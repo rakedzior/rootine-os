@@ -3,6 +3,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { ModuleScreen } from '@/modules/ModuleScreen';
 import { StartScreen } from '@/modules/start/StartScreen';
 import { GoalsScreen } from '@/modules/goals/GoalsScreen';
+import { FinanceScreen } from '@/modules/finance/FinanceScreen';
 import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { Login } from '@/features/auth/Login';
@@ -31,7 +32,7 @@ export const router = createBrowserRouter([
       { index: true, element: <StartScreen /> },
       { path: 'sport', element: <ModuleScreen moduleKey="sport" /> },
       { path: 'diet', element: <ModuleScreen moduleKey="diet" /> },
-      { path: 'finance', element: <ModuleScreen moduleKey="finance" /> },
+      { path: 'finance', element: <FinanceScreen /> },
       { path: 'goals', element: <GoalsScreen /> },
       { path: 'office', element: <ModuleScreen moduleKey="office" /> },
       { path: 'travel', element: <ModuleScreen moduleKey="travel" /> },
