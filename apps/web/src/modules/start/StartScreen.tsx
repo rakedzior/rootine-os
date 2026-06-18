@@ -6,6 +6,7 @@ import { FinancePulse } from '@/features/finance/FinancePulse';
 import { GoalProgress } from '@/features/goals/GoalProgress';
 import { useTasks } from '@/features/tasks/hooks';
 import { useHabits } from '@/features/habits/hooks';
+import { useTodayMealItems, useNutritionToday } from '@/features/diet/hooks';
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -155,6 +156,25 @@ function WeatherCard() {
 }
 
 function NutritionSummaryCard() {
+  const itemsQ = useTodayMealItems();
+  const dailyQ = useNutritionToday();
+
+  const items = itemsQ.data ?? [];
+  const daily = dailyQ.data;
+
+  const sumKcal = items.reduce((s, i) => s + i.kcal, 0);
+  const sumProt = items.reduce((s, i) => s + i.protein, 0);
+  const sumCarb = items.reduce((s, i) => s + i.carb, 0);
+  const sumFat = items.reduce((s, i) => s + i.fat, 0);
+
+  const kcalTarget = daily?.kcal_target ?? 2500;
+  const protTarget = daily?.protein_target ?? 180;
+  const carbTarget = daily?.carb_target ?? 240;
+  const fatTarget = daily?.fat_target ?? 70;
+
+  const dash = 263.9;
+  const offset = dash - (dash * Math.min(100, (sumKcal / kcalTarget) * 100)) / 100;
+
   return (
     <article className="card diet-sum-card">
       <div className="card-head">
@@ -165,18 +185,19 @@ function NutritionSummaryCard() {
         <div className="diet-sum-ring">
           <svg viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="42" fill="none" stroke="var(--surface-inset)" strokeWidth="9" />
-            <circle cx="50" cy="50" r="42" fill="none" stroke="var(--acc-a)" strokeWidth="9" strokeLinecap="round" strokeDasharray="263.9" strokeDashoffset="263.9" transform="rotate(-90 50 50)" />
+            <circle cx="50" cy="50" r="42" fill="none" stroke="var(--acc-a)" strokeWidth="9" strokeLinecap="round"
+              strokeDasharray={dash} strokeDashoffset={offset} transform="rotate(-90 50 50)" />
           </svg>
-          <div className="diet-sum-inner"><b className="tnum">0</b><small>kcal</small></div>
+          <div className="diet-sum-inner"><b className="tnum">{Math.round(sumKcal)}</b><small>kcal</small></div>
         </div>
         <div className="diet-sum-macros">
-          <div className="dsm-row"><span className="dsm-dot" style={{ background: 'var(--acc-a)' }} /><span className="dsm-lbl">Białko</span><span className="dsm-val tnum">0 <span className="dsm-g">/ — g</span></span></div>
-          <div className="dsm-row"><span className="dsm-dot" style={{ background: 'var(--ev-blue)' }} /><span className="dsm-lbl">Węglowodany</span><span className="dsm-val tnum">0 <span className="dsm-g">/ — g</span></span></div>
-          <div className="dsm-row"><span className="dsm-dot" style={{ background: 'var(--acc-b)' }} /><span className="dsm-lbl">Tłuszcze</span><span className="dsm-val tnum">0 <span className="dsm-g">/ — g</span></span></div>
+          <div className="dsm-row"><span className="dsm-dot" style={{ background: 'var(--acc-a)' }} /><span className="dsm-lbl">Białko</span><span className="dsm-val tnum">{Math.round(sumProt)} <span className="dsm-g">/ {Math.round(protTarget)} g</span></span></div>
+          <div className="dsm-row"><span className="dsm-dot" style={{ background: 'var(--ev-blue)' }} /><span className="dsm-lbl">Węglowodany</span><span className="dsm-val tnum">{Math.round(sumCarb)} <span className="dsm-g">/ {Math.round(carbTarget)} g</span></span></div>
+          <div className="dsm-row"><span className="dsm-dot" style={{ background: 'var(--acc-b)' }} /><span className="dsm-lbl">Tłuszcze</span><span className="dsm-val tnum">{Math.round(sumFat)} <span className="dsm-g">/ {Math.round(fatTarget)} g</span></span></div>
         </div>
       </div>
       <div className="diet-sum-foot">
-        <span className="dsf-hint">Dane pojawią się w module Dieta</span>
+        <span className="dsf-hint">{items.length === 0 ? 'Brak wpisów — dodaj posiłki w module Dieta' : `${items.length} ${items.length === 1 ? 'wpis' : 'wpisów'} dziś`}</span>
         <a href="/diet" className="dsf-link">Zobacz dietę →</a>
       </div>
     </article>
