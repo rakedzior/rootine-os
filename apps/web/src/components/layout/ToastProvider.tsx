@@ -10,7 +10,7 @@ const BG: Record<Toast['type'], string> = {
 export function ToastProvider() {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  useEffect(() => subscribeToasts(setToasts), []);
+  useEffect(() => { const unsub = subscribeToasts(setToasts); return () => { unsub(); }; }, []);
 
   if (toasts.length === 0) return null;
 

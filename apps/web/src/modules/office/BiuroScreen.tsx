@@ -64,7 +64,7 @@ export function BiuroScreen() {
   const insQ = useInsurancePolicies();
   const addIns = useAddInsurance();
   const delIns = useDeleteInsurance();
-  const patchIns = usePatchInsurance();
+  const _patchIns = usePatchInsurance();
   const [insType, setInsType] = useState('OC');
   const [insInsurer, setInsInsurer] = useState('');
   const [insPremium, setInsPremium] = useState('');

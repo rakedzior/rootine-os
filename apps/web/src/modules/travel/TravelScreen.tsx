@@ -30,13 +30,13 @@ export function TravelScreen() {
   const showDocs = useIsFeatureVisible('travel.documents');
   const showBucket = useIsFeatureVisible('travel.bucket_list');
   const showPacking = useIsFeatureVisible('travel.packing');
-  const showBudget = useIsFeatureVisible('travel.budget');
+  const _showBudget = useIsFeatureVisible('travel.budget');
   const showAttractions = useIsFeatureVisible('travel.attractions');
 
   const tripsQ = useTrips();
   const createTrip = useCreateTrip();
   const deleteTrip = useDeleteTrip();
-  const patchTrip = usePatchTrip();
+  const _patchTrip = usePatchTrip();
 
   const [newDest, setNewDest] = useState('');
   const [newCountry, setNewCountry] = useState('');

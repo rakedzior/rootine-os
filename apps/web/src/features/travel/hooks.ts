@@ -68,7 +68,7 @@ export function useAddTripItem() {
 export function useDeleteTripItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, tripId }: { id: string; tripId: string | null }) => deleteTripItem(id),
+    mutationFn: ({ id }: { id: string; tripId: string | null }) => deleteTripItem(id),
     onMutate: async ({ id, tripId }) => {
       const key = ['trip_items', tripId ?? 'all'];
       await qc.cancelQueries({ queryKey: key });

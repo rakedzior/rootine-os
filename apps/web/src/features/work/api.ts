@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import type {
-  WorkCompany, WorkProject, WorkTask, WorkTaskNote, WorkSubtask,
-  NewWorkTaskInput, CompanyType, ProjectStatus, WorkTaskStatus,
+  WorkCompany, WorkProject, WorkTask, WorkSubtask,
+  NewWorkTaskInput, CompanyType, ProjectStatus,
 } from './types';
 
 async function uid(): Promise<string> {

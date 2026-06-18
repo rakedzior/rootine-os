@@ -112,7 +112,7 @@ export function useAddSubtask() {
 export function useToggleSubtask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, done, taskId }: { id: string; done: boolean; taskId: string }) => patchSubtask(id, done),
+    mutationFn: ({ id, done }: { id: string; done: boolean; taskId: string }) => patchSubtask(id, done),
     onMutate: async ({ id, done, taskId }) => {
       const key = ['work_subtasks', taskId];
       await qc.cancelQueries({ queryKey: key });
@@ -128,7 +128,7 @@ export function useToggleSubtask() {
 export function useDeleteSubtask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, taskId }: { id: string; taskId: string }) => deleteSubtask(id),
+    mutationFn: ({ id }: { id: string; taskId: string }) => deleteSubtask(id),
     onSuccess: (_d, v) => qc.invalidateQueries({ queryKey: ['work_subtasks', v.taskId] }),
   });
 }

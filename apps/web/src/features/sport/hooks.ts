@@ -73,7 +73,7 @@ export function useAddWorkoutSet() {
 export function useDeleteWorkoutSet() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, workoutId }: { id: string; workoutId: string | null }) => deleteWorkoutSet(id),
+    mutationFn: ({ id }: { id: string; workoutId: string | null }) => deleteWorkoutSet(id),
     onMutate: async ({ id, workoutId }) => {
       const key = ['workout_sets', workoutId];
       await qc.cancelQueries({ queryKey: key });

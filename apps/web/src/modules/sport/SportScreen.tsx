@@ -373,7 +373,7 @@ export function SportScreen() {
                       {w.type && <div className="m">{w.type}</div>}
                     </div>
                     <div className="sh-feel">
-                      <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 5, background: w.status === 'done' ? 'var(--acc-a-soft)' : 'var(--surface-inset)', color: w.status === 'done' ? 'var(--acc-a-ink)' : 'var(--ink-3)', fontFamily: 'var(--mono)', fontWeight: 600, fontSize: 10 }}>
+                      <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 5, background: w.status === 'done' ? 'var(--acc-a-soft)' : 'var(--surface-inset)', color: w.status === 'done' ? 'var(--acc-a-ink)' : 'var(--ink-3)', fontFamily: 'var(--mono)', fontWeight: 600 }}>
                         {w.status}
                       </span>
                     </div>
