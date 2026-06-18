@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import {
-  useAccounts, useTransactions, useCreateAccount, useDeleteAccount,
+  useAccounts, useTransactions, useCategories, useCreateAccount, useDeleteAccount,
   useCreateTransaction, useDeleteTransaction,
 } from '@/features/finance/hooks';
-import { accountBalance, totalBalance, formatMoney, ACCOUNT_KINDS, type Account } from '@/features/finance/types';
+import { accountBalance, totalBalance, formatMoney, ACCOUNT_KINDS, type Account, type Category } from '@/features/finance/types';
+import { CategoriesCard } from './CategoriesCard';
+import { BudgetsCard } from './BudgetsCard';
+import { RecurringCard } from './RecurringCard';
 
 const TRASH = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -14,9 +17,11 @@ const TRASH = (
 export function FinanceScreen() {
   const accountsQ = useAccounts();
   const txQ = useTransactions();
+  const categoriesQ = useCategories();
 
   const accounts = accountsQ.data ?? [];
   const txs = txQ.data ?? [];
+  const categories = categoriesQ.data ?? [];
   const loading = accountsQ.isLoading || txQ.isLoading;
   const error = accountsQ.isError || txQ.isError;
 
@@ -25,14 +30,13 @@ export function FinanceScreen() {
       <section className="col">
         <article className="card session">
           <div className="greet">Finanse <span className="em">·</span> saldo</div>
-          <div className="greet-sub">Konta i transakcje</div>
+          <div className="greet-sub">Konta, transakcje, budżety</div>
         </article>
 
         {error && (
           <article className="card"><div className="auth-banner warn">Nie udało się wczytać danych finansowych.</div></article>
         )}
 
-        {/* Saldo + konta */}
         <article className="card">
           <div className="card-head">
             <div className="lhs"><span className="card-title">Saldo</span></div>
@@ -53,12 +57,11 @@ export function FinanceScreen() {
           )}
         </article>
 
-        {/* Transakcje */}
         <article className="card">
           <div className="card-head">
             <div className="lhs"><span className="card-title">Transakcje</span></div>
           </div>
-          <AddTransactionForm accounts={accounts} />
+          <AddTransactionForm accounts={accounts} categories={categories} />
           {!loading && (
             <div className="fin-ledger" style={{ marginTop: 8 }}>
               {txs.length === 0 && <div className="agenda-empty">Brak transakcji.</div>}
@@ -68,6 +71,10 @@ export function FinanceScreen() {
             </div>
           )}
         </article>
+
+        <BudgetsCard />
+        <RecurringCard />
+        <CategoriesCard />
       </section>
     </main>
   );
@@ -126,11 +133,12 @@ function AddAccountForm() {
   );
 }
 
-function AddTransactionForm({ accounts }: { accounts: Account[] }) {
+function AddTransactionForm({ accounts, categories }: { accounts: Account[]; categories: Category[] }) {
   const create = useCreateTransaction();
   const [amount, setAmount] = useState('');
   const [dir, setDir] = useState<'out' | 'in'>('out');
   const [accountId, setAccountId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
 
@@ -141,6 +149,7 @@ function AddTransactionForm({ accounts }: { accounts: Account[] }) {
     create.mutate({
       amount: dir === 'out' ? -value : value,
       account_id: accountId || null,
+      category_id: categoryId || null,
       note: note.trim() || null,
       occurred_on: date,
     });
@@ -156,9 +165,13 @@ function AddTransactionForm({ accounts }: { accounts: Account[] }) {
       </select>
       <input className="auth-input mono" style={{ width: 110 }} inputMode="decimal"
         value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Kwota" />
-      <select className="he-select" value={accountId} onChange={(e) => setAccountId(e.target.value)} style={{ width: 150 }}>
+      <select className="he-select" value={accountId} onChange={(e) => setAccountId(e.target.value)} style={{ width: 140 }}>
         <option value="">— konto —</option>
         {accounts.map((a) => <option key={a.id} value={a.id}>{a.name || 'Konto'}</option>)}
+      </select>
+      <select className="he-select" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} style={{ width: 150 }}>
+        <option value="">— kategoria —</option>
+        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
       <input className="auth-input" type="date" style={{ width: 150 }} value={date} onChange={(e) => setDate(e.target.value)} />
       <div className="field" style={{ flex: '1 1 160px' }}>
