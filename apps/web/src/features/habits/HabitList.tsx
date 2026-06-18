@@ -106,8 +106,8 @@ export function HabitList() {
         })}
       </div>
 
-      <form className="capture" onSubmit={add} style={{ marginTop: 14 }}>
-        <div className="field">
+      <form className="capture" onSubmit={add} style={{ marginTop: 14, flexWrap: 'wrap' }}>
+        <div className="field" style={{ flex: '1 1 100%' }}>
           <span className="lead">Nawyk</span>
           <input
             value={name}
@@ -115,7 +115,7 @@ export function HabitList() {
             placeholder="Dodaj nawyk i naciśnij Enter…"
           />
         </div>
-        <button className="btn" type="submit" disabled={create.isPending}>
+        <button className="btn" type="submit" disabled={create.isPending} style={{ width: '100%' }}>
           {create.isPending ? 'Dodawanie…' : 'Dodaj'}
         </button>
       </form>
