@@ -145,7 +145,8 @@ body{
 .topbar{
   position:sticky; top:0; z-index:40;
   display:flex; align-items:center; gap:26px;
-  height:58px; padding:0 26px;
+  height:calc(58px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 26px 0;
   background: color-mix(in srgb, var(--bg-1) 72%, transparent);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
@@ -646,6 +647,50 @@ body{
 @media (max-width: 760px){
   .nav{ display:none; }
   .tcluster .tmini, .tdiv{ display:none; }
+  /* push content above the bottom nav */
+  .app > *:not(.topbar):not(.mob-nav){ padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+  .tb-search{ display:none; }
+  .tb-add span{ display:none; }
+  .tb-add{ padding:9px 11px; border-radius:50%; }
+}
+
+/* ---- Mobile bottom navigation ---- */
+.mob-nav{
+  display: none;
+}
+@media (max-width: 760px){
+  .mob-nav{
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--bg-1) 88%, transparent);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border-top: 1px solid var(--border-soft);
+    padding-bottom: env(safe-area-inset-bottom);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .mob-nav::-webkit-scrollbar{ display:none; }
+  .mob-nav-item{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    flex: 0 0 auto;
+    min-width: 60px;
+    padding: 8px 4px;
+    text-decoration: none;
+    color: var(--ink-3);
+    transition: color .15s;
+  }
+  .mob-nav-item.active{ color: var(--acc-a-ink, var(--ink)); }
+  .mob-nav-icon{ width:22px; height:22px; display:flex; align-items:center; justify-content:center; }
+  .mob-nav-icon svg{ width:22px; height:22px; }
+  .mob-nav-label{ font-family: var(--mono); font-size: 9px; letter-spacing:.08em; text-transform:uppercase; font-weight:500; white-space:nowrap; }
 }
 
 /* ============================================================

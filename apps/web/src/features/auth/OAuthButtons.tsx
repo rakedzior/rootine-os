@@ -1,45 +1,33 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-type Provider = 'google' | 'apple' | 'facebook';
-
-const LABELS: Record<Provider, string> = {
-  google: 'Kontynuuj z Google',
-  apple: 'Kontynuuj z Apple',
-  facebook: 'Kontynuuj z Facebookiem',
-};
-
 export function OAuthButtons() {
-  const [busy, setBusy] = useState<Provider | null>(null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const signIn = async (provider: Provider) => {
+  const signIn = async () => {
     setError(null);
-    setBusy(provider);
+    setBusy(true);
     const { error } = await supabase.auth.signInWithOAuth({
-      provider,
+      provider: 'google',
       options: { redirectTo: `${window.location.origin}/` },
     });
     if (error) {
       setError('Nie udało się rozpocząć logowania. Spróbuj ponownie.');
-      setBusy(null);
+      setBusy(false);
     }
-    // On success the browser redirects to the provider.
   };
 
   return (
     <div className="oauth-row">
-      {(['google', 'apple', 'facebook'] as Provider[]).map((p) => (
-        <button
-          key={p}
-          type="button"
-          className="oauth-btn"
-          disabled={busy !== null}
-          onClick={() => signIn(p)}
-        >
-          {LABELS[p]}
-        </button>
-      ))}
+      <button
+        type="button"
+        className="oauth-btn"
+        disabled={busy}
+        onClick={signIn}
+      >
+        Kontynuuj z Google
+      </button>
       {error && <div className="auth-err">{error}</div>}
     </div>
   );
