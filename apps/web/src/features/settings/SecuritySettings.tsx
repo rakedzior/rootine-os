@@ -5,6 +5,7 @@ import { logAudit } from '@/lib/audit';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { newPasswordSchema, fieldErrors, passwordStrength } from '@/features/auth/schema';
 import { PasswordMeter } from '@/features/auth/AuthShell';
+import { MfaSettings } from './MfaSettings';
 
 export function SecuritySettings() {
   const nav = useNavigate();
@@ -82,15 +83,7 @@ export function SecuritySettings() {
         </form>
       </article>
 
-      <article className="card">
-        <div className="card-head">
-          <div className="lhs"><span className="card-title">Weryfikacja dwuetapowa (MFA)</span></div>
-          <span className="pill">Wkrótce</span>
-        </div>
-        <div className="note-peek">
-          TOTP (Google Authenticator / Authy / 1Password) i kody odzyskiwania — w kolejnym kroku (c0.8).
-        </div>
-      </article>
+      <MfaSettings />
     </>
   );
 }

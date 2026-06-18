@@ -3,16 +3,28 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { logAudit } from '@/lib/audit';
 import { loginSchema, fieldErrors } from './schema';
+import { needsMfaStepUp, getVerifiedTotpFactorId, verifyTotpCode } from './mfa';
 import { AuthShell } from './AuthShell';
 import { OAuthButtons } from './OAuthButtons';
 
 export function Login() {
   const nav = useNavigate();
+  const [phase, setPhase] = useState<'password' | 'mfa'>('password');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // MFA step-up
+  const [factorId, setFactorId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState('');
+  const [mfaError, setMfaError] = useState<string | null>(null);
+
+  const finishLogin = async (method: string) => {
+    await logAudit('login', { metadata: { method } });
+    nav('/');
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,15 +37,55 @@ export function Login() {
     setErrors({});
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword(parsed.data);
-    setBusy(false);
     if (error) {
-      // Generic message — never reveal whether the email exists.
+      setBusy(false);
       setFormError('Nieprawidłowy e-mail lub hasło.');
       return;
     }
-    await logAudit('login', { metadata: { method: 'password' } });
-    nav('/');
+    if (await needsMfaStepUp()) {
+      const fid = await getVerifiedTotpFactorId();
+      setBusy(false);
+      if (fid) {
+        setFactorId(fid);
+        setPhase('mfa');
+        return;
+      }
+    }
+    setBusy(false);
+    await finishLogin('password');
   };
+
+  const submitMfa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!factorId) return;
+    setMfaError(null);
+    setBusy(true);
+    const { error } = await verifyTotpCode(factorId, mfaCode.trim());
+    setBusy(false);
+    if (error) {
+      setMfaError('Nieprawidłowy kod. Spróbuj ponownie.');
+      return;
+    }
+    await finishLogin('password+totp');
+  };
+
+  if (phase === 'mfa') {
+    return (
+      <AuthShell title="Weryfikacja dwuetapowa" subtitle="Wpisz kod z aplikacji">
+        {mfaError && <div className="auth-banner warn">{mfaError}</div>}
+        <form className="auth-form" onSubmit={submitMfa} noValidate>
+          <div className="auth-field">
+            <label htmlFor="otp">Kod TOTP</label>
+            <input id="otp" className="auth-input mono" inputMode="numeric" autoComplete="one-time-code"
+              value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} placeholder="000000" autoFocus />
+          </div>
+          <button className="auth-btn" type="submit" disabled={busy}>
+            {busy ? 'Weryfikacja…' : 'Potwierdź'}
+          </button>
+        </form>
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell title="Witaj ponownie" subtitle="Zaloguj się do Rootine OS">
