@@ -1,10 +1,14 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { ModuleScreen } from '@/modules/ModuleScreen';
 import { StartScreen } from '@/modules/start/StartScreen';
 import { GoalsScreen } from '@/modules/goals/GoalsScreen';
 import { FinanceScreen } from '@/modules/finance/FinanceScreen';
 import { DietScreen } from '@/modules/diet/DietScreen';
+import { SportScreen } from '@/modules/sport/SportScreen';
+import { BiuroScreen } from '@/modules/office/BiuroScreen';
+import { TravelScreen } from '@/modules/travel/TravelScreen';
+import { NotesScreen } from '@/modules/notes/NotesScreen';
+import { PracaScreen } from '@/modules/work/PracaScreen';
 import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { Login } from '@/features/auth/Login';
@@ -31,14 +35,14 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <StartScreen /> },
-      { path: 'sport', element: <ModuleScreen moduleKey="sport" /> },
+      { path: 'sport', element: <SportScreen /> },
       { path: 'diet', element: <DietScreen /> },
       { path: 'finance', element: <FinanceScreen /> },
       { path: 'goals', element: <GoalsScreen /> },
-      { path: 'office', element: <ModuleScreen moduleKey="office" /> },
-      { path: 'travel', element: <ModuleScreen moduleKey="travel" /> },
-      { path: 'notes', element: <ModuleScreen moduleKey="notes" /> },
-      { path: 'work', element: <ModuleScreen moduleKey="work" /> },
+      { path: 'office', element: <BiuroScreen /> },
+      { path: 'travel', element: <TravelScreen /> },
+      { path: 'notes', element: <NotesScreen /> },
+      { path: 'work', element: <PracaScreen /> },
       { path: 'settings', element: <SettingsScreen /> },
       { path: 'settings/integrations', element: <SettingsScreen tab="integrations" /> },
       { path: 'settings/security', element: <SettingsScreen tab="security" /> },
