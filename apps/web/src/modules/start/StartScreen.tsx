@@ -1,11 +1,13 @@
 import { useIsFeatureVisible } from '@/features/config/useConfig';
 import { TaskList } from '@/features/tasks/TaskList';
+import { HabitList } from '@/features/habits/HabitList';
 
-/** Start dashboard — assembled incrementally. c1.1 brings the live task list;
- *  remaining widgets (finance pulse, nutrition, calendar, habits…) land in
- *  c1.2–c1.7 and are gated by their feature_key. */
+/** Start dashboard — assembled incrementally. c1.1 tasks, c1.2 habits;
+ *  remaining widgets (finance pulse, nutrition, calendar…) land in
+ *  c1.3–c1.7, each gated by its feature_key. */
 export function StartScreen() {
   const showTasks = useIsFeatureVisible('start.today_tasks');
+  const showHabits = useIsFeatureVisible('start.habits');
 
   return (
     <main className="grid" style={{ gridTemplateColumns: '1fr', maxWidth: 760 }}>
@@ -14,7 +16,7 @@ export function StartScreen() {
           <div className="greet">
             Dzień dobry <span className="em">·</span> dziś
           </div>
-          <div className="greet-sub">Faza 1 — pierwszy żywy moduł: zadania</div>
+          <div className="greet-sub">Faza 1 — żywe moduły: zadania, nawyki</div>
         </article>
 
         {showTasks && (
@@ -25,6 +27,17 @@ export function StartScreen() {
               </div>
             </div>
             <TaskList />
+          </article>
+        )}
+
+        {showHabits && (
+          <article className="card">
+            <div className="card-head">
+              <div className="lhs">
+                <span className="card-title">Nawyki i rutyny</span>
+              </div>
+            </div>
+            <HabitList />
           </article>
         )}
       </section>
