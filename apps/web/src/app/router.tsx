@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ModuleScreen } from '@/modules/ModuleScreen';
+import { StartScreen } from '@/modules/start/StartScreen';
 import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { Login } from '@/features/auth/Login';
@@ -26,7 +27,7 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
-      { index: true, element: <ModuleScreen moduleKey="start" /> },
+      { index: true, element: <StartScreen /> },
       { path: 'sport', element: <ModuleScreen moduleKey="sport" /> },
       { path: 'diet', element: <ModuleScreen moduleKey="diet" /> },
       { path: 'finance', element: <ModuleScreen moduleKey="finance" /> },
