@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ModuleScreen } from '@/modules/ModuleScreen';
 import { StartScreen } from '@/modules/start/StartScreen';
+import { GoalsScreen } from '@/modules/goals/GoalsScreen';
 import { SettingsScreen } from '@/features/settings/SettingsScreen';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { Login } from '@/features/auth/Login';
@@ -31,7 +32,7 @@ export const router = createBrowserRouter([
       { path: 'sport', element: <ModuleScreen moduleKey="sport" /> },
       { path: 'diet', element: <ModuleScreen moduleKey="diet" /> },
       { path: 'finance', element: <ModuleScreen moduleKey="finance" /> },
-      { path: 'goals', element: <ModuleScreen moduleKey="goals" /> },
+      { path: 'goals', element: <GoalsScreen /> },
       { path: 'office', element: <ModuleScreen moduleKey="office" /> },
       { path: 'travel', element: <ModuleScreen moduleKey="travel" /> },
       { path: 'notes', element: <ModuleScreen moduleKey="notes" /> },

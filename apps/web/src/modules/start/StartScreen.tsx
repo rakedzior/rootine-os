@@ -1,6 +1,7 @@
 import { useIsFeatureVisible } from '@/features/config/useConfig';
 import { TaskList } from '@/features/tasks/TaskList';
 import { HabitList } from '@/features/habits/HabitList';
+import { GoalProgress } from '@/features/goals/GoalProgress';
 
 /** Start dashboard — assembled incrementally. c1.1 tasks, c1.2 habits;
  *  remaining widgets (finance pulse, nutrition, calendar…) land in
@@ -8,6 +9,7 @@ import { HabitList } from '@/features/habits/HabitList';
 export function StartScreen() {
   const showTasks = useIsFeatureVisible('start.today_tasks');
   const showHabits = useIsFeatureVisible('start.habits');
+  const showGoals = useIsFeatureVisible('start.goal_progress');
 
   return (
     <main className="grid" style={{ gridTemplateColumns: '1fr', maxWidth: 760 }}>
@@ -38,6 +40,17 @@ export function StartScreen() {
               </div>
             </div>
             <HabitList />
+          </article>
+        )}
+
+        {showGoals && (
+          <article className="card">
+            <div className="card-head">
+              <div className="lhs">
+                <span className="card-title">Postępy w celach</span>
+              </div>
+            </div>
+            <GoalProgress />
           </article>
         )}
       </section>
