@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useIsFeatureVisible } from '@/features/config/useConfig';
 import {
-  useTrips, useCreateTrip, useDeleteTrip, usePatchTrip,
+  useTrips, useCreateTrip, useDeleteTrip,
   useTripItems, useAddTripItem, useDeleteTripItem,
   useTripDocuments, useAddTripDocument, useDeleteTripDocument,
   useBucketList, useAddBucketItem, usePatchBucketItem, useDeleteBucketItem,
@@ -30,13 +30,11 @@ export function TravelScreen() {
   const showDocs = useIsFeatureVisible('travel.documents');
   const showBucket = useIsFeatureVisible('travel.bucket_list');
   const showPacking = useIsFeatureVisible('travel.packing');
-  const _showBudget = useIsFeatureVisible('travel.budget');
   const showAttractions = useIsFeatureVisible('travel.attractions');
 
   const tripsQ = useTrips();
   const createTrip = useCreateTrip();
   const deleteTrip = useDeleteTrip();
-  const _patchTrip = usePatchTrip();
 
   const [newDest, setNewDest] = useState('');
   const [newCountry, setNewCountry] = useState('');

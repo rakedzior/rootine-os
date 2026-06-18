@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useIsFeatureVisible } from '@/features/config/useConfig';
 import {
   useOfficeDocs, useAddOfficeDoc, useDeleteOfficeDoc,
-  useInsurancePolicies, useAddInsurance, useDeleteInsurance, usePatchInsurance,
+  useInsurancePolicies, useAddInsurance, useDeleteInsurance,
   useVehicles, useAddVehicle, useDeleteVehicle,
   useVehicleServices, useAddVehicleService, useDeleteVehicleService,
   useB2bSettlements, useUpsertB2b, usePatchB2b,
@@ -64,7 +64,6 @@ export function BiuroScreen() {
   const insQ = useInsurancePolicies();
   const addIns = useAddInsurance();
   const delIns = useDeleteInsurance();
-  const _patchIns = usePatchInsurance();
   const [insType, setInsType] = useState('OC');
   const [insInsurer, setInsInsurer] = useState('');
   const [insPremium, setInsPremium] = useState('');
