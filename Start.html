@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="light" data-palette="celadon" data-font="serif">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rootine OS</title>
+<link rel="stylesheet" href="styles.css">
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#efe8da"/>
+  <circle cx="50" cy="50" r="22" fill="none" stroke="#6f9d84" stroke-width="5"/>
+  <circle cx="50" cy="50" r="6" fill="#bd8769"/>
+  <text x="50" y="86" text-anchor="middle" font-family="Georgia, serif" font-size="13" fill="#6f6857">Rootine</text>
+</svg>
+</template>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== TOP BAR ===================== -->
+  <header class="topbar" style="gap:16px">
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="wm"><b>Rootine</b>&nbsp;OS&nbsp;<span>v2.9</span></span>
+    </div>
+    <nav class="nav">
+      <a href="Start.html" class="active">Start</a>
+      <a href="Health.html">Sport</a>
+      <a href="Nutrition.html">Dieta</a>
+      <a href="Finance.html">Finanse</a>
+      <a href="Goals.html">Cele</a>
+      <a href="Desk.html">Biuro</a>
+      <a href="Travel.html">Podróże</a>
+      <a href="Notes.html">Notatki</a>
+    </nav>
+    <div class="tb-search">
+      <svg class="tb-srch-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="tb-srch-inp" type="text" placeholder="Szukaj lub wpisz polecenie…" />
+      <span class="tb-kbd">⌘K</span>
+    </div>
+    <button class="tb-add">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      Dodaj
+    </button>
+    <div class="tcluster">
+      <div class="tmini">
+        <span class="ic" id="topWeatherIc"></span>
+        <span class="tt">
+          <b id="topTemp" class="tnum">24°</b>
+          <small id="topLoc">Kraków</small>
+        </span>
+      </div>
+      <span class="tdiv"></span>
+      <div class="tclock-col">
+        <div class="tclock tnum"><span id="topClock">11:39</span><span class="s" id="topClockSec">:00</span></div>
+        <div class="tclock-date" id="topDate">Czwartek, 18 czerwca</div>
+      </div>
+      <span class="tdiv"></span>
+      <div class="avatar-wrap">
+        <div class="avatar">YOU</div>
+        <svg class="avatar-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== GRID ===================== -->
+  <main class="grid">
+
+    <!-- ============ LEFT COLUMN ============ -->
+    <section class="col" data-screen-label="Left rail">
+
+      <!-- WEATHER & TIME -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Pogoda i czas</span></div>
+          <span class="pill accent" id="locPill"><span class="led"></span><span id="locPillText">Kraków</span></span>
+        </div>
+        <div class="weather-main">
+          <span class="weather-ic" id="weatherIc"></span>
+          <div class="weather-temp">
+            <span class="t tnum"><span id="wTemp">24</span><sup>°C</sup></span>
+            <span class="cond" id="wCond">Zachmurzenie</span>
+          </div>
+        </div>
+        <div class="weather-meta">
+          <div class="wm-cell"><div class="k">Odczuwalna</div><div class="v tnum" id="wFeels">23°</div></div>
+          <div class="wm-cell"><div class="k">Wilgotność</div><div class="v tnum" id="wHum">52%</div></div>
+          <div class="wm-cell">
+            <div class="k">Wiatr</div>
+            <div class="v tnum">
+              <span id="wWindSpeed">14 km/h</span>
+              <span id="wWindDir" style="display:block;font-size:10px;color:var(--ink-3);margin-top:2px">NE</span>
+            </div>
+          </div>
+        </div>
+        <div class="wx-hours" id="wxHours"></div>
+        <div class="clock-row centered">
+          <div class="clock-big tnum"><span id="bigClock">11:39</span><span class="sec" id="bigClockSec">09</span></div>
+          <div class="d" id="bigDate">Czwartek, 18 czerwca</div>
+        </div>
+      </article>
+
+      <!-- FINANCE PULSE -->
+      <article class="card fin-card" id="finCard">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Puls finansów</span></div>
+          <button class="diet-edit" id="finEdit" type="button">Edytuj</button>
+        </div>
+      </article>
+
+      <!-- NUTRITION SUMMARY -->
+      <article class="card diet-sum-card" id="dietSumCard">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Największe kalorie</span></div>
+          <span class="pill">Dziś</span>
+        </div>
+        <div class="diet-sum-body">
+          <div class="diet-sum-ring">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="var(--surface-inset)" stroke-width="9"/>
+              <circle id="dietSumArc" cx="50" cy="50" r="42" fill="none" stroke="var(--acc-a)" stroke-width="9" stroke-linecap="round"
+                      stroke-dasharray="263.9" stroke-dashoffset="50" transform="rotate(-90 50 50)"/>
+            </svg>
+            <div class="diet-sum-inner">
+              <b class="tnum" id="dietSumKcal">1&thinsp;620</b>
+              <small>kcal</small>
+            </div>
+          </div>
+          <div class="diet-sum-macros">
+            <div class="dsm-row">
+              <span class="dsm-dot" style="background:var(--acc-a)"></span>
+              <span class="dsm-lbl">Białko</span>
+              <span class="dsm-val tnum">118 <span class="dsm-g">/ 180 g</span></span>
+            </div>
+            <div class="dsm-row">
+              <span class="dsm-dot" style="background:var(--ev-blue)"></span>
+              <span class="dsm-lbl">Węglowodany</span>
+              <span class="dsm-val tnum">187 <span class="dsm-g">/ 240 g</span></span>
+            </div>
+            <div class="dsm-row">
+              <span class="dsm-dot" style="background:var(--acc-b)"></span>
+              <span class="dsm-lbl">Tłuszcze</span>
+              <span class="dsm-val tnum">46 <span class="dsm-g">/ 70 g</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="diet-sum-foot">
+          <span class="dsf-hint">spożyte · z 2 500</span>
+          <a href="Nutrition.html" class="dsf-link">Zobacz dietę →</a>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ============ CENTER COLUMN ============ -->
+    <section class="col" data-screen-label="Center">
+
+      <!-- DZISIAJ -->
+      <article class="card today-card" data-screen-label="Today">
+        <div class="today-layout">
+
+          <!-- tasks side -->
+          <div class="today-main">
+            <div class="today-hd">
+              <div class="today-hd-l">
+                <span class="today-title">DZISIAJ</span>
+                <span class="today-sub" id="todayDateSub">Czwartek, 18 czerwca</span>
+              </div>
+              <div class="today-hd-r">
+                <button class="today-plan-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                  Plan dnia
+                </button>
+                <button class="today-more-btn">···</button>
+              </div>
+            </div>
+
+            <div class="today-stats">
+              <div class="ts-cell">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <div class="ts-body"><span class="ts-n tnum" id="todayTaskCount">5</span><span class="ts-lbl">zadań do zrobienia</span></div>
+              </div>
+              <div class="ts-cell">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                <div class="ts-body"><span class="ts-n tnum">2</span><span class="ts-lbl">nawyki do wykonania</span></div>
+              </div>
+              <div class="ts-cell">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                <div class="ts-body"><span class="ts-n tnum">1</span><span class="ts-lbl">wydarzenie dzisiaj</span></div>
+              </div>
+            </div>
+
+            <div id="todoList"></div>
+
+            <div class="today-foot">
+              <button class="td-add" id="addTaskBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                Dodaj zadanie
+              </button>
+              <button class="td-done">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Pokaż zakończone
+              </button>
+            </div>
+          </div>
+
+          <!-- aside: upcoming + reminders -->
+          <div class="today-aside">
+            <div class="ta-block">
+              <div class="ta-head">Następnie</div>
+              <div class="ta-next">
+                <div class="ta-chip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                  <span class="tnum">12 CZE · 18:00</span>
+                </div>
+                <div class="ta-evname">Spotkanie Krzysi</div>
+                <div class="ta-evmeta">
+                  <span class="ta-platform">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                    Google Meet
+                  </span>
+                  <button class="ta-join">Dołącz</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="ta-block">
+              <div class="ta-head">Przypomnienia</div>
+              <div class="ta-rems">
+                <div class="ta-rem">
+                  <span class="ta-rem-dot"></span>
+                  <div>
+                    <div class="ta-rem-n">Wizyta u księdza</div>
+                    <div class="ta-rem-w">pt 14 cze · 18:00</div>
+                  </div>
+                </div>
+                <div class="ta-rem">
+                  <span class="ta-rem-dot"></span>
+                  <div>
+                    <div class="ta-rem-n">Rotacja zewn. barku z gumą</div>
+                    <div class="ta-rem-w">dziś</div>
+                  </div>
+                </div>
+                <div class="ta-rem">
+                  <span class="ta-rem-dot"></span>
+                  <div>
+                    <div class="ta-rem-n">Opłacić OC/AC – Warta</div>
+                    <div class="ta-rem-w">za 2 dni</div>
+                  </div>
+                </div>
+              </div>
+              <button class="ta-all">Pokaż wszystkie <span class="ta-badge">3</span></button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- CALENDAR -->
+      <article class="card">
+        <div class="cal-head">
+          <div class="lhs">
+            <span class="cal-month">Czerwiec <span class="yr">2026</span></span>
+          </div>
+          <div class="seg cal-views" id="calViews">
+            <button data-cv="day">Dzień</button>
+            <button data-cv="week">Tydzień</button>
+            <button class="on" data-cv="month">Miesiąc</button>
+          </div>
+          <div class="cal-ctrl">
+            <button class="navbtn" aria-label="Poprzedni miesiąc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+            <button class="navbtn" aria-label="Następny miesiąc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+            <button class="today">Dziś</button>
+          </div>
+        </div>
+        <div class="cal-dow">
+          <div>Pon</div><div>Wt</div><div>Śr</div><div>Czw</div><div>Pt</div><div>Sob</div><div>Ndz</div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-legend">
+          <span class="cl-item"><i style="background:var(--ev-blue)"></i>Praca</span>
+          <span class="cl-item"><i style="background:var(--ev-clay)"></i>Trening</span>
+          <span class="cl-item"><i style="background:var(--ev-green)"></i>Wydarzenia</span>
+          <span class="cl-item"><i style="background:var(--ev-lav)"></i>Osobiste</span>
+          <span class="cl-item"><i style="background:var(--acc-b)"></i>Podróże</span>
+        </div>
+      </article>
+
+
+    </section>
+
+    <!-- ============ RIGHT COLUMN ============ -->
+    <section class="col" data-screen-label="Right rail">
+
+      <!-- HABITS & ROUTINES -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Nawyki i rutyny</span></div>
+          <span class="pill" id="habitCount">5 / 6</span>
+        </div>
+        <div class="habits-top">
+          <div class="hb-score">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="43" fill="none" stroke="var(--surface-inset)" stroke-width="8"/>
+              <circle id="hbArc" cx="50" cy="50" r="43" fill="none" stroke="var(--acc-a)" stroke-width="8" stroke-linecap="round"
+                      stroke-dasharray="270.2" stroke-dashoffset="135" />
+            </svg>
+            <div class="v tnum" id="hbPct">50</div>
+          </div>
+          <div class="meta">
+            <div class="a">Stabilny rytm dziś</div>
+            <div class="b">Jesteś o krok dalej!</div>
+          </div>
+        </div>
+        <div id="habitList"></div>
+      </article>
+
+      <!-- TRAINING -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Dzisiejszy trening</span></div>
+          <span class="pill">Push A</span>
+        </div>
+        <div class="train-card">
+          <div class="th">
+            <div>
+              <div class="tt">Klatka i barki</div>
+              <div class="ts">6 ćwiczeń · 23 serie</div>
+            </div>
+            <span class="badge">Hipertrofia</span>
+          </div>
+          <div class="train-meta">
+            <div><span class="k">Szac. czas</span><span class="v tnum">58 min</span></div>
+            <div><span class="k">Ost. obj.</span><span class="v tnum">9 240 kg</span></div>
+            <div><span class="k">Top seria</span><span class="v tnum">RIR 2</span></div>
+          </div>
+          <button class="train-btn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            Rozpocznij sesję
+          </button>
+        </div>
+        <div class="sources">
+          <span class="s"><i></i>Strava</span>
+          <span class="s"><i></i>Garmin</span>
+          <span class="s"><i style="background:var(--acc-b)"></i>Kotcha</span>
+        </div>
+      </article>
+
+      <!-- GOALS — postępy w celach -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Postępy w celach</span></div>
+          <span class="pill">Q2</span>
+        </div>
+        <div class="goal">
+          <div class="gh">
+            <span class="gn"><span class="gic gic-str"></span>Wyciskanie 100 kg <small>Siła</small></span>
+            <span class="gp tnum">82%</span>
+          </div>
+          <div class="track"><i style="width:82%"></i></div>
+        </div>
+        <div class="goal">
+          <div class="gh">
+            <span class="gn"><span class="gic gic-book"></span>Przeczytaj 24 książki <small>Nauka</small></span>
+            <span class="gp tnum">41%</span>
+          </div>
+          <div class="track"><i style="width:41%"></i></div>
+        </div>
+        <div class="goal">
+          <div class="gh">
+            <span class="gn"><span class="gic gic-fin"></span>Fundusz awaryjny 30k <small>Finanse</small></span>
+            <span class="gp tnum">60%</span>
+          </div>
+          <div class="track"><i style="width:60%"></i></div>
+        </div>
+        <a href="Goals.html" class="goals-all">Zobacz wszystkie cele →</a>
+      </article>
+
+    </section>
+
+  </main>
+</div>
+
+<!-- mount point for Tweaks (React) -->
+<div id="tweaks-root"></div>
+
+<script src="editable.js"></script>
+<script src="app.js"></script>
+
+<!-- React + Babel + Tweaks -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="tweaks-app.jsx"></script>
+
+</body>
+</html>

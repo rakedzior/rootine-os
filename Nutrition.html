@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="light" data-palette="celadon" data-font="serif">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rootine OS · Dieta</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="nutrition.css">
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#efe8da"/>
+  <circle cx="50" cy="48" r="22" fill="none" stroke="#6f9d84" stroke-width="6"/>
+  <path d="M50 26 a22 22 0 0 1 19 11 l-19 11 z" fill="#bd8769"/>
+  <text x="50" y="90" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="#6f6857">Nutrition</text>
+</svg>
+</template>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== TOP BAR ===================== -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="wm"><b>Rootine</b>&nbsp;OS&nbsp;<span>// v1.0</span></span>
+    </div>
+    <nav class="nav">
+      <a href="Rootine OS.html">Start</a>
+      <a href="Health.html">Sport</a>
+      <a href="Nutrition.html" class="active">Dieta</a>
+      <a href="Finance.html">Finanse</a>
+      <a href="Goals.html">Cele</a>
+      <a href="Desk.html">Biuro</a>
+      <a href="Travel.html">Podróże</a>
+      <a href="Notes.html">Notatki</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="tcluster">
+      <div class="tmini">
+        <span class="ic" id="topWeatherIc"></span>
+        <span class="tt">
+          <b id="topTemp" class="tnum">14°</b>
+          <small id="topLoc">Kraków</small>
+        </span>
+      </div>
+      <span class="tdiv"></span>
+      <div class="tclock tnum"><span id="topClock">15:38</span><span class="s" id="topClockSec">:00</span></div>
+      <span class="tdiv"></span>
+      <div class="avatar">YOU</div>
+    </div>
+  </header>
+
+  <!-- ===================== GRID ===================== -->
+  <main class="grid">
+
+    <!-- ============ LEFT COLUMN ============ -->
+    <section class="col" data-screen-label="Targets rail">
+
+      <!-- TODAY'S TARGETS -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">01</span><span class="card-title" id="targetTitle">Cele na dziś</span></div>
+          <span class="pill accent"><span class="led"></span>Redukcja · −440</span>
+        </div>
+        <div class="nt-ring">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="43" fill="none" stroke="var(--surface-inset)" stroke-width="9"/>
+            <circle id="kcalArc" cx="50" cy="50" r="43" fill="none" stroke="var(--acc-a)" stroke-width="9" stroke-linecap="round"
+                    stroke-dasharray="270.2" stroke-dashoffset="118"/>
+          </svg>
+          <div class="c"><b class="tnum" id="kcalConsumed">1420</b><span class="of"><span id="kcalTarget">2500</span> kcal</span><small>spożyte</small></div>
+        </div>
+        <div class="nt-remain"><span id="kcalLeft">1080</span> kcal pozostało</div>
+
+        <div class="nt-macros">
+          <div class="nt-macro">
+            <div class="mh"><span class="k"><i style="background:var(--m-prot)"></i>Białko</span><span class="v"><b id="pVal">126</b> / 180g</span></div>
+            <div class="nt-track"><i id="pBar" style="width:70%;background:var(--m-prot)"></i></div>
+          </div>
+          <div class="nt-macro">
+            <div class="mh"><span class="k"><i style="background:var(--m-carb)"></i>Węglowodany</span><span class="v"><b id="cVal">142</b> / 240g</span></div>
+            <div class="nt-track"><i id="cBar" style="width:59%;background:var(--m-carb)"></i></div>
+          </div>
+          <div class="nt-macro">
+            <div class="mh"><span class="k"><i style="background:var(--m-fat)"></i>Tłuszcze</span><span class="v"><b id="fVal">38</b> / 70g</span></div>
+            <div class="nt-track"><i id="fBar" style="width:54%;background:var(--m-fat)"></i></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- HYDRATION + SNAPSHOT -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">02</span><span class="card-title">Nawodnienie i tydzień</span></div>
+          <span class="pill">śr. 7 dni</span>
+        </div>
+        <div class="hydro-big">
+          <div class="hydro-glass" id="hydroGlass">
+            <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div class="hydro-info">
+            <div class="v tnum"><span id="waterVal">1.6</span><small> / 3.0 L</small></div>
+            <div class="k">Dotknij szklankę · 250ml</div>
+          </div>
+        </div>
+        <div class="snap-grid">
+          <div class="snap"><div class="v tnum">2 180<small> kcal</small></div><div class="k">Śr. spożycie</div></div>
+          <div class="snap"><div class="v tnum">168<small> g</small></div><div class="k">Śr. białko</div></div>
+          <div class="snap"><div class="v tnum">6 / 7</div><div class="k">Dni w celu</div></div>
+          <div class="snap"><div class="v tnum up">−1.2<small> kg</small></div><div class="k">Waga 30 dni</div></div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ============ CENTER COLUMN ============ -->
+    <section class="col" data-screen-label="Food log center">
+
+      <!-- TODAY'S LOG -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">03</span><span class="card-title" id="logTitle">Dziennik dziś</span></div>
+          <span class="pill" id="logCount">9 pozycji</span>
+        </div>
+        <div class="hist-bar">
+          <button class="hist-nav" id="histPrev" aria-label="Poprzedni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <div class="hist-date">
+            <span class="big" id="histLabel">Dziś</span>
+            <span class="sub" id="histSub">Wt · 17 cze</span>
+          </div>
+          <button class="hist-nav" id="histNext" aria-label="Następny"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+          <label class="hist-pick" aria-label="Wybierz datę">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <input type="date" id="histPick">
+          </label>
+          <div class="seg hist-window" id="histWindow">
+            <button class="on" data-win="day">Dzień</button>
+            <button data-win="week">Tydzień</button>
+            <button data-win="month">Miesiąc</button>
+          </div>
+        </div>
+        <div class="log-add" id="logAdd">
+          <div class="field">
+            <input type="text" id="addName" placeholder="Szybko dodaj — np. jogurt grecki" aria-label="Nazwa produktu">
+            <input type="number" id="addKcal" class="kcal" placeholder="kcal" aria-label="Kalorie" inputmode="numeric">
+          </div>
+          <button class="add-btn" id="addBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Dodaj
+          </button>
+        </div>
+        <div id="logBody"></div>
+      </article>
+
+      <!-- TRENDS -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">04</span><span class="card-title">Trend kalorii</span></div>
+          <div class="trend-legend">
+            <span><i style="background:var(--m-prot)"></i>W celu</span>
+            <span><i style="background:var(--acc-b)"></i>Powyżej</span>
+          </div>
+        </div>
+        <div class="trend-top">
+          <div>
+            <div class="lbl">Średnia z 7 dni</div>
+            <div class="big tnum">2 180<small> kcal / dzień</small></div>
+          </div>
+          <div style="text-align:right">
+            <div class="lbl">Śr. białko</div>
+            <div class="big tnum">168<small> g</small></div>
+          </div>
+        </div>
+        <div class="trend-chart" id="trendChart"></div>
+        <div class="pattern">
+          <span class="tag">Wzorzec</span>
+          <span class="txt">Jesz za mało białka w <b>dni wolne</b> — wt. i ndz. ~30g poniżej.</span>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ============ RIGHT COLUMN ============ -->
+    <section class="col" data-screen-label="Plan rail">
+
+      <!-- HIT YOUR TARGETS / AUTOFILL -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">05</span><span class="card-title">Trafić w cele</span></div>
+          <span class="pill">Pozostało</span>
+        </div>
+        <div class="fill-gap">
+          <div class="row"><span class="k">Kalorie do celu</span><span class="v tnum" id="gapKcal">1 080<small> kcal</small></span></div>
+          <div class="row"><span class="k">Białko do celu</span><span class="v tnum" id="gapP">54<small> g</small></span></div>
+        </div>
+        <div id="suggestList"></div>
+        <button class="sg-add" id="addSuggestBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Dodaj własny produkt
+        </button>
+        <button class="autofill-btn" id="autofillBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg>
+          Uzupełnij mój dzień
+        </button>
+      </article>
+
+      <!-- MY MEALS -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">06</span><span class="card-title">Moje posiłki</span></div>
+          <span class="pill">Zapisane · dotknij, by dodać</span>
+        </div>
+        <div id="myMeals"></div>
+      </article>
+
+      <!-- INSPIRATION -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">07</span><span class="card-title">Inspiracje</span></div>
+          <span class="pill">Wysokobiałkowe</span>
+        </div>
+        <div class="insp-grid">
+          <div class="insp">
+            <div class="ph"><span>zdjęcie posiłku</span></div>
+            <div class="ib"><div class="n">Miska z łososiem teriyaki</div><div class="m"><b>610 kcal</b> · 48P 52C 18F</div></div>
+          </div>
+          <div class="insp">
+            <div class="ph"><span>zdjęcie posiłku</span></div>
+            <div class="ib"><div class="n">Placki z twarogu</div><div class="m"><b>420 kcal</b> · 38P 44C 9F</div></div>
+          </div>
+          <div class="insp">
+            <div class="ph"><span>zdjęcie posiłku</span></div>
+            <div class="ib"><div class="n">Pad thai z tofu</div><div class="m"><b>540 kcal</b> · 32P 64C 16F</div></div>
+          </div>
+          <div class="insp">
+            <div class="ph"><span>zdjęcie posiłku</span></div>
+            <div class="ib"><div class="n">Wrap z wołowiną i halloumi</div><div class="m"><b>580 kcal</b> · 44P 40C 24F</div></div>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+  </main>
+</div>
+
+<div id="tweaks-root"></div>
+
+<script src="app.js"></script>
+<script src="nutrition.js"></script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="tweaks-app.jsx"></script>
+
+</body>
+</html>

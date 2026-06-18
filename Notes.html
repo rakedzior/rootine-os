@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="light" data-palette="celadon" data-font="serif">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rootine OS · Notatki</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="notes.css">
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#efe8da"/>
+  <rect x="32" y="26" width="36" height="46" rx="4" fill="none" stroke="#6f9d84" stroke-width="4"/>
+  <path d="M40 38h20M40 48h20M40 58h12" stroke="#bd8769" stroke-width="3" stroke-linecap="round"/>
+  <text x="50" y="90" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#6f6857">Notes</text>
+</svg>
+</template>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== TOP BAR ===================== -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="wm"><b>Rootine</b>&nbsp;OS&nbsp;<span>// v1.0</span></span>
+    </div>
+    <nav class="nav">
+      <a href="Rootine OS.html">Start</a>
+      <a href="Health.html">Sport</a>
+      <a href="Nutrition.html">Dieta</a>
+      <a href="Finance.html">Finanse</a>
+      <a href="Goals.html">Cele</a>
+      <a href="Desk.html">Biuro</a>
+      <a href="Travel.html">Podróże</a>
+      <a href="Notes.html" class="active">Notatki</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="tcluster">
+      <div class="tmini">
+        <span class="ic" id="topWeatherIc"></span>
+        <span class="tt">
+          <b id="topTemp" class="tnum">14°</b>
+          <small id="topLoc">Kraków</small>
+        </span>
+      </div>
+      <span class="tdiv"></span>
+      <div class="tclock tnum"><span id="topClock">15:38</span><span class="s" id="topClockSec">:00</span></div>
+      <span class="tdiv"></span>
+      <div class="avatar">YOU</div>
+    </div>
+  </header>
+
+  <!-- ===================== GRID ===================== -->
+  <main class="grid">
+
+    <!-- ============ LEFT COLUMN ============ -->
+    <section class="col" data-screen-label="Capture rail">
+
+      <!-- QUICK CAPTURE -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">01</span><span class="card-title">Szybki zapis</span></div>
+          <span class="pill accent"><span class="led"></span>Szkic</span>
+        </div>
+        <textarea class="cap-area" id="capArea" placeholder="Zapisz myśl, listę, cokolwiek…"></textarea>
+        <div class="cap-collrow">
+          <span class="lbl">Do</span>
+          <button class="cap-chip c-personal on" data-coll="personal">Osobiste</button>
+          <button class="cap-chip c-work" data-coll="work">Praca</button>
+          <button class="cap-chip c-ideas" data-coll="ideas">Pomysły</button>
+        </div>
+        <div class="cap-foot">
+          <div class="seg" id="capType">
+            <button class="on" data-type="note">Notatka</button>
+            <button data-type="checklist">Lista</button>
+            <button data-type="quote">Cytat</button>
+          </div>
+          <button class="cap-save" id="capSave">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+            Zapisz
+          </button>
+        </div>
+      </article>
+
+      <!-- COLLECTIONS -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">02</span><span class="card-title">Kolekcje</span></div>
+          <span class="pill" id="totalCount">11 notatek</span>
+        </div>
+        <div id="collList">
+          <div class="coll c-all on" data-coll="all"><span class="dot"></span><span class="n">Wszystkie notatki</span><span class="ct" data-count="all">11</span></div>
+          <div class="coll c-personal" data-coll="personal"><span class="dot"></span><span class="n">Osobiste</span><span class="ct" data-count="personal">3</span></div>
+          <div class="coll c-work" data-coll="work"><span class="dot"></span><span class="n">Praca</span><span class="ct" data-count="work">3</span></div>
+          <div class="coll c-ideas" data-coll="ideas"><span class="dot"></span><span class="n">Pomysły</span><span class="ct" data-count="ideas">2</span></div>
+          <div class="coll c-journal" data-coll="journal"><span class="dot"></span><span class="n">Dziennik</span><span class="ct" data-count="journal">2</span></div>
+          <div class="coll c-recipes" data-coll="recipes"><span class="dot"></span><span class="n">Przepisy</span><span class="ct" data-count="recipes">1</span></div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ============ CENTER COLUMN ============ -->
+    <section class="col" data-screen-label="Note board">
+
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">03</span><span class="card-title" id="boardTitle">Wszystkie notatki</span></div>
+          <span class="pill" id="boardCount">11 notatek · 2 przypięte</span>
+        </div>
+        <div class="nboard" id="nboard"></div>
+      </article>
+
+    </section>
+
+    <!-- ============ RIGHT COLUMN ============ -->
+    <section class="col" data-screen-label="Journal rail">
+
+      <!-- TODAY'S JOURNAL -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">04</span><span class="card-title">Dziennik dziś</span></div>
+          <span class="pill">17 cze</span>
+        </div>
+        <div class="prompt">
+          <div class="k">Pytanie dnia</div>
+          <div class="q">Jaki jeden mały sukces z dziś warto zapamiętać?</div>
+        </div>
+        <div class="tmpl-btns">
+          <button class="tmpl" data-tmpl="journal">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+            <span class="tx"><span class="n">Wpis do dziennika</span><span class="d">Pisz swobodnie z pytaniem dnia</span></span>
+          </button>
+          <button class="tmpl" data-tmpl="gratitude">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21C5 16 3 12 3 8.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 9 2.5C21 12 19 16 12 21z"/></svg></span>
+            <span class="tx"><span class="n">3 wdzięczności</span><span class="d">Szablon listy</span></span>
+          </button>
+          <button class="tmpl" data-tmpl="meeting">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v12H4z"/><path d="M8 21h8M12 17v4"/></svg></span>
+            <span class="tx"><span class="n">Notatki ze spotkania</span><span class="d">Szablon agenda · zadania</span></span>
+          </button>
+        </div>
+      </article>
+
+      <!-- RECENTLY EDITED -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">05</span><span class="card-title">Ostatnio edytowane</span></div>
+          <span class="pill">Ostatnie 5</span>
+        </div>
+        <div id="recentList"></div>
+      </article>
+
+    </section>
+
+  </main>
+</div>
+
+<div id="tweaks-root"></div>
+
+<script src="app.js"></script>
+<script src="notes.js"></script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="tweaks-app.jsx"></script>
+
+</body>
+</html>

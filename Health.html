@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="light" data-palette="celadon" data-font="serif">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rootine OS · Sport</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="health.css">
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#efe8da"/>
+  <path d="M50 70c-12-8-20-15-20-25a10 10 0 0 1 20-3 10 10 0 0 1 20 3c0 10-8 17-20 25z" fill="#bd8769"/>
+  <text x="50" y="90" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#6f6857">Sport</text>
+</svg>
+</template>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== TOP BAR ===================== -->
+  <header class="topbar" style="gap:16px">
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="wm"><b>Rootine</b>&nbsp;OS&nbsp;<span>v2.0</span></span>
+    </div>
+    <nav class="nav">
+      <a href="Start.html">Start</a>
+      <a href="Health.html" class="active">Sport</a>
+      <a href="Nutrition.html">Dieta</a>
+      <a href="Finance.html">Finanse</a>
+      <a href="Goals.html">Cele</a>
+      <a href="Desk.html">Biuro</a>
+      <a href="Travel.html">Podróże</a>
+      <a href="Notes.html">Notatki</a>
+    </nav>
+    <div class="tb-search">
+      <svg class="tb-srch-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="tb-srch-inp" type="text" placeholder="Szukaj lub wpisz polecenie…" />
+      <span class="tb-kbd">⌘K</span>
+    </div>
+    <button class="tb-add">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      Dodaj
+    </button>
+    <div class="tcluster">
+      <div class="tmini">
+        <span class="ic" id="topWeatherIc"></span>
+        <span class="tt">
+          <b id="topTemp" class="tnum">24°</b>
+          <small id="topLoc">Kraków</small>
+        </span>
+      </div>
+      <span class="tdiv"></span>
+      <div class="tclock-col">
+        <div class="tclock tnum"><span id="topClock">11:39</span><span class="s" id="topClockSec">:00</span></div>
+        <div class="tclock-date" id="topDate">Czwartek, 18 czerwca</div>
+      </div>
+      <span class="tdiv"></span>
+      <div class="avatar-wrap">
+        <div class="avatar">YOU</div>
+        <svg class="avatar-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== GRID ===================== -->
+  <main class="grid">
+
+    <!-- ============ LEFT COLUMN ============ -->
+    <section class="col" data-screen-label="Recovery rail">
+
+      <!-- READINESS -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Regeneracja i gotowość</span>
+            <svg class="card-info-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          </div>
+        </div>
+        <div class="readiness-top">
+          <div class="h-ring">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="var(--surface-inset)" stroke-width="9"/>
+              <circle cx="50" cy="50" r="42" fill="none" stroke="var(--acc-a)" stroke-width="9" stroke-linecap="round"
+                      stroke-dasharray="263.9" stroke-dashoffset="47.5" transform="rotate(-90 50 50)"/>
+            </svg>
+            <div class="rt"><b class="tnum">82</b><small>Gotowy</small></div>
+          </div>
+          <div class="meta">
+            <div class="a">Gotów do treningu</div>
+            <div class="b">Zregenerowany · zwiększ intensywność</div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-cell"><div class="k"><i style="background:var(--acc-a)"></i>Sen</div><div class="v tnum">7:24<small>h</small></div><div class="d up">+58m vs śr.</div></div>
+          <div class="stat-cell"><div class="k"><i style="background:var(--ev-blue)"></i>HRV</div><div class="v tnum">68<small>ms</small></div><div class="d up">Zbalansowane</div></div>
+          <div class="stat-cell"><div class="k"><i style="background:var(--acc-b)"></i>Tętno spocz.</div><div class="v tnum">52<small>bpm</small></div><div class="d up">−2 bpm</div></div>
+          <div class="stat-cell"><div class="k"><i style="background:var(--ev-lav)"></i>Zakwasy</div><div class="v">Niskie</div><div class="d">Nogi jeszcze czuć</div></div>
+        </div>
+      </article>
+
+      <!-- BODY METRICS -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Pomiary ciała</span></div>
+          <span class="pill">30 dni</span>
+        </div>
+        <div class="metric-head">
+          <div class="big tnum">78.4<small> kg</small></div>
+          <div class="delta down">−1.2 kg</div>
+        </div>
+        <div class="spark" id="weightSpark"></div>
+        <div class="stat-grid" style="margin-top:14px">
+          <div class="stat-cell"><div class="k">Tkanka tłuszczowa</div><div class="v tnum">14.2<small>%</small></div><div class="d up">−0,6%</div></div>
+          <div class="stat-cell"><div class="k">Masa beztłuszczowa</div><div class="v tnum">67.3<small>kg</small></div><div class="d up">+0,4kg</div></div>
+        </div>
+        <div class="meas">
+          <div class="meas-head">
+            <span class="meas-title">Obwody</span>
+            <button class="meas-edit" id="measEdit">Aktualizuj</button>
+          </div>
+          <div id="measList"></div>
+        </div>
+      </article>
+
+      <!-- INTEGRATIONS -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Integracje</span></div>
+        </div>
+        <div class="integ">
+          <div class="integ-row">
+            <div class="integ-icon strava">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169"/></svg>
+            </div>
+            <div class="integ-info">
+              <div class="integ-name">Strava</div>
+            </div>
+            <div class="integ-status">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              Połączono
+            </div>
+          </div>
+          <div class="integ-row">
+            <div class="integ-icon garmin">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 2a8 8 0 1 1-8 8 8 8 0 0 1 8-8zm0 2a6 6 0 1 0 6 6 6 6 0 0 0-6-6zm0 2a4 4 0 1 1-4 4 4 4 0 0 1 4-4zm0 2a2 2 0 1 0 2 2 2 2 0 0 0-2-2z"/></svg>
+            </div>
+            <div class="integ-info">
+              <div class="integ-name">Garmin</div>
+            </div>
+            <div class="integ-status">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              Połączono
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ============ CENTER COLUMN ============ -->
+    <section class="col" data-screen-label="Training center">
+
+      <!-- TODAY'S TRAINING CARD -->
+      <article class="card">
+
+        <!-- PRE-SESSION VIEW -->
+        <div id="presess">
+          <div class="card-head" style="margin-bottom:16px">
+            <div class="lhs"><span class="card-title">Dzisiejszy trening</span></div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="th-plan-btn">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                Plan dnia
+              </button>
+              <button class="th-dots">···</button>
+            </div>
+          </div>
+
+          <div class="th-layout">
+            <div class="th-left">
+              <span class="th-badge">Planowany</span>
+              <div class="th-name">Push A</div>
+              <div class="th-sub">Klatka i barki · Hipertrofia · Tydzień 6 z 8</div>
+
+              <div class="th-metrics">
+                <div class="th-m">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+                  <div><span>Objętość</span><b>2190 kg</b></div>
+                </div>
+                <div class="th-m">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <div><span>Czas</span><b>~58 min</b></div>
+                </div>
+                <div class="th-m">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                  <div><span>Serie</span><b>20</b></div>
+                </div>
+                <div class="th-m">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                  <div><span>Kalorie</span><b>~420 kcal</b></div>
+                </div>
+              </div>
+
+              <div class="th-focus">
+                <span class="tf-lbl">Główny fokus</span>
+                <span class="tf-tag">Klatka piersiowa</span>
+                <span class="tf-tag">Barki</span>
+                <span class="tf-tag">Tricepsy</span>
+              </div>
+            </div>
+
+            <div class="th-right">
+              <!-- Front body -->
+              <svg class="body-svg" viewBox="0 0 68 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- head -->
+                <ellipse cx="34" cy="12" rx="9.5" ry="11" fill="#cdc8be"/>
+                <!-- neck -->
+                <rect x="29.5" y="22" width="9" height="8" rx="3" fill="#cdc8be"/>
+                <!-- left deltoid highlighted -->
+                <ellipse cx="15" cy="35" rx="8.5" ry="7.5" fill="#c97a52" opacity="0.85"/>
+                <!-- right deltoid highlighted -->
+                <ellipse cx="53" cy="35" rx="8.5" ry="7.5" fill="#c97a52" opacity="0.85"/>
+                <!-- torso base -->
+                <path d="M22 27 C17 31 15 50 17 65 L51 65 C53 50 51 31 46 27 C41 24 27 24 22 27Z" fill="#cdc8be"/>
+                <!-- pectorals highlighted -->
+                <path d="M22 29 C21 40 24 54 34 55 C44 54 47 40 46 29 C42 26 26 26 22 29Z" fill="#c97a52" opacity="0.82"/>
+                <!-- abdomen -->
+                <path d="M20 64 L48 64 L46 88 L22 88Z" fill="#b8b3a8"/>
+                <!-- hips -->
+                <path d="M19 87 L49 87 L48 98 L20 98Z" fill="#cdc8be"/>
+                <!-- left arm -->
+                <rect x="7" y="42" width="10" height="27" rx="5" fill="#cdc8be"/>
+                <!-- left forearm -->
+                <rect x="7.5" y="71" width="9" height="20" rx="4" fill="#b8b3a8"/>
+                <!-- right arm -->
+                <rect x="51" y="42" width="10" height="27" rx="5" fill="#cdc8be"/>
+                <!-- right forearm -->
+                <rect x="51.5" y="71" width="9" height="20" rx="4" fill="#b8b3a8"/>
+                <!-- triceps subtle highlight (back of arms) -->
+                <!-- left thigh -->
+                <path d="M20 98 L32 98 L30 135 L18 135Z" fill="#cdc8be" rx="4"/>
+                <!-- right thigh -->
+                <path d="M36 98 L48 98 L50 135 L38 135Z" fill="#cdc8be" rx="4"/>
+                <!-- left calf -->
+                <path d="M18 135 L30 135 L28 155 L17 155Z" fill="#b8b3a8" rx="3"/>
+                <!-- right calf -->
+                <path d="M38 135 L50 135 L51 155 L40 155Z" fill="#b8b3a8" rx="3"/>
+              </svg>
+
+              <!-- Back body -->
+              <svg class="body-svg" viewBox="0 0 68 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- head -->
+                <ellipse cx="34" cy="12" rx="9.5" ry="11" fill="#cdc8be"/>
+                <!-- neck -->
+                <rect x="29.5" y="22" width="9" height="8" rx="3" fill="#cdc8be"/>
+                <!-- left deltoid back (slight highlight) -->
+                <ellipse cx="15" cy="35" rx="8.5" ry="7.5" fill="#c97a52" opacity="0.55"/>
+                <!-- right deltoid back -->
+                <ellipse cx="53" cy="35" rx="8.5" ry="7.5" fill="#c97a52" opacity="0.55"/>
+                <!-- torso back -->
+                <path d="M22 27 C17 31 15 50 17 65 L51 65 C53 50 51 31 46 27 C41 24 27 24 22 27Z" fill="#cdc8be"/>
+                <!-- trapezius -->
+                <path d="M26 27 C25 34 34 37 34 37 C34 37 43 34 42 27 C39 25 29 25 26 27Z" fill="#b8b3a8"/>
+                <!-- lats -->
+                <path d="M17 40 C15 52 18 64 22 65 L34 65 C34 65 22 60 21 50 Z" fill="#b0aba0"/>
+                <path d="M51 40 C53 52 50 64 46 65 L34 65 C34 65 46 60 47 50 Z" fill="#b0aba0"/>
+                <!-- lower back -->
+                <path d="M20 64 L48 64 L46 88 L22 88Z" fill="#b8b3a8"/>
+                <!-- hips / glutes -->
+                <path d="M19 87 L49 87 L48 98 L20 98Z" fill="#cdc8be"/>
+                <!-- triceps highlighted (worked in push) -->
+                <rect x="7" y="42" width="10" height="27" rx="5" fill="#cdc8be"/>
+                <rect x="7" y="44" width="4.5" height="18" rx="3" fill="#c97a52" opacity="0.5"/>
+                <rect x="51" y="42" width="10" height="27" rx="5" fill="#cdc8be"/>
+                <rect x="56.5" y="44" width="4.5" height="18" rx="3" fill="#c97a52" opacity="0.5"/>
+                <!-- forearms -->
+                <rect x="7.5" y="71" width="9" height="20" rx="4" fill="#b8b3a8"/>
+                <rect x="51.5" y="71" width="9" height="20" rx="4" fill="#b8b3a8"/>
+                <!-- thighs -->
+                <path d="M20 98 L32 98 L30 135 L18 135Z" fill="#cdc8be"/>
+                <path d="M36 98 L48 98 L50 135 L38 135Z" fill="#cdc8be"/>
+                <!-- calves -->
+                <path d="M18 135 L30 135 L28 155 L17 155Z" fill="#b8b3a8"/>
+                <path d="M38 135 L50 135 L51 155 L40 155Z" fill="#b8b3a8"/>
+              </svg>
+            </div>
+          </div>
+
+          <button class="btn-primary" id="startBtn" style="margin-top:20px">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M8 5v14l11-7z"/></svg>
+            <span id="startLabel">Rozpocznij sesję</span>
+          </button>
+
+          <div class="th-actions2">
+            <button class="btn-ghost" id="tmplBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Podgląd treningu
+            </button>
+            <label class="th-mark">
+              <input type="checkbox" id="doneCheck">
+              Oznacz jako wykonany
+            </label>
+          </div>
+
+          <div id="sessPreview" class="ex-list" style="display:none;margin-top:6px"></div>
+
+          <div class="th-next">
+            <div>
+              <div class="th-next-lbl">Następny trening</div>
+              <div class="th-next-name">Pull A</div>
+              <div class="th-next-info">Plecy i biceps</div>
+              <div class="th-next-date">Sobota, 20 czerwca</div>
+            </div>
+            <button class="th-next-arr">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- IN-SESSION VIEW (hidden until start) -->
+        <div id="sessRunning" style="display:none">
+          <div class="sess-hero">
+            <div>
+              <div class="title">Push A</div>
+              <div class="sub">Klatka i barki · Hipertrofia · Tydzień 6 z 8</div>
+            </div>
+            <span class="badge" id="sessState">W trakcie</span>
+          </div>
+          <div class="sess-stats">
+            <div class="c"><div class="k">Ćwiczenia</div><div class="v tnum">6</div></div>
+            <div class="c"><div class="k">Serie</div><div class="v tnum"><span id="sSetsDone">0</span><small>/20</small></div></div>
+            <div class="c"><div class="k">Objętość</div><div class="v tnum"><span id="sVol">0</span><small> kg</small></div></div>
+            <div class="c"><div class="k">Czas</div><div class="v tnum" id="sElapsed">0:00</div></div>
+          </div>
+          <div id="logger" class="logger"></div>
+          <div class="rest-bar hidden" id="restBar">
+            <div class="rest-time" id="restTime">2:00</div>
+            <div class="rest-mid">
+              <div class="lbl">Przerwa · następna seria</div>
+              <div class="rest-track"><i id="restFill" style="width:100%"></i></div>
+            </div>
+            <div class="rest-btns">
+              <button id="restAdd">+15s</button>
+              <button class="solid" id="restSkip">Pomiń</button>
+            </div>
+          </div>
+          <div class="sess-actions" style="margin-top:16px">
+            <button class="btn-primary" id="finishBtn">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+              Zakończ sesję
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- WEEKLY CALENDAR -->
+      <article class="card">
+        <div class="card-head" style="flex-wrap:wrap;gap:10px">
+          <div class="lhs"><span class="card-title">Ten tydzień</span></div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div class="week-legend">
+              <span class="wleg"><i style="background:var(--ev-clay)"></i>Trening</span>
+              <span class="wleg"><i style="background:var(--ev-lav)"></i>Cardio</span>
+              <span class="wleg"><i style="background:var(--ev-green)"></i>Mobilność</span>
+              <span class="wleg"><i style="background:var(--surface-inset);border:1px solid var(--border)"></i>Odpoczynek</span>
+            </div>
+            <a href="#" class="pill" style="text-decoration:none">Pełny kalendarz</a>
+            <div style="display:flex;gap:2px">
+              <button class="navbtn" style="width:26px;height:26px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <button class="navbtn" style="width:26px;height:26px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="week-cal">
+          <!-- PON 15 - done -->
+          <div class="wk-day past">
+            <div class="wkd-h">
+              <div class="wkd-dow">PON</div>
+              <div class="wkd-date">15
+                <svg class="wkd-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+            </div>
+            <div class="wkd-chip sc-push">Push B<span class="ty">Klatka i barki</span></div>
+            <div class="wkd-stats">
+              <span class="s">SERIE 18&nbsp;&nbsp;OBJ. 1820 kg</span>
+              <span class="s">58 min</span>
+            </div>
+          </div>
+          <!-- WT 16 - done -->
+          <div class="wk-day past">
+            <div class="wkd-h">
+              <div class="wkd-dow">WT</div>
+              <div class="wkd-date">16
+                <svg class="wkd-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+            </div>
+            <div class="wkd-chip sc-run">Lekkie 5K<span class="ty">Bieg</span></div>
+            <div class="wkd-stats">
+              <span class="s">5.1 km&nbsp;&nbsp;27:30</span>
+              <span class="s">—</span>
+            </div>
+          </div>
+          <!-- ŚR 17 - done -->
+          <div class="wk-day past">
+            <div class="wkd-h">
+              <div class="wkd-dow">ŚR</div>
+              <div class="wkd-date">17
+                <svg class="wkd-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+            </div>
+            <div class="wkd-chip sc-pull">Pull A<span class="ty">Plecy i biceps</span></div>
+            <div class="wkd-stats">
+              <span class="s">SERIE 20&nbsp;&nbsp;OBJ. 1850 kg</span>
+              <span class="s">54 min</span>
+            </div>
+          </div>
+          <!-- CZW 18 - DZIŚ -->
+          <div class="wk-day today">
+            <div class="wkd-h">
+              <div class="wkd-dow">CZW · DZIŚ</div>
+              <div class="wkd-date">18</div>
+            </div>
+            <div class="wkd-chip sc-push">Push A<span class="ty">Klatka i barki</span></div>
+            <div class="wkd-stats">
+              <span class="s">SERIE 20&nbsp;&nbsp;OBJ. 2190 kg</span>
+              <span class="s">~58 min</span>
+            </div>
+          </div>
+          <!-- PT 19 - future -->
+          <div class="wk-day future">
+            <div class="wkd-h">
+              <div class="wkd-dow">PT</div>
+              <div class="wkd-date">19</div>
+            </div>
+            <div class="wkd-chip sc-legs">Nogi<span class="ty">Nogi</span></div>
+            <div class="wkd-stats">
+              <span class="s">SERIE 19&nbsp;&nbsp;OBJ. 2260 kg</span>
+              <span class="s">~62 min</span>
+            </div>
+          </div>
+          <!-- SOB 20 - future -->
+          <div class="wk-day future">
+            <div class="wkd-h">
+              <div class="wkd-dow">SOB</div>
+              <div class="wkd-date">20</div>
+            </div>
+            <div class="wkd-chip sc-run">Długi bieg<span class="ty">Trail</span></div>
+            <div class="wkd-stats">
+              <span class="s">14 km</span>
+              <span class="s">1:18:40 · 152 BPM</span>
+            </div>
+          </div>
+          <!-- NIEDZ 21 - rest -->
+          <div class="wk-day rest-day">
+            <div class="wkd-h">
+              <div class="wkd-dow">NIEDZ</div>
+              <div class="wkd-date">21</div>
+            </div>
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;opacity:.35">
+              <svg viewBox="0 0 40 65" width="34" height="56" fill="currentColor" color="var(--ink-3)">
+                <ellipse cx="20" cy="9" rx="7" ry="7"/>
+                <path d="M10 18 C10 18 8 30 10 42 L15 42 L17 55 L23 55 L25 42 L30 42 C32 30 30 18 30 18 C27 15 13 15 10 18Z"/>
+                <path d="M10 22 L4 36 L9 38 L14 26Z"/>
+                <path d="M30 22 L36 36 L31 38 L26 26Z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="week-foot">
+          <span class="week-foot-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="margin-right:4px;vertical-align:middle"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Średni trening: 67 min · 19 serii · 2060 kg objętości
+          </span>
+          <span class="week-load high">Obciążenie tygodnia: Wysokie</span>
+        </div>
+      </article>
+
+      <!-- PROGRESSIVE OVERLOAD -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Progresja obciążeń</span>
+            <svg class="card-info-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          </div>
+          <div class="po-tabs" id="poTabs">
+            <button class="on" data-lift="Bench">Bench</button>
+            <button data-lift="Squat">Squat</button>
+            <button data-lift="Deadlift">Deadlift</button>
+            <button data-lift="OHP">OHP</button>
+          </div>
+        </div>
+        <div class="po-head">
+          <div>
+            <div class="po-meta"><div class="lbl" id="poLbl">Wyciskanie leżąc · szac. 1RM</div></div>
+            <div class="po-now"><span id="poNow">102.5</span><small> kg</small></div>
+          </div>
+          <div class="po-delta" id="poDelta">▲ +10,5 kg · 8 miesięcy</div>
+        </div>
+        <div class="po-chart" id="poChart"></div>
+      </article>
+
+    </section>
+
+    <!-- ============ RIGHT COLUMN ============ -->
+    <section class="col" data-screen-label="Activity rail">
+
+      <!-- WEEKLY LOAD -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Obciążenie treningowe</span></div>
+          <button class="pill" style="border:0;cursor:pointer;display:flex;align-items:center;gap:4px">
+            Objętość (kg)
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+        </div>
+        <div class="vol-chart">
+          <div class="b"><i style="height:52%"></i><span>P</span></div>
+          <div class="b lt"><i style="height:24%"></i><span>W</span></div>
+          <div class="b"><i style="height:68%"></i><span>Ś</span></div>
+          <div class="b today"><i style="height:78%"></i><span>C</span></div>
+          <div class="b lt"><i style="height:4%"></i><span>P</span></div>
+          <div class="b lt"><i style="height:4%"></i><span>S</span></div>
+          <div class="b lt"><i style="height:4%"></i><span>N</span></div>
+        </div>
+        <div class="vol-foot">
+          <div><span class="k">Tonaż tygodnia</span><span class="v tnum">42 180 kg</span></div>
+          <div><span class="k">Średnia / dzień</span><span class="v tnum">6 025 kg</span></div>
+          <div><span class="k">vs poprz.</span><span class="v tnum up">+6%</span></div>
+        </div>
+      </article>
+
+      <!-- SESSION HISTORY -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Historia sesji</span></div>
+          <span class="pill">Ostatnie 5</span>
+        </div>
+        <div class="sh-row">
+          <div class="sh-date"><div class="dd">11</div><div class="mo">cze</div></div>
+          <div class="sh-main"><div class="n"><span class="sh-tag" style="background:var(--ev-green)"></span>Nogi · czworogłowe</div><div class="m">19 serii · 14 200 kg · 1:02</div></div>
+          <div class="sh-feel"><div class="sh-bars"><i class="on" style="height:7px"></i><i class="on" style="height:9px"></i><i class="on" style="height:11px"></i><i class="on" style="height:13px"></i><i style="height:15px"></i></div><div class="sh-rpe">RPE 8</div></div>
+        </div>
+        <div class="sh-row">
+          <div class="sh-date"><div class="dd">10</div><div class="mo">cze</div></div>
+          <div class="sh-main"><div class="n"><span class="sh-tag" style="background:var(--ev-blue)"></span>Pull A · plecy</div><div class="m">20 serii · 11 800 kg · 0:58</div></div>
+          <div class="sh-feel"><div class="sh-bars"><i class="on" style="height:7px"></i><i class="on" style="height:9px"></i><i class="on" style="height:11px"></i><i class="on" style="height:13px"></i><i style="height:15px"></i></div><div class="sh-rpe">RPE 7</div></div>
+        </div>
+        <div class="sh-row">
+          <div class="sh-date"><div class="dd">9</div><div class="mo">cze</div></div>
+          <div class="sh-main"><div class="n"><span class="sh-tag" style="background:var(--ev-lav)"></span>Lekkie 5K · strefa 2</div><div class="m">5,1 km · 27:30 · 5:23 /km</div></div>
+          <div class="sh-feel"><div class="sh-bars"><i class="on" style="height:7px"></i><i class="on" style="height:9px"></i><i style="height:11px"></i><i style="height:13px"></i><i style="height:15px"></i></div><div class="sh-rpe">RPE 4</div></div>
+        </div>
+        <div class="sh-row">
+          <div class="sh-date"><div class="dd">8</div><div class="mo">cze</div></div>
+          <div class="sh-main"><div class="n"><span class="sh-tag" style="background:var(--ev-clay)"></span>Push B · klatka</div><div class="m">18 serii · 9 240 kg · 0:54</div></div>
+          <div class="sh-feel"><div class="sh-bars"><i class="on" style="height:7px"></i><i class="on" style="height:9px"></i><i class="on" style="height:11px"></i><i class="on" style="height:13px"></i><i style="height:15px"></i></div><div class="sh-rpe">RPE 7</div></div>
+        </div>
+        <div class="sh-row">
+          <div class="sh-date"><div class="dd">6</div><div class="mo">cze</div></div>
+          <div class="sh-main"><div class="n"><span class="sh-tag" style="background:var(--ev-lav)"></span>Długi bieg · trail</div><div class="m">14 km · 1:18:40 · 5:37 /km</div></div>
+          <div class="sh-feel"><div class="sh-bars"><i class="on" style="height:7px"></i><i class="on" style="height:9px"></i><i class="on" style="height:11px"></i><i style="height:13px"></i><i style="height:15px"></i></div><div class="sh-rpe">RPE 6</div></div>
+        </div>
+      </article>
+
+      <!-- RUNNING -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Bieganie</span></div>
+          <span class="pill"><span class="led"></span>Zsynchronizowano</span>
+        </div>
+        <div class="run-card">
+          <div class="run-title">
+            <span class="n">Tempo nad rzeką</span>
+            <span class="src">Strava · śr</span>
+          </div>
+          <div class="run-map">
+            <svg viewBox="0 0 240 80" preserveAspectRatio="none">
+              <path d="M12 60 C 40 20, 70 70, 100 40 S 160 10, 190 48 S 220 66, 232 30" fill="none" stroke="var(--acc-b)" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="12" cy="60" r="4" fill="var(--acc-a)"/>
+              <circle cx="232" cy="30" r="4" fill="var(--acc-b)"/>
+            </svg>
+          </div>
+          <div class="run-stats">
+            <div><span class="k">Dystans</span><span class="v tnum">8.4<small> km</small></span></div>
+            <div><span class="k">Tempo</span><span class="v tnum">5:12<small> /km</small></span></div>
+            <div><span class="k">Czas</span><span class="v tnum">43:42</span></div>
+            <div><span class="k">Śr. tętno</span><span class="v tnum">152</span></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- REHAB & MOBILITY -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="card-title">Rehabilitacja i mobilność</span></div>
+          <span class="pill" id="rehabCount">1 / 4</span>
+        </div>
+        <div id="rehabList">
+          <div class="rehab done">
+            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg></span>
+            <div class="info"><div class="n">Rotacje zewn. barku z gumą</div><div class="c">Rehab · 2×15</div></div>
+            <span class="dur">8 min</span>
+          </div>
+          <div class="rehab">
+            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg></span>
+            <div class="info"><div class="n">Otwieranie odcinka piersiowego</div><div class="c">Mobilność · 5 powt.</div></div>
+            <span class="dur">5 min</span>
+          </div>
+          <div class="rehab">
+            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg></span>
+            <div class="info"><div class="n">Rozciąganie zginaczy bioder</div><div class="c">Stretching · 2×45s</div></div>
+            <span class="dur">6 min</span>
+          </div>
+          <div class="rehab">
+            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg></span>
+            <div class="info"><div class="n">Mobilność łydek i kostek</div><div class="c">Regeneracja · 3 serie</div></div>
+            <span class="dur">4 min</span>
+          </div>
+        </div>
+        <a href="#" class="rehab-all">Zobacz wszystkie zadania
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      </article>
+
+    </section>
+
+  </main>
+</div>
+
+<div id="tweaks-root"></div>
+
+<script src="app.js"></script>
+<script src="health.js"></script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="tweaks-app.jsx"></script>
+
+</body>
+</html>

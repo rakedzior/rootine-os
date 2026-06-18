@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="light" data-palette="celadon" data-font="serif">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rootine OS · Finanse</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="finance.css">
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#efe8da"/>
+  <path d="M28 64 L44 50 L56 58 L74 38" fill="none" stroke="#6f9d84" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="74" cy="38" r="5" fill="#bd8769"/>
+  <text x="50" y="88" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#6f6857">Finance</text>
+</svg>
+</template>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== TOP BAR ===================== -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="wm"><b>Rootine</b>&nbsp;OS&nbsp;<span>// v1.0</span></span>
+    </div>
+    <nav class="nav">
+      <a href="Rootine OS.html">Start</a>
+      <a href="Health.html">Sport</a>
+      <a href="Nutrition.html">Dieta</a>
+      <a href="Finance.html" class="active">Finanse</a>
+      <a href="Goals.html">Cele</a>
+      <a href="Desk.html">Biuro</a>
+      <a href="Travel.html">Podróże</a>
+      <a href="Notes.html">Notatki</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="tcluster">
+      <div class="tmini">
+        <span class="ic" id="topWeatherIc"></span>
+        <span class="tt">
+          <b id="topTemp" class="tnum">14°</b>
+          <small id="topLoc">Kraków</small>
+        </span>
+      </div>
+      <span class="tdiv"></span>
+      <div class="tclock tnum"><span id="topClock">15:38</span><span class="s" id="topClockSec">:00</span></div>
+      <span class="tdiv"></span>
+      <div class="avatar">YOU</div>
+    </div>
+  </header>
+
+  <!-- ===================== GRID ===================== -->
+  <main class="grid">
+
+    <!-- ============ LEFT COLUMN ============ -->
+    <section class="col" data-screen-label="Net worth rail">
+
+      <!-- NET WORTH -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">01</span><span class="card-title">Majątek netto</span></div>
+          <span class="pill accent"><span class="led"></span>4 konta</span>
+        </div>
+        <div class="nw-head">
+          <div class="nw-amt tnum">92,260<small> zł</small></div>
+          <div class="nw-delta up">▲ +4.2%</div>
+        </div>
+        <div class="nw-sub">Aktywa 116 860 · Długi 24 600</div>
+        <div class="nw-spark" id="nwSpark"></div>
+        <div class="accts">
+          <div class="acct">
+            <span class="ic"><i style="background:var(--acc-a)"></i></span>
+            <div class="nm"><div class="n">Konto · Finanteq</div><div class="t">Konto główne</div></div>
+            <span class="amt tnum">24,860 zł</span>
+          </div>
+          <div class="acct">
+            <span class="ic"><i style="background:var(--ev-green)"></i></span>
+            <div class="nm"><div class="n">Konto oszczędnościowe</div><div class="t">3,2% w skali roku</div></div>
+            <span class="amt tnum">38,500 zł</span>
+          </div>
+          <div class="acct">
+            <span class="ic"><i style="background:var(--ev-blue)"></i></span>
+            <div class="nm"><div class="n">Inwestycje</div><div class="t">ETF + IKE</div></div>
+            <span class="amt tnum">52,300 zł</span>
+          </div>
+          <div class="acct">
+            <span class="ic"><i style="background:var(--acc-b)"></i></span>
+            <div class="nm"><div class="n">Długi razem</div><div class="t">Kredyty + karta</div></div>
+            <span class="amt neg tnum">−24,600 zł</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- SAVINGS GOALS -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">02</span><span class="card-title">Cele oszczędnościowe</span></div>
+          <span class="pill">3 aktywne</span>
+        </div>
+        <div class="goal">
+          <div class="gh"><span class="gn">Fundusz awaryjny <small>Bezpieczeństwo</small></span><span class="gp tnum">60%</span></div>
+          <div class="track"><i style="width:60%"></i></div>
+          <div class="gv"><span>18 000 / 30 000 zł</span><b>+1 200 / mies.</b></div>
+        </div>
+        <div class="goal">
+          <div class="gh"><span class="gn">Wyjazd do Japonii <small>2027</small></span><span class="gp tnum">53%</span></div>
+          <div class="track"><i style="width:53%"></i></div>
+          <div class="gv"><span>4 200 / 8 000 zł</span><b>+600 / mies.</b></div>
+        </div>
+        <div class="goal">
+          <div class="gh"><span class="gn">Nowy laptop <small>Praca</small></span><span class="gp tnum">46%</span></div>
+          <div class="track"><i style="width:46%"></i></div>
+          <div class="gv"><span>3 000 / 6 500 zł</span><b>+500 / mies.</b></div>
+        </div>
+      </article>
+
+      <!-- MONEY LENT OUT -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">03</span><span class="card-title">Pożyczone innym</span></div>
+          <span class="pill">3 osoby</span>
+        </div>
+        <div class="lent">
+          <span class="av">KB</span>
+          <div class="nm"><div class="n">Kamil B.</div><div class="t">Rozliczenie wyjazdu</div></div>
+          <div class="rhs"><span class="amt tnum">1 500 zł</span><span class="st due">Termin 30 cze</span></div>
+        </div>
+        <div class="lent">
+          <span class="av">AN</span>
+          <div class="nm"><div class="n">Ania</div><div class="t">Bilety na koncert</div></div>
+          <div class="rhs"><span class="amt tnum">600 zł</span><span class="st due">Po terminie</span></div>
+        </div>
+        <div class="lent">
+          <span class="av">BR</span>
+          <div class="nm"><div class="n">Brat</div><div class="t">Długoterminowo</div></div>
+          <div class="rhs"><span class="amt tnum">2 500 zł</span><span class="st ok">Na bieżąco</span></div>
+        </div>
+        <div class="lent-total">
+          <span class="k">Razem pożyczone</span>
+          <span class="v tnum">4 600 zł</span>
+        </div>
+      </article>
+
+      <!-- DEBTS YOU OWE -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">04</span><span class="card-title">Twoje długi</span></div>
+          <span class="pill">24,600 zł</span>
+        </div>
+        <div class="debt">
+          <div class="dh"><span class="dn">Kredyt na auto <small>Bank</small></span><span class="rem tnum">18 400 zł</span></div>
+          <div class="track"><i style="width:43%"></i></div>
+          <div class="meta"><span><b>43%</b> spłacone · zostało 15</span><span>1 250 zł / mies.</span></div>
+        </div>
+        <div class="debt">
+          <div class="dh"><span class="dn">Karta kredytowa <small>Odnawialna</small></span><span class="rem tnum">2 100 zł</span></div>
+          <div class="track"><i style="width:58%"></i></div>
+          <div class="meta"><span><b>58%</b> spłacone</span><span>min. 210 zł / mies.</span></div>
+        </div>
+        <div class="debt">
+          <div class="dh"><span class="dn">Pożyczka rodzinna <small>Rodzice</small></span><span class="rem tnum">4 100 zł</span></div>
+          <div class="track"><i style="width:32%"></i></div>
+          <div class="meta"><span><b>32%</b> spłacone · zostało 8</span><span>500 zł / mies.</span></div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ============ CENTER COLUMN ============ -->
+    <section class="col" data-screen-label="Cash flow center">
+
+      <!-- MONTH SELECTOR -->
+      <article class="card month-selector-card">
+        <div class="month-selector">
+          <button class="month-nav" id="prevMonth" aria-label="Poprzedni miesiąc">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+          <div class="month-display">
+            <span class="month-name" id="monthName">Czerwiec</span>
+            <span class="year-name" id="yearName">2026</span>
+          </div>
+          <button class="month-nav" id="nextMonth" aria-label="Następny miesiąc">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <button class="month-today" id="monthToday">Dziś</button>
+        </div>
+      </article>
+
+      <!-- CASH FLOW -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">06</span><span class="card-title">Przepływy gotówki</span></div>
+          <div class="cf-legend">
+            <span><i style="background:var(--acc-a)"></i>Przychód</span>
+            <span><i style="background:var(--acc-b)"></i>Wydatki</span>
+          </div>
+        </div>
+        <div class="cf-top">
+          <div>
+            <div class="cf-lbl">Zaoszczędzone netto · czerwiec</div>
+            <div class="cf-net tnum">+3,860<small> zł</small></div>
+          </div>
+          <div style="text-align:right">
+            <div class="cf-lbl">Stopa oszczędności</div>
+            <div class="cf-net tnum" style="font-size:26px">34<small>%</small></div>
+          </div>
+        </div>
+        <div class="cf-chart" id="cfChart"></div>
+        <div class="cf-foot">
+          <div><span class="k">Śr. przychód</span><span class="v tnum">11 800 zł</span></div>
+          <div><span class="k">Śr. wydatki</span><span class="v tnum">8 660 zł</span></div>
+          <div><span class="k">Oszcz. 6 mies.</span><span class="v tnum up">+18 840 zł</span></div>
+        </div>
+      </article>
+
+      <!-- BUDGET PLANNER -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">07</span><span class="card-title">Planowanie budżetu</span></div>
+          <span class="pill" id="budgetCount">6 kategorii</span>
+        </div>
+        <div class="budget-list" id="budgetList"></div>
+        <button class="budget-add" id="budgetAddBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Dodaj kategorię
+        </button>
+      </article>
+
+    </section>
+
+    <!-- ============ RIGHT COLUMN ============ -->
+    <section class="col" data-screen-label="Upcoming & subscriptions">
+
+      <!-- SALARY & INCOME -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">05</span><span class="card-title">Wypłata i przychody</span></div>
+          <span class="pill">Miesięcznie</span>
+        </div>
+        <div class="pay-chip">
+          <div class="l"><div class="k">Najbliższa wypłata</div><div class="d">za 9 dni</div></div>
+          <div class="r"><div class="amt tnum">+11 200 zł</div><div class="s">pon · 22 cze</div></div>
+        </div>
+        <div class="inc-row">
+          <span class="tag" style="background:var(--acc-a)"></span>
+          <div class="nm"><div class="n">Wypłata · Finanteq</div><div class="t">25. każdego miesiąca</div></div>
+          <span class="amt tnum">11,200 zł</span>
+        </div>
+        <div class="inc-row">
+          <span class="tag" style="background:var(--ev-blue)"></span>
+          <div class="nm"><div class="n">Freelance · śr.</div><div class="t">Zmienny</div></div>
+          <span class="amt tnum">~2,100 zł</span>
+        </div>
+        <div class="inc-row">
+          <span class="tag" style="background:var(--ev-green)"></span>
+          <div class="nm"><div class="n">Odsetki i dywidendy</div><div class="t">Pasywny</div></div>
+          <span class="amt tnum">180 zł</span>
+        </div>
+        <div class="lent-total">
+          <span class="k">Śr. wpływy / mies.</span>
+          <span class="v tnum">13,480 zł</span>
+        </div>
+      </article>
+
+      <!-- UPCOMING EXPENSES -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">06</span><span class="card-title">Nadchodzące i cykliczne</span></div>
+          <span class="pill">Najbliższe 30 dni · 4 609 zł</span>
+        </div>
+        <div class="exp">
+          <div class="date"><div class="dd">15</div><div class="mo">cze</div></div>
+          <div class="main"><div class="n">Czynsz · mieszkanie <span class="rec">Cykliczne</span></div><div class="c">Mieszkanie · auto-płatność</div></div>
+          <span class="amt tnum">2,400 zł</span>
+        </div>
+        <div class="exp">
+          <div class="date"><div class="dd">18</div><div class="mo">cze</div></div>
+          <div class="main"><div class="n">Rata kredytu na auto <span class="rec">Cykliczne</span></div><div class="c">Dług · zostało 15</div></div>
+          <span class="amt tnum">1,250 zł</span>
+        </div>
+        <div class="exp">
+          <div class="date"><div class="dd">20</div><div class="mo">cze</div></div>
+          <div class="main"><div class="n">Karnet na siłownię <span class="rec">Cykliczne</span></div><div class="c">Zdrowie</div></div>
+          <span class="amt tnum">159 zł</span>
+        </div>
+        <div class="exp">
+          <div class="date"><div class="dd">25</div><div class="mo">cze</div></div>
+          <div class="main"><div class="n">Media · prąd + woda</div><div class="c">Mieszkanie</div></div>
+          <span class="amt tnum">480 zł</span>
+        </div>
+        <div class="exp">
+          <div class="date"><div class="dd">01</div><div class="mo">lip</div></div>
+          <div class="main"><div class="n">Ubezpieczenie auta <span class="rec">Cykliczne</span></div><div class="c">Ubezpieczenie · kwartalnie</div></div>
+          <span class="amt tnum">320 zł</span>
+        </div>
+      </article>
+
+      <!-- SUBSCRIPTIONS -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">07</span><span class="card-title">Subskrypcje</span></div>
+          <span class="pill">5 aktywnych</span>
+        </div>
+        <div class="sub">
+          <span class="tag" style="background:var(--ev-green)"></span>
+          <span class="n">ChatGPT Plus</span><span class="cyc">miesięcznie</span><span class="amt tnum">80 zł</span>
+        </div>
+        <div class="sub">
+          <span class="tag" style="background:var(--acc-b)"></span>
+          <span class="n">Netflix</span><span class="cyc">miesięcznie</span><span class="amt tnum">43 zł</span>
+        </div>
+        <div class="sub">
+          <span class="tag" style="background:var(--acc-a)"></span>
+          <span class="n">Strava</span><span class="cyc">miesięcznie</span><span class="amt tnum">40 zł</span>
+        </div>
+        <div class="sub">
+          <span class="tag" style="background:var(--ev-lav)"></span>
+          <span class="n">Spotify</span><span class="cyc">miesięcznie</span><span class="amt tnum">23 zł</span>
+        </div>
+        <div class="sub">
+          <span class="tag" style="background:var(--ev-blue)"></span>
+          <span class="n">iCloud+</span><span class="cyc">miesięcznie</span><span class="amt tnum">12 zł</span>
+        </div>
+        <div class="sub-total">
+          <span class="k">Razem miesięcznie</span>
+          <span class="v tnum">198 zł<small> / mies.</small></span>
+        </div>
+      </article>
+
+      <!-- CAR - KIA STINGER -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">08</span><span class="card-title">Auto · KIA Stinger</span></div>
+          <span class="pill accent"><span class="led"></span>Wkrótce termin</span>
+        </div>
+        <div class="car-meta">
+          <div class="car-cell"><div class="k">Przebieg</div><div class="v tnum">142 300<small> km</small></div></div>
+          <div class="car-cell"><div class="k">Nast. serwis</div><div class="v tnum">+1 700<small> km</small></div></div>
+        </div>
+        <div class="car-list">
+          <div class="car-row">
+            <span class="car-ic" style="background:var(--acc-b-soft);color:var(--acc-b-ink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M5 12V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4M7 16h.01M17 16h.01"/></svg></span>
+            <div class="car-info"><div class="n">Ubezpieczenie OC / AC</div><div class="t">Warta · roczne</div></div>
+            <div class="car-due"><div class="d">14 lip</div><div class="left soon">27 dni</div></div>
+          </div>
+          <div class="car-row">
+            <span class="car-ic" style="background:var(--ev-blue-bg);color:var(--ev-blue)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            <div class="car-info"><div class="n">Przegląd techniczny</div><div class="t">Badanie techniczne</div></div>
+            <div class="car-due"><div class="d">2 sie</div><div class="left">7 tyg.</div></div>
+          </div>
+          <div class="car-row">
+            <span class="car-ic" style="background:var(--acc-b-soft);color:var(--acc-b-ink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 6l-4.5 9M7 4l10 4-2 5-10-4z"/><circle cx="6" cy="18" r="2"/></svg></span>
+            <div class="car-info"><div class="n">Wymiana oleju i filtra</div><div class="t">Co 15 000 km</div></div>
+            <div class="car-due"><div class="d">~wrz</div><div class="left">+1 700 km</div></div>
+          </div>
+          <div class="car-row">
+            <span class="car-ic" style="background:var(--ev-lav-bg);color:var(--ev-lav)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg></span>
+            <div class="car-info"><div class="n">Wymiana na opony zimowe</div><div class="t">Sezonowo · przechowanie w MotoSerwis</div></div>
+            <div class="car-due"><div class="d">28 paź</div><div class="left">Zaplanowane</div></div>
+          </div>
+          <div class="car-row">
+            <span class="car-ic" style="background:var(--ev-green-bg);color:var(--ev-green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg></span>
+            <div class="car-info"><div class="n">Wymieniono klocki hamulcowe</div><div class="t">Przód · zrobione przy 138k</div></div>
+            <div class="car-due"><div class="d">12 maj</div><div class="left">Zrobione</div></div>
+          </div>
+        </div>
+        <div class="car-foot">
+          <span class="k">Roczny koszt utrzymania</span>
+          <span class="v tnum">~9 400 zł</span>
+        </div>
+      </article>
+
+    </section>
+
+  </main>
+</div>
+
+<div id="tweaks-root"></div>
+
+<script src="app.js"></script>
+<script src="finance.js"></script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="tweaks-app.jsx"></script>
+
+<script>
+// Budget Planner Logic
+(function() {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+
+  const defaultBudgets = [
+    { name: 'Zakupy spożywcze', budget: 1200, spent: 850, color: '--ev-green' },
+    { name: 'Opłaty i media', budget: 800, spent: 480, color: '--acc-b' },
+    { name: 'Ubrania i akcesoria', budget: 400, spent: 120, color: '--ev-blue' },
+    { name: 'Transport', budget: 600, spent: 340, color: '--acc-a' },
+    { name: 'Rozrywka i hobby', budget: 500, spent: 280, color: '--ev-lav' },
+    { name: 'Inne wydatki', budget: 300, spent: 200, color: '--ev-clay' }
+  ];
+
+  let budgets = JSON.parse(localStorage.getItem('budgets')) || defaultBudgets;
+
+  function renderBudgets() {
+    const list = $('budgetList');
+    if (!list) return;
+
+    list.innerHTML = budgets.map((b, idx) => {
+      const pct = Math.round((b.spent / b.budget) * 100);
+      const remaining = b.budget - b.spent;
+      return `
+        <div class="budget-item">
+          <div class="budget-head">
+            <div class="budget-name">${b.name}</div>
+            <div class="budget-pct tnum">${pct}%</div>
+          </div>
+          <div class="budget-bar">
+            <i style="width:${Math.min(pct, 100)}%;background:var(${b.color})"></i>
+          </div>
+          <div class="budget-foot">
+            <span class="budget-spent tnum">${b.spent} / ${b.budget} zł</span>
+            <span class="budget-left tnum" style="color:var(${b.color})">${remaining >= 0 ? '+' : ''}${remaining} zł</span>
+          </div>
+          <div class="budget-actions">
+            <button class="budget-edit" data-idx="${idx}">Edytuj</button>
+            <button class="budget-delete" data-idx="${idx}">Usuń</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.querySelectorAll('.budget-delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.target.dataset.idx);
+        budgets.splice(idx, 1);
+        saveBudgets();
+        renderBudgets();
+      });
+    });
+
+    document.querySelectorAll('.budget-edit').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.target.dataset.idx);
+        const b = budgets[idx];
+        const newBudget = prompt(`Zmień budżet dla "${b.name}":`, b.budget);
+        if (newBudget && !isNaN(newBudget)) {
+          budgets[idx].budget = parseInt(newBudget);
+          saveBudgets();
+          renderBudgets();
+        }
+      });
+    });
+  }
+
+  function saveBudgets() {
+    localStorage.setItem('budgets', JSON.stringify(budgets));
+    updateBudgetCount();
+  }
+
+  function updateBudgetCount() {
+    const count = $('budgetCount');
+    if (count) count.textContent = budgets.length + ' kategorii';
+  }
+
+  const addBtn = $('budgetAddBtn');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      const name = prompt('Nazwa nowej kategorii:');
+      if (name && name.trim()) {
+        const budget = parseInt(prompt('Budżet (zł):') || 500);
+        budgets.push({
+          name: name.trim(),
+          budget: budget || 500,
+          spent: 0,
+          color: '--ev-blue'
+        });
+        saveBudgets();
+        renderBudgets();
+      }
+    });
+  }
+
+  function boot() {
+    renderBudgets();
+    updateBudgetCount();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+
+// Month Selector Logic
+(function() {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  
+  const months = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
+  
+  let currentDate = new Date();
+  const today = new Date();
+
+  function updateMonthDisplay() {
+    const monthIdx = currentDate.getMonth();
+    const year = currentDate.getFullYear();
+    
+    const monthName = $('monthName');
+    const yearName = $('yearName');
+    
+    if (monthName) monthName.textContent = months[monthIdx];
+    if (yearName) yearName.textContent = year;
+    
+    localStorage.setItem('selectedMonth', JSON.stringify({
+      month: monthIdx,
+      year: year
+    }));
+  }
+
+  function boot() {
+    const saved = localStorage.getItem('selectedMonth');
+    if (saved) {
+      try {
+        const { month, year } = JSON.parse(saved);
+        currentDate = new Date(year, month, 1);
+      } catch (e) {}
+    }
+
+    updateMonthDisplay();
+
+    const prevBtn = $('prevMonth');
+    const nextBtn = $('nextMonth');
+    const todayBtn = $('monthToday');
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        updateMonthDisplay();
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        updateMonthDisplay();
+      });
+    }
+
+    if (todayBtn) {
+      todayBtn.addEventListener('click', () => {
+        currentDate = new Date(today);
+        updateMonthDisplay();
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+
+</body>
+</html>

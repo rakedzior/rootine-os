@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="light" data-palette="celadon" data-font="serif">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rootine OS · Podróże</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+/* ============ TRAVEL tab styles (self-contained) ============ */
+.up{ color:var(--acc-a-ink); } .down{ color:var(--acc-b-ink); }
+
+/* layout: rail wrap shares grid metrics */
+.travel{ flex:1; }
+.grid[hidden]{ display:none; }
+.rail-wrap{ max-width:1640px; width:100%; margin:0 auto; padding:var(--gap) var(--gap) 0; }
+.trip-rail{ display:flex; gap:10px; overflow-x:auto; padding:2px 2px 6px; scrollbar-width:thin; }
+.trip-chip{ flex-shrink:0; min-width:178px; text-align:left; cursor:pointer;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-mid);
+  box-shadow:var(--sh-1); padding:13px 15px; transition:.18s; position:relative; overflow:hidden; }
+.trip-chip::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--tc,transparent); opacity:.0; transition:.18s; }
+.trip-chip:hover{ transform:translateY(-2px); box-shadow:var(--sh-2); }
+.trip-chip.active{ border-color:var(--acc-a); background:var(--acc-a-soft); }
+.trip-chip.active::before{ opacity:1; }
+.trip-chip .tc-top{ display:flex; align-items:baseline; gap:8px; }
+.trip-chip .tc-dest{ font-family:var(--display); font-size:20px; font-weight:600; letter-spacing:-.01em; line-height:1; }
+.trip-chip .tc-dest.sm{ font-size:16px; }
+.trip-chip .tc-cc{ font-family:var(--mono); font-size:9px; letter-spacing:.08em; color:var(--ink-3); border:1px solid var(--border); padding:1px 5px; border-radius:5px; }
+.trip-chip .tc-ico{ width:18px; height:18px; color:var(--ink-2); display:inline-grid; place-items:center; }
+.trip-chip .tc-ico svg{ width:100%; height:100%; }
+.trip-chip .tc-meta{ font-family:var(--mono); font-size:9.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3); margin-top:7px; white-space:nowrap; }
+.trip-chip .tc-st{ font-family:var(--mono); font-size:9.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-2); margin-top:5px; font-weight:600; }
+.trip-chip .tc-st.soon{ color:var(--acc-b-ink); }
+.trip-chip.ov{ min-width:150px; background:var(--surface-2); }
+.trip-chip.ov.active{ background:var(--acc-a-soft); }
+
+/* trip hero */
+.th-dest{ font-family:var(--display); font-size:44px; font-weight:600; letter-spacing:-.01em; line-height:1; display:flex; align-items:baseline; gap:12px; margin-top:2px; }
+.th-dest .cc{ font-family:var(--mono); font-size:13px; font-weight:500; letter-spacing:.1em; color:var(--ink-3); border:1px solid var(--border); padding:3px 7px; border-radius:7px; }
+.th-sub{ font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); margin-top:10px; }
+.th-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:16px; }
+.th-cell{ background:var(--surface-inset); border-radius:var(--r-sm); padding:11px 12px; }
+.th-cell .k{ font-family:var(--mono); font-size:9px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); }
+.th-cell .v{ font-size:13.5px; font-weight:600; color:var(--ink); margin-top:4px; }
+.th-cell .v small{ font-family:var(--mono); font-size:10px; color:var(--ink-3); font-weight:500; }
+.th-note{ margin-top:12px; padding:11px 13px; border-radius:var(--r-mid); background:var(--acc-a-soft); display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.th-note .l{ font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--acc-a-ink); font-weight:600; white-space:nowrap; }
+.th-note .r{ font-size:13px; font-weight:700; color:var(--acc-a-ink); text-align:right; }
+.ov-btn{ margin-top:14px; width:100%; display:flex; align-items:center; justify-content:center; gap:8px; background:var(--ink); color:var(--bg-1); border:0; border-radius:var(--r-mid); padding:12px; font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; font-weight:600; cursor:pointer; transition:.18s; }
+.ov-btn:hover{ transform:translateY(-1px); }
+
+/* document / generic rows */
+.drow{ display:flex; align-items:center; gap:12px; padding:11px 0; border-top:1px solid var(--border-soft); }
+.drow:first-of-type{ border-top:0; }
+.drow .di{ width:32px; height:32px; border-radius:9px; display:grid; place-items:center; flex-shrink:0; }
+.drow .di svg{ width:16px; height:16px; }
+.drow .dinfo{ flex:1; min-width:0; }
+.drow .dinfo .n{ font-size:13px; font-weight:600; color:var(--ink); }
+.drow .dinfo .t{ font-family:var(--mono); font-size:9px; letter-spacing:.03em; color:var(--ink-3); margin-top:3px; }
+.drow .damt{ text-align:right; white-space:nowrap; }
+.drow .damt .v{ font-size:13px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; }
+.drow .damt .s{ font-family:var(--mono); font-size:8.5px; letter-spacing:.04em; text-transform:uppercase; margin-top:3px; }
+.s-ok{ color:var(--acc-a-ink); } .s-warn{ color:var(--acc-b-ink); } .s-muted{ color:var(--ink-3); }
+.note-line{ font-size:12.5px; line-height:1.6; color:var(--ink-2); }
+
+/* trip timeline */
+.dl{ display:flex; align-items:center; gap:13px; padding:12px 0; border-top:1px solid var(--border-soft); }
+.dl:first-of-type{ border-top:0; }
+.dl.clk{ cursor:pointer; border-radius:var(--r-sm); transition:.15s; margin:0 -8px; padding-left:8px; padding-right:8px; }
+.dl.clk:hover{ background:var(--surface-2); }
+.dl-date{ width:46px; flex-shrink:0; text-align:center; }
+.dl-date .dd{ font-family:var(--sans); font-size:19px; font-weight:700; line-height:1; }
+.dl-date .mo{ font-family:var(--mono); font-size:8px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); margin-top:3px; }
+.dl-main{ flex:1; min-width:0; }
+.dl-main .n{ font-size:13px; font-weight:600; color:var(--ink); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.dl-main .t{ font-family:var(--mono); font-size:9px; letter-spacing:.03em; color:var(--ink-3); margin-top:4px; }
+.dl-tag{ font-family:var(--mono); font-size:8px; letter-spacing:.05em; text-transform:uppercase; font-weight:600; padding:2px 6px; border-radius:5px; }
+.tag-vac{ color:var(--ev-green); background:var(--ev-green-bg); }
+.tag-work{ color:var(--ev-blue); background:var(--ev-blue-bg); }
+.tag-plan{ color:var(--ev-lav); background:var(--ev-lav-bg); }
+.tag-city{ color:var(--ev-clay); background:var(--ev-clay-bg); }
+.dl-left{ font-family:var(--mono); font-size:9.5px; letter-spacing:.03em; text-transform:uppercase; color:var(--ink-3); white-space:nowrap; }
+.dl-left.soon{ color:var(--acc-b-ink); font-weight:600; }
+
+/* legs (flights / trains) */
+.leg{ display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--border-soft); }
+.leg:first-of-type{ border-top:0; }
+.leg .ldir{ width:46px; flex-shrink:0; font-family:var(--mono); font-size:9px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); }
+.leg .lic{ width:28px; height:28px; border-radius:8px; display:grid; place-items:center; flex-shrink:0; background:var(--surface-inset); color:var(--ink-2); }
+.leg .lic svg{ width:15px; height:15px; }
+.leg .lmain{ flex:1; min-width:0; }
+.leg .lmain .r{ font-size:14px; font-weight:700; color:var(--ink); }
+.leg .lmain .x{ font-family:var(--mono); font-size:9px; letter-spacing:.03em; color:var(--ink-3); margin-top:3px; }
+.leg .ltime{ text-align:right; white-space:nowrap; }
+.leg .ltime .h{ font-size:12.5px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; }
+.leg .ltime .s{ font-family:var(--mono); font-size:8.5px; letter-spacing:.04em; text-transform:uppercase; margin-top:3px; }
+
+/* packing list */
+.pack-groups{ display:flex; flex-direction:column; gap:4px; }
+.pack-gh{ font-family:var(--mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); margin:14px 0 2px; }
+.pack-gh:first-child{ margin-top:2px; }
+.pack{ display:flex; align-items:center; gap:11px; padding:9px 0; border-top:1px solid var(--border-soft); cursor:pointer; }
+.pack:first-of-type{ border-top:0; }
+.pack .check{ width:18px; height:18px; border-radius:6px; border:1.5px solid var(--border); flex-shrink:0; display:grid; place-items:center; color:transparent; transition:.15s; }
+.pack .check svg{ width:11px; height:11px; }
+.pack.done .check{ background:var(--acc-a); border-color:var(--acc-a); color:#fff; }
+.pack .n{ flex:1; font-size:13px; font-weight:500; color:var(--ink); transition:.15s; }
+.pack.done .n{ color:var(--ink-3); text-decoration:line-through; text-decoration-color:var(--ink-4); }
+
+/* budget */
+.bud-rows{ margin-top:2px; display:flex; flex-direction:column; gap:2px; }
+.bud-row{ display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-top:1px solid var(--border-soft); }
+.bud-row:first-child{ border-top:0; }
+.bud-row .lbl{ display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--ink-2); font-weight:500; }
+.bud-row .lbl .tag{ width:7px; height:7px; border-radius:3px; }
+.bud-row .val{ font-size:12.5px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; }
+.bud-split{ margin-top:16px; }
+.bud-split .bar{ height:8px; border-radius:999px; overflow:hidden; display:flex; background:var(--surface-inset); }
+.bud-split .bar i{ display:block; height:100%; }
+.bud-split .legend{ display:flex; justify-content:space-between; margin-top:9px; }
+.bud-split .legend div{ font-family:var(--mono); font-size:10px; color:var(--ink-3); letter-spacing:.03em; }
+.bud-split .legend b{ color:var(--ink); }
+
+/* savings */
+.sv-top{ display:flex; align-items:baseline; gap:10px; margin-top:2px; }
+.sv-top{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.sv-have{ font-family:var(--mono); font-size:34px; font-weight:600; white-space:nowrap; }
+.sv-goal{ font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3); }
+.goal .track{ height:7px; border-radius:999px; background:var(--surface-inset); overflow:hidden; margin-top:14px; }
+.goal .track i{ display:block; height:100%; border-radius:999px; background:linear-gradient(90deg, var(--acc-a), color-mix(in srgb, var(--acc-a) 55%, var(--acc-b))); }
+.goal{ margin-bottom:4px; }
+
+/* stats grid */
+.tstat{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.tstat .cell{ background:var(--surface-inset); border-radius:var(--r-sm); padding:13px 13px; }
+.tstat .cell .v{ font-family:var(--mono); font-size:26px; font-weight:600; line-height:1; color:var(--ink); }
+.tstat .cell .k{ font-family:var(--mono); font-size:9px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); margin-top:6px; }
+.recent{ margin-top:14px; padding-top:14px; border-top:1px solid var(--border-soft); display:flex; flex-direction:column; }
+.recent .r{ display:flex; align-items:center; justify-content:space-between; padding:8px 0; }
+.recent .r .n{ font-size:12.5px; font-weight:600; color:var(--ink); display:flex; align-items:center; gap:9px; }
+.recent .r .n i{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.recent .r .d{ font-family:var(--mono); font-size:9.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3); }
+
+/* wishlist */
+.wish{ display:flex; align-items:center; gap:12px; padding:11px 0; border-top:1px solid var(--border-soft); }
+.wish:first-of-type{ border-top:0; }
+.wish .pin{ width:30px; height:30px; border-radius:8px; display:grid; place-items:center; flex-shrink:0; background:var(--surface-inset); color:var(--ink-2); }
+.wish .pin svg{ width:15px; height:15px; }
+.wish .wi{ flex:1; min-width:0; }
+.wish .wi .n{ font-size:13px; font-weight:600; color:var(--ink); }
+.wish .wi .t{ font-family:var(--mono); font-size:9px; letter-spacing:.03em; color:var(--ink-3); margin-top:3px; }
+.wish .wtag{ font-family:var(--mono); font-size:8px; letter-spacing:.05em; text-transform:uppercase; font-weight:600; padding:3px 7px; border-radius:5px; white-space:nowrap; color:var(--ink-3); background:var(--surface-2); }
+.wish .wtag.hot{ color:var(--acc-a-ink); background:var(--acc-a-soft); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="wm"><b>Rootine</b>&nbsp;OS&nbsp;<span>// v1.0</span></span>
+    </div>
+    <nav class="nav">
+      <a href="Rootine OS.html">Start</a>
+      <a href="Health.html">Sport</a>
+      <a href="Nutrition.html">Dieta</a>
+      <a href="Finance.html">Finanse</a>
+      <a href="Goals.html">Cele</a>
+      <a href="Desk.html">Biuro</a>
+      <a href="Travel.html" class="active">Podróże</a>
+      <a href="Notes.html">Notatki</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="tcluster">
+      <div class="tmini">
+        <span class="ic" id="topWeatherIc"></span>
+        <span class="tt"><b id="topTemp" class="tnum">14°</b><small id="topLoc">Kraków</small></span>
+      </div>
+      <span class="tdiv"></span>
+      <div class="tclock tnum"><span id="topClock">15:38</span><span class="s" id="topClockSec">:00</span></div>
+      <span class="tdiv"></span>
+      <div class="avatar">YOU</div>
+    </div>
+  </header>
+
+  <main class="travel">
+
+    <!-- TRIP RAIL -->
+    <div class="rail-wrap">
+      <div class="trip-rail" id="tripRail"></div>
+    </div>
+
+    <!-- ===== OVERVIEW VIEW ===== -->
+    <div class="grid" id="overview">
+
+      <!-- LEFT -->
+      <section class="col" data-screen-label="Overview rail">
+
+        <!-- NEXT TRIP -->
+        <article class="card">
+          <div class="card-head">
+            <div class="lhs"><span class="idx">01</span><span class="card-title">Najbliższy wyjazd</span></div>
+            <span class="pill accent"><span class="led"></span>za 3 dni</span>
+          </div>
+          <div class="th-dest">Barcelona<span class="cc">ES</span></div>
+          <div class="th-sub">Długi weekend · 15–18 czerwca 2026</div>
+          <div class="th-grid">
+            <div class="th-cell"><div class="k">Wylot</div><div class="v">15 cze · <small>09:40</small></div></div>
+            <div class="th-cell"><div class="k">Powrót</div><div class="v">18 cze · <small>21:15</small></div></div>
+            <div class="th-cell"><div class="k">Lot</div><div class="v">KRK → BCN <small>FR8394</small></div></div>
+            <div class="th-cell"><div class="k">Nocleg</div><div class="v">Eixample <small>3 noce</small></div></div>
+          </div>
+          <button class="ov-btn" data-trip="bcn">Zobacz szczegóły →</button>
+        </article>
+
+        <!-- DOCUMENTS -->
+        <article class="card">
+          <div class="card-head">
+            <div class="lhs"><span class="idx">02</span><span class="card-title">Dokumenty podróżne</span></div>
+            <span class="pill">Sejf</span>
+          </div>
+          <div class="drow">
+            <span class="di" style="background:var(--ev-lav-bg);color:var(--ev-lav)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="2.5"/><path d="M8.5 17h7"/></svg></span>
+            <div class="dinfo"><div class="n">Paszport</div><div class="t">PL · seria ZE-1XXX</div></div>
+            <div class="damt"><div class="v tnum">do 03.2026</div><div class="s s-warn">Odnów wkrótce</div></div>
+          </div>
+          <div class="drow">
+            <span class="di" style="background:var(--ev-blue-bg);color:var(--ev-blue)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg></span>
+            <div class="dinfo"><div class="n">Dowód osobisty</div><div class="t">Wystarczy w UE</div></div>
+            <div class="damt"><div class="v tnum">do 2029</div><div class="s s-ok">Ważny</div></div>
+          </div>
+          <div class="drow">
+            <span class="di" style="background:var(--ev-green-bg);color:var(--ev-green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg></span>
+            <div class="dinfo"><div class="n">Karta EKUZ</div><div class="t">Opieka zdrowotna w UE</div></div>
+            <div class="damt"><div class="v tnum">do 2027</div><div class="s s-ok">Ważna</div></div>
+          </div>
+          <div class="drow">
+            <span class="di" style="background:var(--acc-a-soft);color:var(--acc-a-ink)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            <div class="dinfo"><div class="n">Ubezpieczenie podróżne</div><div class="t">Allianz · cały świat</div></div>
+            <div class="damt"><div class="v tnum">do 03.2027</div><div class="s s-ok">Aktywne</div></div>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- CENTER -->
+      <section class="col" data-screen-label="Overview center">
+
+        <!-- UPCOMING TRIPS -->
+        <article class="card">
+          <div class="card-head">
+            <div class="lhs"><span class="idx">03</span><span class="card-title">Nadchodzące wyjazdy</span></div>
+            <span class="pill">Najbliższy rok</span>
+          </div>
+          <div class="dl clk" data-trip="bcn">
+            <div class="dl-date"><div class="dd">15</div><div class="mo">cze</div></div>
+            <div class="dl-main"><div class="n">Barcelona <span class="dl-tag tag-vac">Wakacje</span></div><div class="t">Długi weekend · z partnerką · 4 dni</div></div>
+            <div class="dl-left soon">za 3 dni</div>
+          </div>
+          <div class="dl clk" data-trip="gdn">
+            <div class="dl-date"><div class="dd">03</div><div class="mo">lip</div></div>
+            <div class="dl-main"><div class="n">Kawalerski · Gdańsk <span class="dl-tag tag-vac">Wyjazd</span></div><div class="t">Ekipa · 3 dni nad morzem</div></div>
+            <div class="dl-left">3 tyg.</div>
+          </div>
+          <div class="dl">
+            <div class="dl-date"><div class="dd">03</div><div class="mo">lip</div></div>
+            <div class="dl-main"><div class="n">Finanteq · integracja <span class="dl-tag tag-work">Praca</span></div><div class="t">Wyjazd firmowy · Warszawa</div></div>
+            <div class="dl-left">3 tyg.</div>
+          </div>
+          <div class="dl clk" data-trip="vie">
+            <div class="dl-date"><div class="dd">12</div><div class="mo">wrz</div></div>
+            <div class="dl-main"><div class="n">City break · Wiedeń <span class="dl-tag tag-city">Plan</span></div><div class="t">Przedłużony weekend · loty do kupienia</div></div>
+            <div class="dl-left">13 tyg.</div>
+          </div>
+          <div class="dl clk" data-trip="jpn">
+            <div class="dl-date"><div class="dd">—</div><div class="mo">2027</div></div>
+            <div class="dl-main"><div class="n">Japonia · Tokio + Kioto <span class="dl-tag tag-plan">Marzenie</span></div><div class="t">Wiosna 2027 · oszczędności 53%</div></div>
+            <div class="dl-left">planowane</div>
+          </div>
+        </article>
+
+        <!-- WISHLIST -->
+        <article class="card">
+          <div class="card-head">
+            <div class="lhs"><span class="idx">04</span><span class="card-title">Lista marzeń</span></div>
+            <span class="pill">Kiedyś</span>
+          </div>
+          <div class="wish">
+            <span class="pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+            <div class="wi"><div class="n">Japonia · Tokio + Kioto</div><div class="t">Wiosna 2027 · oszczędności 53%</div></div>
+            <span class="wtag hot">W planach</span>
+          </div>
+          <div class="wish">
+            <span class="pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+            <div class="wi"><div class="n">Islandia · ring road</div><div class="t">Autem dookoła wyspy · 10 dni</div></div>
+            <span class="wtag">Marzenie</span>
+          </div>
+          <div class="wish">
+            <span class="pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+            <div class="wi"><div class="n">Norwegia · fiordy</div><div class="t">Lato · trekking i kajaki</div></div>
+            <span class="wtag">Marzenie</span>
+          </div>
+          <div class="wish">
+            <span class="pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+            <div class="wi"><div class="n">Maroko · Marrakesz</div><div class="t">Suki, pustynia, riady</div></div>
+            <span class="wtag">Marzenie</span>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- RIGHT -->
+      <section class="col" data-screen-label="Overview stats">
+
+        <!-- TRAVEL STATS -->
+        <article class="card">
+          <div class="card-head">
+            <div class="lhs"><span class="idx">05</span><span class="card-title">Licznik podróży</span></div>
+            <span class="pill">Od 2019</span>
+          </div>
+          <div class="tstat">
+            <div class="cell"><div class="v">14</div><div class="k">Krajów</div></div>
+            <div class="cell"><div class="v">38</div><div class="k">Miast</div></div>
+            <div class="cell"><div class="v">4</div><div class="k">Kontynenty</div></div>
+            <div class="cell"><div class="v">6</div><div class="k">Wyjazdów w 2025</div></div>
+          </div>
+          <div class="recent">
+            <div class="r"><span class="n"><i style="background:var(--ev-green)"></i>Lizbona, Portugalia</span><span class="d">maj 2026</span></div>
+            <div class="r"><span class="n"><i style="background:var(--ev-clay)"></i>Rzym, Włochy</span><span class="d">mar 2026</span></div>
+            <div class="r"><span class="n"><i style="background:var(--ev-blue)"></i>Alpy · narty</span><span class="d">sty 2026</span></div>
+            <div class="r"><span class="n"><i style="background:var(--ev-lav)"></i>Tajlandia</span><span class="d">lis 2025</span></div>
+          </div>
+        </article>
+
+      </section>
+
+    </div>
+
+    <!-- ===== TRIP DETAIL VIEW (rendered by travel.js) ===== -->
+    <div class="grid" id="detail" hidden></div>
+
+  </main>
+</div>
+
+<div id="tweaks-root"></div>
+
+<template id="__bundler_thumbnail">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <rect width="100" height="100" fill="#6f9d84"/>
+    <g fill="none" stroke="#fbf8f1" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M50 30c11 0 17 7 17 17 0 11-17 23-17 23S33 58 33 47c0-10 6-17 17-17z"/>
+      <circle cx="50" cy="47" r="6"/>
+    </g>
+  </svg>
+</template>
+
+<script src="app.js"></script>
+<script src="travel.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="tweaks-app.jsx"></script>
+
+</body>
+</html>

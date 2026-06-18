@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="light" data-palette="celadon" data-font="serif">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rootine OS · Biuro</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="desk.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="wm"><b>Rootine</b>&nbsp;OS&nbsp;<span>// v1.0</span></span>
+    </div>
+    <nav class="nav">
+      <a href="Start.html">Start</a>
+      <a href="Health.html">Sport</a>
+      <a href="Nutrition.html">Dieta</a>
+      <a href="Finance.html">Finanse</a>
+      <a href="Goals.html">Cele</a>
+      <a href="Desk.html" class="active">Biuro</a>
+      <a href="Travel.html">Podróże</a>
+      <a href="Notes.html">Notatki</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="tcluster">
+      <div class="tmini">
+        <span class="ic" id="topWeatherIc"></span>
+        <span class="tt">
+          <b id="topTemp" class="tnum">14°</b>
+          <small id="topLoc">Kraków</small>
+        </span>
+      </div>
+      <span class="tdiv"></span>
+      <div class="tclock tnum"><span id="topClock">15:38</span><span class="s" id="topClockSec">:00</span></div>
+      <span class="tdiv"></span>
+      <div class="avatar">YOU</div>
+    </div>
+  </header>
+
+  <!-- Biuro sub-navigation -->
+  <div class="biuro-subnav">
+    <button class="biuro-nav-btn active" data-sec="dashboard">Dashboard</button>
+    <button class="biuro-nav-btn" data-sec="sprawy">Sprawy</button>
+    <button class="biuro-nav-btn" data-sec="dokumenty">Dokumenty</button>
+    <button class="biuro-nav-btn" data-sec="umowy">Umowy</button>
+    <button class="biuro-nav-btn" data-sec="auto">Auto</button>
+    <button class="biuro-nav-btn" data-sec="ubezpieczenia">Ubezpieczenia</button>
+    <button class="biuro-nav-btn" data-sec="uop">UoP</button>
+    <button class="biuro-nav-btn" data-sec="b2b">B2B</button>
+  </div>
+
+  <!-- Section containers — filled by desk.js -->
+  <div class="biuro-body">
+    <div id="sec-dashboard" class="biuro-sec active"></div>
+    <div id="sec-sprawy" class="biuro-sec"></div>
+    <div id="sec-dokumenty" class="biuro-sec"></div>
+    <div id="sec-umowy" class="biuro-sec"></div>
+    <div id="sec-auto" class="biuro-sec"></div>
+    <div id="sec-ubezpieczenia" class="biuro-sec"></div>
+    <div id="sec-uop" class="biuro-sec"></div>
+    <div id="sec-b2b" class="biuro-sec"></div>
+  </div>
+
+</div>
+
+<!-- Modal container -->
+<div id="biuro-modal"></div>
+<div id="tweaks-root"></div>
+
+<script src="app.js"></script>
+<script src="desk.js"></script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="tweaks-app.jsx"></script>
+
+</body>
+</html>

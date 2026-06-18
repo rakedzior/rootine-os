@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="light" data-palette="celadon" data-font="serif">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rootine OS · Cele</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="goals.css">
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#efe8da"/>
+  <circle cx="50" cy="50" r="22" fill="none" stroke="#6f9d84" stroke-width="5"/>
+  <circle cx="50" cy="50" r="11" fill="none" stroke="#bd8769" stroke-width="4"/>
+  <circle cx="50" cy="50" r="3" fill="#322e25"/>
+  <text x="50" y="88" text-anchor="middle" font-family="Georgia, serif" font-size="12" fill="#6f6857">Goals</text>
+</svg>
+</template>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== TOP BAR ===================== -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="wm"><b>Rootine</b>&nbsp;OS&nbsp;<span>// v1.0</span></span>
+    </div>
+    <nav class="nav">
+      <a href="Rootine OS.html">Start</a>
+      <a href="Health.html">Sport</a>
+      <a href="Nutrition.html">Dieta</a>
+      <a href="Finance.html">Finanse</a>
+      <a href="Goals.html" class="active">Cele</a>
+      <a href="Desk.html">Biuro</a>
+      <a href="Travel.html">Podróże</a>
+      <a href="Notes.html">Notatki</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="tcluster">
+      <div class="tmini">
+        <span class="ic" id="topWeatherIc"></span>
+        <span class="tt">
+          <b id="topTemp" class="tnum">14°</b>
+          <small id="topLoc">Kraków</small>
+        </span>
+      </div>
+      <span class="tdiv"></span>
+      <div class="tclock tnum"><span id="topClock">15:38</span><span class="s" id="topClockSec">:00</span></div>
+      <span class="tdiv"></span>
+      <div class="avatar">YOU</div>
+    </div>
+  </header>
+
+  <!-- ===================== GRID ===================== -->
+  <main class="grid">
+
+    <!-- ============ LEFT COLUMN ============ -->
+    <section class="col" data-screen-label="Portfolio rail">
+
+      <!-- WEEKLY REVIEW -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">07</span><span class="card-title">Momentum</span></div>
+          <span class="pill">Tydzień 24</span>
+        </div>
+        <div class="rev-grid">
+          <div class="rev-cell"><div class="v tnum" id="revTasks">14<small>/19</small></div><div class="k">Zadań zrobionych</div><div class="d up">74% · +6 vs poprz.</div></div>
+          <div class="rev-cell"><div class="v tnum">86<small>%</small></div><div class="k">Realizacja nawyków</div><div class="d up">rekord 4 tyg.</div></div>
+          <div class="rev-cell"><div class="v tnum">5</div><div class="k">Kamienie milowe</div><div class="d up">w tym kwartale</div></div>
+          <div class="rev-cell"><div class="v tnum">21<small>d</small></div><div class="k">Najlepsza seria</div><div class="d">auto-oszczędzanie</div></div>
+        </div>
+      </article>
+
+      <!-- HABITS THAT FEED GOALS -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">02</span><span class="card-title">Nawyki kluczowe</span></div>
+          <span class="pill">Ten tydzień</span>
+        </div>
+        <div id="ghabitList">
+          <div class="ghabit">
+            <div class="info"><div class="n">Trening na siłowni</div><div class="c">→ Wyciskanie 100kg</div></div>
+            <div class="hweek" data-habit="gym"><i class="on"></i><i class="on"></i><i></i><i class="on"></i><i class="on today"></i><i></i><i></i></div>
+            <span class="streak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2 3 4 4.5 4 8a4 4 0 11-8 0c0-1.2.4-2.2 1-3 .3 1 1 1.6 1.8 1.8C10.5 8 11 5 12 3z"/></svg>34</span>
+          </div>
+          <div class="ghabit">
+            <div class="info"><div class="n">Deep work · 90 min</div><div class="c">→ System Design</div></div>
+            <div class="hweek" data-habit="deep"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="today"></i><i></i><i></i></div>
+            <span class="streak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2 3 4 4.5 4 8a4 4 0 11-8 0c0-1.2.4-2.2 1-3 .3 1 1 1.6 1.8 1.8C10.5 8 11 5 12 3z"/></svg>12</span>
+          </div>
+          <div class="ghabit">
+            <div class="info"><div class="n">Czytaj 20 min</div><div class="c">→ 24 książki</div></div>
+            <div class="hweek" data-habit="read"><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i class="today"></i><i></i><i></i></div>
+            <span class="streak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2 3 4 4.5 4 8a4 4 0 11-8 0c0-1.2.4-2.2 1-3 .3 1 1 1.6 1.8 1.8C10.5 8 11 5 12 3z"/></svg>6</span>
+          </div>
+          <div class="ghabit">
+            <div class="info"><div class="n">Auto-oszczędzanie 1 200 zł</div><div class="c">→ Fundusz awaryjny</div></div>
+            <div class="hweek" data-habit="save"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on today"></i><i class="on"></i><i class="on"></i></div>
+            <span class="streak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c2 3 4 4.5 4 8a4 4 0 11-8 0c0-1.2.4-2.2 1-3 .3 1 1 1.6 1.8 1.8C10.5 8 11 5 12 3z"/></svg>21</span>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ============ CENTER COLUMN ============ -->
+    <section class="col" data-screen-label="Roadmap center">
+
+      <!-- ROADMAP / GANTT -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">03</span><span class="card-title">Plan na 2026</span></div>
+          <div class="rmap-legend">
+            <span><i style="background:var(--acc-b)"></i>Siła</span>
+            <span><i style="background:var(--ev-blue)"></i>Nauka</span>
+            <span><i style="background:var(--acc-a)"></i>Finanse</span>
+            <span><i style="background:var(--ev-lav)"></i>Bieganie</span>
+            <span><i style="background:var(--ev-green)"></i>Umysł</span>
+          </div>
+        </div>
+        <div class="rgs-strip" id="roadmapStrip"></div>
+        <div class="rmap" id="roadmap"></div>
+      </article>
+
+      <!-- TASKS -->
+      <article class="card">
+        <div class="task-head">
+          <div class="lhs" style="display:flex;align-items:center;gap:10px">
+            <span class="idx">04</span><span class="card-title">Zadania</span>
+          </div>
+          <div class="seg" id="taskSeg">
+            <button class="on" data-range="today">Dziś</button>
+            <button data-range="week">Tydzień</button>
+            <button data-range="backlog">Zaległe</button>
+            <button data-range="month">Miesiąc</button>
+            <button data-range="year">Rok</button>
+          </div>
+        </div>
+        <div id="taskBoard"></div>
+      </article>
+
+    </section>
+
+    <!-- ============ RIGHT COLUMN ============ -->
+    <section class="col" data-screen-label="Plans rail">
+
+      <!-- LEARNING PATHS -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">05</span><span class="card-title">Ścieżki nauki</span></div>
+          <span class="pill" id="pathPct">— %</span>
+        </div>
+        <div class="lpath-tabs" id="pathTabs"></div>
+        <div class="lp-hero">
+          <div class="lp-ring">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="43" fill="none" stroke="var(--surface-inset)" stroke-width="8"/>
+              <circle id="lpArc" cx="50" cy="50" r="43" fill="none" stroke="var(--ev-blue)" stroke-width="8" stroke-linecap="round"
+                      stroke-dasharray="270.2" stroke-dashoffset="112"/>
+            </svg>
+            <div class="v" id="lpPct" style="color:var(--ev-blue)">58</div>
+          </div>
+          <div class="lp-info">
+            <div class="n" id="pathName">—</div>
+            <div class="t" id="pathMeta">—</div>
+          </div>
+        </div>
+        <div id="pathSkills"></div>
+      </article>
+
+      <!-- MILESTONES -->
+      <article class="card">
+        <div class="card-head">
+          <div class="lhs"><span class="idx">06</span><span class="card-title">Nadchodzące kamienie milowe</span></div>
+          <span class="pill">Najbliższe 5</span>
+        </div>
+        <div class="mstone">
+          <span class="dot" style="background:var(--acc-b)"></span>
+          <div class="body"><div class="n">Wyciskanie 95 kg × 3</div><div class="t">Siła · kamień milowy 3 z 4</div></div>
+          <div class="when"><div class="d">28 cze</div><div class="left">11 dni</div></div>
+        </div>
+        <div class="mstone">
+          <span class="dot" style="background:var(--ev-blue)"></span>
+          <div class="body"><div class="n">Skończ moduł shardingu DB</div><div class="t">Nauka · System Design</div></div>
+          <div class="when"><div class="d">4 lip</div><div class="left">17 dni</div></div>
+        </div>
+        <div class="mstone">
+          <span class="dot" style="background:var(--ev-lav)"></span>
+          <div class="body"><div class="n">Bieg próbny półmaratonu</div><div class="t">Bieganie · cel poniżej 1:48</div></div>
+          <div class="when"><div class="d">20 lip</div><div class="left">5 tyg.</div></div>
+        </div>
+        <div class="mstone">
+          <span class="dot" style="background:var(--acc-a)"></span>
+          <div class="body"><div class="n">Fundusz awaryjny osiąga 20k</div><div class="t">Finanse · zostało 2k</div></div>
+          <div class="when"><div class="d">1 sie</div><div class="left">7 tyg.</div></div>
+        </div>
+        <div class="mstone">
+          <span class="dot" style="background:var(--ev-green)"></span>
+          <div class="body"><div class="n">Książka 12 z 24</div><div class="t">Umysł · półmetek</div></div>
+          <div class="when"><div class="d">15 sie</div><div class="left">9 tyg.</div></div>
+        </div>
+      </article>
+
+    </section>
+
+  </main>
+</div>
+
+<div id="tweaks-root"></div>
+
+<script src="editable.js"></script>
+<script src="app.js"></script>
+<script src="goals.js"></script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="tweaks-app.jsx"></script>
+
+</body>
+</html>
