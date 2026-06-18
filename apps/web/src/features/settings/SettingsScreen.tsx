@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { SecuritySettings } from './SecuritySettings';
+import { ModulesSettings } from './ModulesSettings';
 
 type Tab = 'account' | 'integrations' | 'security' | 'modules';
 
@@ -39,6 +40,8 @@ export function SettingsScreen({ tab = 'account' }: { tab?: Tab }) {
 
         {tab === 'security' ? (
           <SecuritySettings />
+        ) : tab === 'modules' ? (
+          <ModulesSettings />
         ) : (
           <article className="card">
             <div className="card-head">
@@ -46,11 +49,9 @@ export function SettingsScreen({ tab = 'account' }: { tab?: Tab }) {
               <span className="pill">Wkrótce</span>
             </div>
             <div className="note-peek">
-              {tab === 'modules'
-                ? 'Konfiguracja widoczności i kolejności modułów/feature’ów — Faza 1 (c1.8).'
-                : tab === 'integrations'
-                  ? 'Google Calendar i Strava — Faza 3.'
-                  : 'Ustawienia konta — wkrótce.'}
+              {tab === 'integrations'
+                ? 'Google Calendar i Strava — Faza 3.'
+                : 'Ustawienia konta — wkrótce.'}
             </div>
           </article>
         )}
