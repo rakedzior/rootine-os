@@ -147,19 +147,19 @@ export function PracaScreen() {
               </div>
               {/* Quick add */}
               <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
-                <input type="text" placeholder="Nowe zadanie…" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddTask()} style={{ flex: 2, minWidth: 160 }} />
-                <select value={newTaskStatus} onChange={(e) => setNewTaskStatus(e.target.value as WorkTaskStatus)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
+                <input className="fi" type="text" placeholder="Nowe zadanie…" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddTask()} style={{ flex: 2, minWidth: 160 }} />
+                <select className="fi-sel" value={newTaskStatus} onChange={(e) => setNewTaskStatus(e.target.value as WorkTaskStatus)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
                   <option value="todo">Do zrobienia</option>
                   <option value="doing">W toku</option>
                   <option value="done">Zrobione</option>
                 </select>
                 {projects.length > 0 && (
-                  <select value={newTaskProject} onChange={(e) => setNewTaskProject(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
+                  <select className="fi-sel" value={newTaskProject} onChange={(e) => setNewTaskProject(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
                     <option value="">— projekt —</option>
                     {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 )}
-                <input type="date" value={newTaskDue} onChange={(e) => setNewTaskDue(e.target.value)} style={{ width: 140 }} />
+                <input className="fi" type="date" value={newTaskDue} onChange={(e) => setNewTaskDue(e.target.value)} style={{ width: 140 }} />
                 <button className="add-btn" type="button" onClick={handleAddTask} disabled={addTask.isPending}>+ Dodaj</button>
               </div>
             </article>
@@ -183,8 +183,8 @@ export function PracaScreen() {
                   </ul>
                 )}
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <input type="text" placeholder="Nazwa firmy" value={newCompName} onChange={(e) => setNewCompName(e.target.value)} style={{ flex: 1 }} onKeyDown={(e) => e.key === 'Enter' && handleAddCompany()} />
-                  <select value={newCompType} onChange={(e) => setNewCompType(e.target.value as 'client' | 'own')} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
+                  <input className="fi" type="text" placeholder="Nazwa firmy" value={newCompName} onChange={(e) => setNewCompName(e.target.value)} style={{ flex: 1 }} onKeyDown={(e) => e.key === 'Enter' && handleAddCompany()} />
+                  <select className="fi-sel" value={newCompType} onChange={(e) => setNewCompType(e.target.value as 'client' | 'own')} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
                     <option value="client">Klient</option>
                     <option value="own">Własna</option>
                   </select>
@@ -213,9 +213,9 @@ export function PracaScreen() {
                   </ul>
                 )}
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <input type="text" placeholder="Nazwa projektu" value={newProjName} onChange={(e) => setNewProjName(e.target.value)} style={{ flex: 1 }} onKeyDown={(e) => e.key === 'Enter' && handleAddProject()} />
+                  <input className="fi" type="text" placeholder="Nazwa projektu" value={newProjName} onChange={(e) => setNewProjName(e.target.value)} style={{ flex: 1 }} onKeyDown={(e) => e.key === 'Enter' && handleAddProject()} />
                   {companies.length > 0 && (
-                    <select value={newProjComp} onChange={(e) => setNewProjComp(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
+                    <select className="fi-sel" value={newProjComp} onChange={(e) => setNewProjComp(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
                       <option value="">— firma —</option>
                       {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
@@ -231,13 +231,13 @@ export function PracaScreen() {
             <article className="card">
               <div className="card-head"><div className="lhs"><span className="card-title">Zadania</span></div><span className="pill">{tasks.length}</span></div>
               <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
-                <input type="text" placeholder="Nowe zadanie…" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddTask()} style={{ flex: 2, minWidth: 160 }} />
-                <select value={newTaskStatus} onChange={(e) => setNewTaskStatus(e.target.value as WorkTaskStatus)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
+                <input className="fi" type="text" placeholder="Nowe zadanie…" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddTask()} style={{ flex: 2, minWidth: 160 }} />
+                <select className="fi-sel" value={newTaskStatus} onChange={(e) => setNewTaskStatus(e.target.value as WorkTaskStatus)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
                   <option value="todo">Do zrobienia</option>
                   <option value="doing">W toku</option>
                   <option value="done">Zrobione</option>
                 </select>
-                <input type="date" value={newTaskDue} onChange={(e) => setNewTaskDue(e.target.value)} style={{ width: 140 }} />
+                <input className="fi" type="date" value={newTaskDue} onChange={(e) => setNewTaskDue(e.target.value)} style={{ width: 140 }} />
                 <button className="add-btn" type="button" onClick={handleAddTask} disabled={addTask.isPending}>+ Dodaj</button>
               </div>
               {tasks.length === 0 ? (
@@ -305,7 +305,7 @@ function SubtaskPanel({ taskId }: { taskId: string }) {
         </div>
       ))}
       <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-        <input type="text" placeholder="Subtask…" value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} style={{ flex: 1, fontSize: 12 }} />
+        <input className="fi" type="text" placeholder="Subtask…" value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} style={{ flex: 1, fontSize: 12 }} />
         <button type="button" onClick={add} style={{ fontSize: 12, padding: '4px 10px', background: 'var(--surface-inset)', border: 'none', borderRadius: 'var(--r-sm)', cursor: 'pointer' }}>+</button>
       </div>
     </div>

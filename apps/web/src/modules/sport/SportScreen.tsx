@@ -138,8 +138,11 @@ export function SportScreen() {
               <div className="h-ring">
                 <svg viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="42" fill="none" stroke="var(--surface-inset)" strokeWidth="9" />
-                  <circle cx="50" cy="50" r="42" fill="none" stroke={score >= 70 ? 'var(--acc-a)' : score >= 40 ? 'var(--ev-yellow)' : 'var(--acc-b)'}
-                    strokeWidth="9" strokeLinecap="round" strokeDasharray={dash} strokeDashoffset={offset} transform="rotate(-90 50 50)" />
+                  <circle cx="50" cy="50" r="42" fill="none"
+                    stroke={score >= 70 ? 'var(--acc-a)' : score >= 40 ? 'var(--acc-b)' : 'var(--acc-b)'}
+                    strokeWidth="9" strokeLinecap="round"
+                    strokeDasharray={dash} strokeDashoffset={offset}
+                    transform="rotate(-90 50 50)" />
                 </svg>
                 <div className="rt"><b className="tnum">{readinessScore ?? '—'}</b><small>Gotowość</small></div>
               </div>
@@ -154,14 +157,30 @@ export function SportScreen() {
               <div className="stat-cell"><div className="k"><i style={{ background: 'var(--acc-b)' }} />Tętno spocz.</div><div className="v tnum">{r?.resting_hr ?? '—'}<small>bpm</small></div></div>
               <div className="stat-cell"><div className="k"><i style={{ background: 'var(--ev-lav)' }} />Zakwasy</div><div className="v">{r?.soreness != null ? `${r.soreness}/5` : '—'}</div></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
-              <input type="number" className="kcal" placeholder="Sen (h)" value={sleepH} onChange={(e) => setSleepH(e.target.value)} inputMode="decimal" />
-              <input type="number" className="kcal" placeholder="HRV (ms)" value={hrv} onChange={(e) => setHrv(e.target.value)} inputMode="numeric" />
-              <input type="number" className="kcal" placeholder="Tętno (bpm)" value={hr} onChange={(e) => setHr(e.target.value)} inputMode="numeric" />
-              <input type="number" className="kcal" placeholder="Zakwasy (0-5)" value={soreness} onChange={(e) => setSoreness(e.target.value)} inputMode="numeric" min={0} max={5} />
+            <div className="meas" style={{ marginTop: 12 }}>
+              <div className="meas-row">
+                <span className="mn">Sen</span>
+                <input type="number" placeholder="h" value={sleepH} onChange={(e) => setSleepH(e.target.value)} inputMode="decimal" />
+                <span className="mu">h</span>
+              </div>
+              <div className="meas-row">
+                <span className="mn">HRV</span>
+                <input type="number" placeholder="ms" value={hrv} onChange={(e) => setHrv(e.target.value)} inputMode="numeric" />
+                <span className="mu">ms</span>
+              </div>
+              <div className="meas-row">
+                <span className="mn">Tętno spocz.</span>
+                <input type="number" placeholder="bpm" value={hr} onChange={(e) => setHr(e.target.value)} inputMode="numeric" />
+                <span className="mu">bpm</span>
+              </div>
+              <div className="meas-row">
+                <span className="mn">Zakwasy</span>
+                <input type="number" placeholder="0–5" value={soreness} onChange={(e) => setSoreness(e.target.value)} inputMode="numeric" min={0} max={5} />
+                <span className="mu">/5</span>
+              </div>
             </div>
-            <button className="add-btn" style={{ marginTop: 8 }} type="button" onClick={saveReadiness} disabled={upsertReadiness.isPending}>
-              Zapisz gotowość
+            <button className="meas-edit" style={{ marginTop: 12, width: '100%' }} type="button" onClick={saveReadiness} disabled={upsertReadiness.isPending}>
+              {upsertReadiness.isPending ? 'Zapisywanie…' : 'Zapisz gotowość'}
             </button>
           </article>
         )}
@@ -184,13 +203,25 @@ export function SportScreen() {
               <div className="stat-cell"><div className="k">Tłuszcz</div><div className="v tnum">{latestBody?.body_fat ?? '—'}<small>%</small></div></div>
               <div className="stat-cell"><div className="k">Masa beztłuszcz.</div><div className="v tnum">{latestBody?.lean_mass ?? '—'}<small>kg</small></div></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginTop: 10 }}>
-              <input type="number" className="kcal" placeholder="kg" value={bWeight} onChange={(e) => setBWeight(e.target.value)} inputMode="decimal" />
-              <input type="number" className="kcal" placeholder="tłuszcz %" value={bFat} onChange={(e) => setBFat(e.target.value)} inputMode="decimal" />
-              <input type="number" className="kcal" placeholder="LBM kg" value={bLean} onChange={(e) => setBLean(e.target.value)} inputMode="decimal" />
+            <div className="meas" style={{ marginTop: 12 }}>
+              <div className="meas-row">
+                <span className="mn">Waga</span>
+                <input type="number" placeholder="0.0" value={bWeight} onChange={(e) => setBWeight(e.target.value)} inputMode="decimal" />
+                <span className="mu">kg</span>
+              </div>
+              <div className="meas-row">
+                <span className="mn">Tłuszcz</span>
+                <input type="number" placeholder="0.0" value={bFat} onChange={(e) => setBFat(e.target.value)} inputMode="decimal" />
+                <span className="mu">%</span>
+              </div>
+              <div className="meas-row">
+                <span className="mn">LBM</span>
+                <input type="number" placeholder="0.0" value={bLean} onChange={(e) => setBLean(e.target.value)} inputMode="decimal" />
+                <span className="mu">kg</span>
+              </div>
             </div>
-            <button className="add-btn" style={{ marginTop: 8 }} type="button" onClick={saveMeasurement} disabled={addMeasure.isPending}>
-              Zapisz pomiar
+            <button className="meas-edit" style={{ marginTop: 12, width: '100%' }} type="button" onClick={saveMeasurement} disabled={addMeasure.isPending}>
+              {addMeasure.isPending ? 'Zapisywanie…' : 'Zapisz pomiar'}
             </button>
           </article>
         )}
@@ -201,12 +232,16 @@ export function SportScreen() {
           </div>
           <div className="integ">
             <div className="integ-row">
-              <div className="integ-icon strava"><svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" /></svg></div>
+              <div className="integ-icon strava">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="white">
+                  <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
+                </svg>
+              </div>
               <div className="integ-info"><div className="integ-name">Strava</div></div>
               <div className="integ-status">Niepołączono</div>
             </div>
           </div>
-          <div className="diet-hint" style={{ marginTop: 10 }}>Strava w Fazie 3.</div>
+          <p style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', marginTop: 10, marginBottom: 0 }}>Strava w Fazie 3.</p>
         </article>
       </section>
 
@@ -214,7 +249,7 @@ export function SportScreen() {
       <section className="col">
         {showWorkout && (
           <article className="card">
-            <div className="card-head" style={{ marginBottom: 8 }}>
+            <div className="card-head">
               <div className="lhs"><span className="card-title">Dzisiejszy trening</span></div>
               <span className="pill">{todayWo ? todayWo.status : 'Brak'}</span>
             </div>
@@ -222,23 +257,25 @@ export function SportScreen() {
               <div>
                 <div className="th-name" style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>{todayWo.name}</div>
                 {todayWo.type && <div className="th-sub">{todayWo.type}</div>}
-                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                  <button className="add-btn" type="button" onClick={() => patchWorkout.mutate({ id: todayWo.id, patch: { status: 'done' } })} disabled={todayWo.status === 'done'}>
+                <div className="sess-actions" style={{ marginTop: 10 }}>
+                  <button className="btn-primary" type="button"
+                    onClick={() => patchWorkout.mutate({ id: todayWo.id, patch: { status: 'done' } })}
+                    disabled={todayWo.status === 'done'}>
                     {todayWo.status === 'done' ? '✓ Zrobione' : 'Oznacz jako zrobione'}
                   </button>
-                  <button type="button" onClick={() => setSelectedWoId(todayWo.id)} style={{ background: 'var(--surface-inset)', border: 'none', borderRadius: 'var(--r-sm)', padding: '6px 12px', cursor: 'pointer', fontSize: 13 }}>
+                  <button className="btn-ghost" type="button" onClick={() => setSelectedWoId(todayWo.id)}>
                     Logger →
                   </button>
                 </div>
               </div>
             ) : (
               <div>
-                <div className="agenda-empty" style={{ marginBottom: 10 }}>Brak sesji na dziś.</div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input type="text" placeholder="Nazwa treningu" value={newWoName} onChange={(e) => setNewWoName(e.target.value)} style={{ flex: 1 }} />
-                  <input type="text" className="kcal" placeholder="Typ (Push…)" value={newWoType} onChange={(e) => setNewWoType(e.target.value)} />
+                <div className="agenda-empty" style={{ marginBottom: 12 }}>Brak sesji na dziś.</div>
+                <div className="he-grid" style={{ marginBottom: 8 }}>
+                  <input type="text" className="fi" placeholder="Nazwa treningu" value={newWoName} onChange={(e) => setNewWoName(e.target.value)} />
+                  <input type="text" className="fi" placeholder="Typ (Push, Pull…)" value={newWoType} onChange={(e) => setNewWoType(e.target.value)} />
                 </div>
-                <button className="add-btn" style={{ marginTop: 6 }} type="button" onClick={addWorkout} disabled={createWorkout.isPending}>
+                <button className="btn-primary" type="button" onClick={addWorkout} disabled={createWorkout.isPending}>
                   + Dodaj trening
                 </button>
               </div>
@@ -251,7 +288,8 @@ export function SportScreen() {
             <div className="card-head">
               <div className="lhs"><span className="card-title">Logger serii</span></div>
               {workouts.length > 0 && (
-                <select value={selectedWoId ?? ''} onChange={(e) => setSelectedWoId(e.target.value || null)} style={{ fontSize: 12, padding: '2px 6px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
+                <select className="fi-sel" value={selectedWoId ?? ''} onChange={(e) => setSelectedWoId(e.target.value || null)}
+                  style={{ fontSize: 12, padding: '4px 28px 4px 8px', width: 'auto', maxWidth: 200 }}>
                   <option value="">-- Wybierz sesję --</option>
                   {workouts.map((w) => <option key={w.id} value={w.id}>{w.date} · {w.name}</option>)}
                 </select>
@@ -261,25 +299,50 @@ export function SportScreen() {
               <div className="agenda-empty">Wybierz sesję powyżej lub utwórz trening.</div>
             ) : (
               <>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-                  <input type="text" placeholder="Ćwiczenie" value={exName} onChange={(e) => setExName(e.target.value)} style={{ flex: 2, minWidth: 120 }} />
-                  <input type="number" className="kcal" placeholder="kg" value={setWeight} onChange={(e) => setSetWeight(e.target.value)} inputMode="decimal" />
-                  <input type="number" className="kcal" placeholder="powt." value={setReps} onChange={(e) => setSetReps(e.target.value)} inputMode="numeric" />
-                  <input type="number" className="kcal" placeholder="RIR" value={setRir} onChange={(e) => setSetRir(e.target.value)} inputMode="numeric" />
-                  <button className="add-btn" type="button" onClick={logSet} disabled={addSet.isPending}>Loguj</button>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12, alignItems: 'center' }}>
+                  <input type="text" className="fi" placeholder="Ćwiczenie" value={exName} onChange={(e) => setExName(e.target.value)} style={{ flex: '2 1 120px' }} />
+                  <input type="number" className="set-inp" placeholder="kg" value={setWeight} onChange={(e) => setSetWeight(e.target.value)} inputMode="decimal" style={{ width: 64 }} />
+                  <input type="number" className="set-inp" placeholder="powt." value={setReps} onChange={(e) => setSetReps(e.target.value)} inputMode="numeric" style={{ width: 64 }} />
+                  <input type="number" className="set-inp" placeholder="RIR" value={setRir} onChange={(e) => setSetRir(e.target.value)} inputMode="numeric" style={{ width: 52 }} />
+                  <button className="btn-primary" type="button" onClick={logSet} disabled={addSet.isPending} style={{ padding: '8px 14px', flexShrink: 0 }}>
+                    Loguj
+                  </button>
                 </div>
                 {sets.length === 0 ? (
                   <div className="agenda-empty">Brak serii — dodaj pierwszą.</div>
                 ) : (
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {sets.map((s) => (
-                      <li key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                        <span><b>{s.exercise_name}</b> · Seria {s.set_no}</span>
-                        <span className="tnum">{s.weight}kg × {s.reps} {s.rir != null ? `(RIR ${s.rir})` : ''} <span style={{ color: 'var(--ink-3)', fontSize: 11 }}>≈1RM: {epley(s.weight, s.reps)}</span></span>
-                        <button type="button" onClick={() => delSet.mutate({ id: s.id, workoutId: selectedWoId })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                      </li>
+                  <div className="logger">
+                    {Object.entries(
+                      sets.reduce<Record<string, typeof sets>>((acc, s) => {
+                        (acc[s.exercise_name] ??= []).push(s);
+                        return acc;
+                      }, {}),
+                    ).map(([ex, exSets]) => (
+                      <div key={ex} className="lg-ex">
+                        <div className="lg-ex-head">
+                          <span className="n">{ex}</span>
+                          <span className="t">{exSets.length} ser.</span>
+                        </div>
+                        <div className="set-cols">
+                          <div>#</div><div>kg</div><div>Powt.</div><div>≈1RM</div><div />
+                        </div>
+                        {exSets.map((s) => (
+                          <div key={s.id} className="set-row">
+                            <span className="sn">{s.set_no}</span>
+                            <span className="tnum" style={{ fontSize: 13, fontWeight: 600 }}>{s.weight}</span>
+                            <span className="tnum" style={{ fontSize: 13 }}>{s.reps}</span>
+                            <span className="tnum" style={{ fontSize: 12, color: 'var(--acc-a-ink)', fontWeight: 600 }}>
+                              {epley(s.weight, s.reps)}
+                            </span>
+                            <button type="button" onClick={() => delSet.mutate({ id: s.id, workoutId: selectedWoId })}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-4)', fontSize: 15, lineHeight: 1 }}>
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </>
             )}
@@ -295,21 +358,32 @@ export function SportScreen() {
             {workouts.length === 0 ? (
               <div className="agenda-empty">Brak sesji treningowych.</div>
             ) : (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <>
                 {workouts.slice(0, 8).map((w) => (
-                  <li key={w.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-                    <div>
-                      <span style={{ fontWeight: 500 }}>{w.name}</span>
-                      {w.type && <span style={{ fontSize: 11, color: 'var(--ink-3)', marginLeft: 6 }}>{w.type}</span>}
+                  <div key={w.id} className="sh-row">
+                    <div className="sh-date">
+                      <div className="dd">{w.date.slice(8, 10)}</div>
+                      <div className="mo">{w.date.slice(5, 7)}.{w.date.slice(2, 4)}</div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>{w.date}</span>
-                      <span style={{ fontSize: 11, padding: '2px 6px', borderRadius: 4, background: 'var(--surface-inset)' }}>{w.status}</span>
-                      <button type="button" onClick={() => deleteWorkout.mutate(w.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
+                    <div className="sh-main">
+                      <div className="n">
+                        <span className="sh-tag" style={{ background: w.status === 'done' ? 'var(--acc-a)' : 'var(--surface-inset)' }} />
+                        {w.name}
+                      </div>
+                      {w.type && <div className="m">{w.type}</div>}
                     </div>
-                  </li>
+                    <div className="sh-feel">
+                      <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 5, background: w.status === 'done' ? 'var(--acc-a-soft)' : 'var(--surface-inset)', color: w.status === 'done' ? 'var(--acc-a-ink)' : 'var(--ink-3)', fontFamily: 'var(--mono)', fontWeight: 600, fontSize: 10 }}>
+                        {w.status}
+                      </span>
+                    </div>
+                    <button type="button" onClick={() => deleteWorkout.mutate(w.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-4)', fontSize: 16, padding: '0 4px', flexShrink: 0 }}>
+                      ×
+                    </button>
+                  </div>
                 ))}
-              </ul>
+              </>
             )}
           </article>
         )}
@@ -326,7 +400,7 @@ export function SportScreen() {
             {sets.length === 0 ? (
               <div className="agenda-empty">Zaloguj serie, aby zobaczyć szacowane 1RM.</div>
             ) : (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <>
                 {Object.entries(
                   sets.reduce<Record<string, { w: number; r: number }>>((acc, s) => {
                     const e1rm = epley(s.weight, s.reps);
@@ -336,12 +410,13 @@ export function SportScreen() {
                     return acc;
                   }, {}),
                 ).map(([ex, { w, r }]) => (
-                  <li key={ex} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                    <span>{ex}</span>
-                    <span className="tnum" style={{ color: 'var(--acc-a)', fontWeight: 600 }}>≈ {epley(w, r)} kg</span>
-                  </li>
+                  <div key={ex} className="pb-row">
+                    <div className="pb-mark" style={{ background: 'var(--acc-a)' }} />
+                    <div className="nm"><div className="n">{ex}</div><div className="d">{w}kg × {r} powt.</div></div>
+                    <div className="pb-val tnum">{epley(w, r)}<small>kg</small></div>
+                  </div>
                 ))}
-              </ul>
+              </>
             )}
           </article>
         )}

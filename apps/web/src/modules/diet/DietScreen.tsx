@@ -103,14 +103,26 @@ export function DietScreen() {
             </div>
 
             {editTargets ? (
-              <div style={{ display: 'grid', gap: 8, marginBottom: 12 }}>
-                <label style={{ fontSize: 12 }}>Kalorie<input className="kcal" type="number" value={tKcal} onChange={(e) => setTKcal(e.target.value)} style={{ marginLeft: 8, width: 80 }} /></label>
-                <label style={{ fontSize: 12 }}>Białko (g)<input className="kcal" type="number" value={tProt} onChange={(e) => setTProt(e.target.value)} style={{ marginLeft: 8, width: 70 }} /></label>
-                <label style={{ fontSize: 12 }}>Węgle (g)<input className="kcal" type="number" value={tCarb} onChange={(e) => setTCarb(e.target.value)} style={{ marginLeft: 8, width: 70 }} /></label>
-                <label style={{ fontSize: 12 }}>Tłuszcze (g)<input className="kcal" type="number" value={tFat} onChange={(e) => setTFat(e.target.value)} style={{ marginLeft: 8, width: 70 }} /></label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="add-btn" type="button" onClick={saveTargets}>Zapisz</button>
-                  <button className="add-btn" type="button" style={{ background: 'var(--surface-inset)' }} onClick={() => setEditTargets(false)}>Anuluj</button>
+              <div className="he-grid" style={{ gap: 8, marginBottom: 12 }}>
+                <div className="he-field">
+                  <label className="he-lbl">Kalorie</label>
+                  <input className="he-input" type="number" value={tKcal} onChange={(e) => setTKcal(e.target.value)} inputMode="numeric" />
+                </div>
+                <div className="he-field">
+                  <label className="he-lbl">Białko (g)</label>
+                  <input className="he-input" type="number" value={tProt} onChange={(e) => setTProt(e.target.value)} inputMode="numeric" />
+                </div>
+                <div className="he-field">
+                  <label className="he-lbl">Węglowodany (g)</label>
+                  <input className="he-input" type="number" value={tCarb} onChange={(e) => setTCarb(e.target.value)} inputMode="numeric" />
+                </div>
+                <div className="he-field">
+                  <label className="he-lbl">Tłuszcze (g)</label>
+                  <input className="he-input" type="number" value={tFat} onChange={(e) => setTFat(e.target.value)} inputMode="numeric" />
+                </div>
+                <div className="he-actions">
+                  <button className="he-btn ghost" type="button" onClick={() => setEditTargets(false)}>Anuluj</button>
+                  <button className="he-btn primary" type="button" onClick={saveTargets}>Zapisz</button>
                 </div>
               </div>
             ) : (

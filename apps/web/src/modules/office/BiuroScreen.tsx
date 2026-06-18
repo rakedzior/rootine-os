@@ -206,9 +206,9 @@ export function BiuroScreen() {
               )}
               <div style={{ display: 'grid', gap: 6 }}>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <input type="text" placeholder="Nazwa dokumentu*" value={docName} onChange={(e) => setDocName(e.target.value)} style={{ flex: 2 }} />
-                  <input type="text" placeholder="Numer (MVP: jawny)" value={docNum} onChange={(e) => setDocNum(e.target.value)} style={{ flex: 1 }} />
-                  <input type="date" value={docExp} onChange={(e) => setDocExp(e.target.value)} style={{ width: 140 }} />
+                  <input className="fi" type="text" placeholder="Nazwa dokumentu*" value={docName} onChange={(e) => setDocName(e.target.value)} style={{ flex: 2 }} />
+                  <input className="fi" type="text" placeholder="Numer (MVP: jawny)" value={docNum} onChange={(e) => setDocNum(e.target.value)} style={{ flex: 1 }} />
+                  <input className="fi" type="date" value={docExp} onChange={(e) => setDocExp(e.target.value)} style={{ width: 140 }} />
                   <button className="add-btn" type="button" onClick={() => { if (!docName.trim()) return; addDoc.mutate({ name: docName.trim(), doc_number: docNum || null, expires_on: docExp || null }); setDocName(''); setDocNum(''); setDocExp(''); }}>+</button>
                 </div>
               </div>
@@ -234,8 +234,8 @@ export function BiuroScreen() {
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <input type="text" placeholder="Marka / model" value={vehName} onChange={(e) => setVehName(e.target.value)} style={{ flex: 1 }} />
-                  <input type="text" placeholder="Tablice" value={vehPlate} onChange={(e) => setVehPlate(e.target.value)} style={{ width: 100 }} />
+                  <input className="fi" type="text" placeholder="Marka / model" value={vehName} onChange={(e) => setVehName(e.target.value)} style={{ flex: 1 }} />
+                  <input className="fi" type="text" placeholder="Tablice" value={vehPlate} onChange={(e) => setVehPlate(e.target.value)} style={{ width: 100 }} />
                   <button className="add-btn" type="button" onClick={() => { if (!vehName.trim()) return; addVeh.mutate({ name: vehName.trim(), plate: vehPlate || null }); setVehName(''); setVehPlate(''); }}>+</button>
                 </div>
               </article>
@@ -262,11 +262,11 @@ export function BiuroScreen() {
                     </ul>
                   )}
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <select value={svcType} onChange={(e) => setSvcType(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
+                    <select className="fi-sel" value={svcType} onChange={(e) => setSvcType(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
                       {['przegląd', 'OC', 'AC', 'serwis', 'opony', 'inne'].map((t) => <option key={t}>{t}</option>)}
                     </select>
-                    <input type="date" placeholder="Data kolejna" value={svcDue} onChange={(e) => setSvcDue(e.target.value)} />
-                    <input type="number" className="kcal" placeholder="Koszt zł" value={svcCost} onChange={(e) => setSvcCost(e.target.value)} inputMode="decimal" />
+                    <input className="fi" type="date" placeholder="Data kolejna" value={svcDue} onChange={(e) => setSvcDue(e.target.value)} />
+                    <input type="number" className="fi-num" placeholder="Koszt zł" value={svcCost} onChange={(e) => setSvcCost(e.target.value)} inputMode="decimal" />
                     <button className="add-btn" type="button" onClick={() => { addSvc.mutate({ vehicle_id: selectedVehId, type: svcType, due_on: svcDue || null, cost: svcCost ? parseFloat(svcCost) : null }); setSvcDue(''); setSvcCost(''); }}>+</button>
                   </div>
                 </article>
@@ -298,12 +298,12 @@ export function BiuroScreen() {
                 </ul>
               )}
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <select value={insType} onChange={(e) => setInsType(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
+                <select className="fi-sel" value={insType} onChange={(e) => setInsType(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
                   {['OC', 'AC', 'health', 'life', 'property', 'travel', 'other'].map((t) => <option key={t}>{t}</option>)}
                 </select>
-                <input type="text" placeholder="Ubezpieczyciel" value={insInsurer} onChange={(e) => setInsInsurer(e.target.value)} style={{ flex: 1 }} />
-                <input type="number" className="kcal" placeholder="Składka zł/r" value={insPremium} onChange={(e) => setInsPremium(e.target.value)} inputMode="decimal" />
-                <input type="date" placeholder="Koniec" value={insEnd} onChange={(e) => setInsEnd(e.target.value)} />
+                <input className="fi" type="text" placeholder="Ubezpieczyciel" value={insInsurer} onChange={(e) => setInsInsurer(e.target.value)} style={{ flex: 1 }} />
+                <input type="number" className="fi-num" placeholder="Składka zł/r" value={insPremium} onChange={(e) => setInsPremium(e.target.value)} inputMode="decimal" />
+                <input className="fi" type="date" placeholder="Koniec" value={insEnd} onChange={(e) => setInsEnd(e.target.value)} />
                 <button className="add-btn" type="button" onClick={() => { if (!insInsurer.trim()) return; addIns.mutate({ type: insType, insurer: insInsurer.trim(), premium: insPremium ? parseFloat(insPremium) : null, end_date: insEnd || null }); setInsInsurer(''); setInsPremium(''); setInsEnd(''); }}>+</button>
               </div>
             </article>
@@ -330,9 +330,9 @@ export function BiuroScreen() {
                 </ul>
               )}
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <input type="text" placeholder="Pracodawca*" value={empName} onChange={(e) => setEmpName(e.target.value)} style={{ flex: 1 }} />
-                <input type="text" placeholder="Stanowisko" value={empPos} onChange={(e) => setEmpPos(e.target.value)} style={{ flex: 1 }} />
-                <input type="number" className="kcal" placeholder="Pula urlopu" value={empPoolInput} onChange={(e) => setEmpPoolInput(e.target.value)} inputMode="numeric" />
+                <input className="fi" type="text" placeholder="Pracodawca*" value={empName} onChange={(e) => setEmpName(e.target.value)} style={{ flex: 1 }} />
+                <input className="fi" type="text" placeholder="Stanowisko" value={empPos} onChange={(e) => setEmpPos(e.target.value)} style={{ flex: 1 }} />
+                <input type="number" className="fi-num" placeholder="Pula urlopu" value={empPoolInput} onChange={(e) => setEmpPoolInput(e.target.value)} inputMode="numeric" />
                 <button className="add-btn" type="button" onClick={() => { if (!empName.trim()) return; addEmp.mutate({ employer: empName.trim(), position: empPos || null, vacationPool: parseInt(empPoolInput) || 26 }); setEmpName(''); setEmpPos(''); }}>+</button>
               </div>
             </article>
@@ -367,10 +367,10 @@ export function BiuroScreen() {
                 </table>
               )}
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <input type="month" value={b2bMonth} onChange={(e) => setB2bMonth(e.target.value)} />
-                <input type="number" className="kcal" placeholder="ZUS" value={b2bZus} onChange={(e) => setB2bZus(e.target.value)} inputMode="decimal" />
-                <input type="number" className="kcal" placeholder="PIT" value={b2bPit} onChange={(e) => setB2bPit(e.target.value)} inputMode="decimal" />
-                <input type="number" className="kcal" placeholder="VAT" value={b2bVat} onChange={(e) => setB2bVat(e.target.value)} inputMode="decimal" />
+                <input className="fi" type="month" value={b2bMonth} onChange={(e) => setB2bMonth(e.target.value)} />
+                <input type="number" className="fi-num" placeholder="ZUS" value={b2bZus} onChange={(e) => setB2bZus(e.target.value)} inputMode="decimal" />
+                <input type="number" className="fi-num" placeholder="PIT" value={b2bPit} onChange={(e) => setB2bPit(e.target.value)} inputMode="decimal" />
+                <input type="number" className="fi-num" placeholder="VAT" value={b2bVat} onChange={(e) => setB2bVat(e.target.value)} inputMode="decimal" />
                 <button className="add-btn" type="button" onClick={() => { upsertB2b.mutate({ month: b2bMonth, zus: parseFloat(b2bZus) || 0, pit: parseFloat(b2bPit) || 0, vat: parseFloat(b2bVat) || 0 }); setB2bZus(''); setB2bPit(''); setB2bVat(''); }}>Zapisz</button>
               </div>
             </article>
@@ -403,10 +403,10 @@ export function BiuroScreen() {
                 </ul>
               )}
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <input type="date" value={vacStart} onChange={(e) => setVacStart(e.target.value)} />
-                <input type="date" value={vacEnd} onChange={(e) => setVacEnd(e.target.value)} />
-                <input type="number" className="kcal" placeholder="Dni" value={vacDays} onChange={(e) => setVacDays(e.target.value)} inputMode="numeric" />
-                <select value={vacType} onChange={(e) => setVacType(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
+                <input className="fi" type="date" value={vacStart} onChange={(e) => setVacStart(e.target.value)} />
+                <input className="fi" type="date" value={vacEnd} onChange={(e) => setVacEnd(e.target.value)} />
+                <input type="number" className="fi-num" placeholder="Dni" value={vacDays} onChange={(e) => setVacDays(e.target.value)} inputMode="numeric" />
+                <select className="fi-sel" value={vacType} onChange={(e) => setVacType(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
                   {['wypoczynkowy', 'na żądanie', 'okolicznościowy', 'bezpłatny'].map((t) => <option key={t}>{t}</option>)}
                 </select>
                 <button className="add-btn" type="button" onClick={() => { if (!vacStart || !vacEnd || !vacDays) return; addVac.mutate({ start_date: vacStart, end_date: vacEnd, days: parseInt(vacDays), type: vacType }); setVacStart(''); setVacEnd(''); setVacDays(''); }}>+</button>

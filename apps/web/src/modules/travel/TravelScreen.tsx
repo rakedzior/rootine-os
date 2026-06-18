@@ -139,11 +139,11 @@ export function TravelScreen() {
               )}
               {showAddTrip && (
                 <div style={{ marginTop: 12, display: 'grid', gap: 6 }}>
-                  <input type="text" placeholder="Destynacja*" value={newDest} onChange={(e) => setNewDest(e.target.value)} />
-                  <input type="text" placeholder="Kraj" value={newCountry} onChange={(e) => setNewCountry(e.target.value)} />
+                  <input className="fi" type="text" placeholder="Destynacja*" value={newDest} onChange={(e) => setNewDest(e.target.value)} />
+                  <input className="fi" type="text" placeholder="Kraj" value={newCountry} onChange={(e) => setNewCountry(e.target.value)} />
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <input type="date" value={newStart} onChange={(e) => setNewStart(e.target.value)} style={{ flex: 1 }} />
-                    <input type="date" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} style={{ flex: 1 }} />
+                    <input className="fi" type="date" value={newStart} onChange={(e) => setNewStart(e.target.value)} style={{ flex: 1 }} />
+                    <input className="fi" type="date" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} style={{ flex: 1 }} />
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button className="add-btn" type="button" onClick={addTrip}>Zapisz</button>
@@ -176,8 +176,8 @@ export function TravelScreen() {
                 </ul>
               )}
               <div style={{ display: 'flex', gap: 6 }}>
-                <input type="text" placeholder="Nazwa dokumentu" value={newDocName} onChange={(e) => setNewDocName(e.target.value)} style={{ flex: 1 }} />
-                <input type="date" value={newDocExp} onChange={(e) => setNewDocExp(e.target.value)} style={{ width: 130 }} />
+                <input className="fi" type="text" placeholder="Nazwa dokumentu" value={newDocName} onChange={(e) => setNewDocName(e.target.value)} style={{ flex: 1 }} />
+                <input className="fi" type="date" value={newDocExp} onChange={(e) => setNewDocExp(e.target.value)} style={{ width: 130 }} />
                 <button className="add-btn" type="button" onClick={addDocument}>+</button>
               </div>
             </article>
@@ -216,7 +216,7 @@ export function TravelScreen() {
             <article className="card">
               <div className="card-head">
                 <div className="lhs"><span className="idx">04</span><span className="card-title">Plan wyjazdu</span></div>
-                <select value={newItemType} onChange={(e) => setNewItemType(e.target.value as typeof newItemType)} style={{ fontSize: 12, padding: '2px 6px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
+                <select className="fi-sel" value={newItemType} onChange={(e) => setNewItemType(e.target.value as typeof newItemType)} style={{ fontSize: 12, padding: '2px 6px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
                   <option value="attraction">Atrakcja</option>
                   <option value="flight">Lot</option>
                   <option value="lodging">Nocleg</option>
@@ -225,7 +225,7 @@ export function TravelScreen() {
                 </select>
               </div>
               <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-                <input type="text" placeholder="Tytuł" value={newItemTitle} onChange={(e) => setNewItemTitle(e.target.value)} style={{ flex: 1 }} onKeyDown={(e) => e.key === 'Enter' && addTripItem()} />
+                <input className="fi" type="text" placeholder="Tytuł" value={newItemTitle} onChange={(e) => setNewItemTitle(e.target.value)} style={{ flex: 1 }} onKeyDown={(e) => e.key === 'Enter' && addTripItem()} />
                 <button className="add-btn" type="button" onClick={addTripItem}>+</button>
               </div>
               {attractionItems.length === 0 ? (
@@ -264,7 +264,7 @@ export function TravelScreen() {
                 ))
               )}
               <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                <input type="text" placeholder="Miejsce marzenie…" value={newBucket} onChange={(e) => setNewBucket(e.target.value)} style={{ flex: 1 }} onKeyDown={(e) => { if (e.key === 'Enter' && newBucket.trim()) { addBucket.mutate({ name: newBucket.trim() }); setNewBucket(''); } }} />
+                <input className="fi" type="text" placeholder="Miejsce marzenie…" value={newBucket} onChange={(e) => setNewBucket(e.target.value)} style={{ flex: 1 }} onKeyDown={(e) => { if (e.key === 'Enter' && newBucket.trim()) { addBucket.mutate({ name: newBucket.trim() }); setNewBucket(''); } }} />
                 <button className="add-btn" type="button" onClick={() => { if (newBucket.trim()) { addBucket.mutate({ name: newBucket.trim() }); setNewBucket(''); } }}>+</button>
               </div>
             </article>
@@ -305,7 +305,7 @@ export function TravelScreen() {
                 </ul>
               )}
               <div style={{ display: 'flex', gap: 6 }}>
-                <input type="text" placeholder="Dodaj do bagażu…" style={{ flex: 1 }}
+                <input className="fi" type="text" placeholder="Dodaj do bagażu…" style={{ flex: 1 }}
                   onKeyDown={(e) => { if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) { addItem.mutate({ trip_id: selectedTripId, type: 'packing', title: (e.target as HTMLInputElement).value.trim() }); (e.target as HTMLInputElement).value = ''; } }} />
                 <button className="add-btn" type="button" onClick={(e) => {
                   const inp = (e.currentTarget.previousSibling as HTMLInputElement);

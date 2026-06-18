@@ -147,7 +147,7 @@ export function NotesScreen() {
               </div>
             ))}
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-              <input type="text" placeholder="Nowa kolekcja…" value={newCollName} onChange={(e) => setNewCollName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addColl()} style={{ flex: 1, fontSize: 13 }} />
+              <input className="fi" type="text" placeholder="Nowa kolekcja…" value={newCollName} onChange={(e) => setNewCollName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addColl()} style={{ flex: 1, fontSize: 13 }} />
               <button className="add-btn" type="button" onClick={addColl}>+</button>
             </div>
           </article>
