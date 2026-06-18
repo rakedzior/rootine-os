@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router-dom';
 import { SecuritySettings } from './SecuritySettings';
 import { ModulesSettings } from './ModulesSettings';
+import { AccountSettings } from './AccountSettings';
+import { IntegrationsSettings } from './IntegrationsSettings';
 
 type Tab = 'account' | 'integrations' | 'security' | 'modules';
 
@@ -10,13 +12,6 @@ const TABS: { tab: Tab; to: string; label: string }[] = [
   { tab: 'modules', to: '/settings/modules', label: 'Moduły' },
   { tab: 'integrations', to: '/settings/integrations', label: 'Integracje' },
 ];
-
-const TITLES: Record<Tab, string> = {
-  account: 'Ustawienia konta',
-  integrations: 'Integracje',
-  security: 'Bezpieczeństwo konta',
-  modules: 'Moduły i widoczność',
-};
 
 export function SettingsScreen({ tab = 'account' }: { tab?: Tab }) {
   return (
@@ -42,18 +37,10 @@ export function SettingsScreen({ tab = 'account' }: { tab?: Tab }) {
           <SecuritySettings />
         ) : tab === 'modules' ? (
           <ModulesSettings />
+        ) : tab === 'integrations' ? (
+          <IntegrationsSettings />
         ) : (
-          <article className="card">
-            <div className="card-head">
-              <div className="lhs"><span className="card-title">{TITLES[tab]}</span></div>
-              <span className="pill">Wkrótce</span>
-            </div>
-            <div className="note-peek">
-              {tab === 'integrations'
-                ? 'Google Calendar i Strava — Faza 3.'
-                : 'Ustawienia konta — wkrótce.'}
-            </div>
-          </article>
+          <AccountSettings />
         )}
       </section>
     </main>

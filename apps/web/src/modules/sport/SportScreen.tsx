@@ -6,6 +6,7 @@ import {
   useWorkouts, useCreateWorkout, useDeleteWorkout, usePatchWorkout,
   useWorkoutSets, useAddWorkoutSet, useDeleteWorkoutSet,
 } from '@/features/sport/hooks';
+import { useStravaActivities } from '@/features/integrations/hooks';
 import '@/styles/health.css';
 
 // 1RM Epley: w * (1 + reps/30)
@@ -420,9 +421,64 @@ export function SportScreen() {
             )}
           </article>
         )}
-        {showRunning && card('Bieganie', 'Aktywności ze Stravy (Faza 3).', 'Strava')}
+        {showRunning && <RunningCard />}
         {showRehab && card('Rehabilitacja i mobilność', 'Ćwiczenia rehab i mobility.', 'Rutyna')}
       </section>
     </main>
+  );
+}
+
+function RunningCard() {
+  const activQ = useStravaActivities(10);
+  const runs = (activQ.data ?? []).filter((a) => a.type === 'Run' || a.type === 'VirtualRun');
+
+  function fmt(distM: number | null) {
+    if (!distM) return '—';
+    return `${(distM / 1000).toFixed(2)} km`;
+  }
+  function fmtPace(s: number | null) {
+    if (!s) return '—';
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${String(sec).padStart(2, '0')} /km`;
+  }
+  function fmtDur(s: number | null) {
+    if (!s) return '—';
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    return h > 0 ? `${h}h ${m}min` : `${m}min`;
+  }
+
+  return (
+    <article className="card">
+      <div className="card-head">
+        <div className="lhs"><span className="card-title">Bieganie</span></div>
+        {activQ.isFetching && <span style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>↻</span>}
+      </div>
+      {runs.length === 0 ? (
+        <div className="note-peek">
+          {activQ.isLoading ? 'Ładowanie…' : 'Brak biegów · Połącz Stravę w Ustawienia → Integracje'}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+          {runs.map((r) => (
+            <div key={r.id} className="sh-row">
+              <div className="sh-date">
+                {new Date(r.start_date).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
+              </div>
+              <div className="sh-main">
+                <div className="sh-title">{r.name}</div>
+                <div className="m" style={{ display: 'flex', gap: 10 }}>
+                  <span>{fmt(r.distance_m)}</span>
+                  <span>{fmtDur(r.duration_s)}</span>
+                  {r.avg_pace_s && <span>{fmtPace(r.avg_pace_s)}</span>}
+                  {r.avg_hr && <span>♥ {r.avg_hr}</span>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </article>
   );
 }

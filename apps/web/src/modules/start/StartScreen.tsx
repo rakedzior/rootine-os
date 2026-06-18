@@ -7,6 +7,8 @@ import { GoalProgress } from '@/features/goals/GoalProgress';
 import { useTasks } from '@/features/tasks/hooks';
 import { useHabits } from '@/features/habits/hooks';
 import { useTodayMealItems, useNutritionToday } from '@/features/diet/hooks';
+import { useCalendarEvents } from '@/features/integrations/hooks';
+import type { CalendarEvent } from '@/features/integrations/types';
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -84,7 +86,7 @@ export function StartScreen() {
                   <div className="ta-head">Następnie</div>
                   <div className="ta-next">
                     <div className="ta-evname" style={{ color: 'var(--ink-3)' }}>Brak nadchodzących wydarzeń</div>
-                    <div className="diet-hint">Kalendarz pojawi się po integracji (Faza 3).</div>
+                    <div className="diet-hint">Połącz Google Calendar w Ustawienia → Integracje</div>
                   </div>
                 </div>
               </div>
@@ -225,20 +227,44 @@ function TodayWorkoutCard() {
 }
 
 function MonthCalendar() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const today = now.getDate();
+
+  const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01T00:00:00`;
+  const nextMonth = new Date(year, month + 1, 1);
+  const monthEnd = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-01T00:00:00`;
+
+  const eventsQ = useCalendarEvents(monthStart, monthEnd);
+  const events: CalendarEvent[] = eventsQ.data ?? [];
+
+  // Map events by day-of-month for quick lookup
+  const eventsByDay = useMemo(() => {
+    const map: Record<number, CalendarEvent[]> = {};
+    for (const ev of events) {
+      const d = new Date(ev.start_ts).getDate();
+      if (!map[d]) map[d] = [];
+      map[d].push(ev);
+    }
+    return map;
+  }, [events]);
+
   const cells = useMemo(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const today = now.getDate();
     const firstIdx = (new Date(year, month, 1).getDay() + 6) % 7;
     const days = new Date(year, month + 1, 0).getDate();
     const arr: { day: number | null; today: boolean }[] = [];
     for (let i = 0; i < firstIdx; i++) arr.push({ day: null, today: false });
     for (let d = 1; d <= days; d++) arr.push({ day: d, today: d === today });
     return arr;
-  }, []);
-  const now = new Date();
+  }, [year, month, today]);
+
   const monthName = cap(new Intl.DateTimeFormat('pl-PL', { month: 'long' }).format(now));
+
+  // Upcoming events this month
+  const upcoming = events
+    .filter((e) => new Date(e.start_ts) >= new Date())
+    .slice(0, 5);
 
   return (
     <article className="card">
@@ -246,22 +272,59 @@ function MonthCalendar() {
         <div className="lhs">
           <span className="cal-month">{monthName} <span className="yr">{now.getFullYear()}</span></span>
         </div>
+        {eventsQ.isFetching && (
+          <span style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>↻</span>
+        )}
       </div>
       <div className="cal-dow">
         <div>Pon</div><div>Wt</div><div>Śr</div><div>Czw</div><div>Pt</div><div>Sob</div><div>Ndz</div>
       </div>
       <div className="cal-grid">
-        {cells.map((c, i) =>
-          c.day === null ? (
-            <div className="cal-cell out" key={`e${i}`} />
-          ) : (
-            <div className={`cal-cell${c.today ? ' today' : ''}`} key={c.day}>
+        {cells.map((c, i) => {
+          if (c.day === null) return <div className="cal-cell out" key={`e${i}`} />;
+          const dayEvents = eventsByDay[c.day] ?? [];
+          return (
+            <div className={`cal-cell${c.today ? ' today' : ''}`} key={c.day} title={dayEvents.map((e) => e.title).join('\n')}>
               <div className="dn tnum">{c.day}</div>
+              {dayEvents.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, marginTop: 2 }}>
+                  {dayEvents.slice(0, 3).map((ev) => (
+                    <div
+                      key={ev.id}
+                      style={{
+                        width: 6, height: 6, borderRadius: '50%',
+                        background: ev.color ?? 'var(--acc-a)',
+                        flexShrink: 0,
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          ),
-        )}
+          );
+        })}
       </div>
-      <div className="diet-hint" style={{ marginTop: 12 }}>Wydarzenia z Google Calendar — Faza 3.</div>
+      {upcoming.length > 0 && (
+        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {upcoming.map((ev) => (
+            <div key={ev.id} style={{ display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 12 }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                background: ev.color ?? 'var(--acc-a)', marginTop: 3,
+              }} />
+              <span style={{ color: 'var(--ink-2)', fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>
+                {new Date(ev.start_ts).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
+              </span>
+              <span style={{ color: 'var(--ink)', fontWeight: 500 }}>{ev.title}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {events.length === 0 && !eventsQ.isFetching && (
+        <div className="diet-hint" style={{ marginTop: 12 }}>
+          Brak wydarzeń · Połącz Google Calendar w Ustawienia → Integracje
+        </div>
+      )}
     </article>
   );
 }
