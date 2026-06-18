@@ -26,17 +26,12 @@ export function FinanceScreen() {
   const error = accountsQ.isError || txQ.isError;
 
   return (
-    <main className="grid" style={{ gridTemplateColumns: '1fr', maxWidth: 760 }}>
+    <main className="grid">
+      {/* LEFT: balance + budgets */}
       <section className="col">
-        <article className="card session">
-          <div className="greet">Finanse <span className="em">·</span> saldo</div>
-          <div className="greet-sub">Konta, transakcje, budżety</div>
-        </article>
-
         {error && (
           <article className="card"><div className="auth-banner warn">Nie udało się wczytać danych finansowych.</div></article>
         )}
-
         <article className="card">
           <div className="card-head">
             <div className="lhs"><span className="card-title">Saldo</span></div>
@@ -56,7 +51,11 @@ export function FinanceScreen() {
             </>
           )}
         </article>
+        <BudgetsCard />
+      </section>
 
+      {/* CENTER: transactions */}
+      <section className="col">
         <article className="card">
           <div className="card-head">
             <div className="lhs"><span className="card-title">Transakcje</span></div>
@@ -65,14 +64,16 @@ export function FinanceScreen() {
           {!loading && (
             <div className="fin-ledger" style={{ marginTop: 8 }}>
               {txs.length === 0 && <div className="agenda-empty">Brak transakcji.</div>}
-              {txs.slice(0, 50).map((t) => (
+              {txs.slice(0, 80).map((t) => (
                 <TransactionRow key={t.id} amount={t.amount} note={t.note} date={t.occurred_on} id={t.id} />
               ))}
             </div>
           )}
         </article>
+      </section>
 
-        <BudgetsCard />
+      {/* RIGHT: recurring + categories */}
+      <section className="col">
         <RecurringCard />
         <CategoriesCard />
       </section>
@@ -119,16 +120,16 @@ function AddAccountForm() {
 
   return (
     <form className="capture" onSubmit={submit} style={{ flexWrap: 'wrap', gap: 10, marginTop: 12 }}>
-      <div className="field" style={{ flex: '1 1 180px' }}>
+      <div className="field" style={{ flex: '1 1 100%' }}>
         <span className="lead">Konto</span>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nazwa konta…" />
       </div>
-      <select className="he-select" value={kind} onChange={(e) => setKind(e.target.value)} style={{ width: 140 }}>
+      <select className="he-select" value={kind} onChange={(e) => setKind(e.target.value)} style={{ flex: '1 1 120px' }}>
         {ACCOUNT_KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
       </select>
-      <input className="auth-input mono" style={{ width: 120 }} inputMode="decimal"
+      <input className="auth-input mono" style={{ flex: '1 1 100px' }} inputMode="decimal"
         value={start} onChange={(e) => setStart(e.target.value)} placeholder="Saldo pocz." />
-      <button className="btn" type="submit" disabled={create.isPending}>Dodaj</button>
+      <button className="btn" type="submit" disabled={create.isPending} style={{ width: '100%' }}>Dodaj konto</button>
     </form>
   );
 }
@@ -159,26 +160,26 @@ function AddTransactionForm({ accounts, categories }: { accounts: Account[]; cat
 
   return (
     <form className="capture" onSubmit={submit} style={{ flexWrap: 'wrap', gap: 10 }}>
-      <select className="he-select" value={dir} onChange={(e) => setDir(e.target.value as 'out' | 'in')} style={{ width: 120 }}>
+      <select className="he-select" value={dir} onChange={(e) => setDir(e.target.value as 'out' | 'in')} style={{ flex: '1 1 110px' }}>
         <option value="out">Wydatek</option>
         <option value="in">Wpływ</option>
       </select>
-      <input className="auth-input mono" style={{ width: 110 }} inputMode="decimal"
+      <input className="auth-input mono" style={{ flex: '1 1 100px' }} inputMode="decimal"
         value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Kwota" />
-      <select className="he-select" value={accountId} onChange={(e) => setAccountId(e.target.value)} style={{ width: 140 }}>
+      <select className="he-select" value={accountId} onChange={(e) => setAccountId(e.target.value)} style={{ flex: '1 1 130px' }}>
         <option value="">— konto —</option>
         {accounts.map((a) => <option key={a.id} value={a.id}>{a.name || 'Konto'}</option>)}
       </select>
-      <select className="he-select" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} style={{ width: 150 }}>
+      <select className="he-select" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} style={{ flex: '1 1 130px' }}>
         <option value="">— kategoria —</option>
         {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
       </select>
-      <input className="auth-input" type="date" style={{ width: 150 }} value={date} onChange={(e) => setDate(e.target.value)} />
-      <div className="field" style={{ flex: '1 1 160px' }}>
+      <input className="auth-input" type="date" style={{ flex: '1 1 140px' }} value={date} onChange={(e) => setDate(e.target.value)} />
+      <div className="field" style={{ flex: '1 1 100%' }}>
         <span className="lead">Opis</span>
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Notatka (opcjonalnie)…" />
       </div>
-      <button className="btn" type="submit" disabled={create.isPending}>Dodaj</button>
+      <button className="btn" type="submit" disabled={create.isPending} style={{ width: '100%' }}>Dodaj transakcję</button>
     </form>
   );
 }

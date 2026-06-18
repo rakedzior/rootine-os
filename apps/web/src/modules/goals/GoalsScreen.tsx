@@ -25,15 +25,24 @@ export function GoalsScreen() {
   const [name, setName] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
 
+  const goals = goalsQ.data ?? [];
+  const milestones = milestonesQ.data ?? [];
+
   const byGoal = useMemo(() => {
     const map = new Map<string, Milestone[]>();
-    for (const m of milestonesQ.data ?? []) {
+    for (const m of milestones) {
       const arr = map.get(m.goal_id) ?? [];
       arr.push(m);
       map.set(m.goal_id, arr);
     }
     return map;
-  }, [milestonesQ.data]);
+  }, [milestones]);
+
+  const goalName = useMemo(() => new Map(goals.map((g) => [g.id, g.name])), [goals]);
+  const avgProgress = goals.length
+    ? Math.round(goals.reduce((s, g) => s + g.progress, 0) / goals.length)
+    : 0;
+  const upcoming = milestones.filter((m) => !m.done).slice(0, 12);
 
   const addGoal = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,31 +53,46 @@ export function GoalsScreen() {
   };
 
   return (
-    <main className="grid" style={{ gridTemplateColumns: '1fr', maxWidth: 760 }}>
+    <main className="grid">
+      {/* LEFT: new goal + summary */}
       <section className="col">
-        <article className="card session">
-          <div className="greet">Cele <span className="em">·</span> postępy</div>
-          <div className="greet-sub">Cele i kamienie milowe</div>
-        </article>
-
         <article className="card">
           <div className="card-head">
             <div className="lhs"><span className="card-title">Nowy cel</span></div>
           </div>
           <form className="capture" onSubmit={addGoal} style={{ flexWrap: 'wrap', gap: 10 }}>
-            <div className="field" style={{ flex: '1 1 220px' }}>
+            <div className="field" style={{ flex: '1 1 100%' }}>
               <span className="lead">Cel</span>
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nazwa celu…" />
             </div>
-            <select className="he-select" value={category} onChange={(e) => setCategory(e.target.value)} style={{ width: 150 }}>
+            <select className="he-select" value={category} onChange={(e) => setCategory(e.target.value)} style={{ flex: '1 1 130px' }}>
               {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
-            <button className="btn" type="submit" disabled={create.isPending}>
-              {create.isPending ? 'Dodawanie…' : 'Dodaj'}
-            </button>
+            <button className="btn" type="submit" disabled={create.isPending} style={{ flex: '1 1 100px' }}>Dodaj</button>
           </form>
         </article>
 
+        <article className="card">
+          <div className="card-head">
+            <div className="lhs"><span className="card-title">Momentum</span></div>
+            <span className="pill accent">{avgProgress}%</span>
+          </div>
+          <div className="hb-score" style={{ margin: '4px auto 0' }}>
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="43" fill="none" stroke="var(--surface-inset)" strokeWidth="8" />
+              <circle cx="50" cy="50" r="43" fill="none" stroke="var(--acc-a)" strokeWidth="8" strokeLinecap="round"
+                strokeDasharray="270.2" strokeDashoffset={270.2 - (270.2 * avgProgress) / 100} transform="rotate(-90 50 50)" />
+            </svg>
+            <div className="v tnum">{avgProgress}</div>
+          </div>
+          <div className="note-peek" style={{ textAlign: 'center', marginTop: 8 }}>
+            {goals.length} {goals.length === 1 ? 'cel' : 'celów'} · średni postęp
+          </div>
+        </article>
+      </section>
+
+      {/* CENTER: goal cards */}
+      <section className="col">
         {goalsQ.isLoading && <article className="card"><div className="note-peek">Ładowanie celów…</div></article>}
         {goalsQ.isError && (
           <article className="card">
@@ -76,13 +100,31 @@ export function GoalsScreen() {
             <button className="he-btn ghost" type="button" onClick={() => goalsQ.refetch()}>Spróbuj ponownie</button>
           </article>
         )}
-        {goalsQ.data && goalsQ.data.length === 0 && (
-          <article className="card"><div className="agenda-empty">Brak celów. Dodaj pierwszy powyżej.</div></article>
+        {goalsQ.data && goals.length === 0 && (
+          <article className="card"><div className="agenda-empty">Brak celów. Dodaj pierwszy po lewej.</div></article>
         )}
-
-        {(goalsQ.data ?? []).map((g) => (
+        {goals.map((g) => (
           <GoalCard key={g.id} goal={g} milestones={byGoal.get(g.id) ?? []} />
         ))}
+      </section>
+
+      {/* RIGHT: upcoming milestones */}
+      <section className="col">
+        <article className="card">
+          <div className="card-head">
+            <div className="lhs"><span className="card-title">Kamienie milowe</span></div>
+            <span className="pill">Do zrobienia</span>
+          </div>
+          <div className="todos">
+            {upcoming.length === 0 && <div className="agenda-empty">Brak otwartych kamieni.</div>}
+            {upcoming.map((m) => (
+              <div className="todo" key={m.id} style={{ cursor: 'default' }}>
+                <span className="t">{m.title}</span>
+                <span className="todo-cat">{goalName.get(m.goal_id) ?? ''}</span>
+              </div>
+            ))}
+          </div>
+        </article>
       </section>
     </main>
   );
@@ -102,8 +144,6 @@ function GoalCard({ goal, milestones }: { goal: Goal; milestones: Milestone[] })
   const derived = hasMilestones ? computeGoalProgress(milestones) : null;
   const shown = derived ?? manual;
 
-  // Persist derived progress to goals.progress so the Start widget stays in
-  // sync. Optimistic update sets goal.progress === derived, so this settles.
   useEffect(() => {
     if (derived !== null && derived !== goal.progress) {
       update.mutate({ id: goal.id, patch: { progress: derived } });
@@ -144,8 +184,7 @@ function GoalCard({ goal, milestones }: { goal: Goal; milestones: Milestone[] })
 
       {hasMilestones ? (
         <div className="diet-hint" style={{ marginTop: 8 }}>
-          Postęp liczony z kamieni milowych ({milestones.filter((m) => m.done).length}/{milestones.length}).
-          Pole „%" przy kamieniu ustawia własną wagę; puste = równy podział.
+          Postęp z kamieni ({milestones.filter((m) => m.done).length}/{milestones.length}). Pole „%" = własna waga; puste = równy podział.
         </div>
       ) : (
         <input
