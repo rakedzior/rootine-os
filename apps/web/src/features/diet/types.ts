@@ -60,6 +60,16 @@ export interface NewMealItemInput {
   food_item_id?: string | null;
 }
 
+export interface NewFoodItemInput {
+  name: string;
+  kcal: number;
+  protein?: number;
+  carb?: number;
+  fat?: number;
+  per_amount?: number;
+  unit?: string;
+}
+
 export interface NutritionDailyPatch {
   kcal_target?: number;
   protein_target?: number;
@@ -67,4 +77,15 @@ export interface NutritionDailyPatch {
   fat_target?: number;
   water_ml?: number;
   weight_kg?: number | null;
+}
+
+export interface FoodSearchResult {
+  external_id: string;
+  name: string;
+  kcal: number;
+  protein: number;
+  carb: number;
+  fat: number;
+  per_amount: number;
+  unit: string;
 }
