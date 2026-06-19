@@ -5,7 +5,13 @@ export interface Task {
   done: boolean;
   due_date: string | null;
   category: string | null;
+  priority: 'high' | 'mid' | 'low' | null;
   scheduled_time: string | null;
+  note: string;
+  series_id: string | null;
+  repeat_mode: 'none' | 'daily' | 'weekly' | null;
+  repeat_until: string | null;
+  repeat_weekdays: number[] | null;
   favorite: boolean;
   sort_order: number;
   created_at: string;
@@ -16,6 +22,12 @@ export interface Task {
 export interface NewTaskInput {
   title: string;
   category?: string | null;
+  priority?: 'high' | 'mid' | 'low' | null;
   due_date?: string | null;
   scheduled_time?: string | null;
+  note?: string | null;
+  series_id?: string | null;
+  repeat_mode?: 'none' | 'daily' | 'weekly' | null;
+  repeat_until?: string | null;
+  repeat_weekdays?: number[] | null;
 }

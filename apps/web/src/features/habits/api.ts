@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { Habit, HabitLog, NewHabitInput } from './types';
-import { addDays, todayStr } from './dates';
+import { ALL_WEEKDAYS, addDays, todayStr } from './dates';
 
 export async function fetchHabits(): Promise<Habit[]> {
   const { data, error } = await supabase
@@ -30,7 +30,15 @@ export async function insertHabit(input: NewHabitInput): Promise<Habit> {
   if (!userId) throw new Error('Brak sesji użytkownika');
   const { data, error } = await supabase
     .from('habits')
-    .insert({ user_id: userId, name: input.name, category: input.category ?? null })
+    .insert({
+      user_id: userId,
+      name: input.name,
+      category: input.category ?? null,
+      recurrence_type: input.recurrence_type ?? 'daily',
+      weekdays: input.weekdays?.length ? input.weekdays : ALL_WEEKDAYS,
+      start_date: input.start_date ?? todayStr(),
+      end_date: input.end_date ?? null,
+    })
     .select('*')
     .single();
   if (error) throw error;

@@ -501,11 +501,11 @@ button.active .sub-tab-icon { opacity: 1; }
 .modal, .modal-box {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--r-card); box-shadow: var(--sh-pop);
-  width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+  width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;
   display: flex; flex-direction: column; animation: modal-in 200ms var(--ease);
 }
 .modal.modal-sm, .modal-box.sm { max-width: 392px; }
-.modal.modal-lg, .modal-box.md { max-width: 580px; }
+.modal.modal-lg, .modal-box.md { max-width: min(860px, calc(100vw - 40px)); }
 .modal-box.lg { max-width: 700px; }
 .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 20px var(--pad) 15px; border-bottom: 1px solid var(--border-soft); }
 .modal-title { font-family: var(--font-display); font-size: 19px; font-weight: 600; letter-spacing: -.02em; }

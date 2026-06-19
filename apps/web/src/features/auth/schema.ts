@@ -1,9 +1,8 @@
 import { z } from 'zod';
-import zxcvbn from 'zxcvbn';
 
 export const emailSchema = z.string().trim().email('Podaj poprawny adres e-mail');
 
-/** Strong password policy: min 12 chars + zxcvbn strength >= 3. */
+/** Strong password policy: min 12 chars + local entropy checks. */
 export const passwordSchema = z
   .string()
   .min(12, 'Hasło musi mieć co najmniej 12 znaków')
@@ -24,7 +23,7 @@ export const registerSchema = z
     path: ['confirm'],
     message: 'Hasła nie są takie same',
   })
-  .refine((d) => zxcvbn(d.password).score >= 3, {
+  .refine((d) => passwordStrength(d.password).score >= 3, {
     path: ['password'],
     message: 'Hasło jest zbyt łatwe do odgadnięcia — wydłuż je lub dodaj losowości',
   });
@@ -32,16 +31,43 @@ export const registerSchema = z
 export const newPasswordSchema = z
   .object({ password: passwordSchema, confirm: z.string() })
   .refine((d) => d.password === d.confirm, { path: ['confirm'], message: 'Hasła nie są takie same' })
-  .refine((d) => zxcvbn(d.password).score >= 3, {
+  .refine((d) => passwordStrength(d.password).score >= 3, {
     path: ['password'],
     message: 'Hasło jest zbyt łatwe do odgadnięcia',
   });
 
 const STRENGTH_LABELS = ['Bardzo słabe', 'Słabe', 'Średnie', 'Dobre', 'Bardzo dobre'];
+const COMMON_PASSWORD_PARTS = ['password', 'haslo', 'hasło', 'qwerty', 'admin', 'rootine', '123456', '111111'];
+
+function hasSequence(pw: string): boolean {
+  const s = pw.toLowerCase();
+  for (let i = 0; i <= s.length - 4; i += 1) {
+    const chars = s.slice(i, i + 4).split('').map((c) => c.charCodeAt(0));
+    const ascending = chars.every((code, idx) => idx === 0 || code === chars[idx - 1] + 1);
+    const descending = chars.every((code, idx) => idx === 0 || code === chars[idx - 1] - 1);
+    if (ascending || descending) return true;
+  }
+  return false;
+}
 
 export function passwordStrength(pw: string): { score: number; label: string } {
   if (!pw) return { score: 0, label: '—' };
-  const { score } = zxcvbn(pw);
+  const classes = [
+    /[a-z]/.test(pw),
+    /[A-Z]/.test(pw),
+    /\d/.test(pw),
+    /[^A-Za-z0-9]/.test(pw),
+  ].filter(Boolean).length;
+  const uniqueRatio = new Set(pw).size / pw.length;
+  let score = 0;
+  if (pw.length >= 12) score += 1;
+  if (pw.length >= 16) score += 1;
+  if (pw.length >= 20) score += 1;
+  if (classes >= 3) score += 1;
+  if (classes >= 4 && uniqueRatio > 0.55) score += 1;
+  if (COMMON_PASSWORD_PARTS.some((part) => pw.toLowerCase().includes(part))) score -= 1;
+  if (/(.)\1{3,}/.test(pw) || hasSequence(pw)) score -= 1;
+  score = Math.max(0, Math.min(4, score));
   return { score, label: STRENGTH_LABELS[score] ?? '—' };
 }
 

@@ -98,7 +98,11 @@ export function useAddMealItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: NewMealItemInput) => insertMealItem(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: TODAY_ITEMS_KEY }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: TODAY_ITEMS_KEY });
+      qc.invalidateQueries({ queryKey: TODAY_MEALS_KEY });
+      qc.invalidateQueries({ queryKey: MEAL_ITEMS_HISTORY_KEY });
+    },
   });
 }
 
@@ -115,7 +119,10 @@ export function useDeleteMealItem() {
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(TODAY_ITEMS_KEY, ctx.prev);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: TODAY_ITEMS_KEY }),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: TODAY_ITEMS_KEY });
+      qc.invalidateQueries({ queryKey: MEAL_ITEMS_HISTORY_KEY });
+    },
   });
 }
 
@@ -143,7 +150,10 @@ export function useUpsertNutritionDaily() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (patch: NutritionDailyPatch) => upsertNutritionDaily(patch),
-    onSuccess: () => qc.invalidateQueries({ queryKey: NUTRITION_TODAY_KEY }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: NUTRITION_TODAY_KEY });
+      qc.invalidateQueries({ queryKey: NUTRITION_HISTORY_KEY });
+    },
   });
 }
 
@@ -155,7 +165,10 @@ export function useAddWater(glassML = 250) {
       const curWater = current?.water_ml ?? 0;
       return upsertNutritionDaily({ water_ml: curWater + glassML });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: NUTRITION_TODAY_KEY }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: NUTRITION_TODAY_KEY });
+      qc.invalidateQueries({ queryKey: NUTRITION_HISTORY_KEY });
+    },
   });
 }
 

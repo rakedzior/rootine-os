@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, ProgressBar, StatusBadge, PriorityBadge, IcoTrash } from '@/components/common';
+import { HabitList } from '@/features/habits/HabitList';
 import { useLocalStore, type Goal, type GoalTask, type GoalType, type Priority } from '@/store/localStore';
 
 const TABS = [
   { id: 'lista',     label: 'Lista celów', icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> },
+  { id: 'nawyki',    label: 'Nawyki',      icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M9 12l2 2 4-5"/><path d="M12 3a9 9 0 1 0 9 9"/><path d="M17 3h4v4"/></svg> },
   { id: 'dzisiaj',   label: 'Dzisiaj',     icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
   { id: 'ukonczone', label: 'Ukończone',   icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> },
 ];
@@ -19,8 +21,22 @@ export function GoalsScreen() {
         <SubTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
       {tab === 'lista'     && <GoalsList />}
+      {tab === 'nawyki'    && <GoalsHabits />}
       {tab === 'dzisiaj'   && <GoalsToday />}
       {tab === 'ukonczone' && <GoalsDone />}
+    </div>
+  );
+}
+
+function GoalsHabits() {
+  return (
+    <div style={{ maxWidth: 920 }}>
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Nawyki</span>
+        </div>
+        <HabitList />
+      </div>
     </div>
   );
 }

@@ -4,8 +4,21 @@ import type {
   NewMealItemInput, NewFoodItemInput, NutritionDailyPatch,
 } from './types';
 
+function toDateStr(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function today() {
-  return new Date().toISOString().split('T')[0];
+  return toDateStr(new Date());
+}
+
+function daysAgo(days: number) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return toDateStr(d);
 }
 
 async function uid(): Promise<string> {
@@ -23,18 +36,20 @@ function normItem(r: MealItem): MealItem {
 
 export async function fetchTodayMealItems(): Promise<MealItem[]> {
   const d = today();
+  const meals = await fetchTodayMeals(d);
+  const mealIds = meals.map((meal) => meal.id);
+  if (mealIds.length === 0) return [];
   const { data, error } = await supabase
     .from('meal_items')
     .select('*')
-    .gte('created_at', `${d}T00:00:00`)
-    .lt('created_at', `${d}T23:59:59.999`)
+    .in('meal_id', mealIds)
     .order('created_at', { ascending: true });
   if (error) throw error;
   return ((data ?? []) as MealItem[]).map(normItem);
 }
 
 export async function fetchMealItemsHistory(days = 30): Promise<MealItem[]> {
-  const from = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+  const from = daysAgo(days);
   const { data, error } = await supabase
     .from('meal_items')
     .select('*')
@@ -177,7 +192,7 @@ export async function upsertNutritionDaily(patch: NutritionDailyPatch, date?: st
 }
 
 export async function fetchNutritionDailyHistory(days = 30): Promise<NutritionDaily[]> {
-  const from = new Date(Date.now() - days * 86400000).toISOString().split('T')[0];
+  const from = daysAgo(days);
   const { data, error } = await supabase
     .from('nutrition_daily')
     .select('*')

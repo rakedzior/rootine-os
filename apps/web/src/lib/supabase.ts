@@ -7,7 +7,6 @@ const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 if (!url || !anonKey) {
   // Don't throw at import time during early scaffolding, but make it loud.
-  // eslint-disable-next-line no-console
   console.warn(
     '[Rootine OS] Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY — copy .env.example to .env.',
   );

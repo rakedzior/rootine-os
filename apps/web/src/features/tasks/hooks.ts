@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchTasks, insertTask, patchTask, deleteTask } from './api';
+import { fetchTasks, insertTask, patchTask, deleteTask, deleteTasks } from './api';
 import type { Task, NewTaskInput } from './types';
 
 export const TASKS_KEY = ['tasks'] as const;
@@ -12,7 +12,17 @@ export function useCreateTask() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: NewTaskInput) => insertTask(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: TASKS_KEY }),
+    onSuccess: (task) => {
+      qc.setQueryData<Task[]>(TASKS_KEY, (old) => {
+        const next = [task, ...(old ?? []).filter((t) => t.id !== task.id)];
+        return next.sort((a, b) => {
+          if (a.done !== b.done) return Number(a.done) - Number(b.done);
+          if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order;
+          return a.created_at.localeCompare(b.created_at);
+        });
+      });
+      qc.invalidateQueries({ queryKey: TASKS_KEY });
+    },
   });
 }
 
@@ -51,6 +61,24 @@ export function useDeleteTask() {
       await qc.cancelQueries({ queryKey: TASKS_KEY });
       const prev = qc.getQueryData<Task[]>(TASKS_KEY);
       qc.setQueryData<Task[]>(TASKS_KEY, (old) => (old ?? []).filter((t) => t.id !== id));
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(TASKS_KEY, ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: TASKS_KEY }),
+  });
+}
+
+export function useDeleteTasks() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => deleteTasks(ids),
+    onMutate: async (ids) => {
+      await qc.cancelQueries({ queryKey: TASKS_KEY });
+      const prev = qc.getQueryData<Task[]>(TASKS_KEY);
+      const remove = new Set(ids);
+      qc.setQueryData<Task[]>(TASKS_KEY, (old) => (old ?? []).filter((t) => !remove.has(t.id)));
       return { prev };
     },
     onError: (_e, _v, ctx) => {
