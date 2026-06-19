@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { setTheme, getCurrentTheme, type Theme } from '@/lib/theme';
+import { useWeather } from '@/features/weather/useWeather';
+import { WeatherButton, WeatherModal } from '@/features/weather/WeatherWidget';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Planer', exact: true },
@@ -34,7 +36,9 @@ export function Topbar() {
   const [now, setNow] = useState(new Date());
   const [theme, setThemeState] = useState<Theme>(getCurrentTheme);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [weatherOpen, setWeatherOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const weather = useWeather();
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -99,16 +103,7 @@ export function Topbar() {
 
       {/* Right cluster */}
       <div className="tcluster">
-        <div className="tmini">
-          <svg className="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="5"/>
-            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-          </svg>
-          <div className="tt"><b>22°C</b><small>Słonecznie</small></div>
-        </div>
+        <WeatherButton weather={weather.data} loading={weather.loading} onClick={() => setWeatherOpen(true)} compact />
         <div className="tdiv" />
         <div className="tclock-col">
           <div className="tclock">{hh}:{mm}<span className="s">:{ss}</span></div>
@@ -140,6 +135,13 @@ export function Topbar() {
           )}
         </div>
       </div>
+      <WeatherModal
+        open={weatherOpen}
+        weather={weather.data}
+        loading={weather.loading}
+        error={weather.error}
+        onClose={() => setWeatherOpen(false)}
+      />
     </header>
   );
 }
