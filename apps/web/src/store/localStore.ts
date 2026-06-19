@@ -5,6 +5,7 @@
  */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { EXERCISE_CATALOG, MUSCLE_LABEL, type ExerciseDef, type MuscleKey, type Difficulty } from '@/features/sport/catalog';
 
 // ─── TYPES ──────────────────────────────────────────────────
 
@@ -16,6 +17,20 @@ export interface SportExercise {
   id: string; createdAt: string;
   name: string; sportType: string; muscleGroup: string;
   equipment: string; notes: string;
+  // Rich multi-muscle model (optional — older/custom entries may omit these).
+  aliases?: string[];
+  category?: string;
+  equipmentTags?: string[];
+  difficulty?: Difficulty;
+  movementPattern?: string;
+  primaryMuscles?: MuscleKey[];
+  secondaryMuscles?: MuscleKey[];
+  stabilizerMuscles?: MuscleKey[];
+  instructions?: string;
+  tips?: string;
+  contraindications?: string;
+  rehabSafe?: boolean;
+  tags?: string[];
 }
 export interface WorkoutSet {
   setNumber: number; reps: number; weight: number;
@@ -28,6 +43,10 @@ export interface WorkoutTemplate {
   id: string; createdAt: string; updatedAt: string;
   name: string; sportType: string; description: string;
   exercises: WorkoutExercise[]; estimatedDuration: number; isActive: boolean;
+  category?: string;
+  level?: Difficulty;
+  equipmentTags?: string[];
+  goal?: string;
 }
 export interface WorkoutSession {
   id: string; createdAt: string; updatedAt: string;
@@ -38,6 +57,20 @@ export interface WorkoutSession {
   painAfterTraining?: number; notesAfterTraining?: string;
   painNextDay?: number; notesNextDay?: string;
   status: 'active' | 'completed';
+  /** Bieganie — opcjonalne metryki dystansowe. */
+  distanceKm?: number;
+  avgPaceMinPerKm?: number;
+}
+
+// — SPORT: ODCZUCIA (check-ins) —
+export type FeelingMode = 'pre' | 'post';
+export interface FeelingEntry {
+  id: string; createdAt: string; date: string; mode: FeelingMode;
+  mood: number; energy: number; motivation: number;
+  pain: number; stiffness: number; recovery: number;
+  sleep: number; stress: number; readiness: number;
+  note: string;
+  painMap: Partial<Record<MuscleKey, number>>;
 }
 
 // — OFFICE —
@@ -196,6 +229,7 @@ interface LocalStore {
   templates: WorkoutTemplate[];
   sessions: WorkoutSession[];
   activeSession: ActiveSession | null;
+  feelings: FeelingEntry[];
 
   // Office
   officeTasks: OfficeTask[];
@@ -246,6 +280,8 @@ interface LocalStore {
   updateActiveSession: (patch: Partial<ActiveSession>) => void;
   completeSession: (notes?: string, pain?: number) => void;
   cancelSession: () => void;
+  repeatSession: (sessionId: string) => void;
+  addFeeling: (f: Omit<FeelingEntry, 'id' | 'createdAt'>) => void;
 
   // ACTIONS — Office
   addOfficeTask: (t: Omit<OfficeTask, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -315,16 +351,23 @@ function now(): string { return new Date().toISOString(); }
 
 // ─── MOCK DATA ──────────────────────────────────────────────
 
-const MOCK_EXERCISES: SportExercise[] = [
-  { id: 'ex1', createdAt: now(), name: 'Wyciskanie sztangi', sportType: 'Siłownia', muscleGroup: 'Klatka piersiowa', equipment: 'Sztanga', notes: '' },
-  { id: 'ex2', createdAt: now(), name: 'Wyciskanie hantli', sportType: 'Siłownia', muscleGroup: 'Klatka piersiowa', equipment: 'Hantle', notes: '' },
-  { id: 'ex3', createdAt: now(), name: 'Rozpiętki', sportType: 'Siłownia', muscleGroup: 'Klatka piersiowa', equipment: 'Hantle', notes: '' },
-  { id: 'ex4', createdAt: now(), name: 'Podciąganie nachwytem', sportType: 'Siłownia', muscleGroup: 'Plecy', equipment: 'Drążek', notes: '' },
-  { id: 'ex5', createdAt: now(), name: 'Wiosłowanie sztangą', sportType: 'Siłownia', muscleGroup: 'Plecy', equipment: 'Sztanga', notes: '' },
-  { id: 'ex6', createdAt: now(), name: 'Uginanie sztangi', sportType: 'Siłownia', muscleGroup: 'Biceps', equipment: 'Sztanga', notes: '' },
-  { id: 'ex7', createdAt: now(), name: 'Przysiad ze sztangą', sportType: 'Siłownia', muscleGroup: 'Nogi', equipment: 'Sztanga', notes: '' },
-  { id: 'ex8', createdAt: now(), name: 'Wyciskanie żołnierskie', sportType: 'Siłownia', muscleGroup: 'Barki', equipment: 'Sztanga', notes: '' },
-];
+function exerciseDefToSportExercise(e: ExerciseDef): SportExercise {
+  return {
+    id: e.id, createdAt: now(),
+    name: e.name, sportType: e.sport,
+    muscleGroup: MUSCLE_LABEL[e.primaryMuscles[0]] ?? '',
+    equipment: e.equipment.join(', '),
+    notes: '',
+    aliases: e.aliases, category: e.category, equipmentTags: e.equipment,
+    difficulty: e.difficulty, movementPattern: e.movementPattern,
+    primaryMuscles: e.primaryMuscles, secondaryMuscles: e.secondaryMuscles, stabilizerMuscles: e.stabilizerMuscles,
+    instructions: e.instructions, tips: e.tips, contraindications: e.contraindications,
+    rehabSafe: e.rehabSafe, tags: e.tags,
+  };
+}
+
+// Seeded from the curated multi-sport catalog (apps/web/src/features/sport/catalog.ts).
+const MOCK_EXERCISES: SportExercise[] = EXERCISE_CATALOG.map(exerciseDefToSportExercise);
 
 const MOCK_TEMPLATES: WorkoutTemplate[] = [
   {
@@ -332,25 +375,27 @@ const MOCK_TEMPLATES: WorkoutTemplate[] = [
     name: 'Push A — Klatka i barki', sportType: 'Siłownia',
     description: 'Trening pchający skupiony na klatce piersiowej i barkach.',
     estimatedDuration: 70, isActive: true,
+    category: 'Push', level: 'intermediate', goal: 'Hipertrofia klatki i barków',
+    equipmentTags: ['Sztanga', 'Hantle', 'Maszyna'],
     exercises: [
-      { exerciseId: 'ex1', exerciseName: 'Wyciskanie sztangi', sets: [
+      { exerciseId: 'gym-bench-press', exerciseName: 'Wyciskanie sztangi na ławce płaskiej', sets: [
         { setNumber: 1, reps: 8, weight: 100, restTime: 120, rir: 2, completed: false, notes: '' },
         { setNumber: 2, reps: 8, weight: 100, restTime: 120, rir: 2, completed: false, notes: '' },
         { setNumber: 3, reps: 6, weight: 110, restTime: 150, rir: 1, completed: false, notes: '' },
         { setNumber: 4, reps: 6, weight: 110, restTime: 150, rir: 1, completed: false, notes: '' },
         { setNumber: 5, reps: 8, weight: 90,  restTime: 120, rir: 2, completed: false, notes: '' },
       ]},
-      { exerciseId: 'ex2', exerciseName: 'Wyciskanie hantli', sets: [
+      { exerciseId: 'gym-db-press', exerciseName: 'Wyciskanie hantli na ławce płaskiej', sets: [
         { setNumber: 1, reps: 10, weight: 32, restTime: 90, rir: 2, completed: false, notes: '' },
         { setNumber: 2, reps: 10, weight: 32, restTime: 90, rir: 2, completed: false, notes: '' },
         { setNumber: 3, reps: 10, weight: 32, restTime: 90, rir: 2, completed: false, notes: '' },
       ]},
-      { exerciseId: 'ex3', exerciseName: 'Rozpiętki', sets: [
+      { exerciseId: 'gym-cable-fly', exerciseName: 'Rozpiętki na bramie / wyciągu', sets: [
         { setNumber: 1, reps: 12, weight: 22, restTime: 60, rir: 2, completed: false, notes: '' },
         { setNumber: 2, reps: 12, weight: 22, restTime: 60, rir: 2, completed: false, notes: '' },
         { setNumber: 3, reps: 12, weight: 22, restTime: 60, rir: 2, completed: false, notes: '' },
       ]},
-      { exerciseId: 'ex8', exerciseName: 'Wyciskanie żołnierskie', sets: [
+      { exerciseId: 'gym-ohp', exerciseName: 'Wyciskanie żołnierskie', sets: [
         { setNumber: 1, reps: 8, weight: 60, restTime: 120, rir: 2, completed: false, notes: '' },
         { setNumber: 2, reps: 8, weight: 60, restTime: 120, rir: 2, completed: false, notes: '' },
         { setNumber: 3, reps: 8, weight: 60, restTime: 120, rir: 2, completed: false, notes: '' },
@@ -362,19 +407,21 @@ const MOCK_TEMPLATES: WorkoutTemplate[] = [
     name: 'Pull B — Plecy i biceps', sportType: 'Siłownia',
     description: 'Trening ciągnący: plecy, biceps.',
     estimatedDuration: 65, isActive: true,
+    category: 'Pull', level: 'intermediate', goal: 'Siła i masa grzbietu',
+    equipmentTags: ['Drążek', 'Sztanga'],
     exercises: [
-      { exerciseId: 'ex4', exerciseName: 'Podciąganie nachwytem', sets: [
+      { exerciseId: 'gym-pullup', exerciseName: 'Podciąganie nachwytem', sets: [
         { setNumber: 1, reps: 6, weight: 0, restTime: 120, rir: 2, completed: false, notes: '' },
         { setNumber: 2, reps: 6, weight: 0, restTime: 120, rir: 2, completed: false, notes: '' },
         { setNumber: 3, reps: 6, weight: 0, restTime: 120, rir: 2, completed: false, notes: '' },
         { setNumber: 4, reps: 6, weight: 0, restTime: 120, rir: 2, completed: false, notes: '' },
       ]},
-      { exerciseId: 'ex5', exerciseName: 'Wiosłowanie sztangą', sets: [
+      { exerciseId: 'gym-barbell-row', exerciseName: 'Wiosłowanie sztangą w opadzie', sets: [
         { setNumber: 1, reps: 8, weight: 80, restTime: 120, rir: 2, completed: false, notes: '' },
         { setNumber: 2, reps: 8, weight: 80, restTime: 120, rir: 2, completed: false, notes: '' },
         { setNumber: 3, reps: 8, weight: 80, restTime: 120, rir: 2, completed: false, notes: '' },
       ]},
-      { exerciseId: 'ex6', exerciseName: 'Uginanie sztangi', sets: [
+      { exerciseId: 'gym-barbell-curl', exerciseName: 'Uginanie ramion ze sztangą', sets: [
         { setNumber: 1, reps: 10, weight: 40, restTime: 90, rir: 2, completed: false, notes: '' },
         { setNumber: 2, reps: 10, weight: 40, restTime: 90, rir: 2, completed: false, notes: '' },
         { setNumber: 3, reps: 10, weight: 40, restTime: 90, rir: 2, completed: false, notes: '' },
@@ -385,8 +432,10 @@ const MOCK_TEMPLATES: WorkoutTemplate[] = [
     id: 'tpl3', createdAt: now(), updatedAt: now(),
     name: 'Nogi A — Uda i pośladki', sportType: 'Siłownia',
     description: '', estimatedDuration: 80, isActive: true,
+    category: 'Legs', level: 'advanced', goal: 'Siła nóg i pośladków',
+    equipmentTags: ['Sztanga'],
     exercises: [
-      { exerciseId: 'ex7', exerciseName: 'Przysiad ze sztangą', sets: [
+      { exerciseId: 'gym-back-squat', exerciseName: 'Przysiad ze sztangą na plecach', sets: [
         { setNumber: 1, reps: 8, weight: 120, restTime: 180, rir: 2, completed: false, notes: '' },
         { setNumber: 2, reps: 8, weight: 120, restTime: 180, rir: 2, completed: false, notes: '' },
         { setNumber: 3, reps: 8, weight: 120, restTime: 180, rir: 2, completed: false, notes: '' },
@@ -394,19 +443,87 @@ const MOCK_TEMPLATES: WorkoutTemplate[] = [
       ]},
     ],
   },
+  {
+    id: 'tpl4', createdAt: now(), updatedAt: now(),
+    name: 'Easy Run 8 km', sportType: 'Bieganie',
+    description: 'Spokojny bieg bazowy w strefie 2.', estimatedDuration: 45, isActive: true,
+    category: 'Easy Run', level: 'beginner', goal: 'Baza wytrzymałościowa',
+    equipmentTags: ['Brak / teren'],
+    exercises: [{ exerciseId: 'run-easy', exerciseName: 'Bieg spokojny (easy run)', sets: [
+      { setNumber: 1, reps: 1, weight: 0, restTime: 0, rir: 0, completed: false, notes: '8 km, tętno strefa 2' },
+    ]}],
+  },
+  {
+    id: 'tpl5', createdAt: now(), updatedAt: now(),
+    name: 'Boulder — siła i moc', sportType: 'Wspinaczka',
+    description: 'Sesja bulderowa z naciskiem na limit.', estimatedDuration: 90, isActive: true,
+    category: 'Boulder', level: 'intermediate', goal: 'Siła i moc na chwytach',
+    equipmentTags: ['Chwyty / boulder wall'],
+    exercises: [{ exerciseId: 'climb-boulder', exerciseName: 'Sesja bulderowa', sets: [
+      { setNumber: 1, reps: 1, weight: 0, restTime: 0, rir: 0, completed: false, notes: '' },
+    ]}],
+  },
+  {
+    id: 'tpl6', createdAt: now(), updatedAt: now(),
+    name: 'Mobilność — biodra i barki', sportType: 'Mobilność',
+    description: 'Krótka rutyna mobilności na dni bez treningu siłowego.', estimatedDuration: 20, isActive: true,
+    category: 'Biodra', level: 'beginner', goal: 'Zakres ruchu bioder i barków',
+    equipmentTags: ['Brak / teren'],
+    exercises: [
+      { exerciseId: 'mob-90-90-hip', exerciseName: 'Rotacje bioder 90/90', sets: [{ setNumber: 1, reps: 10, weight: 0, restTime: 0, rir: 0, completed: false, notes: '' }] },
+      { exerciseId: 'mob-shoulder-clo', exerciseName: 'Krążenia ramion z taśmą (shoulder CARs)', sets: [{ setNumber: 1, reps: 8, weight: 0, restTime: 0, rir: 0, completed: false, notes: '' }] },
+    ],
+  },
+  {
+    id: 'tpl7', createdAt: now(), updatedAt: now(),
+    name: 'Rehab kolano — faza wzmacniająca', sportType: 'Rehabilitacja',
+    description: 'Zestaw wzmacniający po konsultacji z fizjoterapeutą.', estimatedDuration: 25, isActive: true,
+    category: 'Kolano', level: 'beginner', goal: 'Wzmocnienie czworogłowego i stabilizacja kolana',
+    equipmentTags: ['Guma oporowa'],
+    exercises: [{ exerciseId: 'rehab-knee-terminal-extension', exerciseName: 'Wyprosty kolana z gumą (terminal knee extension)', sets: [
+      { setNumber: 1, reps: 15, weight: 0, restTime: 30, rir: 0, completed: false, notes: '' },
+      { setNumber: 2, reps: 15, weight: 0, restTime: 30, rir: 0, completed: false, notes: '' },
+      { setNumber: 3, reps: 15, weight: 0, restTime: 30, rir: 0, completed: false, notes: '' },
+    ]}],
+  },
 ];
+
+function daysAgoStr(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().split('T')[0];
+}
 
 const MOCK_SESSIONS: WorkoutSession[] = [
   {
     id: 'sess1', createdAt: now(), updatedAt: now(),
     templateId: 'tpl2', templateName: 'Pull B — Plecy i biceps',
-    sportType: 'Siłownia', date: '2026-06-18',
+    sportType: 'Siłownia', date: daysAgoStr(1),
     startTime: '18:30', endTime: '20:05', duration: 95,
     exercises: MOCK_TEMPLATES[1].exercises.map(e => ({
       ...e, sets: e.sets.map(s => ({ ...s, completed: true }))
     })),
     painAfterTraining: 2, notesAfterTraining: 'Świetny trening, dobra pompa.',
     painNextDay: 3, notesNextDay: 'Lekkie zakwasy w plecach.',
+    status: 'completed',
+  },
+  {
+    id: 'sess2', createdAt: now(), updatedAt: now(),
+    templateId: 'tpl4', templateName: 'Easy Run 8 km',
+    sportType: 'Bieganie', date: daysAgoStr(3),
+    startTime: '07:00', endTime: '07:48', duration: 48,
+    exercises: MOCK_TEMPLATES[3].exercises.map(e => ({ ...e, sets: e.sets.map(s => ({ ...s, completed: true })) })),
+    painAfterTraining: 1, notesAfterTraining: 'Lekki bieg, dobre tempo.',
+    distanceKm: 8, avgPaceMinPerKm: 6,
+    status: 'completed',
+  },
+  {
+    id: 'sess3', createdAt: now(), updatedAt: now(),
+    templateId: 'tpl5', templateName: 'Boulder — siła i moc',
+    sportType: 'Wspinaczka', date: daysAgoStr(5),
+    startTime: '19:00', endTime: '20:30', duration: 90,
+    exercises: MOCK_TEMPLATES[4].exercises.map(e => ({ ...e, sets: e.sets.map(s => ({ ...s, completed: true })) })),
+    painAfterTraining: 3, notesAfterTraining: 'Mocna sesja, palce zmęczone.',
     status: 'completed',
   },
 ];
@@ -596,6 +713,7 @@ export const useLocalStore = create<LocalStore>()(
       templates: MOCK_TEMPLATES,
       sessions: MOCK_SESSIONS,
       activeSession: null,
+      feelings: [],
       officeTasks: MOCK_OFFICE_TASKS,
       officeDocuments: MOCK_OFFICE_DOCS,
       cars: MOCK_CARS,
@@ -645,6 +763,19 @@ export const useLocalStore = create<LocalStore>()(
         set(st => ({ sessions: [session, ...st.sessions], activeSession: null }));
       },
       cancelSession: () => set({ activeSession: null }),
+      repeatSession: (sessionId) => {
+        const session = get().sessions.find(s => s.id === sessionId);
+        if (!session) return;
+        set({
+          activeSession: {
+            templateId: session.templateId, templateName: session.templateName ?? session.sportType,
+            sportType: session.sportType, startTime: now(), currentExerciseIndex: 0,
+            exercises: session.exercises.map(e => ({ ...e, sets: e.sets.map(s => ({ ...s, completed: false })) })),
+            timerSeconds: 0, timerRunning: false,
+          },
+        });
+      },
+      addFeeling: (f) => set(s => ({ feelings: [{ ...f, id: uid(), createdAt: now() }, ...s.feelings] })),
 
       // Office actions
       addOfficeTask: (t) => set(s => ({ officeTasks: [{ ...t, id: uid(), createdAt: now(), updatedAt: now() }, ...s.officeTasks] })),
