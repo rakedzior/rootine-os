@@ -41,22 +41,26 @@ export function categoryIconClass(category: string | null): string {
     case 'ksiazki':
       return 'gic-book';
     case 'finanse':
-    case 'pieniądze':
-    case 'pieniadze':
-      return 'gic-fin';
+         return 'gic-fin';
     default:
-      return 'gic-fin';
+      return 'gic-default';
   }
 }
 
-/** Derived goal progress from its milestones.
- *  - milestones with an explicit weight contribute that weight when done
- *  - milestones without a weight ("auto") split the remaining % equally
- *  Returns 0..100 (rounded). With all-auto milestones this is simply
- *  done/total × 100. */
-export function computeGoalProgress(milestones: Milestone[]): number {
+export interface NewMilestoneInput {
+  goal_id: string;
+  title: string;
+  weight?: number | null;
+  due_date?: string | null;
+}
+
+export function computeGoalProgress(milestones: { done: boolean; weight: number | null }[]): number {
   if (milestones.length === 0) return 0;
-  const explicit = milestones.filter((m) => m.weight != null);
+  const total = milestones.reduce((s, m) => s + (m.weight ?? 1), 0);
+  const done = milestones.filter((m) => m.done).reduce((s, m) => s + (m.weight ?? 1), 0);
+  return total > 0 ? Math.round((done / total) * 100) : 0;
+}
+!= null);
   const auto = milestones.filter((m) => m.weight == null);
   const explicitTotal = explicit.reduce((s, m) => s + (m.weight ?? 0), 0);
   const remaining = Math.max(0, 100 - explicitTotal);

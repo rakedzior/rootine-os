@@ -77,10 +77,14 @@ export function Login() {
           <div className="auth-field">
             <label htmlFor="otp">Kod TOTP</label>
             <input id="otp" className="auth-input mono" inputMode="numeric" autoComplete="one-time-code"
-              value={mfaCode} onChange={(e) => setMfaCode(e.target.value)} placeholder="000000" autoFocus />
+              value={mfaCode}
+            maxLength={6}
+            onChange={(e) => setMfaCode(e.target.value)}
+          />
           </div>
+          {mfaError && <div className="auth-banner warn">{mfaError}</div>}
           <button className="auth-btn" type="submit" disabled={busy}>
-            {busy ? 'Weryfikacja…' : 'Potwierdź'}
+            {busy ? 'Weryfikacja…' : 'Zatwierdź kod'}
           </button>
         </form>
       </AuthShell>
@@ -88,11 +92,12 @@ export function Login() {
   }
 
   return (
-    <AuthShell title="Witaj ponownie" subtitle="Zaloguj się do Rootine OS">
-      {formError && <div className="auth-banner warn">{formError}</div>}
+    <AuthShell title="Zaloguj się" subtitle="Witaj z powrotem w Rootine OS">
+      <OAuthButtons />
+      <div className="auth-or"><span>lub</span></div>
       <form className="auth-form" onSubmit={submit} noValidate>
         <div className="auth-field">
-          <label htmlFor="email">E-mail</label>
+          <label htmlFor="email">Email</label>
           <input id="email" className="auth-input" type="email" autoComplete="email"
             value={email} onChange={(e) => setEmail(e.target.value)} />
           {errors.email && <span className="auth-err">{errors.email}</span>}
@@ -103,21 +108,17 @@ export function Login() {
             value={password} onChange={(e) => setPassword(e.target.value)} />
           {errors.password && <span className="auth-err">{errors.password}</span>}
         </div>
+        {formError && <div className="auth-banner warn">{formError}</div>}
         <button className="auth-btn" type="submit" disabled={busy}>
           {busy ? 'Logowanie…' : 'Zaloguj się'}
         </button>
       </form>
-
-      <div className="auth-alt">
-        <Link className="auth-link" to="/forgot-password">Nie pamiętasz hasła?</Link>
-      </div>
-
-      <div className="auth-divider">lub</div>
-      <OAuthButtons />
-
-      <div className="auth-alt">
-        Nie masz konta? <Link className="auth-link" to="/register">Zarejestruj się</Link>
-      </div>
+      <p className="auth-foot">
+        Nie masz konta? <Link to="/register">Zarejestruj się</Link>
+      </p>
+      <p className="auth-foot">
+        <Link to="/forgot-password">Zapomniałeś hasła?</Link>
+      </p>
     </AuthShell>
   );
 }

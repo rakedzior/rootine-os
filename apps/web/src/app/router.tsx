@@ -22,29 +22,31 @@ export const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
   { path: '/register', element: <Register /> },
   { path: '/forgot-password', element: <ForgotPassword /> },
-  { path: '/reset-password', element: <ResetPassword /> },
+    { path: '/reset-password', element: <ResetPassword /> },
   { path: '/confirm-email', element: <ConfirmEmail /> },
-
-  // ---- protected app ----
+  // ---- protected routes ----
   {
-    path: '/',
-    element: (
-      <RequireAuth>
-        <AppLayout />
-      </RequireAuth>
-    ),
+    element: <RequireAuth />,
     children: [
-      { index: true, element: <StartScreen /> },
-      { path: 'sport', element: <SportScreen /> },
-      { path: 'diet', element: <DietScreen /> },
-      { path: 'finance', element: <FinanceScreen /> },
-      { path: 'goals', element: <GoalsScreen /> },
-      { path: 'office', element: <BiuroScreen /> },
-      { path: 'travel', element: <TravelScreen /> },
-      { path: 'notes', element: <NotesScreen /> },
-      { path: 'work', element: <PracaScreen /> },
-      { path: 'settings', element: <SettingsScreen /> },
-      { path: 'settings/integrations', element: <SettingsScreen tab="integrations" /> },
+      {
+        element: <AppLayout />,
+        children: [
+          { path: '/', element: <StartScreen /> },
+          { path: '/sport', element: <SportScreen /> },
+          { path: '/diet', element: <DietScreen /> },
+          { path: '/finance', element: <FinanceScreen /> },
+          { path: '/goals', element: <GoalsScreen /> },
+          { path: '/office', element: <BiuroScreen /> },
+          { path: '/travel', element: <TravelScreen /> },
+          { path: '/notes', element: <NotesScreen /> },
+          { path: '/work', element: <PracaScreen /> },
+          { path: '/settings/*', element: <SettingsScreen /> },
+        ],
+      },
+    ],
+  },
+]);
+ns" /> },
       { path: 'settings/security', element: <SettingsScreen tab="security" /> },
       { path: 'settings/modules', element: <SettingsScreen tab="modules" /> },
     ],

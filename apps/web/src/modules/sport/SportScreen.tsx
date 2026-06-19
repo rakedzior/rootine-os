@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useIsFeatureVisible } from '@/features/config/useConfig';
 import {
-  useReadinessToday, useUpsertReadiness,
   useBodyMeasurements, useAddBodyMeasurement,
   useWorkouts, useCreateWorkout, useDeleteWorkout, usePatchWorkout,
   useWorkoutSets, useAddWorkoutSet, useDeleteWorkoutSet,
@@ -16,7 +15,6 @@ function epley(weight: number, reps: number) {
 }
 
 export function SportScreen() {
-  const showReadiness = useIsFeatureVisible('sport.readiness');
   const showBody = useIsFeatureVisible('sport.body_measurements');
   const showWorkout = useIsFeatureVisible('sport.today_workout');
   const showLogger = useIsFeatureVisible('sport.workout_logger');
@@ -24,34 +22,6 @@ export function SportScreen() {
   const showProg = useIsFeatureVisible('sport.load_progression');
   const showRunning = useIsFeatureVisible('sport.running');
   const showRehab = useIsFeatureVisible('sport.rehab_mobility');
-
-  // Readiness
-  const readinessQ = useReadinessToday();
-  const upsertReadiness = useUpsertReadiness();
-  const [sleepH, setSleepH] = useState('');
-  const [hrv, setHrv] = useState('');
-  const [hr, setHr] = useState('');
-  const [soreness, setSoreness] = useState('');
-  const r = readinessQ.data;
-
-  function saveReadiness() {
-    upsertReadiness.mutate({
-      sleep_h: sleepH ? parseFloat(sleepH) : undefined,
-      hrv_ms: hrv ? parseInt(hrv) : undefined,
-      resting_hr: hr ? parseInt(hr) : undefined,
-      soreness: soreness ? parseInt(soreness) : undefined,
-    });
-    setSleepH(''); setHrv(''); setHr(''); setSoreness('');
-  }
-
-  const readinessScore = r
-    ? Math.round(
-        ((r.sleep_h ?? 0) / 9) * 40 +
-        ((r.hrv_ms ?? 0) / 80) * 30 +
-        ((r.resting_hr ? Math.max(0, (80 - r.resting_hr) / 30) : 0)) * 20 +
-        ((r.soreness != null ? (5 - r.soreness) / 5 : 0)) * 10,
-      )
-    : null;
 
   // Body measurements
   const bodyQ = useBodyMeasurements();
@@ -121,71 +91,10 @@ export function SportScreen() {
     </article>
   );
 
-  const score = readinessScore ?? 0;
-  const dash = 263.9;
-  const offset = dash - (dash * Math.min(100, score)) / 100;
-
   return (
     <main className="grid">
-      {/* LEFT: recovery */}
+      {/* LEFT: body + integrations */}
       <section className="col">
-        {showReadiness && (
-          <article className="card">
-            <div className="card-head">
-              <div className="lhs"><span className="card-title">Regeneracja i gotowość</span></div>
-              <span className="pill">Dziś</span>
-            </div>
-            <div className="readiness-top">
-              <div className="h-ring">
-                <svg viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="42" fill="none" stroke="var(--surface-inset)" strokeWidth="9" />
-                  <circle cx="50" cy="50" r="42" fill="none"
-                    stroke={score >= 70 ? 'var(--acc-a)' : score >= 40 ? 'var(--acc-b)' : 'var(--acc-b)'}
-                    strokeWidth="9" strokeLinecap="round"
-                    strokeDasharray={dash} strokeDashoffset={offset}
-                    transform="rotate(-90 50 50)" />
-                </svg>
-                <div className="rt"><b className="tnum">{readinessScore ?? '—'}</b><small>Gotowość</small></div>
-              </div>
-              <div className="meta">
-                <div className="a">{r ? (score >= 70 ? 'Dobra gotowość' : score >= 40 ? 'Umiarkowana' : 'Potrzeba odpoczynku') : 'Brak danych'}</div>
-                <div className="b">Sen / HRV / tętno</div>
-              </div>
-            </div>
-            <div className="stat-grid">
-              <div className="stat-cell"><div className="k"><i style={{ background: 'var(--acc-a)' }} />Sen</div><div className="v tnum">{r?.sleep_h ?? '—'}<small>h</small></div></div>
-              <div className="stat-cell"><div className="k"><i style={{ background: 'var(--ev-blue)' }} />HRV</div><div className="v tnum">{r?.hrv_ms ?? '—'}<small>ms</small></div></div>
-              <div className="stat-cell"><div className="k"><i style={{ background: 'var(--acc-b)' }} />Tętno spocz.</div><div className="v tnum">{r?.resting_hr ?? '—'}<small>bpm</small></div></div>
-              <div className="stat-cell"><div className="k"><i style={{ background: 'var(--ev-lav)' }} />Zakwasy</div><div className="v">{r?.soreness != null ? `${r.soreness}/5` : '—'}</div></div>
-            </div>
-            <div className="meas" style={{ marginTop: 12 }}>
-              <div className="meas-row">
-                <span className="mn">Sen</span>
-                <input type="number" placeholder="h" value={sleepH} onChange={(e) => setSleepH(e.target.value)} inputMode="decimal" />
-                <span className="mu">h</span>
-              </div>
-              <div className="meas-row">
-                <span className="mn">HRV</span>
-                <input type="number" placeholder="ms" value={hrv} onChange={(e) => setHrv(e.target.value)} inputMode="numeric" />
-                <span className="mu">ms</span>
-              </div>
-              <div className="meas-row">
-                <span className="mn">Tętno spocz.</span>
-                <input type="number" placeholder="bpm" value={hr} onChange={(e) => setHr(e.target.value)} inputMode="numeric" />
-                <span className="mu">bpm</span>
-              </div>
-              <div className="meas-row">
-                <span className="mn">Zakwasy</span>
-                <input type="number" placeholder="0–5" value={soreness} onChange={(e) => setSoreness(e.target.value)} inputMode="numeric" min={0} max={5} />
-                <span className="mu">/5</span>
-              </div>
-            </div>
-            <button className="meas-edit" style={{ marginTop: 12, width: '100%' }} type="button" onClick={saveReadiness} disabled={upsertReadiness.isPending}>
-              {upsertReadiness.isPending ? 'Zapisywanie…' : 'Zapisz gotowość'}
-            </button>
-          </article>
-        )}
-
         {showBody && (
           <article className="card">
             <div className="card-head">

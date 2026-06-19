@@ -6,7 +6,7 @@ import {
   useWorkTasks, useAddWorkTask, useMoveWorkTask, useDeleteWorkTask,
   useSubtasks, useAddSubtask, useToggleSubtask, useDeleteSubtask,
 } from '@/features/work/hooks';
-import type { WorkTaskStatus } from '@/features/work/types';
+import { WORK_STATUS_LABELS, WORK_STATUS_COLORS, type WorkTaskStatus } from '@/features/work/types';
 import '@/styles/work.css';
 
 type Sec = 'dashboard' | 'companies' | 'tasks';
@@ -17,10 +17,13 @@ const SECTIONS: { key: Sec; label: string }[] = [
   { key: 'tasks', label: 'Zadania' },
 ];
 
+const ALL_STATUSES: WorkTaskStatus[] = ['todo', 'doing', 'blocked', 'done'];
+
 const COLUMNS: { status: WorkTaskStatus; label: string }[] = [
   { status: 'todo', label: 'Do zrobienia' },
   { status: 'doing', label: 'W toku' },
-  { status: 'done', label: 'Zrobione' },
+  { status: 'blocked', label: 'Zablokowane' },
+  { status: 'done', label: 'Zakończone' },
 ];
 
 function fmt(d: string | null) {
@@ -101,11 +104,11 @@ export function PracaScreen() {
                 <div className="lhs"><span className="card-title">Kanban projektów</span></div>
                 <span className="pill">{tasks.length} zadań</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--gap)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--gap)', overflowX: 'auto' }}>
                 {COLUMNS.map(({ status, label }) => (
-                  <div key={status} style={{ background: 'var(--surface-inset)', borderRadius: 'var(--r-mid)', padding: 12, minHeight: 200 }}>
+                  <div key={status} style={{ background: 'var(--surface-inset)', borderRadius: 'var(--r-mid)', padding: 12, minHeight: 200, minWidth: 160 }}>
                     <div style={{ fontWeight: 600, marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>{label}</span>
+                      <span style={{ fontSize: 12, color: WORK_STATUS_COLORS[status] }}>{label}</span>
                       <span style={{ fontSize: 12, color: 'var(--ink-3)', fontWeight: 400 }}>{tasksByStatus(status).length}</span>
                     </div>
                     {tasksByStatus(status).length === 0 ? (
@@ -114,8 +117,9 @@ export function PracaScreen() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {tasksByStatus(status).map((t) => {
                           const due = fmt(t.due_date);
+                          const nextStatuses = ALL_STATUSES.filter((s) => s !== status);
                           return (
-                            <div key={t.id} style={{ background: 'var(--surface)', borderRadius: 'var(--r-sm)', padding: '8px 10px', fontSize: 13 }}>
+                            <div key={t.id} style={{ background: 'var(--surface)', borderRadius: 'var(--r-sm)', padding: '8px 10px', fontSize: 13, borderLeft: `3px solid ${WORK_STATUS_COLORS[status]}` }}>
                               <div style={{ fontWeight: 500, marginBottom: 4 }}>{t.title}</div>
                               {due && (
                                 <div style={{ fontSize: 11, color: due.overdue ? 'var(--acc-b)' : due.soon ? 'var(--ev-yellow)' : 'var(--ink-3)' }}>
@@ -125,17 +129,15 @@ export function PracaScreen() {
                               {t.project_id && (
                                 <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{projects.find((p) => p.id === t.project_id)?.name ?? ''}</div>
                               )}
-                              <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
-                                {status !== 'todo' && (
-                                  <button type="button" onClick={() => moveTask.mutate({ id: t.id, status: status === 'doing' ? 'todo' : 'doing' })}
-                                    style={{ fontSize: 11, padding: '2px 6px', background: 'var(--surface-inset)', border: 'none', borderRadius: 3, cursor: 'pointer' }}>←</button>
-                                )}
-                                {status !== 'done' && (
-                                  <button type="button" onClick={() => moveTask.mutate({ id: t.id, status: status === 'todo' ? 'doing' : 'done' })}
-                                    style={{ fontSize: 11, padding: '2px 6px', background: 'var(--surface-inset)', border: 'none', borderRadius: 3, cursor: 'pointer' }}>→</button>
-                                )}
+                              <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
+                                {nextStatuses.slice(0, 2).map((s) => (
+                                  <button key={s} type="button" onClick={() => moveTask.mutate({ id: t.id, status: s })}
+                                    style={{ fontSize: 10, padding: '2px 6px', background: 'var(--surface-inset)', border: 'none', borderRadius: 3, cursor: 'pointer', color: WORK_STATUS_COLORS[s] }}>
+                                    → {WORK_STATUS_LABELS[s].split(' ')[0]}
+                                  </button>
+                                ))}
                                 <button type="button" onClick={() => deleteTask.mutate(t.id)}
-                                  style={{ fontSize: 11, padding: '2px 6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)', marginLeft: 'auto' }}>×</button>
+                                  style={{ fontSize: 11, padding: '2px 4px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)', marginLeft: 'auto' }}>×</button>
                               </div>
                             </div>
                           );
@@ -149,9 +151,7 @@ export function PracaScreen() {
               <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
                 <input className="fi" type="text" placeholder="Nowe zadanie…" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddTask()} style={{ flex: 2, minWidth: 160 }} />
                 <select className="fi-sel" value={newTaskStatus} onChange={(e) => setNewTaskStatus(e.target.value as WorkTaskStatus)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
-                  <option value="todo">Do zrobienia</option>
-                  <option value="doing">W toku</option>
-                  <option value="done">Zrobione</option>
+                  {ALL_STATUSES.map((s) => <option key={s} value={s}>{WORK_STATUS_LABELS[s]}</option>)}
                 </select>
                 {projects.length > 0 && (
                   <select className="fi-sel" value={newTaskProject} onChange={(e) => setNewTaskProject(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
@@ -233,9 +233,7 @@ export function PracaScreen() {
               <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
                 <input className="fi" type="text" placeholder="Nowe zadanie…" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddTask()} style={{ flex: 2, minWidth: 160 }} />
                 <select className="fi-sel" value={newTaskStatus} onChange={(e) => setNewTaskStatus(e.target.value as WorkTaskStatus)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
-                  <option value="todo">Do zrobienia</option>
-                  <option value="doing">W toku</option>
-                  <option value="done">Zrobione</option>
+                  {ALL_STATUSES.map((s) => <option key={s} value={s}>{WORK_STATUS_LABELS[s]}</option>)}
                 </select>
                 <input className="fi" type="date" value={newTaskDue} onChange={(e) => setNewTaskDue(e.target.value)} style={{ width: 140 }} />
                 <button className="add-btn" type="button" onClick={handleAddTask} disabled={addTask.isPending}>+ Dodaj</button>
@@ -255,11 +253,11 @@ export function PracaScreen() {
                             {due && <span style={{ fontSize: 11, marginLeft: 8, color: due.overdue ? 'var(--acc-b)' : due.soon ? 'var(--ev-yellow)' : 'var(--ink-3)' }}>{due.date}</span>}
                           </div>
                           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                            <div style={{ display: 'flex', gap: 4 }}>
-                              {(['todo', 'doing', 'done'] as WorkTaskStatus[]).map((s) => (
+                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                              {ALL_STATUSES.map((s) => (
                                 <button key={s} type="button" onClick={(e) => { e.stopPropagation(); moveTask.mutate({ id: t.id, status: s }); }}
-                                  style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, border: 'none', cursor: 'pointer', background: t.status === s ? 'var(--acc-a)' : 'var(--surface)', color: t.status === s ? '#fff' : 'inherit' }}>
-                                  {s === 'todo' ? 'To do' : s === 'doing' ? 'Doing' : 'Done'}
+                                  style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, border: 'none', cursor: 'pointer', background: t.status === s ? WORK_STATUS_COLORS[s] : 'var(--surface)', color: t.status === s ? '#fff' : 'inherit' }}>
+                                  {WORK_STATUS_LABELS[s].split(' ')[0]}
                                 </button>
                               ))}
                             </div>

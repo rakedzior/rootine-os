@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAuth } from './AuthProvider';
 
@@ -6,7 +6,7 @@ import { useAuth } from './AuthProvider';
  *  - no session  -> /login
  *  - session but email not confirmed -> /confirm-email (no data access)
  *  - otherwise render the app. */
-export function RequireAuth({ children }: { children: ReactNode }) {
+export function RequireAuth({ children }: { children?: ReactNode }) {
   const { session, loading } = useAuth();
   const location = useLocation();
 
@@ -27,5 +27,5 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     return <Navigate to="/confirm-email" replace />;
   }
 
-  return <>{children}</>;
+  return <>{children ?? <Outlet />}</>;
 }

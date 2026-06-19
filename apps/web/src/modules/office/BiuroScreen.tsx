@@ -9,6 +9,7 @@ import {
   useEmployment, useAddEmployment, useDeleteEmployment,
   useVacations, useAddVacation, useDeleteVacation,
 } from '@/features/office/hooks';
+import { DOC_CATEGORIES, docStatus, type DocCategory } from '@/features/office/types';
 import { logAudit } from '@/lib/audit';
 import '@/styles/desk.css';
 
@@ -57,8 +58,11 @@ export function BiuroScreen() {
   const addDoc = useAddOfficeDoc();
   const delDoc = useDeleteOfficeDoc();
   const [docName, setDocName] = useState('');
-  const [docNum, setDocNum] = useState('');
+  const [docCategory, setDocCategory] = useState<DocCategory>('inne');
   const [docExp, setDocExp] = useState('');
+  const [docNote, setDocNote] = useState('');
+  const [docRef, setDocRef] = useState('');
+  const [docFilter, setDocFilter] = useState<DocCategory | ''>('');
 
   // Insurance
   const insQ = useInsurancePolicies();
@@ -106,8 +110,6 @@ export function BiuroScreen() {
   const delVac = useDeleteVacation();
   const [vacStart, setVacStart] = useState('');
   const [vacEnd, setVacEnd] = useState('');
-  const [vacDays, setVacDays] = useState('');
-  const [vacType, setVacType] = useState('wypoczynkowy');
 
   const docs = docsQ.data ?? [];
   const policies = insQ.data ?? [];
@@ -184,32 +186,95 @@ export function BiuroScreen() {
           {/* DOKUMENTY */}
           {sec === 'dokumenty' && showDocs && (
             <article className="card">
-              <div className="card-head"><div className="lhs"><span className="card-title">Dokumenty i sejf</span></div><span className="pill">{docs.length}</span></div>
-              <div className="agenda-empty" style={{ marginBottom: 10, fontSize: 12, color: 'var(--ink-3)' }}>⚠ Numery dokumentów będą szyfrowane w Fazie 4. Na razie przechowywane jawnie — nie wpisuj wrażliwych danych.</div>
-              {docs.length === 0 ? (
-                <div className="agenda-empty">Brak dokumentów.</div>
-              ) : (
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {docs.map((d) => (
-                    <li key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                      <div>
-                        <span style={{ fontWeight: 500 }}>{d.name}</span>
-                        {d.doc_number && <span style={{ fontSize: 11, color: 'var(--ink-3)', marginLeft: 8 }}>{d.doc_number}</span>}
-                        {d.expires_on && <span style={{ fontSize: 11, marginLeft: 8 }}>wygasa {fmt(d.expires_on)}<DueTag date={d.expires_on} /></span>}
-                      </div>
-                      <button type="button" onClick={() => { logAudit('document_access', { entity: d.id }); delDoc.mutate(d.id); }}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <div style={{ display: 'grid', gap: 6 }}>
+              <div className="card-head">
+                <div className="lhs"><span className="card-title">Dokumenty</span></div>
+                <span className="pill">{docs.length}</span>
+              </div>
+
+              {/* Category filter chips */}
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+                <button type="button"
+                  onClick={() => setDocFilter('')}
+                  style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, border: `1px solid ${docFilter === '' ? 'var(--acc-a)' : 'var(--border)'}`, background: docFilter === '' ? 'var(--acc-a-soft)' : 'transparent', color: docFilter === '' ? 'var(--acc-a-ink)' : 'var(--ink-3)', cursor: 'pointer' }}>
+                  Wszystkie
+                </button>
+                {DOC_CATEGORIES.map((cat) => {
+                  const count = docs.filter((d) => d.category === cat).length;
+                  if (count === 0) return null;
+                  return (
+                    <button key={cat} type="button"
+                      onClick={() => setDocFilter(cat)}
+                      style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, border: `1px solid ${docFilter === cat ? 'var(--acc-a)' : 'var(--border)'}`, background: docFilter === cat ? 'var(--acc-a-soft)' : 'transparent', color: docFilter === cat ? 'var(--acc-a-ink)' : 'var(--ink-3)', cursor: 'pointer' }}>
+                      {cat} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Document list */}
+              {(() => {
+                const filtered = docFilter ? docs.filter((d) => d.category === docFilter) : docs;
+                if (filtered.length === 0) return <div className="agenda-empty">{docFilter ? `Brak dokumentów w kategorii „${docFilter}".` : 'Brak dokumentów. Dodaj pierwszy poniżej.'}</div>;
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+                    {filtered.map((d) => {
+                      const status = docStatus(d.expires_on);
+                      const statusColor = status === 'wygasły' ? 'var(--acc-b)' : status === 'wygasa niedługo' ? 'var(--ev-yellow, #f59e0b)' : 'var(--acc-a)';
+                      return (
+                        <div key={d.id} style={{ padding: '10px 12px', background: 'var(--surface-inset)', borderRadius: 10, borderLeft: `3px solid ${status ? statusColor : 'var(--border)'}` }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontWeight: 600, fontSize: 14 }}>{d.name}</div>
+                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4, fontSize: 11, color: 'var(--ink-3)' }}>
+                                <span style={{ padding: '1px 7px', borderRadius: 10, background: 'var(--surface)', border: '1px solid var(--border)', fontFamily: 'var(--mono)' }}>{d.category}</span>
+                                {status && <span style={{ color: statusColor, fontWeight: 600 }}>{status}</span>}
+                                {d.expires_on && <span>wygasa {fmt(d.expires_on)}<DueTag date={d.expires_on} /></span>}
+                              </div>
+                              {d.note && <div style={{ fontSize: 12, color: 'var(--ink-2)', marginTop: 4 }}>{d.note}</div>}
+                              {d.ref_link && (
+                                <a href={d.ref_link} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: 'var(--acc-a)', marginTop: 4, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  🔗 {d.ref_link}
+                                </a>
+                              )}
+                            </div>
+                            <button type="button" onClick={() => { logAudit('document_access', { entity: d.id }); delDoc.mutate(d.id); }}
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-4)', fontSize: 18, lineHeight: 1, flexShrink: 0 }}>×</button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+
+              {/* Add document form */}
+              <div style={{ display: 'grid', gap: 8 }}>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <input className="fi" type="text" placeholder="Nazwa dokumentu*" value={docName} onChange={(e) => setDocName(e.target.value)} style={{ flex: 2 }} />
-                  <input className="fi" type="text" placeholder="Numer (MVP: jawny)" value={docNum} onChange={(e) => setDocNum(e.target.value)} style={{ flex: 1 }} />
-                  <input className="fi" type="date" value={docExp} onChange={(e) => setDocExp(e.target.value)} style={{ width: 140 }} />
-                  <button className="add-btn" type="button" onClick={() => { if (!docName.trim()) return; addDoc.mutate({ name: docName.trim(), doc_number: docNum || null, expires_on: docExp || null }); setDocName(''); setDocNum(''); setDocExp(''); }}>+</button>
+                  <input className="fi" type="text" placeholder="Nazwa dokumentu *" value={docName} onChange={(e) => setDocName(e.target.value)} style={{ flex: 1 }} />
+                  <select className="fi-sel" value={docCategory} onChange={(e) => setDocCategory(e.target.value as DocCategory)}
+                    style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit', flexShrink: 0 }}>
+                    {DOC_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input className="fi" type="date" value={docExp} onChange={(e) => setDocExp(e.target.value)} style={{ flex: 1 }} />
+                  <input className="fi" type="text" placeholder="Link / URL (opcjonalnie)" value={docRef} onChange={(e) => setDocRef(e.target.value)} style={{ flex: 2 }} />
+                </div>
+                <input className="fi" type="text" placeholder="Notatka (opcjonalnie)" value={docNote} onChange={(e) => setDocNote(e.target.value)} />
+                <button className="add-btn" type="button" style={{ width: '100%', padding: 10 }}
+                  onClick={() => {
+                    if (!docName.trim()) return;
+                    addDoc.mutate({
+                      name: docName.trim(),
+                      category: docCategory,
+                      expires_on: docExp || null,
+                      note: docNote.trim() || null,
+                      ref_link: docRef.trim() || null,
+                    });
+                    setDocName(''); setDocExp(''); setDocNote(''); setDocRef('');
+                  }}>
+                  + Dodaj dokument
+                </button>
               </div>
             </article>
           )}
@@ -366,49 +431,43 @@ export function BiuroScreen() {
                 </table>
               )}
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <input className="fi" type="month" value={b2bMonth} onChange={(e) => setB2bMonth(e.target.value)} />
-                <input type="number" className="fi-num" placeholder="ZUS" value={b2bZus} onChange={(e) => setB2bZus(e.target.value)} inputMode="decimal" />
-                <input type="number" className="fi-num" placeholder="PIT" value={b2bPit} onChange={(e) => setB2bPit(e.target.value)} inputMode="decimal" />
-                <input type="number" className="fi-num" placeholder="VAT" value={b2bVat} onChange={(e) => setB2bVat(e.target.value)} inputMode="decimal" />
-                <button className="add-btn" type="button" onClick={() => { upsertB2b.mutate({ month: b2bMonth, zus: parseFloat(b2bZus) || 0, pit: parseFloat(b2bPit) || 0, vat: parseFloat(b2bVat) || 0 }); setB2bZus(''); setB2bPit(''); setB2bVat(''); }}>Zapisz</button>
+                <input className="fi" type="month" value={b2bMonth} onChange={(e) => setB2bMonth(e.target.value)} style={{ flex: '1 1 120px' }} />
+                <input type="number" className="fi-num" placeholder="ZUS" value={b2bZus} onChange={(e) => setB2bZus(e.target.value)} inputMode="numeric" />
+                <input type="number" className="fi-num" placeholder="PIT" value={b2bPit} onChange={(e) => setB2bPit(e.target.value)} inputMode="numeric" />
+                <input type="number" className="fi-num" placeholder="VAT" value={b2bVat} onChange={(e) => setB2bVat(e.target.value)} inputMode="numeric" />
+                <button className="add-btn" type="button" onClick={() => {
+                  upsertB2b.mutate({ month: b2bMonth, zus: parseFloat(b2bZus) || 0, pit: parseFloat(b2bPit) || 0, vat: parseFloat(b2bVat) || 0 });
+                  setB2bZus(''); setB2bPit(''); setB2bVat('');
+                }}>+</button>
               </div>
             </article>
           )}
 
-          {/* URLOPY */}
+          {/* Urlopy */}
           {sec === 'urlopy' && showVacations && (
             <article className="card">
-              <div className="card-head">
-                <div className="lhs"><span className="card-title">Urlopy {new Date().getFullYear()}</span></div>
-                <span className="pill">{usedVacDays} / {empPool} dni</span>
-              </div>
-              <div style={{ display: 'flex', gap: 24, marginBottom: 14, fontSize: 20, fontWeight: 700 }}>
-                <div><div className="tnum">{usedVacDays}</div><div style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink-3)' }}>Wykorzystane</div></div>
-                <div><div className="tnum" style={{ color: 'var(--acc-a)' }}>{Math.max(0, empPool - usedVacDays)}</div><div style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink-3)' }}>Pozostało</div></div>
-              </div>
+              <div className="card-head"><div className="lhs"><span className="card-title">Urlopy</span></div></div>
               {vacs.length === 0 ? (
                 <div className="agenda-empty">Brak urlopów.</div>
               ) : (
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 12px', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {vacs.map((v) => (
-                    <li key={v.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                      <div><span style={{ fontWeight: 500 }}>{fmt(v.start_date)} — {fmt(v.end_date)}</span><span style={{ fontSize: 11, color: 'var(--ink-3)', marginLeft: 8 }}>{v.type}</span></div>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <span className="tnum">{v.days} dni</span>
-                        <button type="button" onClick={() => delVac.mutate(v.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                      </div>
+                    <li key={v.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, padding: '6px 10px', background: 'var(--surface-inset)', borderRadius: 'var(--r-sm)' }}>
+                      <span>{fmt(v.start_date)} – {fmt(v.end_date)} <span className="pill">{v.days} dni</span></span>
+                      <button type="button" onClick={() => delVac.mutate(v.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
                     </li>
                   ))}
                 </ul>
               )}
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <input className="fi" type="date" value={vacStart} onChange={(e) => setVacStart(e.target.value)} />
-                <input className="fi" type="date" value={vacEnd} onChange={(e) => setVacEnd(e.target.value)} />
-                <input type="number" className="fi-num" placeholder="Dni" value={vacDays} onChange={(e) => setVacDays(e.target.value)} inputMode="numeric" />
-                <select className="fi-sel" value={vacType} onChange={(e) => setVacType(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
-                  {['wypoczynkowy', 'na żądanie', 'okolicznościowy', 'bezpłatny'].map((t) => <option key={t}>{t}</option>)}
-                </select>
-                <button className="add-btn" type="button" onClick={() => { if (!vacStart || !vacEnd || !vacDays) return; addVac.mutate({ start_date: vacStart, end_date: vacEnd, days: parseInt(vacDays), type: vacType }); setVacStart(''); setVacEnd(''); setVacDays(''); }}>+</button>
+                <input className="fi" type="date" value={vacStart} onChange={(e) => setVacStart(e.target.value)} style={{ flex: 1 }} />
+                <input className="fi" type="date" value={vacEnd} onChange={(e) => setVacEnd(e.target.value)} style={{ flex: 1 }} />
+                <button className="add-btn" type="button" onClick={() => {
+                  if (!vacStart || !vacEnd) return;
+                  const days = Math.round((new Date(vacEnd).getTime() - new Date(vacStart).getTime()) / 86400000) + 1;
+                  addVac.mutate({ start_date: vacStart, end_date: vacEnd, days });
+                  setVacStart(''); setVacEnd('');
+                }}>+</button>
               </div>
             </article>
           )}

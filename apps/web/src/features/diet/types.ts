@@ -21,6 +21,16 @@ export interface Meal {
   updated_at: string;
 }
 
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'other';
+
+export const MEAL_TYPE_LABELS: Record<MealType, string> = {
+  breakfast: 'Śniadanie',
+  lunch: 'Obiad',
+  dinner: 'Kolacja',
+  snack: 'Przekąska',
+  other: 'Inne',
+};
+
 export interface MealItem {
   id: string;
   user_id: string;
@@ -32,6 +42,7 @@ export interface MealItem {
   carb: number;
   fat: number;
   amount: number;
+  meal_type: MealType;
   created_at: string;
 }
 
@@ -50,14 +61,14 @@ export interface NutritionDaily {
 }
 
 export interface NewMealItemInput {
+  meal_id?: string | null;
+  food_item_id?: string | null;
   name: string;
   kcal: number;
   protein?: number;
   carb?: number;
-  fat?: number;
-  amount?: number;
-  meal_id?: string | null;
-  food_item_id?: string | null;
+  fat?: number;  amount?: number;
+  meal_type?: MealType;
 }
 
 export interface NutritionDailyPatch {

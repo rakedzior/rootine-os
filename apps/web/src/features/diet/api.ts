@@ -47,6 +47,7 @@ export async function insertMealItem(input: NewMealItemInput): Promise<MealItem>
       carb: input.carb ?? 0,
       fat: input.fat ?? 0,
       amount: input.amount ?? 100,
+      meal_type: input.meal_type ?? 'other',
     })
     .select('*')
     .single();

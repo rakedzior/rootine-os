@@ -66,7 +66,7 @@ export function useAddWorkTask() {
 export function useMoveWorkTask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'todo' | 'doing' | 'done' }) => patchWorkTask(id, { status }),
+    mutationFn: ({ id, status }: { id: string; status: 'todo' | 'doing' | 'blocked' | 'done' }) => patchWorkTask(id, { status }),
     onMutate: async ({ id, status }) => {
       await qc.cancelQueries({ queryKey: TASKS_KEY });
       const prev = qc.getQueryData<WorkTask[]>(TASKS_KEY);

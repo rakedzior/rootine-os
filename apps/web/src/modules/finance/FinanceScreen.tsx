@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   useAccounts, useTransactions, useCategories, useCreateAccount, useDeleteAccount,
   useCreateTransaction, useDeleteTransaction,
 } from '@/features/finance/hooks';
-import { accountBalance, totalBalance, formatMoney, ACCOUNT_KINDS, type Account, type Category } from '@/features/finance/types';
+import { accountBalance, totalBalance, formatMoney, ACCOUNT_KINDS, currentYearMonth, type Account, type Category } from '@/features/finance/types';
 import { CategoriesCard } from './CategoriesCard';
 import { BudgetsCard } from './BudgetsCard';
 import { RecurringCard } from './RecurringCard';
@@ -25,9 +25,31 @@ export function FinanceScreen() {
   const loading = accountsQ.isLoading || txQ.isLoading;
   const error = accountsQ.isError || txQ.isError;
 
+  const ym = currentYearMonth();
+  const monthTxs = useMemo(() => txs.filter((t) => t.occurred_on.startsWith(ym)), [txs, ym]);
+  const monthIncome = useMemo(() => monthTxs.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0), [monthTxs]);
+  const monthExpense = useMemo(() => monthTxs.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0), [monthTxs]);
+
+  const catById = useMemo(() => {
+    const m = new Map<string, Category>();
+    for (const c of categories) m.set(c.id, c);
+    return m;
+  }, [categories]);
+
+  const expenseByCategory = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const t of monthTxs) {
+      if (t.amount >= 0 || !t.category_id) continue;
+      map.set(t.category_id, (map.get(t.category_id) ?? 0) + Math.abs(t.amount));
+    }
+    return [...map.entries()]
+      .map(([cid, amt]) => ({ name: catById.get(cid)?.name ?? 'Inne', amt }))
+      .sort((a, b) => b.amt - a.amt);
+  }, [monthTxs, catById]);
+
   return (
     <main className="grid">
-      {/* LEFT: balance + budgets */}
+      {/* LEFT: balance + monthly summary */}
       <section className="col">
         {error && (
           <article className="card"><div className="auth-banner warn">Nie udało się wczytać danych finansowych.</div></article>
@@ -51,6 +73,59 @@ export function FinanceScreen() {
             </>
           )}
         </article>
+
+        {/* Monthly summary */}
+        <article className="card">
+          <div className="card-head">
+            <div className="lhs"><span className="card-title">Podsumowanie miesiąca</span></div>
+            <span className="pill">{ym}</span>
+          </div>
+          <div className="stat-grid" style={{ marginBottom: 14 }}>
+            <div className="stat-cell">
+              <div className="k">Wpływy</div>
+              <div className="v tnum" style={{ color: 'var(--acc-a)', fontWeight: 700 }}>{formatMoney(monthIncome)}</div>
+            </div>
+            <div className="stat-cell">
+              <div className="k">Wydatki</div>
+              <div className="v tnum" style={{ color: 'var(--acc-b)', fontWeight: 700 }}>{formatMoney(monthExpense)}</div>
+            </div>
+            <div className="stat-cell">
+              <div className="k">Bilans</div>
+              <div className="v tnum" style={{ fontWeight: 700, color: monthIncome - monthExpense >= 0 ? 'var(--acc-a)' : 'var(--acc-b)' }}>
+                {formatMoney(monthIncome - monthExpense)}
+              </div>
+            </div>
+            <div className="stat-cell">
+              <div className="k">Transakcji</div>
+              <div className="v tnum">{monthTxs.length}</div>
+            </div>
+          </div>
+          {expenseByCategory.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 8, fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                Wydatki wg kategorii
+              </div>
+              {expenseByCategory.slice(0, 6).map(({ name, amt }) => {
+                const pct = monthExpense > 0 ? Math.round((amt / monthExpense) * 100) : 0;
+                return (
+                  <div key={name} style={{ marginBottom: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
+                      <span>{name}</span>
+                      <span style={{ fontFamily: 'var(--mono)', color: 'var(--ink-2)' }}>{formatMoney(amt)} <span style={{ color: 'var(--ink-3)' }}>{pct}%</span></span>
+                    </div>
+                    <div style={{ height: 4, borderRadius: 2, background: 'var(--surface-inset)' }}>
+                      <div style={{ height: '100%', borderRadius: 2, background: 'var(--acc-a)', width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {expenseByCategory.length === 0 && monthTxs.length === 0 && (
+            <div className="agenda-empty">Brak transakcji w tym miesiącu.</div>
+          )}
+        </article>
+
         <BudgetsCard />
       </section>
 
@@ -127,70 +202,74 @@ function AddAccountForm() {
       <select className="he-select" value={kind} onChange={(e) => setKind(e.target.value)} style={{ flex: '1 1 120px' }}>
         {ACCOUNT_KINDS.map((k) => <option key={k.value} value={k.value}>{k.label}</option>)}
       </select>
-      <input className="auth-input mono" style={{ flex: '1 1 100px' }} inputMode="decimal"
-        value={start} onChange={(e) => setStart(e.target.value)} placeholder="Saldo pocz." />
-      <button className="btn" type="submit" disabled={create.isPending} style={{ width: '100%' }}>Dodaj konto</button>
-    </form>
-  );
-}
-
-function AddTransactionForm({ accounts, categories }: { accounts: Account[]; categories: Category[] }) {
-  const create = useCreateTransaction();
-  const [amount, setAmount] = useState('');
-  const [dir, setDir] = useState<'out' | 'in'>('out');
-  const [accountId, setAccountId] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [note, setNote] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const value = Math.abs(Number(amount));
-    if (!value) return;
-    create.mutate({
-      amount: dir === 'out' ? -value : value,
-      account_id: accountId || null,
-      category_id: categoryId || null,
-      note: note.trim() || null,
-      occurred_on: date,
-    });
-    setAmount('');
-    setNote('');
-  };
-
-  return (
-    <form className="capture" onSubmit={submit} style={{ flexWrap: 'wrap', gap: 10 }}>
-      <select className="he-select" value={dir} onChange={(e) => setDir(e.target.value as 'out' | 'in')} style={{ flex: '1 1 110px' }}>
-        <option value="out">Wydatek</option>
-        <option value="in">Wpływ</option>
-      </select>
-      <input className="auth-input mono" style={{ flex: '1 1 100px' }} inputMode="decimal"
-        value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Kwota" />
-      <select className="he-select" value={accountId} onChange={(e) => setAccountId(e.target.value)} style={{ flex: '1 1 130px' }}>
-        <option value="">— konto —</option>
-        {accounts.map((a) => <option key={a.id} value={a.id}>{a.name || 'Konto'}</option>)}
-      </select>
-      <select className="he-select" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} style={{ flex: '1 1 130px' }}>
-        <option value="">— kategoria —</option>
-        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-      </select>
-      <input className="auth-input" type="date" style={{ flex: '1 1 140px' }} value={date} onChange={(e) => setDate(e.target.value)} />
-      <div className="field" style={{ flex: '1 1 100%' }}>
-        <span className="lead">Opis</span>
-        <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Notatka (opcjonalnie)…" />
-      </div>
-      <button className="btn" type="submit" disabled={create.isPending} style={{ width: '100%' }}>Dodaj transakcję</button>
+      <input className="auth-input mono" style={{ flex: '1 1 100px', width: 110 }} type="number" step="0.01" value={start} onChange={(e) => setStart(e.target.value)} placeholder="Saldo pocz." />
+      <button className="btn" type="submit" disabled={create.isPending} style={{ flex: '0 0 auto' }}>Dodaj konto</button>
     </form>
   );
 }
 
 function TransactionRow({ id, amount, note, date }: { id: string; amount: number; note: string | null; date: string }) {
   const del = useDeleteTransaction();
-  const positive = amount > 0;
   return (
     <div className="fl-row">
-      <div className={`fl-ic ${positive ? 'green' : 'clay'}`}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+      <div className="fl-info">
+        <span className="fl-name">{note || '—'}</span>
+        <span className="fl-ctx">{date}</span>
+      </div>
+      <span className="fl-amt" style={{ color: amount >= 0 ? 'var(--acc-a)' : 'var(--acc-b)', fontFamily: 'var(--mono)' }}>
+        {amount >= 0 ? '+' : ''}{formatMoney(amount)}
+      </span>
+      <button className="fl-del" type="button" aria-label="Usuń transakcję" onClick={() => del.mutate(id)}>
+        {TRASH}
+      </button>
+    </div>
+  );
+}
+
+function AddTransactionForm({ accounts, categories }: { accounts: Account[]; categories: Category[] }) {
+  const create = useCreateTransaction();
+  const [amount, setAmount] = useState('');
+  const [note, setNote] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [accountId, setAccountId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const a = parseFloat(amount);
+    if (isNaN(a)) return;
+    create.mutate({
+      amount: a,
+      note: note.trim() || null,
+      occurred_on: date,
+      account_id: accountId || null,
+      category_id: categoryId || null,
+    });
+    setAmount('');
+    setNote('');
+  };
+
+  return (
+    <form className="capture" onSubmit={submit} style={{ flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+      <input className="auth-input mono" style={{ flex: '1 1 90px', width: 100 }} type="number" step="0.01"
+        value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Kwota (- wydatek)" />
+      <input className="auth-input" style={{ flex: '2 1 140px' }}
+        value={note} onChange={(e) => setNote(e.target.value)} placeholder="Opis…" />
+      <input className="auth-input" style={{ flex: '1 1 110px', width: 120 }} type="date"
+        value={date} onChange={(e) => setDate(e.target.value)} />
+      <select className="he-select" style={{ flex: '1 1 110px' }} value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+        <option value="">Konto…</option>
+        {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+      </select>
+      <select className="he-select" style={{ flex: '1 1 110px' }} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+        <option value="">Kategoria…</option>
+        {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+      </select>
+      <button className="btn" type="submit" disabled={create.isPending} style={{ flex: '0 0 auto' }}>Dodaj</button>
+    </form>
+  );
+}
+="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
           {positive ? <path d="M12 19V5M5 12l7-7 7 7" /> : <path d="M12 5v14M5 12l7 7 7-7" />}
         </svg>
       </div>

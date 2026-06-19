@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useIsFeatureVisible } from '@/features/config/useConfig';
 import { TaskList } from '@/features/tasks/TaskList';
 import { HabitList } from '@/features/habits/HabitList';
@@ -8,6 +9,9 @@ import { useTasks } from '@/features/tasks/hooks';
 import { useHabits } from '@/features/habits/hooks';
 import { useTodayMealItems, useNutritionToday } from '@/features/diet/hooks';
 import { useCalendarEvents } from '@/features/integrations/hooks';
+import { TaskSheet } from '@/features/tasks/TaskSheet';
+import { QuickNoteSheet } from '@/features/notes/QuickNoteSheet';
+import { FoodSearchSheet } from '@/features/diet/FoodSearchSheet';
 import type { CalendarEvent } from '@/features/integrations/types';
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -19,6 +23,78 @@ function useClock() {
     return () => clearInterval(id);
   }, []);
   return now;
+}
+
+/** Quick action buttons visible on mobile at the top of Start */
+function QuickActions() {
+  const navigate = useNavigate();
+  const [taskOpen, setTaskOpen] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [foodOpen, setFoodOpen] = useState(false);
+
+  const actions = [
+    {
+      label: 'Zadanie',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        </svg>
+      ),
+      action: () => setTaskOpen(true),
+    },
+    {
+      label: 'Kalendarz',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
+        </svg>
+      ),
+      action: () => setTaskOpen(true),
+    },
+    {
+      label: 'Trening',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="5" r="2" /><path d="M6 20v-6a6 6 0 0 1 12 0v6" /><path d="M6 14H4m14 0h2" />
+        </svg>
+      ),
+      action: () => navigate('/sport'),
+    },
+    {
+      label: 'Notatka',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+        </svg>
+      ),
+      action: () => setNoteOpen(true),
+    },
+    {
+      label: 'Posiłek',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 11l19-9-9 19-2-8-8-2z" />
+        </svg>
+      ),
+      action: () => setFoodOpen(true),
+    },
+  ];
+
+  return (
+    <>
+      <div className="qa-bar">
+        {actions.map((a) => (
+          <button key={a.label} type="button" className="qa-btn" onClick={a.action}>
+            <span className="qa-icon">{a.icon}</span>
+            <span className="qa-label">{a.label}</span>
+          </button>
+        ))}
+      </div>
+      <TaskSheet open={taskOpen} onClose={() => setTaskOpen(false)} />
+      <QuickNoteSheet open={noteOpen} onClose={() => setNoteOpen(false)} />
+      <FoodSearchSheet open={foodOpen} onClose={() => setFoodOpen(false)} />
+    </>
+  );
 }
 
 export function StartScreen() {
@@ -38,6 +114,11 @@ export function StartScreen() {
 
   return (
     <main className="grid">
+      {/* Quick actions bar — only visible on mobile via CSS */}
+      <div className="qa-bar-wrap">
+        <QuickActions />
+      </div>
+
       {/* ---------- LEFT RAIL ---------- */}
       <section className="col">
         {showWeather && <WeatherCard />}
@@ -207,6 +288,7 @@ function NutritionSummaryCard() {
 }
 
 function TodayWorkoutCard() {
+  const navigate = useNavigate();
   return (
     <article className="card">
       <div className="card-head">
@@ -220,7 +302,14 @@ function TodayWorkoutCard() {
             <div className="ts">Zaplanuj w module Sport</div>
           </div>
         </div>
-        <div className="diet-hint" style={{ marginTop: 10 }}>Treningi i logger serii — moduł Sport.</div>
+        <button
+          type="button"
+          className="btn-primary"
+          style={{ marginTop: 12, width: '100%' }}
+          onClick={() => navigate('/sport')}
+        >
+          Rozpocznij trening
+        </button>
       </div>
     </article>
   );
@@ -239,7 +328,6 @@ function MonthCalendar() {
   const eventsQ = useCalendarEvents(monthStart, monthEnd);
   const events: CalendarEvent[] = eventsQ.data ?? [];
 
-  // Map events by day-of-month for quick lookup
   const eventsByDay = useMemo(() => {
     const map: Record<number, CalendarEvent[]> = {};
     for (const ev of events) {
@@ -261,7 +349,6 @@ function MonthCalendar() {
 
   const monthName = cap(new Intl.DateTimeFormat('pl-PL', { month: 'long' }).format(now));
 
-  // Upcoming events this month
   const upcoming = events
     .filter((e) => new Date(e.start_ts) >= new Date())
     .slice(0, 5);

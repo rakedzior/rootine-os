@@ -40,11 +40,13 @@ export function Topbar() {
         <span className="tdiv" />
         <Link className="avatar-wrap" to="/settings/security" aria-label="Ustawienia konta" style={{ textDecoration: 'none' }}>
           <div className="avatar">YOU</div>
-          <svg className="avatar-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M6 9l6 6 6-6" />
-          </svg>
+          <svg className="avatar-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
         </Link>
       </div>
+    </header>
+  );
+}
+v>
     </header>
   );
 }

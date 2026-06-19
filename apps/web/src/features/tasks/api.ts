@@ -24,9 +24,12 @@ export async function insertTask(input: NewTaskInput): Promise<Task> {
     .insert({
       user_id: userId,
       title: input.title,
+      description: input.description ?? null,
       category: input.category ?? null,
       due_date: input.due_date ?? null,
       scheduled_time: input.scheduled_time ?? null,
+      priority: input.priority ?? 'normal',
+      recurrence: input.recurrence ?? null,
     })
     .select(COLUMNS)
     .single();
@@ -46,6 +49,9 @@ export async function patchTask(id: string, patch: Partial<Task>): Promise<Task>
 }
 
 export async function deleteTask(id: string): Promise<void> {
-  const { error } = await supabase.from('tasks').delete().eq('id', id);
+  const { error } = await supabase
+    .from('tasks')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', id);
   if (error) throw error;
 }

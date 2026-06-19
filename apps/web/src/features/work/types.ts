@@ -1,4 +1,18 @@
-export type WorkTaskStatus = 'todo' | 'doing' | 'done';
+export type WorkTaskStatus = 'todo' | 'doing' | 'blocked' | 'done';
+
+export const WORK_STATUS_LABELS: Record<WorkTaskStatus, string> = {
+  todo: 'Do zrobienia',
+  doing: 'W toku',
+  blocked: 'Zablokowane',
+  done: 'Zakończone',
+};
+
+export const WORK_STATUS_COLORS: Record<WorkTaskStatus, string> = {
+  todo: 'var(--ink-3)',
+  doing: 'var(--ev-blue)',
+  blocked: 'var(--acc-b)',
+  done: 'var(--acc-a)',
+};
 export type CompanyType = 'client' | 'own';
 export type ProjectStatus = 'active' | 'paused' | 'done' | 'archived';
 

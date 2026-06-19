@@ -31,7 +31,14 @@ export async function insertDocument(input: NewDocumentInput): Promise<Document>
   const userId = await uid();
   const { data, error } = await supabase
     .from('documents')
-    .insert({ user_id: userId, name: input.name, category_id: input.category_id ?? null, doc_number: input.doc_number ?? null, expires_on: input.expires_on ?? null })
+    .insert({
+      user_id: userId,
+      name: input.name,
+      category: input.category ?? 'inne',
+      expires_on: input.expires_on ?? null,
+      note: input.note ?? null,
+      ref_link: input.ref_link ?? null,
+    })
     .select('*')
     .single();
   if (error) throw error;
@@ -206,6 +213,8 @@ export async function insertVacation(input: NewVacationInput): Promise<Vacation>
 }
 
 export async function deleteVacation(id: string): Promise<void> {
-  const { error } = await supabase.from('vacations').delete().eq('id', id);
+  const { error } = await supabase.from('vacations')
+    .delete()
+    .eq('id', id);
   if (error) throw error;
 }

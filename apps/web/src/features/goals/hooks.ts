@@ -113,8 +113,10 @@ export function useDeleteMilestone() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteMilestone(id),
-    onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: MILESTONES_KEY });
+    onSettled: () => qc.invalidateQueries({ queryKey: MILESTONES_KEY }),
+  });
+}
+_KEY });
       const prev = qc.getQueryData<Milestone[]>(MILESTONES_KEY);
       qc.setQueryData<Milestone[]>(MILESTONES_KEY, (old) => (old ?? []).filter((m) => m.id !== id));
       return { prev };
