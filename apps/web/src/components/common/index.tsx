@@ -103,13 +103,14 @@ function DefaultEmptyIcon() {
 
 // ─── SUB-TABS ─────────────────────────────────────────────────
 
-interface SubTab { id: string; label: string; }
+interface SubTab { id: string; label: string; icon?: () => ReactNode; }
 interface SubTabsProps { tabs: SubTab[]; active: string; onChange: (id: string) => void; }
 export function SubTabs({ tabs, active, onChange }: SubTabsProps) {
   return (
     <div className="sub-tabs">
       {tabs.map(t => (
         <button key={t.id} className={active === t.id ? 'active' : ''} onClick={() => onChange(t.id)}>
+          {t.icon && <span className="sub-tab-icon">{t.icon()}</span>}
           {t.label}
         </button>
       ))}

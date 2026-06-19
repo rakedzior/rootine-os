@@ -2,7 +2,7 @@
  * Theme management — white-lotus (beige), dark, green.
  * Applies data-theme to <html>; persists to localStorage.
  */
-export type Theme = 'white-lotus' | 'dark' | 'green';
+export type Theme = 'white-lotus' | 'dark' | 'green' | 'coastal' | 'aqua' | 'lavender' | 'coral' | 'steel' | 'magenta' | 'mono';
 
 const ROOT = document.documentElement;
 const KEY = 'rootine-theme';

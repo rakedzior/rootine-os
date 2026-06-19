@@ -3,9 +3,9 @@ import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, ProgressBar, IcoTrash
 import { useLocalStore, type Trip } from '@/store/localStore';
 
 const TABS = [
-  { id: 'podroze',  label: 'Podróże' },
-  { id: 'pakowanie', label: 'Pakowanie' },
-  { id: 'wishlist', label: 'Wishlist' },
+  { id: 'podroze',   label: 'Podróże',   icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> },
+  { id: 'pakowanie', label: 'Pakowanie', icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> },
+  { id: 'wishlist',  label: 'Wishlist',  icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> },
 ];
 
 function fmtDate(d: string) {
@@ -20,7 +20,7 @@ export function TravelScreen() {
   return (
     <div className="module-page">
       <div className="module-header">
-        <h1 className="module-title">✈️ Podróże</h1>
+        <span className="module-title">Podróże</span>
         <SubTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
       {tab === 'podroze'   && <TravelList />}
@@ -275,11 +275,9 @@ function TravelWishlist() {
             setCountry(''); setCity(''); setPriority(3); setShowAdd(false);
           }}>Dodaj</button>
         </>}>
-        <div className="form-grid">
-          <Field label="Kraj" required><input className="input" value={country} onChange={e => setCountry(e.target.value)} placeholder="Japonia" /></Field>
-          <Field label="Miasto"><input className="input" value={city} onChange={e => setCity(e.target.value)} placeholder="Tokio (opcjonalnie)" /></Field>
-        </div>
-        <Field label={`Priorytet: ${priority}/5`}><input type="range" min={1} max={5} value={priority} onChange={e => setPriority(+e.target.value)} style={{ width: '100%' }} /></Field>
+        <Field label="Kraj"><input className="input" value={country} onChange={e => setCountry(e.target.value)} autoFocus /></Field>
+        <Field label="Miasto (opcjonalnie)"><input className="input" value={city} onChange={e => setCity(e.target.value)} /></Field>
+        <Field label="Priorytet (1–10)"><input type="number" min={1} max={10} className="input" value={priority} onChange={e => setPriority(+e.target.value)} /></Field>
       </Modal>
     </div>
   );

@@ -3,9 +3,9 @@ import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, ProgressBar, StatusBa
 import { useLocalStore, type WorkProject, type WorkTask, type Priority, type TaskStatus } from '@/store/localStore';
 
 const TABS = [
-  { id: 'zadania',   label: 'Zadania' },
-  { id: 'projekty',  label: 'Projekty' },
-  { id: 'konteksty', label: 'Konteksty' },
+  { id: 'zadania',   label: 'Zadania',   icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
+  { id: 'projekty',  label: 'Projekty',  icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> },
+  { id: 'konteksty', label: 'Konteksty', icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> },
 ];
 
 function fmtDate(d?: string) {
@@ -18,7 +18,7 @@ export function PracaScreen() {
   return (
     <div className="module-page">
       <div className="module-header">
-        <h1 className="module-title">💼 Praca</h1>
+        <span className="module-title">Praca</span>
         <SubTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
       {tab === 'zadania'   && <PracaZadania />}
@@ -334,18 +334,17 @@ function PracaKonteksty() {
         })}
       </div>
 
-      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Nowy kontekst pracy"
- 
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Nowy kontekst"
         footer={<>
           <button className="btn btn-secondary btn-sm" onClick={() => setShowAdd(false)}>Anuluj</button>
           <button className="btn btn-primary btn-sm" onClick={() => {
             if (!name.trim()) return;
-            addWorkContext({ name, company, active: false });
+            addWorkContext({ name, company: company || undefined, active: workContexts.length === 0 });
             setName(''); setCompany(''); setShowAdd(false);
-          }}>Utwórz</button>
+          }}>Dodaj</button>
         </>}>
-        <Field label="Nazwa kontekstu" required><input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Np. Freelance" /></Field>
-        <Field label="Firma / klient"><input className="input" value={company} onChange={e => setCompany(e.target.value)} placeholder="Np. Acme Corp" /></Field>
+        <Field label="Nazwa kontekstu"><input className="input" value={name} onChange={e => setName(e.target.value)} autoFocus placeholder="np. Freelance, Etat, Projekt X" /></Field>
+        <Field label="Firma / Klient"><input className="input" value={company} onChange={e => setCompany(e.target.value)} /></Field>
       </Modal>
     </div>
   );

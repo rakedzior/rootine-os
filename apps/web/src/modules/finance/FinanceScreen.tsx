@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, ProgressBar, IcoTrash } from '@/components/common';
-import { useLocalStore, type JdgMonth } from '@/store/localStore';
+import { useLocalStore } from '@/store/localStore';
 
 const TABS = [
-  { id: 'przeglad',   label: 'Przegląd' },
-  { id: 'konta',      label: 'Konta' },
-  { id: 'budzet',     label: 'Budżet' },
-  { id: 'oszczednosci', label: 'Oszczędności' },
-  { id: 'cykliczne',  label: 'Cykliczne' },
-  { id: 'jdg',        label: 'JDG' },
+  { id: 'przeglad',     label: 'Przegląd',     icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> },
+  { id: 'konta',        label: 'Konta',         icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> },
+  { id: 'budzet',       label: 'Budżet',        icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
+  { id: 'oszczednosci', label: 'Oszczędności',  icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
+  { id: 'cykliczne',    label: 'Cykliczne',     icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> },
+  { id: 'jdg',          label: 'JDG',           icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> },
 ];
 
 function fmtPLN(n: number) {
@@ -20,7 +20,7 @@ export function FinanceScreen() {
   return (
     <div className="module-page">
       <div className="module-header">
-        <h1 className="module-title">💰 Finanse</h1>
+        <span className="module-title">Finanse</span>
         <SubTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
       {tab === 'przeglad'     && <FinancePrzeglad />}
@@ -328,44 +328,52 @@ function FinanceCykliczne() {
 
 // ─── JDG ──────────────────────────────────────────────────────
 
+const JDG_CHECKS: { key: keyof import('@/store/localStore').JdgMonth; label: string }[] = [
+  { key: 'invoiceIssued',   label: 'Faktury wystawione' },
+  { key: 'documentsSent',   label: 'Dokumenty wysłane' },
+  { key: 'accountingPaid',  label: 'Księgowość opłacona' },
+  { key: 'zusPaid',         label: 'ZUS opłacony' },
+  { key: 'pitPaid',         label: 'PIT opłacony' },
+  { key: 'vatPaid',         label: 'VAT opłacony' },
+];
+
 function FinanceJDG() {
-  const { jdgMonths } = useLocalStore();
-  const MONTHS_PL = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
-  const fields: { key: keyof JdgMonth; label: string }[] = [
-    { key: 'invoiceIssued', label: 'Faktura' },
-    { key: 'documentsSent', label: 'Dokumenty' },
-    { key: 'accountingPaid', label: 'Księgowość' },
-    { key: 'zusPaid', label: 'ZUS' },
-    { key: 'pitPaid', label: 'PIT' },
-    { key: 'vatPaid', label: 'VAT' },
-  ];
+  const { jdgMonths, updateJdgMonth } = useLocalStore();
+
   return (
-    <div className="card" style={{ overflowX: 'auto' }}>
-      <div className="card-head"><span className="card-title">Obowiązki JDG</span></div>
-      <table className="table" style={{ minWidth: 600 }}>
-        <thead>
-          <tr>
-            <th>MIESIĄC</th>
-            {fields.map(f => <th key={String(f.key)} style={{ textAlign: 'center' }}>{f.label}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {jdgMonths.map(month => {
-            const [y, m] = month.month.split('-');
-            const label = `${MONTHS_PL[parseInt(m)-1]} ${y}`;
-            return (
-              <tr key={month.id}>
-                <td style={{ fontWeight: 600 }}>{label}</td>
-                {fields.map(f => (
-                  <td key={String(f.key)} style={{ textAlign: 'center' }}>
-                    <span style={{ fontSize: 16 }}>{month[f.key] ? '✅' : '⬜'}</span>
-                  </td>
+    <div style={{ maxWidth: 700 }}>
+      {jdgMonths.length === 0
+        ? <div className="card"><EmptyState title="Brak danych JDG" desc="Dodaj miesiące w ustawieniach." /></div>
+        : jdgMonths.map(m => {
+          const done = JDG_CHECKS.filter(c => m[c.key as keyof typeof m] === true).length;
+          const total = JDG_CHECKS.length;
+          return (
+            <div key={m.id} className="card" style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 13, letterSpacing: '.06em' }}>{m.month}</span>
+                <span style={{ fontSize: 12, color: done === total ? 'var(--acc-a-ink)' : 'var(--ink-3)' }}>{done}/{total} ukończonych</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {JDG_CHECKS.map(c => (
+                  <div key={c.key} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+                    onClick={() => updateJdgMonth(m.id, { [c.key]: !m[c.key as keyof typeof m] })}>
+                    <div style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${m[c.key as keyof typeof m] ? 'var(--acc-a)' : 'var(--border)'}`, background: m[c.key as keyof typeof m] ? 'var(--acc-a)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: '.14s' }}>
+                      {m[c.key as keyof typeof m] && <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={3} style={{ width: 12, height: 12 }}><polyline points="20 6 9 17 4 12"/></svg>}
+                    </div>
+                    <span style={{ fontSize: 14, color: m[c.key as keyof typeof m] ? 'var(--ink-3)' : 'var(--ink)', textDecoration: m[c.key as keyof typeof m] ? 'line-through' : 'none' }}>{c.label}</span>
+                  </div>
                 ))}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+              </div>
+              {m.notes !== undefined && (
+                <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-soft)' }}>
+                  <textarea className="input" style={{ fontSize: 12, resize: 'none', height: 56 }} placeholder="Notatki…"
+                    value={m.notes} onChange={e => updateJdgMonth(m.id, { notes: e.target.value })} onClick={e => e.stopPropagation()} />
+                </div>
+              )}
+            </div>
+          );
+        })
+      }
     </div>
   );
 }

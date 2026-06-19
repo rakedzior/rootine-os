@@ -3,22 +3,21 @@ import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, IcoEdit, IcoTrash } f
 import { useLocalStore, type Note, type NoteType, type ChecklistItem } from '@/store/localStore';
 
 const TABS = [
-  { id: 'wszystkie', label: 'Wszystkie' },
-  { id: 'sticky',    label: 'Przyklejone' },
-  { id: 'listy',     label: 'Listy kontrolne' },
-  { id: 'pelne',     label: 'Pełne notatki' },
+  { id: 'wszystkie', label: 'Wszystkie',       icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> },
+  { id: 'sticky',    label: 'Przyklejone',     icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="15 3 15 9 21 9"/></svg> },
+  { id: 'listy',     label: 'Listy kontrolne', icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
+  { id: 'pelne',     label: 'Pełne notatki',   icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
 ];
 
 const NOTE_COLORS = ['#FEF3C7','#D1FAE5','#DBEAFE','#FCE7F3','#EDE9FE','#F3F3F0'];
 
-function uid() { return Math.random().toString(36).slice(2,10); }
 
 export function NotesScreen() {
   const [tab, setTab] = useState('wszystkie');
   return (
     <div className="module-page">
       <div className="module-header">
-        <h1 className="module-title">📝 Notatki</h1>
+        <span className="module-title">Notatki</span>
         <SubTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
       <NotesGrid filter={tab} />
@@ -123,8 +122,8 @@ function NoteModal({ open, onClose, note, onSave }: { open: boolean; onClose: ()
   const [title, setTitle] = useState(note?.title ?? '');
   const [content, setContent] = useState(note?.content ?? '');
   const [type, setType] = useState<NoteType>(note?.type ?? 'sticky');
-  const [color, setColor] = useState(note?.color ?? NOTE_COLORS[0]);
-  const [tags, setTags] = useState(note?.tags?.join(', ') ?? '');
+  const [color] = useState(note?.color ?? NOTE_COLORS[0]);
+  const [tags] = useState(note?.tags?.join(', ') ?? '');
   const [items, setItems] = useState<ChecklistItem[]>(note?.checklistItems ?? []);
   const [newItem, setNewItem] = useState('');
 
@@ -138,12 +137,6 @@ function NoteModal({ open, onClose, note, onSave }: { open: boolean; onClose: ()
       checklistItems: type === 'checklist' ? items : undefined,
     });
     setTitle(''); setContent(''); setItems([]);
-  }
-
-  function addItem() {
-    if (!newItem.trim()) return;
-    setItems(i => [...i, { id: uid(), text: newItem.trim(), done: false }]);
-    setNewItem('');
   }
 
   return (
@@ -171,25 +164,22 @@ function NoteModal({ open, onClose, note, onSave }: { open: boolean; onClose: ()
                   <div style={{ width: 14, height: 14, borderRadius: 3, border: '1.5px solid var(--border)', background: item.done ? 'var(--green-mid)' : 'transparent', cursor: 'pointer', flexShrink: 0 }}
                     onClick={() => setItems(prev => prev.map(it => it.id === item.id ? { ...it, done: !it.done } : it))} />
                   <span style={{ flex: 1, fontSize: 13, textDecoration: item.done ? 'line-through' : 'none', color: 'var(--ink)' }}>{item.text}</span>
-                  <button className="icon-btn" style={{ fontSize: 12 }} onClick={() => setItems(prev => prev.filter(it => it.id !== item.id))}>✕</button>
+                  <button className="icon-btn" style={{ padding: 2 }} onClick={() => setItems(prev => prev.filter(it => it.id !== item.id))}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
                 </div>
               ))}
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input className="input" value={newItem} onChange={e => setNewItem(e.target.value)} onKeyDown={e => e.key === 'Enter' && addItem()} placeholder="Nowy element…" style={{ flex: 1 }} />
-              <button className="btn btn-secondary btn-sm" onClick={addItem}>+</button>
+              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                <input className="input" style={{ flex: 1, fontSize: 13 }} value={newItem} onChange={e => setNewItem(e.target.value)}
+                  placeholder="Dodaj pozycję..." onKeyDown={e => { if (e.key === 'Enter' && newItem.trim()) { setItems(prev => [...prev, { id: Date.now().toString(), text: newItem.trim(), done: false }]); setNewItem(''); }}} />
+                <button className="btn btn-primary btn-sm" onClick={() => { if (newItem.trim()) { setItems(prev => [...prev, { id: Date.now().toString(), text: newItem.trim(), done: false }]); setNewItem(''); }}}>+</button>
+              </div>
             </div>
           </Field>
-        )
-      }
-      <Field label="Tagi (oddziel przecinkami)"><input className="input" value={tags} onChange={e => setTags(e.target.value)} placeholder="praca, ważne, pomysły" /></Field>
-      <Field label="Kolor">
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {NOTE_COLORS.map(c => (
-            <div key={c} onClick={() => setColor(c)} style={{ width: 28, height: 28, borderRadius: 6, background: c, border: color === c ? '2px solid var(--green)' : '1px solid var(--border)', cursor: 'pointer' }} />
-          ))}
-        </div>
-      </Field>
-    </Modal>
-  );
+        )}
+      </Modal>
+    );
 }
+

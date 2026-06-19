@@ -3,11 +3,11 @@ import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, StatusBadge, Priority
 import { useLocalStore, type Priority, type TaskStatus } from '@/store/localStore';
 
 const TABS = [
-  { id: 'zadania',   label: 'Zadania urzędowe' },
-  { id: 'dokumenty', label: 'Dokumenty' },
-  { id: 'samochod',  label: 'Samochód' },
-  { id: 'ubezp',     label: 'Ubezpieczenia' },
-  { id: 'urlopy',    label: 'Urlopy' },
+  { id: 'zadania',   label: 'Zadania urzędowe', icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
+  { id: 'dokumenty', label: 'Dokumenty',         icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> },
+  { id: 'samochod',  label: 'Samochód',          icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v9a2 2 0 0 1-2 2h-2"/><circle cx="9" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg> },
+  { id: 'ubezp',     label: 'Ubezpieczenia',     icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
+  { id: 'urlopy',    label: 'Urlopy',            icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg> },
 ];
 
 function fmtDate(d?: string) {
@@ -25,7 +25,7 @@ export function BiuroScreen() {
   return (
     <div className="module-page">
       <div className="module-header">
-        <h1 className="module-title">🏢 Biuro</h1>
+        <span className="module-title">Biuro</span>
         <SubTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
       {tab === 'zadania'   && <BiuroZadania />}
@@ -381,18 +381,18 @@ function BiuroUrlopy() {
           <button className="btn btn-primary btn-sm" onClick={() => {
             if (!start || !end) return;
             const days = Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1;
-            addVacation({ startDate: start, endDate: end, days, type, status: 'planned', notes });
+            addVacation({ startDate: start, endDate: end, days, type, notes, status: 'planned' });
             setStart(''); setEnd(''); setNotes(''); setShowAdd(false);
           }}>Dodaj</button>
         </>}>
-        <div className="form-grid">
-          <Field label="Od"><input type="date" className="input" value={start} onChange={e => setStart(e.target.value)} /></Field>
-          <Field label="Do"><input type="date" className="input" value={end} onChange={e => setEnd(e.target.value)} /></Field>
-        </div>
-        <Field label="Typ urlopu"><select className="select" value={type} onChange={e => setType(e.target.value)}>
-          {['Wypoczynkowy','Na żądanie','Bezpłatny','Okolicznościowy','Chorobowy'].map(t => <option key={t}>{t}</option>)}
-        </select></Field>
-        <Field label="Notatki"><textarea className="textarea" value={notes} onChange={e => setNotes(e.target.value)} rows={2} /></Field>
+        <Field label="Od"><input type="date" className="input" value={start} onChange={e => setStart(e.target.value)} autoFocus /></Field>
+        <Field label="Do"><input type="date" className="input" value={end} onChange={e => setEnd(e.target.value)} /></Field>
+        <Field label="Typ urlopu">
+          <select className="select" value={type} onChange={e => setType(e.target.value)}>
+            {['Wypoczynkowy','Na żądanie','Okolicznościowy','Bezpłatny','Inny'].map(t => <option key={t}>{t}</option>)}
+          </select>
+        </Field>
+        <Field label="Notatki"><input className="input" value={notes} onChange={e => setNotes(e.target.value)} /></Field>
       </Modal>
     </div>
   );

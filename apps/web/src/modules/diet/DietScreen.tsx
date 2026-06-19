@@ -3,10 +3,10 @@ import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, ProgressBar } from '@
 import { useLocalStore, type MealEntry } from '@/store/localStore';
 
 const TABS = [
-  { id: 'dzisiaj', label: 'Dzisiaj' },
-  { id: 'historia', label: 'Historia' },
-  { id: 'produkty', label: 'Produkty' },
-  { id: 'cele',     label: 'Cele' },
+  { id: 'dzisiaj',  label: 'Dzisiaj',   icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg> },
+  { id: 'historia', label: 'Historia',  icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg> },
+  { id: 'produkty', label: 'Produkty',  icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> },
+  { id: 'cele',     label: 'Cele',      icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> },
 ];
 
 const MEAL_LABELS: Record<string, string> = {
@@ -22,7 +22,7 @@ export function DietScreen() {
   return (
     <div className="module-page">
       <div className="module-header">
-        <h1 className="module-title">🥗 Dieta</h1>
+        <span className="module-title">Dieta</span>
         <SubTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
       {tab === 'dzisiaj'  && <DietDzisiaj />}
@@ -347,16 +347,21 @@ function DietCele() {
                   { label: 'Tłuszcze', pct: Math.round((fat * 9 / totalMacroKcal) * 100), color: '#EF4444' },
                 ].map(m => (
                   <div key={m.label} style={{ flex: 1, textAlign: 'center' }}>
-                    <div style={{ fontWeight: 700, color: m.color }}>{m.pct}%</div>
-                    <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{m.label}</div>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: m.color }}>{m.pct}%</div>
+                    <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>{m.label}</div>
                   </div>
                 ))}
               </div>
             </div>
           )}
-          <button className="btn btn-primary" onClick={() => { updateDietGoals({ kcal, protein, carbs, fat, water }); setSaved(true); setTimeout(() => setSaved(false), 2000); }}>
-            {saved ? '✓ Zapisano!' : 'Zapisz cele'}
-          </button>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => setSaved(false)}>Anuluj</button>
+            <button className="btn btn-primary btn-sm" onClick={() => {
+              updateDietGoals({ kcal, protein, carbs, fat, water });
+              setSaved(true);
+            }}>Zapisz cele</button>
+          </div>
+          {saved && <div style={{ color: 'var(--acc-a-ink)', fontSize: 12, textAlign: 'right' }}>✓ Zapisano</div>}
         </div>
       </div>
     </div>

@@ -3,9 +3,9 @@ import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, ProgressBar, StatusBa
 import { useLocalStore, type Goal, type GoalTask, type GoalType, type Priority } from '@/store/localStore';
 
 const TABS = [
-  { id: 'lista',     label: 'Lista celów' },
-  { id: 'dzisiaj',   label: 'Dzisiaj' },
-  { id: 'ukonczone', label: 'Ukończone' },
+  { id: 'lista',     label: 'Lista celów', icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> },
+  { id: 'dzisiaj',   label: 'Dzisiaj',     icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
+  { id: 'ukonczone', label: 'Ukończone',   icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> },
 ];
 
 const CATEGORIES = ['Zdrowie', 'Finanse', 'Kariera', 'Edukacja', 'Relacje', 'Hobby', 'Inne'];
@@ -15,7 +15,7 @@ export function GoalsScreen() {
   return (
     <div className="module-page">
       <div className="module-header">
-        <h1 className="module-title">🎯 Cele</h1>
+        <span className="module-title">Cele</span>
         <SubTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
       {tab === 'lista'     && <GoalsList />}
@@ -274,22 +274,21 @@ function GoalsToday() {
 // ─── UKONCZONE ────────────────────────────────────────────────
 
 function GoalsDone() {
-  const { goals, updateGoal } = useLocalStore();
+  const { goals } = useLocalStore();
   const done = goals.filter(g => g.archived || g.progress >= 100);
   return (
     <div style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 12 }}>
       {done.length === 0
-        ? <div className="card"><EmptyState title="Brak ukończonych celów" desc="Ukonczone lub zarchiwizowane cele pojawia sie tutaj." /></div>
+        ? <div className="card"><EmptyState title="Brak ukończonych celów" desc="Twoje ukończone cele pojawią się tutaj." /></div>
         : done.map(g => (
-          <div key={g.id} className="card">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 28 }}>{g.emoji}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{g.title}</div>
-                <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{g.category} · {g.progress}%</div>
-              </div>
-              <button className="btn btn-ghost btn-sm" onClick={() => updateGoal(g.id, { archived: false })}>Wznow</button>
+          <div key={g.id} className="card" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <span style={{ fontSize: 26 }}>{g.emoji}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{g.title}</div>
+              <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>{g.category}</div>
             </div>
+            <ProgressBar value={g.progress} size="sm" />
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--acc-a-ink)' }}>{g.progress}%</span>
           </div>
         ))
       }

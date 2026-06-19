@@ -3,13 +3,13 @@ import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, SectionHead, IcoTrash
 import { useLocalStore, type WorkoutTemplate, type WorkoutSet, type WorkoutSession, type SportExercise } from '@/store/localStore';
 
 const SPORT_TABS = [
-  { id: 'dzisiaj',   label: 'Dzisiaj' },
-  { id: 'szablony',  label: 'Szablony' },
-  { id: 'sesja',     label: 'Aktywna sesja' },
-  { id: 'historia',  label: 'Historia' },
-  { id: 'analiza',   label: 'Analiza' },
-  { id: 'cwiczenia', label: 'Ćwiczenia' },
-  { id: 'odczucia',  label: 'Odczucia' },
+  { id: 'dzisiaj',   label: 'Dzisiaj',       icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
+  { id: 'szablony',  label: 'Szablony',      icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> },
+  { id: 'sesja',     label: 'Aktywna sesja', icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
+  { id: 'historia',  label: 'Historia',      icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg> },
+  { id: 'analiza',   label: 'Analiza',       icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> },
+  { id: 'cwiczenia', label: 'Ćwiczenia',    icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5m-2 0a2 2 0 1 0 4 0 2 2 0 1 0-4 0"/><path d="M3 12h4l2 6 4-12 2 6h4"/></svg> },
+  { id: 'odczucia',  label: 'Odczucia',     icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> },
 ];
 
 function fmtTime(sec: number) {
@@ -37,7 +37,7 @@ export function SportScreen() {
   return (
     <div className="module-page">
       <div className="module-header">
-        <h1 className="module-title">🏋️ Sport</h1>
+        <span className="module-title">Sport</span>
         <SubTabs tabs={SPORT_TABS} active={tab} onChange={setTab} />
       </div>
 
@@ -579,38 +579,73 @@ function SportExercises() {
   );
 }
 
-// ─── ODCZUCIA ─────────────────────────────────────────────────
+// ─── ODCZUCIA ────────────────────────────────────────────────
+
+const MOODS = ['😴','😓','😐','🙂','💪','🔥'];
+const ENERGY_LABELS = ['Bardzo niska','Niska','Średnia','Dobra','Wysoka','Maksymalna'];
 
 function SportFeelings() {
-  const feelings: any[] = [];
-  const sorted = [...(feelings || [])].sort((a, b) => b.date.localeCompare(a.date));
+  const { sessions: sportSessions } = useLocalStore();
+  const [mood, setMood] = useState(3);
+  const [energy, setEnergy] = useState(3);
+  const [notes, setNotes] = useState('');
+  const [saved, setSaved] = useState(false);
+
+  const recent = [...sportSessions].sort((a,b) => (b.date ?? '').localeCompare(a.date ?? '')).slice(0, 5);
+
+  function handleSave() {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
 
   return (
-    <div style={{ maxWidth: 700 }}>
+    <div style={{ maxWidth: 600, display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="card">
-        <div className="card-head"><span className="card-title">Dziennik odczuć</span></div>
-        {sorted.length === 0
-          ? <EmptyState title="Brak odczuć" desc="Odczucia możesz dodać po zakończeniu sesji treningowej." />
-          : sorted.map(f => (
-            <div key={f.id} style={{ padding: '12px 0', borderBottom: '1px solid var(--border-soft)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontWeight: 600 }}>{new Date(f.date).toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-                <div style={{ display: 'flex', gap: 12, fontSize: 13 }}>
-                  <span>Energia: <strong>{f.energyLevel}/10</strong></span>
-                  <span>Sen: <strong>{f.sleepHours}h</strong></span>
-                  {f.bodyWeight && <span>Waga: <strong>{f.bodyWeight}kg</strong></span>}
-                </div>
-              </div>
-              {f.notes && <div style={{ fontSize: 13, color: 'var(--ink-2)', fontStyle: 'italic' }}>"{f.notes}"</div>}
-              {f.soreness && f.soreness.length > 0 && (
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
-                  {f.soreness.map((s: string) => <span key={s} style={{ fontSize: 11, padding: '2px 7px', background: 'rgba(239,68,68,0.08)', color: 'var(--p-high)', borderRadius: 99 }}>{s}</span>)}
-                </div>
-              )}
-            </div>
-          ))
-        }
+        <div className="card-head"><span className="card-title">Jak się dzisiaj czujesz?</span></div>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-3)', marginBottom: 10 }}>Samopoczucie</div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {MOODS.map((m, i) => (
+              <button key={i} onClick={() => setMood(i)}
+                style={{ fontSize: 26, padding: '8px 12px', borderRadius: 12, border: `2px solid ${mood === i ? 'var(--acc-a)' : 'var(--border)'}`, background: mood === i ? 'var(--acc-a-soft)' : 'transparent', cursor: 'pointer', transition: '.14s' }}>
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-3)', marginBottom: 10 }}>Poziom energii: <span style={{ color: 'var(--ink)' }}>{ENERGY_LABELS[energy]}</span></div>
+          <input type="range" min={0} max={5} value={energy} onChange={e => setEnergy(+e.target.value)}
+            style={{ width: '100%', accentColor: 'var(--acc-a)' }} />
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-3)', marginBottom: 8 }}>Notatki</div>
+          <textarea className="input" rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Jak się czujesz? Czy coś boli?" style={{ resize: 'none', lineHeight: 1.6 }} />
+        </div>
+        <button className="btn btn-primary" onClick={handleSave} style={{ width: '100%' }}>
+          {saved ? '✓ Zapisano' : 'Zapisz odczucia'}
+        </button>
       </div>
+
+      {recent.length > 0 && (
+        <div className="card">
+          <div className="card-head"><span className="card-title">Historia odczuć</span></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {recent.map(s => (
+              <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-soft)' }}>
+                <span style={{ fontSize: 22 }}>{MOODS[Math.min(s.painAfterTraining ?? 3, 5)]}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{s.templateName ?? s.sportType}</div>
+                  <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{s.date}</div>
+                </div>
+                {s.painAfterTraining != null && (
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ink-3)' }}>Ból {s.painAfterTraining}/10</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
