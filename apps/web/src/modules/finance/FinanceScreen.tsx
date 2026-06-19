@@ -207,7 +207,6 @@ function AddAccountForm() {
     </form>
   );
 }
-
 function TransactionRow({ id, amount, note, date }: { id: string; amount: number; note: string | null; date: string }) {
   const del = useDeleteTransaction();
   return (
@@ -267,22 +266,5 @@ function AddTransactionForm({ accounts, categories }: { accounts: Account[]; cat
       </select>
       <button className="btn" type="submit" disabled={create.isPending} style={{ flex: '0 0 auto' }}>Dodaj</button>
     </form>
-  );
-}
-="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-          {positive ? <path d="M12 19V5M5 12l7-7 7 7" /> : <path d="M12 5v14M5 12l7 7 7-7" />}
-        </svg>
-      </div>
-      <div className="fl-info">
-        <span className="fl-name">{note || (positive ? 'Wpływ' : 'Wydatek')}</span>
-        <span className="fl-ctx">{date}</span>
-      </div>
-      <span className={`fl-amt ${positive ? 'positive' : 'negative'}`}>
-        {positive ? '+' : '−'}{formatMoney(Math.abs(amount))}
-      </span>
-      <button className="fl-del" type="button" aria-label="Usuń transakcję" onClick={() => del.mutate(id)}>
-        {TRASH}
-      </button>
-    </div>
   );
 }

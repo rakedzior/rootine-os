@@ -46,9 +46,3 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
-ns" /> },
-      { path: 'settings/security', element: <SettingsScreen tab="security" /> },
-      { path: 'settings/modules', element: <SettingsScreen tab="modules" /> },
-    ],
-  },
-]);

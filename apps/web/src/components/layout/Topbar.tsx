@@ -46,7 +46,3 @@ export function Topbar() {
     </header>
   );
 }
-v>
-    </header>
-  );
-}

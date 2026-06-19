@@ -60,15 +60,3 @@ export function computeGoalProgress(milestones: { done: boolean; weight: number 
   const done = milestones.filter((m) => m.done).reduce((s, m) => s + (m.weight ?? 1), 0);
   return total > 0 ? Math.round((done / total) * 100) : 0;
 }
-!= null);
-  const auto = milestones.filter((m) => m.weight == null);
-  const explicitTotal = explicit.reduce((s, m) => s + (m.weight ?? 0), 0);
-  const remaining = Math.max(0, 100 - explicitTotal);
-  const autoShare = auto.length ? remaining / auto.length : 0;
-  let p = 0;
-  for (const m of milestones) {
-    if (!m.done) continue;
-    p += m.weight != null ? m.weight : autoShare;
-  }
-  return Math.round(Math.min(100, Math.max(0, p)));
-}

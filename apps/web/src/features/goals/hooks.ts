@@ -116,14 +116,3 @@ export function useDeleteMilestone() {
     onSettled: () => qc.invalidateQueries({ queryKey: MILESTONES_KEY }),
   });
 }
-_KEY });
-      const prev = qc.getQueryData<Milestone[]>(MILESTONES_KEY);
-      qc.setQueryData<Milestone[]>(MILESTONES_KEY, (old) => (old ?? []).filter((m) => m.id !== id));
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(MILESTONES_KEY, ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: MILESTONES_KEY }),
-  });
-}
