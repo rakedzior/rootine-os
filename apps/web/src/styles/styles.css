@@ -945,7 +945,10 @@ body{
 
 /* Inline text input — he-input but auto width (for flex rows) */
 .fi{ font-family:var(--sans); font-size:12.5px; color:var(--ink); background:var(--surface);
-  border:1px solid va
+  border:1px solid var(--border); border-radius:var(--r-sm); padding:8px 9px; width:auto; transition:.14s; }
+.fi:focus{ outline:none; border-color:var(--acc-a); box-shadow:0 0 0 3px var(--acc-a-soft); }
+.fi::placeholder{ color:var(--ink-4); }
+
 /* ============================================================
    BOTTOM SHEET
    ============================================================ */
