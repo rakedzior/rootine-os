@@ -248,3 +248,27 @@ export async function searchFoodExternal(query: string, _lang = 'pl'): Promise<F
     })
     .filter((p): p is FoodSearchResult => p !== null);
 }
+
+// ── barcode lookup — Open Food Facts by EAN/UPC ───────────────────────────────
+
+export async function lookupBarcode(barcode: string): Promise<FoodSearchResult | null> {
+  const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+  if (!res.ok) return null;
+  const json = await res.json() as { status: number; product?: OFFProduct & { product_name_pl?: string; product_name?: string; brands?: string; nutriments?: OFFProduct['nutriments'] } };
+  if (json.status !== 1 || !json.product) return null;
+  const p = json.product;
+  const name = (p.product_name_pl || p.product_name || '').trim();
+  if (!name) return null;
+  const n = p.nutriments ?? {};
+  const kcal = n['energy-kcal_100g'] ?? 0;
+  return {
+    external_id: `off_barcode_${barcode}`,
+    name: p.brands ? `${name} (${p.brands})` : name,
+    kcal: Math.round(kcal),
+    protein: Number((n.proteins_100g ?? 0).toFixed(1)),
+    carb: Number((n.carbohydrates_100g ?? 0).toFixed(1)),
+    fat: Number((n.fat_100g ?? 0).toFixed(1)),
+    per_amount: 100,
+    unit: 'g',
+  };
+}

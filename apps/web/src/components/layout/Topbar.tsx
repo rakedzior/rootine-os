@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { setTheme, getCurrentTheme, type Theme } from '@/lib/theme';
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Start', exact: true },
+  { to: '/', label: 'Planer', exact: true },
   { to: '/sport', label: 'Sport' },
   { to: '/diet', label: 'Dieta' },
   { to: '/finance', label: 'Finanse' },

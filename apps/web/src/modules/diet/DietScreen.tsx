@@ -16,6 +16,8 @@ import {
   useFoodSearch,
 } from '@/features/diet/hooks';
 import type { FoodItem, FoodSearchResult, NewFoodItemInput } from '@/features/diet/types';
+import { lookupBarcode } from '@/features/diet/api';
+import { useBarcode } from '@/features/diet/useBarcode';
 
 const TABS = [
   { id: 'dzisiaj',  label: 'Dzisiaj',   icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg> },
@@ -58,6 +60,8 @@ function MacroBadge({ kcal, protein, carb, fat }: { kcal: number; protein: numbe
 // ─── FoodSearchDropdown ───────────────────────────────────────
 type SearchEntry =
   | { source: 'local'; item: FoodItem }
+  | { source: 'builtin'; item: FoodSearchResult }
+  | { source: 'xl'; item: FoodSearchResult }
   | { source: 'external'; item: FoodSearchResult };
 
 interface FoodSearchDropdownProps {
@@ -120,17 +124,18 @@ function FoodSearchDropdown({ query, onQueryChange, onSelect, placeholder }: Foo
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
                   padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer',
-                  borderBottom: i < results.length - 1 ? '1px solid var(--border)' : 'none',
+                  color: 'var(--ink)',
+                  borderBottom: i < results.length - 1 ? '1px solid var(--border-soft)' : 'none',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-3)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-inset)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                <span style={{ flex: 1, fontWeight: 500, fontSize: 13 }}>{name}</span>
-                <span style={{ fontSize: 11, color: 'var(--ink-3)', whiteSpace: 'nowrap' }}>
+                <span style={{ flex: 1, fontWeight: 600, fontSize: 13, color: 'var(--ink)' }}>{name}</span>
+                <span style={{ fontSize: 11, color: 'var(--ink-2)', whiteSpace: 'nowrap' }}>
                   {Math.round(macros.kcal)} kcal / {macros.per_amount}{macros.unit}
                 </span>
-                {entry.source === 'external' && (
-                  <span style={{ fontSize: 10, background: 'var(--surface-3)', color: 'var(--ink-3)', borderRadius: 4, padding: '1px 5px' }}>FS</span>
+                {(entry.source === 'builtin' || entry.source === 'xl' || entry.source === 'external') && (
+                  <span style={{ fontSize: 10, background: 'var(--surface-3)', color: 'var(--ink-2)', borderRadius: 4, padding: '1px 5px', fontWeight: 600 }}>{entry.source === 'builtin' || entry.source === 'xl' ? 'PL' : 'OFF'}</span>
                 )}
               </button>
             );
@@ -301,7 +306,9 @@ function AddMealModal({ open, defaultMeal, onClose }: { open: boolean; defaultMe
   const [perAmount, setPerAmount] = useState(100);
   const [selectedName, setSelectedName] = useState('');
   const [selectedExternalId, setSelectedExternalId] = useState<string | null>(null);
-  const [mode, setMode] = useState<'search' | 'manual'>('search');
+  const [mode, setMode] = useState<'search' | 'manual' | 'scan'>('search');
+  const [barcodeLoading, setBarcodeLoading] = useState(false);
+  const [barcodeError, setBarcodeError] = useState<string | null>(null);
 
   useEffect(() => { setMeal(defaultMeal); }, [defaultMeal]);
 
@@ -310,7 +317,7 @@ function AddMealModal({ open, defaultMeal, onClose }: { open: boolean; defaultMe
     setQuery(item.name);
     setSelectedName(item.name);
     setPerAmount(item.per_amount);
-    setSelectedExternalId(entry.source === 'external' ? (entry.item as FoodSearchResult).external_id : null);
+    setSelectedExternalId(entry.source !== 'local' ? (entry.item as FoodSearchResult).external_id : null);
     const ratio = amount / item.per_amount;
     setKcal(Math.round(item.kcal * ratio));
     setProtein(+(item.protein * ratio).toFixed(1));
@@ -330,9 +337,36 @@ function AddMealModal({ open, defaultMeal, onClose }: { open: boolean; defaultMe
     }
   }
 
+  const barcode = useBarcode(async (code) => {
+    setBarcodeLoading(true);
+    setBarcodeError(null);
+    try {
+      const result = await lookupBarcode(code);
+      if (!result) {
+        setBarcodeError(`Nie znaleziono produktu o kodzie ${code}`);
+      } else {
+        const ratio = amount / result.per_amount;
+        setSelectedName(result.name);
+        setQuery(result.name);
+        setPerAmount(result.per_amount);
+        setSelectedExternalId(result.external_id);
+        setKcal(Math.round(result.kcal * ratio));
+        setProtein(+(result.protein * ratio).toFixed(1));
+        setCarb(+(result.carb * ratio).toFixed(1));
+        setFat(+(result.fat * ratio).toFixed(1));
+        setMode('search');
+      }
+    } catch {
+      setBarcodeError('Błąd podczas wyszukiwania produktu');
+    } finally {
+      setBarcodeLoading(false);
+    }
+  });
+
   function resetForm() {
     setQuery(''); setSelectedName(''); setSelectedExternalId(null);
     setAmount(100); setKcal(0); setProtein(0); setCarb(0); setFat(0); setPerAmount(100);
+    setBarcodeError(null); barcode.stop();
   }
 
   async function handleSave() {
@@ -361,15 +395,43 @@ function AddMealModal({ open, defaultMeal, onClose }: { open: boolean; defaultMe
         </select>
       </Field>
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        {(['search', 'manual'] as const).map(m => (
-          <button key={m} onClick={() => setMode(m)}
+        {([
+          ['search', 'Szukaj'],
+          ['scan', '📷 Skanuj'],
+          ['manual', 'Ręcznie'],
+        ] as const).map(([m, label]) => (
+          <button key={m} onClick={() => { setMode(m); if (m === 'scan') { barcode.start(); } else { barcode.stop(); } }}
             style={{ padding: '5px 14px', borderRadius: 99, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, background: mode === m ? 'var(--acc-solid)' : 'var(--surface-3)', color: mode === m ? 'var(--on-acc)' : 'var(--ink-2)' }}>
-            {m === 'search' ? 'Szukaj' : 'Recznie'}
+            {label}
           </button>
         ))}
       </div>
 
-      {mode === 'search' ? (
+      {mode === 'scan' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '8px 0' }}>
+          <div style={{ position: 'relative', width: '100%', borderRadius: 12, overflow: 'hidden', background: '#000', aspectRatio: '16/9' }}>
+            <video ref={barcode.videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', display: barcode.scanning ? 'block' : 'none' }} />
+            {!barcode.scanning && !barcodeLoading && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8, color: '#fff' }}>
+                <span style={{ fontSize: 36 }}>📷</span>
+                <button className="btn btn-primary btn-sm" onClick={() => barcode.start()}>Uruchom kamerę</button>
+              </div>
+            )}
+            {barcodeLoading && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', color: '#fff', flexDirection: 'column', gap: 8 }}>
+                <span style={{ fontSize: 14 }}>Szukam produktu…</span>
+              </div>
+            )}
+            {barcode.scanning && (
+              <div style={{ position: 'absolute', left: '10%', right: '10%', top: '40%', bottom: '40%', border: '2px solid var(--acc-solid)', borderRadius: 8, boxShadow: '0 0 0 9999px rgba(0,0,0,0.45)' }} />
+            )}
+          </div>
+          {(barcode.error || barcodeError) && (
+            <p style={{ color: 'var(--red)', fontSize: 13, textAlign: 'center' }}>{barcode.error ?? barcodeError}</p>
+          )}
+          <p style={{ fontSize: 12, color: 'var(--ink-3)', textAlign: 'center' }}>Skieruj kamerę na kod kreskowy EAN lub QR produktu</p>
+        </div>
+      ) : mode === 'search' ? (
         <>
           <Field label="Produkt" required>
             <FoodSearchDropdown query={query} onQueryChange={q => { setQuery(q); if (q !== selectedName) setSelectedName(''); }} onSelect={handleSelect} />
@@ -473,7 +535,7 @@ function DietProdukty() {
   // FatSecret search panel
   const [fsQuery, setFsQuery] = useState('');
   const { results: fsResults, isSearching: fsSearching, error: fsError } = useFoodSearch(fsQuery);
-  const externalOnly = fsResults.filter(r => r.source === 'external');
+  const externalOnly = fsResults.filter(r => r.source === 'builtin' || r.source === 'xl' || r.source === 'external');
 
   const filtered = foodItems.filter(f => !search || f.name.toLowerCase().includes(search.toLowerCase()));
 

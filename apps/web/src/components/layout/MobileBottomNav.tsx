@@ -62,7 +62,7 @@ const I = {
 };
 
 const PRIMARY: { to: string; label: string; end?: boolean; icon: ReactNode }[] = [
-  { to: '/', label: 'Start', end: true, icon: I.start },
+  { to: '/', label: 'Planer', end: true, icon: I.start },
   { to: '/sport', label: 'Sport', icon: I.sport },
   { to: '/diet', label: 'Dieta', icon: I.diet },
   { to: '/notes', label: 'Notatki', icon: I.notes },
@@ -70,7 +70,7 @@ const PRIMARY: { to: string; label: string; end?: boolean; icon: ReactNode }[] =
 
 // Full module list for the "More" sheet.
 const ALL: { to: string; label: string; end?: boolean; icon: ReactNode }[] = [
-  { to: '/', label: 'Start', end: true, icon: I.start },
+  { to: '/', label: 'Planer', end: true, icon: I.start },
   { to: '/sport', label: 'Sport', icon: I.sport },
   { to: '/diet', label: 'Dieta', icon: I.diet },
   { to: '/finance', label: 'Finanse', icon: I.finance },

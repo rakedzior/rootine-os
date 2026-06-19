@@ -27,7 +27,7 @@ export interface ModuleDef {
 }
 
 export const MODULES: ModuleDef[] = [
-  { key: 'start', path: '/', label: 'Start', order: 0 },
+  { key: 'start', path: '/', label: 'Planer', order: 0 },
   { key: 'sport', path: '/sport', label: 'Sport', order: 1 },
   { key: 'diet', path: '/diet', label: 'Dieta', order: 2 },
   { key: 'finance', path: '/finance', label: 'Finanse', order: 3 },
