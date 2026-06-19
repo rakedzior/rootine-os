@@ -16,21 +16,6 @@ function toDateStr(y: number, m: number, d: number) {
   return `${y}-${pad(m + 1)}-${pad(d)}`;
 }
 
-// ─── MOCK HABITS ──────────────────────────────────────────────
-const MOCK_EVENTS: Record<number, { label: string; cls: string }[]> = {
-  3:  [{ label: 'Standup', cls: 'blue' }],
-  7:  [{ label: 'Trening A', cls: 'clay' }],
-  11: [{ label: 'Spotkanie Krzysi', cls: 'blue' }],
-  13: [{ label: 'Festiwal', cls: 'green' }],
-  16: [{ label: 'Barcelona', cls: 'green' }],
-  17: [{ label: 'Taniec 19:00', cls: 'lav' }],
-  18: [{ label: 'Masa: Dawid', cls: 'blue' }],
-  19: [{ label: 'Kaszki – punkt', cls: 'clay' }],
-  21: [{ label: 'Trening B', cls: 'clay' }],
-  23: [{ label: 'Dzień Ojca', cls: 'green' }],
-  26: [{ label: 'Wizyta u ks.', cls: 'lav' }],
-};
-
 // ─── ADD TASK MODAL ───────────────────────────────────────────
 
 const CAT_OPTIONS = ['Rutyna', 'Trening', 'Praca', 'Regeneracja', 'Cel', 'Inne'];
@@ -669,7 +654,6 @@ function Calendar({ tasks, onDayClick, onTaskClick }: CalendarProps) {
   function renderDayCell(date: Date, compact: boolean) {
     const dateStr = toDateStr(date.getFullYear(), date.getMonth(), date.getDate());
     const isCellToday = dateStr === todayDateStr;
-    const evs = compact ? (MOCK_EVENTS[date.getDate()] ?? []) : [];
     const allDayTasks = tasks
       .filter(t => t.due_date === dateStr)
       .sort((a, b) => Number(a.done) - Number(b.done) || a.created_at.localeCompare(b.created_at));
@@ -697,9 +681,6 @@ function Calendar({ tasks, onDayClick, onTaskClick }: CalendarProps) {
             ? { color:'#fff', background:'var(--acc-a)', width:22, height:22, borderRadius:'50%', display:'grid', placeItems:'center', fontSize:11, fontWeight:700 }
             : { fontSize:12, fontWeight:600, color:'var(--ink-2)' })
         }}>{date.getDate()}</div>
-        {evs.map(e => (
-          <div key={e.label} className={`ev ${e.cls}`} style={{ fontSize:9.5 }}>{e.label}</div>
-        ))}
         {dayTasks.map(t => (
           <div
             key={t.id}
@@ -874,6 +855,10 @@ function HabitsStrip() {
             <circle cx="50" cy="50" r="40" fill="none" stroke="var(--acc-a)" strokeWidth="12" strokeLinecap="round"
               strokeDasharray="251.3" strokeDashoffset={251.3-(251.3*pct/100)}/>
           </svg>
+          <span style={{ position:'absolute', inset:0, display:'grid', placeItems:'center', fontFamily:'var(--mono)', fontSize:13, fontWeight:800, color:'var(--ink)' }}>{pct}%</span>
+        </div>
+        <div style={{ fontSize:12, color:'var(--ink-3)', lineHeight:1.4 }}>
+          Wykonano <strong style={{ color:'var(--ink)' }}>{done}</strong> z <strong style={{ color:'var(--ink)' }}>{total}</strong> dzisiejszych nawyków.
         </div>
       </div>
       <div
@@ -894,18 +879,16 @@ function HabitsStrip() {
               type="button"
               onClick={() => canToggle && toggleHabit.mutate({ habitId: habit.id, date: today, done: !stats.doneToday })}
               disabled={!canToggle}
-              className="hover-row"
+              className={`habit-chip${stats.doneToday ? ' done' : ''}`}
               style={{
                 display:'grid',
                 gridTemplateColumns:'18px 1fr auto',
                 alignItems:'center',
                 gap:8,
                 width:'100%',
-                border:0,
-                background:'transparent',
                 color:'inherit',
-                padding:'4px 6px',
-                borderRadius: 8,
+                padding:'8px 10px',
+                borderRadius: 10,
                 textAlign:'left',
                 cursor: canToggle ? 'pointer' : 'default',
                 opacity: scheduledToday ? 1 : 0.55,
@@ -916,10 +899,11 @@ function HabitsStrip() {
                 height:16,
                 borderRadius:6,
                 border:`1.5px solid ${stats.doneToday ? 'var(--acc-a)' : 'var(--border)'}`,
-                background: stats.doneToday ? 'var(--acc-a)' : 'transparent',
+                background: stats.doneToday ? 'var(--acc-a)' : 'var(--surface)',
                 display:'grid',
                 placeItems:'center',
                 color:'#fff',
+                flexShrink: 0,
               }}>
                 {stats.doneToday && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
               </span>
@@ -927,7 +911,7 @@ function HabitsStrip() {
                 <span style={{ display:'block', fontSize:12.5, fontWeight:700, color:'var(--ink)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{habit.name}</span>
                 <span style={{ display:'block', fontSize:10.5, color:'var(--ink-3)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{habitScheduleLabel(habit)}</span>
               </span>
-              <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-3)' }}>{stats.streak}d</span>
+              <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-3)', whiteSpace:'nowrap' }}>{stats.streak}d</span>
             </button>
           );
         })}

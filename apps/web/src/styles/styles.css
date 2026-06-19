@@ -569,11 +569,15 @@ button.active .sub-tab-icon { opacity: 1; }
 .streak { display: flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: 11px; color: var(--acc-b-ink); font-weight: 600; }
 
 /* ============================================================ HABITS STRIP (Start) */
-.habits-strip-list { display: flex; flex-direction: column; gap: 6px; }
-.habits-strip-list.two-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 10px; align-content: start; }
+.habits-strip-list { display: flex; flex-direction: column; gap: 7px; }
+.habits-strip-list.two-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px 8px; align-content: start; }
 @media (max-width: 700px) {
   .habits-strip-list.two-col { grid-template-columns: 1fr; }
 }
+.habit-chip { background: var(--surface-inset); border: 1px solid var(--border-soft); transition: background var(--t), border-color var(--t), transform var(--t); }
+.habit-chip:not(:disabled):hover { background: var(--surface-2); border-color: var(--border-strong); transform: translateY(-1px); }
+.habit-chip.done { background: var(--acc-a-soft); border-color: var(--acc-a-soft); }
+.habit-chip.done:not(:disabled):hover { background: var(--acc-a-soft); border-color: var(--acc-a); transform: translateY(-1px); }
 
 .goal-row { padding: 13px 0; border-top: 1px solid var(--border-soft); }
 .goal-row:first-child { border-top: 0; padding-top: 4px; }
@@ -605,9 +609,9 @@ button.active .sub-tab-icon { opacity: 1; }
 .cal-cell.today .dn { color: #fff; background: var(--acc); width: 23px; height: 23px; border-radius: var(--r-xs); display: grid; place-items: center; font-weight: 700; font-size: 11px; }
 .ev { font-size: 10.5px; font-weight: 600; padding: 2px 6px; border-radius: var(--r-xs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; }
 .ev::before { content: ""; width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; background: currentColor; }
-.ev-task { cursor: pointer; transition: filter var(--t); }
-.ev-task:hover { filter: brightness(0.92); }
-.day-cell:hover { filter: brightness(0.97); }
+.ev-task { cursor: pointer; transition: filter var(--t), box-shadow var(--t), transform var(--t); }
+.ev-task:hover { filter: brightness(1.18) saturate(1.1); box-shadow: 0 0 0 1px var(--acc-line); transform: translateY(-1px); }
+.day-cell:hover { filter: brightness(1.04); }
 .hover-row { transition: background var(--t); }
 .hover-row:hover { background: var(--surface-2); }
 .ev.blue { color: var(--ev-blue); background: var(--ev-blue-bg); }
