@@ -1,419 +1,399 @@
 import { useState } from 'react';
-import { useIsFeatureVisible } from '@/features/config/useConfig';
-import {
-  useOfficeDocs, useAddOfficeDoc, useDeleteOfficeDoc,
-  useInsurancePolicies, useAddInsurance, useDeleteInsurance,
-  useVehicles, useAddVehicle, useDeleteVehicle,
-  useVehicleServices, useAddVehicleService, useDeleteVehicleService,
-  useB2bSettlements, useUpsertB2b, usePatchB2b,
-  useEmployment, useAddEmployment, useDeleteEmployment,
-  useVacations, useAddVacation, useDeleteVacation,
-} from '@/features/office/hooks';
-import { logAudit } from '@/lib/audit';
-import '@/styles/desk.css';
+import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, StatusBadge, PriorityBadge, IcoTrash } from '@/components/common';
+import { useLocalStore, type Priority, type TaskStatus } from '@/store/localStore';
 
-type Sec = 'dashboard' | 'dokumenty' | 'auto' | 'ubezpieczenia' | 'uop' | 'b2b' | 'urlopy';
-
-const SECTIONS: { key: Sec; label: string }[] = [
-  { key: 'dashboard', label: 'Dashboard' },
-  { key: 'dokumenty', label: 'Dokumenty' },
-  { key: 'auto', label: 'Auto' },
-  { key: 'ubezpieczenia', label: 'Ubezpieczenia' },
-  { key: 'uop', label: 'UoP' },
-  { key: 'b2b', label: 'B2B' },
-  { key: 'urlopy', label: 'Urlopy' },
+const TABS = [
+  { id: 'zadania',   label: 'Zadania urzędowe' },
+  { id: 'dokumenty', label: 'Dokumenty' },
+  { id: 'samochod',  label: 'Samochód' },
+  { id: 'ubezp',     label: 'Ubezpieczenia' },
+  { id: 'urlopy',    label: 'Urlopy' },
 ];
 
-function fmt(d: string | null) {
+function fmtDate(d?: string) {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' });
 }
-
-function daysUntil(d: string | null) {
+function daysLeft(d?: string) {
   if (!d) return null;
-  return Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
-}
-
-function DueTag({ date }: { date: string | null }) {
-  const d = daysUntil(date);
-  if (d === null) return null;
-  const color = d < 0 ? 'var(--acc-b)' : d <= 30 ? 'var(--ev-yellow)' : 'var(--acc-a)';
-  const label = d < 0 ? `${Math.abs(d)}d po terminie` : d === 0 ? 'dziś' : `za ${d}d`;
-  return <span style={{ fontSize: 11, color, marginLeft: 6 }}>{label}</span>;
+  const diff = Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
+  return diff;
 }
 
 export function BiuroScreen() {
-  const showDocs = useIsFeatureVisible('office.documents_vault');
-  const showInsurance = useIsFeatureVisible('office.insurance');
-  const showVehicles = useIsFeatureVisible('office.vehicles');
-  const showB2b = useIsFeatureVisible('office.b2b_settlements');
-  const showEmployment = useIsFeatureVisible('office.employment');
-  const showVacations = useIsFeatureVisible('office.vacations');
+  const [tab, setTab] = useState('zadania');
+  return (
+    <div className="module-page">
+      <div className="module-header">
+        <h1 className="module-title">🏢 Biuro</h1>
+        <SubTabs tabs={TABS} active={tab} onChange={setTab} />
+      </div>
+      {tab === 'zadania'   && <BiuroZadania />}
+      {tab === 'dokumenty' && <BiuroDokumenty />}
+      {tab === 'samochod'  && <BiuroSamochod />}
+      {tab === 'ubezp'     && <BiuroUbezpieczenia />}
+      {tab === 'urlopy'    && <BiuroUrlopy />}
+    </div>
+  );
+}
 
-  const [sec, setSec] = useState<Sec>('dashboard');
+// ─── ZADANIA ──────────────────────────────────────────────────
 
-  // Documents
-  const docsQ = useOfficeDocs();
-  const addDoc = useAddOfficeDoc();
-  const delDoc = useDeleteOfficeDoc();
-  const [docName, setDocName] = useState('');
-  const [docNum, setDocNum] = useState('');
-  const [docExp, setDocExp] = useState('');
+function BiuroZadania() {
+  const { officeTasks, addOfficeTask, updateOfficeTask, deleteOfficeTask } = useLocalStore();
+  const [showAdd, setShowAdd] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<TaskStatus | 'all'>('all');
 
-  // Insurance
-  const insQ = useInsurancePolicies();
-  const addIns = useAddInsurance();
-  const delIns = useDeleteInsurance();
-  const [insType, setInsType] = useState('OC');
-  const [insInsurer, setInsInsurer] = useState('');
-  const [insPremium, setInsPremium] = useState('');
-  const [insEnd, setInsEnd] = useState('');
+  const active = officeTasks.filter(t => !t.isArchived);
+  const filtered = filter === 'all' ? active : active.filter(t => t.status === filter);
+  const counts = { todo: active.filter(t=>t.status==='todo').length, active: active.filter(t=>t.status==='active').length, done: active.filter(t=>t.status==='done').length };
 
-  // Vehicles
-  const vehiclesQ = useVehicles();
-  const addVeh = useAddVehicle();
-  const delVeh = useDeleteVehicle();
-  const [selectedVehId, setSelectedVehId] = useState<string | null>(null);
-  const [vehName, setVehName] = useState('');
-  const [vehPlate, setVehPlate] = useState('');
-  const servicesQ = useVehicleServices(selectedVehId);
-  const addSvc = useAddVehicleService();
-  const delSvc = useDeleteVehicleService();
-  const [svcType, setSvcType] = useState('przegląd');
-  const [svcDue, setSvcDue] = useState('');
-  const [svcCost, setSvcCost] = useState('');
-
-  // B2B
-  const b2bQ = useB2bSettlements();
-  const upsertB2b = useUpsertB2b();
-  const patchB2b = usePatchB2b();
-  const [b2bMonth, setB2bMonth] = useState(() => new Date().toISOString().slice(0, 7));
-  const [b2bZus, setB2bZus] = useState('');
-  const [b2bPit, setB2bPit] = useState('');
-  const [b2bVat, setB2bVat] = useState('');
-
-  // Employment
-  const empQ = useEmployment();
-  const addEmp = useAddEmployment();
-  const delEmp = useDeleteEmployment();
-  const [empName, setEmpName] = useState('');
-  const [empPos, setEmpPos] = useState('');
-  const [empPoolInput, setEmpPoolInput] = useState('26');
-
-  // Vacations
-  const vacQ = useVacations();
-  const addVac = useAddVacation();
-  const delVac = useDeleteVacation();
-  const [vacStart, setVacStart] = useState('');
-  const [vacEnd, setVacEnd] = useState('');
-  const [vacDays, setVacDays] = useState('');
-  const [vacType, setVacType] = useState('wypoczynkowy');
-
-  const docs = docsQ.data ?? [];
-  const policies = insQ.data ?? [];
-  const vehicles = vehiclesQ.data ?? [];
-  const services = servicesQ.data ?? [];
-  const b2bs = b2bQ.data ?? [];
-  const emps = empQ.data ?? [];
-  const vacs = vacQ.data ?? [];
-
-  // Dashboard: upcoming deadlines
-  const upcomingDocs = docs.filter((d) => d.expires_on).sort((a, b) => (a.expires_on ?? '').localeCompare(b.expires_on ?? '')).slice(0, 5);
-  const upcomingPolicies = policies.filter((p) => p.end_date).sort((a, b) => (a.end_date ?? '').localeCompare(b.end_date ?? '')).slice(0, 5);
-  const upcomingServices = services.filter((s) => s.due_on).sort((a, b) => (a.due_on ?? '').localeCompare(b.due_on ?? '')).slice(0, 5);
-
-  const usedVacDays = vacs.filter((v) => v.type === 'wypoczynkowy').reduce((s, v) => s + v.days, 0);
-  const empPool = emps[0]?.vacation_pool ?? 26;
+  const [title, setTitle] = useState('');
+  const [institution, setInstitution] = useState('');
+  const [category, setCategory] = useState('');
+  const [priority, setPriority] = useState<Priority>('mid');
+  const [dueDate, setDueDate] = useState('');
+  const [notes, setNotes] = useState('');
 
   return (
-    <div className="app" style={{ minHeight: 'auto' }}>
-      <div className="biuro-subnav">
-        {SECTIONS.map((s) => (
-          <button key={s.key} className={`biuro-nav-btn${sec === s.key ? ' active' : ''}`} type="button" onClick={() => setSec(s.key)}>
-            {s.label}
-          </button>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, alignItems: 'start' }}>
+      <div className="col">
+        {/* Filter bar */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {(['all','todo','active','done'] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              style={{ padding: '5px 14px', borderRadius: 99, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, background: filter === f ? 'var(--green)' : 'var(--surface-3)', color: filter === f ? 'white' : 'var(--ink-2)' }}>
+              {f === 'all' ? 'Wszystkie' : f === 'todo' ? 'Do zrobienia' : f === 'active' ? 'W trakcie' : 'Zrobione'}
+            </button>
+          ))}
+          <button className="btn btn-primary btn-sm" style={{ marginLeft: 'auto' }} onClick={() => setShowAdd(true)}>+ Nowe zadanie</button>
+        </div>
+
+        {filtered.length === 0
+          ? <div className="card"><EmptyState title="Brak zadań" cta="Dodaj zadanie" onCta={() => setShowAdd(true)} /></div>
+          : filtered.map(task => (
+            <div key={task.id} className="card">
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <div onClick={() => updateOfficeTask(task.id, { status: task.status === 'done' ? 'todo' : 'done' })}
+                  style={{ width: 20, height: 20, borderRadius: 99, border: `2px solid ${task.status === 'done' ? 'var(--green-mid)' : 'var(--border)'}`, background: task.status === 'done' ? 'var(--green-mid)' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'white', flexShrink: 0, marginTop: 2 }}>
+                  {task.status === 'done' && '✓'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, textDecoration: task.status === 'done' ? 'line-through' : 'none', color: task.status === 'done' ? 'var(--ink-3)' : 'var(--ink)' }}>{task.title}</div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    {task.institution && <span className="badge badge-gray">{task.institution}</span>}
+                    {task.category && <span className="badge badge-gray">{task.category}</span>}
+                    <PriorityBadge priority={task.priority} />
+                    <StatusBadge status={task.status} />
+                    {task.dueDate && <span style={{ fontSize: 11, color: daysLeft(task.dueDate)! < 3 ? 'var(--p-high)' : 'var(--ink-3)' }}>📅 {fmtDate(task.dueDate)}</span>}
+                  </div>
+                  {task.notes && <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 6 }}>{task.notes}</div>}
+                </div>
+                <button className="icon-btn" onClick={() => setDeleteId(task.id)}><IcoTrash /></button>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      {/* Sidebar stats */}
+      <div className="col">
+        <div className="card">
+          <div className="card-head"><span className="card-title">Podsumowanie</span></div>
+          {[{ label: 'Do zrobienia', val: counts.todo, color: 'var(--p-mid)' },
+            { label: 'W trakcie', val: counts.active, color: 'var(--green-text)' },
+            { label: 'Zrobione', val: counts.done, color: 'var(--ink-3)' },
+          ].map(item => (
+            <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-soft)' }}>
+              <span style={{ fontSize: 13 }}>{item.label}</span>
+              <span style={{ fontWeight: 700, color: item.color }}>{item.val}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Nowe zadanie urzędowe"
+        footer={<>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowAdd(false)}>Anuluj</button>
+          <button className="btn btn-primary btn-sm" onClick={() => {
+            if (!title.trim()) return;
+            addOfficeTask({ title, institution, category, priority, dueDate: dueDate || undefined, status: 'todo', notes, isArchived: false });
+            setTitle(''); setInstitution(''); setCategory(''); setDueDate(''); setNotes(''); setShowAdd(false);
+          }}>Dodaj</button>
+        </>}>
+        <Field label="Tytuł zadania" required><input className="input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Np. Odnów paszport" /></Field>
+        <div className="form-grid">
+          <Field label="Instytucja"><input className="input" value={institution} onChange={e => setInstitution(e.target.value)} placeholder="Urząd, bank, itp." /></Field>
+          <Field label="Kategoria"><input className="input" value={category} onChange={e => setCategory(e.target.value)} placeholder="Np. Dokumenty, Podatki" /></Field>
+          <Field label="Priorytet"><select className="select" value={priority} onChange={e => setPriority(e.target.value as Priority)}>
+            <option value="low">Niski</option><option value="mid">Średni</option><option value="high">Wysoki</option>
+          </select></Field>
+          <Field label="Termin"><input type="date" className="input" value={dueDate} onChange={e => setDueDate(e.target.value)} /></Field>
+        </div>
+        <Field label="Notatki"><textarea className="textarea" value={notes} onChange={e => setNotes(e.target.value)} rows={2} /></Field>
+      </Modal>
+      <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { deleteOfficeTask(deleteId!); setDeleteId(null); }} label="to zadanie" />
+    </div>
+  );
+}
+
+// ─── DOKUMENTY ────────────────────────────────────────────────
+
+function BiuroDokumenty() {
+  const { officeDocuments, addOfficeDocument } = useLocalStore();
+  const [showAdd, setShowAdd] = useState(false);
+  const [name, setName] = useState('');
+  const [category, setCategory] = useState('Osobiste');
+  const [docNumber, setDocNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+
+  return (
+    <div style={{ maxWidth: 760 }}>
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Dokumenty ({officeDocuments.filter(d=>!d.isArchived).length})</span>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>+ Dodaj dokument</button>
+        </div>
+        {officeDocuments.filter(d => !d.isArchived).length === 0
+          ? <EmptyState title="Brak dokumentów" cta="Dodaj dokument" onCta={() => setShowAdd(true)} />
+          : (
+            <table className="table">
+              <thead><tr><th>DOKUMENT</th><th>KATEGORIA</th><th>NUMER</th><th>WAŻNY DO</th><th>STATUS</th></tr></thead>
+              <tbody>
+                {officeDocuments.filter(d => !d.isArchived).map(doc => {
+                  const days = daysLeft(doc.expiryDate);
+                  const expiring = days !== null && days <= 30;
+                  return (
+                    <tr key={doc.id}>
+                      <td style={{ fontWeight: 600 }}>{doc.name}</td>
+                      <td><span className="badge badge-gray">{doc.category}</span></td>
+                      <td style={{ fontSize: 12, color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>{doc.documentNumber || '—'}</td>
+                      <td style={{ fontSize: 13, color: expiring ? 'var(--p-high)' : 'var(--ink)' }}>{fmtDate(doc.expiryDate)}</td>
+                      <td>
+                        {expiring ? <span className="badge" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--p-high)' }}>⚠ Wkrótce wygasa</span>
+                          : days === null ? <span className="badge badge-gray">Bezterminowy</span>
+                          : <span className="badge badge-green">Ważny</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )
+        }
+      </div>
+
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Dodaj dokument"
+        footer={<>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowAdd(false)}>Anuluj</button>
+          <button className="btn btn-primary btn-sm" onClick={() => {
+            if (!name.trim()) return;
+            addOfficeDocument({ name, category, documentNumber: docNumber || undefined, expiryDate: expiry || undefined, issueDate: undefined, reminderEnabled: true, notes: '', isArchived: false });
+            setName(''); setDocNumber(''); setExpiry(''); setShowAdd(false);
+          }}>Dodaj</button>
+        </>}>
+        <Field label="Nazwa dokumentu" required><input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Np. Paszport, Dowód osobisty" /></Field>
+        <div className="form-grid">
+          <Field label="Kategoria"><select className="select" value={category} onChange={e => setCategory(e.target.value)}>
+            {['Osobiste','Pojazd','Nieruchomość','Ubezpieczenie','Podatkowe','Inne'].map(c => <option key={c}>{c}</option>)}
+          </select></Field>
+          <Field label="Numer dokumentu"><input className="input" value={docNumber} onChange={e => setDocNumber(e.target.value)} placeholder="AA 123456" /></Field>
+          <Field label="Data ważności"><input type="date" className="input" value={expiry} onChange={e => setExpiry(e.target.value)} /></Field>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// ─── SAMOCHÓD ─────────────────────────────────────────────────
+
+function BiuroSamochod() {
+  const { cars } = useLocalStore();
+  const car = cars[0];
+
+  if (!car) return <div className="card" style={{ maxWidth: 400 }}><EmptyState title="Brak samochodu" desc="Dodaj samochód w ustawieniach." /></div>;
+
+  const items = [
+    { label: 'Przebieg', val: `${car.mileage.toLocaleString('pl-PL')} km`, icon: '🛣' },
+    { label: 'Ubezpieczenie (OC/AC)', val: fmtDate(car.insuranceExpiry), icon: '🛡', warn: daysLeft(car.insuranceExpiry) !== null && daysLeft(car.insuranceExpiry)! <= 30 },
+    { label: 'Przegląd techniczny', val: fmtDate(car.inspectionDate), icon: '🔧', warn: daysLeft(car.inspectionDate) !== null && daysLeft(car.inspectionDate)! <= 30 },
+    { label: 'Wymiana oleju', val: fmtDate(car.oilChangeDate), icon: '🛢', warn: false },
+    { label: 'Wymiana opon', val: fmtDate(car.tireChangeDate), icon: '⚙️', warn: false },
+  ];
+
+  return (
+    <div style={{ maxWidth: 560 }}>
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ fontSize: 36 }}>🚗</div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 20 }}>{car.name}</div>
+            <div style={{ fontSize: 13, color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>{car.plateNumber}</div>
+          </div>
+        </div>
+      </div>
+      <div className="card">
+        {items.map(item => (
+          <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border-soft)' }}>
+            <span style={{ fontSize: 20 }}>{item.icon}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{item.label}</div>
+              <div style={{ fontWeight: 600, fontSize: 15, color: (item as any).warn ? 'var(--p-high)' : 'var(--ink)' }}>{item.val}</div>
+            </div>
+            {(item as any).warn && <span className="badge" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--p-high)' }}>⚠</span>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── UBEZPIECZENIA ────────────────────────────────────────────
+
+function BiuroUbezpieczenia() {
+  const { insurances, addInsurance } = useLocalStore();
+  const [showAdd, setShowAdd] = useState(false);
+  const [name, setName] = useState('');
+  const [type, setType] = useState('Życiowe');
+  const [insurer, setInsurer] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [premium, setPremium] = useState(0);
+  const [frequency, setFrequency] = useState('miesięcznie');
+
+  return (
+    <div style={{ maxWidth: 760 }}>
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Ubezpieczenia</span>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>+ Dodaj</button>
+        </div>
+        {insurances.length === 0
+          ? <EmptyState title="Brak ubezpieczeń" cta="Dodaj ubezpieczenie" onCta={() => setShowAdd(true)} />
+          : (
+            <table className="table">
+              <thead><tr><th>NAZWA</th><th>TYP</th><th>UBEZPIECZYCIEL</th><th>WAŻNE DO</th><th>SKŁADKA</th></tr></thead>
+              <tbody>
+                {insurances.map(ins => {
+                  const days = daysLeft(ins.expiryDate);
+                  return (
+                    <tr key={ins.id}>
+                      <td style={{ fontWeight: 600 }}>{ins.name}</td>
+                      <td><span className="badge badge-gray">{ins.type}</span></td>
+                      <td style={{ fontSize: 13, color: 'var(--ink-2)' }}>{ins.insurer}</td>
+                      <td style={{ fontSize: 13, color: days !== null && days <= 30 ? 'var(--p-high)' : 'var(--ink)' }}>{fmtDate(ins.expiryDate)}</td>
+                      <td style={{ fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{ins.premium} PLN/{ins.frequency}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )
+        }
+      </div>
+
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Dodaj ubezpieczenie"
+        footer={<>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowAdd(false)}>Anuluj</button>
+          <button className="btn btn-primary btn-sm" onClick={() => {
+            if (!name.trim()) return;
+            addInsurance({ name, type, insurer, expiryDate: expiry, premium, frequency, notes: '' });
+            setName(''); setInsurer(''); setExpiry(''); setPremium(0); setShowAdd(false);
+          }}>Dodaj</button>
+        </>}>
+        <Field label="Nazwa" required><input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Np. OC/AC BMW" /></Field>
+        <div className="form-grid">
+          <Field label="Typ"><select className="select" value={type} onChange={e => setType(e.target.value)}>
+            {['Życiowe','OC/AC','Nieruchomość','Zdrowotne','Podróżne','Inne'].map(t => <option key={t}>{t}</option>)}
+          </select></Field>
+          <Field label="Ubezpieczyciel"><input className="input" value={insurer} onChange={e => setInsurer(e.target.value)} /></Field>
+          <Field label="Data wygaśnięcia"><input type="date" className="input" value={expiry} onChange={e => setExpiry(e.target.value)} /></Field>
+          <Field label="Składka (PLN)"><input type="number" className="input" value={premium} onChange={e => setPremium(+e.target.value)} /></Field>
+          <Field label="Częstotliwość"><select className="select" value={frequency} onChange={e => setFrequency(e.target.value)}>
+            {['miesięcznie','kwartalnie','rocznie'].map(f => <option key={f}>{f}</option>)}
+          </select></Field>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// ─── URLOPY ───────────────────────────────────────────────────
+
+function BiuroUrlopy() {
+  const { vacations, vacationBalance, addVacation } = useLocalStore();
+  const [showAdd, setShowAdd] = useState(false);
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
+  const [type, setType] = useState('Wypoczynkowy');
+  const [notes, setNotes] = useState('');
+
+  const remaining = vacationBalance.yearlyLimit - vacationBalance.usedDays - vacationBalance.plannedDays;
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 16, alignItems: 'start' }}>
+      <div className="col">
+        <div className="card">
+          <div className="card-head">
+            <span className="card-title">Historia urlopów</span>
+            <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>+ Dodaj</button>
+          </div>
+          {vacations.length === 0
+            ? <EmptyState title="Brak wpisów urlopowych" cta="Dodaj urlop" onCta={() => setShowAdd(true)} />
+            : (
+              <table className="table">
+                <thead><tr><th>OD</th><th>DO</th><th>DNI</th><th>TYP</th><th>STATUS</th></tr></thead>
+                <tbody>
+                  {vacations.map(v => (
+                    <tr key={v.id}>
+                      <td>{fmtDate(v.startDate)}</td>
+                      <td>{fmtDate(v.endDate)}</td>
+                      <td style={{ fontWeight: 700 }}>{v.days}</td>
+                      <td><span className="badge badge-gray">{v.type}</span></td>
+                      <td><span className={`badge ${v.status === 'approved' ? 'badge-green' : 'badge-gray'}`}>{v.status === 'approved' ? 'Zatwierdzone' : v.status === 'planned' ? 'Planowane' : v.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )
+          }
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-head"><span className="card-title">Bilans urlopowy</span></div>
+        {[
+          { label: 'Limit roczny', val: vacationBalance.yearlyLimit, color: 'var(--ink)' },
+          { label: 'Wykorzystane', val: vacationBalance.usedDays, color: 'var(--p-high)' },
+          { label: 'Zaplanowane', val: vacationBalance.plannedDays, color: 'var(--p-mid)' },
+          { label: 'Pozostałe', val: remaining, color: 'var(--green-text)' },
+        ].map(item => (
+          <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-soft)' }}>
+            <span style={{ fontSize: 13 }}>{item.label}</span>
+            <span style={{ fontWeight: 700, color: item.color }}>{item.val} dni</span>
+          </div>
         ))}
       </div>
 
-      <main className="grid" style={{ gridTemplateColumns: '1fr', maxWidth: 900 }}>
-        <section className="col">
-
-          {/* DASHBOARD */}
-          {sec === 'dashboard' && (
-            <>
-              <article className="card">
-                <div className="card-head"><div className="lhs"><span className="card-title">Najbliższe terminy</span></div></div>
-                {upcomingDocs.length === 0 && upcomingPolicies.length === 0 && upcomingServices.length === 0 ? (
-                  <div className="agenda-empty">Brak terminów — dodaj dokumenty, polisy i serwisy.</div>
-                ) : (
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {upcomingDocs.map((d) => (
-                      <li key={d.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                        <span>📄 {d.name}</span>
-                        <span>{fmt(d.expires_on)}<DueTag date={d.expires_on} /></span>
-                      </li>
-                    ))}
-                    {upcomingPolicies.map((p) => (
-                      <li key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                        <span>🛡 {p.type} · {p.insurer}</span>
-                        <span>{fmt(p.end_date)}<DueTag date={p.end_date} /></span>
-                      </li>
-                    ))}
-                    {upcomingServices.map((s) => (
-                      <li key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                        <span>🚗 {s.type}</span>
-                        <span>{fmt(s.due_on)}<DueTag date={s.due_on} /></span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </article>
-              {showVacations && emps.length > 0 && (
-                <article className="card">
-                  <div className="card-head"><div className="lhs"><span className="card-title">Urlop — {new Date().getFullYear()}</span></div></div>
-                  <div style={{ display: 'flex', gap: 24, fontSize: 20, fontWeight: 700, padding: '8px 0' }}>
-                    <div><div className="tnum">{usedVacDays}</div><div style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink-3)' }}>Wykorzystane</div></div>
-                    <div><div className="tnum" style={{ color: 'var(--acc-a)' }}>{Math.max(0, empPool - usedVacDays)}</div><div style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink-3)' }}>Pozostało</div></div>
-                    <div><div className="tnum">{empPool}</div><div style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink-3)' }}>Pula roczna</div></div>
-                  </div>
-                </article>
-              )}
-            </>
-          )}
-
-          {/* DOKUMENTY */}
-          {sec === 'dokumenty' && showDocs && (
-            <article className="card">
-              <div className="card-head"><div className="lhs"><span className="card-title">Dokumenty i sejf</span></div><span className="pill">{docs.length}</span></div>
-              <div className="agenda-empty" style={{ marginBottom: 10, fontSize: 12, color: 'var(--ink-3)' }}>⚠ Numery dokumentów będą szyfrowane w Fazie 4. Na razie przechowywane jawnie — nie wpisuj wrażliwych danych.</div>
-              {docs.length === 0 ? (
-                <div className="agenda-empty">Brak dokumentów.</div>
-              ) : (
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {docs.map((d) => (
-                    <li key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                      <div>
-                        <span style={{ fontWeight: 500 }}>{d.name}</span>
-                        {d.doc_number && <span style={{ fontSize: 11, color: 'var(--ink-3)', marginLeft: 8 }}>{d.doc_number}</span>}
-                        {d.expires_on && <span style={{ fontSize: 11, marginLeft: 8 }}>wygasa {fmt(d.expires_on)}<DueTag date={d.expires_on} /></span>}
-                      </div>
-                      <button type="button" onClick={() => { logAudit('document_access', { entity: d.id }); delDoc.mutate(d.id); }}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <div style={{ display: 'grid', gap: 6 }}>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input className="fi" type="text" placeholder="Nazwa dokumentu*" value={docName} onChange={(e) => setDocName(e.target.value)} style={{ flex: 2 }} />
-                  <input className="fi" type="text" placeholder="Numer (MVP: jawny)" value={docNum} onChange={(e) => setDocNum(e.target.value)} style={{ flex: 1 }} />
-                  <input className="fi" type="date" value={docExp} onChange={(e) => setDocExp(e.target.value)} style={{ width: 140 }} />
-                  <button className="add-btn" type="button" onClick={() => { if (!docName.trim()) return; addDoc.mutate({ name: docName.trim(), doc_number: docNum || null, expires_on: docExp || null }); setDocName(''); setDocNum(''); setDocExp(''); }}>+</button>
-                </div>
-              </div>
-            </article>
-          )}
-
-          {/* AUTO */}
-          {sec === 'auto' && showVehicles && (
-            <>
-              <article className="card">
-                <div className="card-head"><div className="lhs"><span className="card-title">Pojazdy</span></div><span className="pill">{vehicles.length}</span></div>
-                {vehicles.length === 0 ? (
-                  <div className="agenda-empty">Brak pojazdów.</div>
-                ) : (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                    {vehicles.map((v) => (
-                      <div key={v.id} style={{ padding: '6px 12px', background: selectedVehId === v.id ? 'var(--acc-a)' : 'var(--surface-inset)', borderRadius: 'var(--r-sm)', cursor: 'pointer', color: selectedVehId === v.id ? '#fff' : 'inherit', fontSize: 13, display: 'flex', gap: 6, alignItems: 'center' }}
-                        onClick={() => setSelectedVehId(selectedVehId === v.id ? null : v.id)}>
-                        {v.name} {v.plate && <span style={{ fontSize: 11, opacity: 0.7 }}>{v.plate}</span>}
-                        <button type="button" onClick={(e) => { e.stopPropagation(); delVeh.mutate(v.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', opacity: 0.7 }}>×</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input className="fi" type="text" placeholder="Marka / model" value={vehName} onChange={(e) => setVehName(e.target.value)} style={{ flex: 1 }} />
-                  <input className="fi" type="text" placeholder="Tablice" value={vehPlate} onChange={(e) => setVehPlate(e.target.value)} style={{ width: 100 }} />
-                  <button className="add-btn" type="button" onClick={() => { if (!vehName.trim()) return; addVeh.mutate({ name: vehName.trim(), plate: vehPlate || null }); setVehName(''); setVehPlate(''); }}>+</button>
-                </div>
-              </article>
-              {selectedVehId && (
-                <article className="card">
-                  <div className="card-head"><div className="lhs"><span className="card-title">Historia serwisu · {vehicles.find((v) => v.id === selectedVehId)?.name}</span></div></div>
-                  {services.length === 0 ? (
-                    <div className="agenda-empty">Brak wpisów serwisowych.</div>
-                  ) : (
-                    <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 10px', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                      {services.map((s) => (
-                        <li key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                          <div>
-                            <span style={{ fontWeight: 500 }}>{s.type}</span>
-                            <span style={{ fontSize: 11, color: 'var(--ink-3)', marginLeft: 8 }}>{fmt(s.date)}</span>
-                            {s.due_on && <span style={{ fontSize: 11, marginLeft: 8 }}>kolejny {fmt(s.due_on)}<DueTag date={s.due_on} /></span>}
-                          </div>
-                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                            {s.cost != null && <span className="tnum" style={{ fontSize: 12 }}>{s.cost} zł</span>}
-                            <button type="button" onClick={() => delSvc.mutate(s.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <select className="fi-sel" value={svcType} onChange={(e) => setSvcType(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
-                      {['przegląd', 'OC', 'AC', 'serwis', 'opony', 'inne'].map((t) => <option key={t}>{t}</option>)}
-                    </select>
-                    <input className="fi" type="date" placeholder="Data kolejna" value={svcDue} onChange={(e) => setSvcDue(e.target.value)} />
-                    <input type="number" className="fi-num" placeholder="Koszt zł" value={svcCost} onChange={(e) => setSvcCost(e.target.value)} inputMode="decimal" />
-                    <button className="add-btn" type="button" onClick={() => { addSvc.mutate({ vehicle_id: selectedVehId, type: svcType, due_on: svcDue || null, cost: svcCost ? parseFloat(svcCost) : null }); setSvcDue(''); setSvcCost(''); }}>+</button>
-                  </div>
-                </article>
-              )}
-            </>
-          )}
-
-          {/* UBEZPIECZENIA */}
-          {sec === 'ubezpieczenia' && showInsurance && (
-            <article className="card">
-              <div className="card-head"><div className="lhs"><span className="card-title">Polisy ubezpieczeniowe</span></div><span className="pill">{policies.length}</span></div>
-              {policies.length === 0 ? (
-                <div className="agenda-empty">Brak polis.</div>
-              ) : (
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {policies.map((p) => (
-                    <li key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                      <div>
-                        <span style={{ fontWeight: 500 }}>{p.type}</span>
-                        <span style={{ color: 'var(--ink-3)', marginLeft: 8 }}>{p.insurer}</span>
-                        {p.end_date && <span style={{ fontSize: 11, marginLeft: 8 }}>do {fmt(p.end_date)}<DueTag date={p.end_date} /></span>}
-                      </div>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        {p.premium != null && <span className="tnum" style={{ fontSize: 12 }}>{p.premium} zł/r</span>}
-                        <button type="button" onClick={() => delIns.mutate(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <select className="fi-sel" value={insType} onChange={(e) => setInsType(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
-                  {['OC', 'AC', 'health', 'life', 'property', 'travel', 'other'].map((t) => <option key={t}>{t}</option>)}
-                </select>
-                <input className="fi" type="text" placeholder="Ubezpieczyciel" value={insInsurer} onChange={(e) => setInsInsurer(e.target.value)} style={{ flex: 1 }} />
-                <input type="number" className="fi-num" placeholder="Składka zł/r" value={insPremium} onChange={(e) => setInsPremium(e.target.value)} inputMode="decimal" />
-                <input className="fi" type="date" placeholder="Koniec" value={insEnd} onChange={(e) => setInsEnd(e.target.value)} />
-                <button className="add-btn" type="button" onClick={() => { if (!insInsurer.trim()) return; addIns.mutate({ type: insType, insurer: insInsurer.trim(), premium: insPremium ? parseFloat(insPremium) : null, end_date: insEnd || null }); setInsInsurer(''); setInsPremium(''); setInsEnd(''); }}>+</button>
-              </div>
-            </article>
-          )}
-
-          {/* UoP */}
-          {sec === 'uop' && showEmployment && (
-            <article className="card">
-              <div className="card-head"><div className="lhs"><span className="card-title">Umowa o pracę</span></div></div>
-              {emps.length === 0 ? (
-                <div className="agenda-empty">Brak danych UoP.</div>
-              ) : (
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {emps.map((e) => (
-                    <li key={e.id} style={{ padding: '8px 10px', background: 'var(--surface-inset)', borderRadius: 'var(--r-sm)', fontSize: 13 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontWeight: 600 }}>{e.employer}</span>
-                        <button type="button" onClick={() => delEmp.mutate(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                      </div>
-                      {e.position && <div style={{ color: 'var(--ink-3)' }}>{e.position}</div>}
-                      <div style={{ marginTop: 4 }}>Od: {fmt(e.start_date)} · Pula urlopu: {e.vacation_pool} dni/rok</div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <input className="fi" type="text" placeholder="Pracodawca*" value={empName} onChange={(e) => setEmpName(e.target.value)} style={{ flex: 1 }} />
-                <input className="fi" type="text" placeholder="Stanowisko" value={empPos} onChange={(e) => setEmpPos(e.target.value)} style={{ flex: 1 }} />
-                <input type="number" className="fi-num" placeholder="Pula urlopu" value={empPoolInput} onChange={(e) => setEmpPoolInput(e.target.value)} inputMode="numeric" />
-                <button className="add-btn" type="button" onClick={() => { if (!empName.trim()) return; addEmp.mutate({ employer: empName.trim(), position: empPos || null, vacationPool: parseInt(empPoolInput) || 26 }); setEmpName(''); setEmpPos(''); }}>+</button>
-              </div>
-            </article>
-          )}
-
-          {/* B2B */}
-          {sec === 'b2b' && showB2b && (
-            <article className="card">
-              <div className="card-head"><div className="lhs"><span className="card-title">Rozliczenia B2B / ZUS / PIT / VAT</span></div></div>
-              {b2bs.length === 0 ? (
-                <div className="agenda-empty">Brak rozliczeń.</div>
-              ) : (
-                <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse', marginBottom: 14 }}>
-                  <thead><tr style={{ color: 'var(--ink-3)', fontSize: 11 }}><th style={{ textAlign: 'left', padding: '4px 0' }}>Miesiąc</th><th>ZUS</th><th>PIT</th><th>VAT</th><th>Status</th><th /></tr></thead>
-                  <tbody>
-                    {b2bs.map((b) => (
-                      <tr key={b.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '6px 0', fontWeight: 500 }}>{b.month}</td>
-                        <td style={{ textAlign: 'center' }} className="tnum">{b.zus} zł</td>
-                        <td style={{ textAlign: 'center' }} className="tnum">{b.pit} zł</td>
-                        <td style={{ textAlign: 'center' }} className="tnum">{b.vat} zł</td>
-                        <td style={{ textAlign: 'center' }}>
-                          <button type="button" onClick={() => patchB2b.mutate({ id: b.id, patch: { status: b.status === 'paid' ? 'pending' : 'paid' } })}
-                            style={{ fontSize: 11, padding: '2px 8px', borderRadius: 3, border: 'none', cursor: 'pointer', background: b.status === 'paid' ? 'var(--acc-a)' : 'var(--surface-inset)', color: b.status === 'paid' ? '#fff' : 'inherit' }}>
-                            {b.status === 'paid' ? '✓ Zapłacono' : 'Oczekuje'}
-                          </button>
-                        </td>
-                        <td />
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <input className="fi" type="month" value={b2bMonth} onChange={(e) => setB2bMonth(e.target.value)} />
-                <input type="number" className="fi-num" placeholder="ZUS" value={b2bZus} onChange={(e) => setB2bZus(e.target.value)} inputMode="decimal" />
-                <input type="number" className="fi-num" placeholder="PIT" value={b2bPit} onChange={(e) => setB2bPit(e.target.value)} inputMode="decimal" />
-                <input type="number" className="fi-num" placeholder="VAT" value={b2bVat} onChange={(e) => setB2bVat(e.target.value)} inputMode="decimal" />
-                <button className="add-btn" type="button" onClick={() => { upsertB2b.mutate({ month: b2bMonth, zus: parseFloat(b2bZus) || 0, pit: parseFloat(b2bPit) || 0, vat: parseFloat(b2bVat) || 0 }); setB2bZus(''); setB2bPit(''); setB2bVat(''); }}>Zapisz</button>
-              </div>
-            </article>
-          )}
-
-          {/* URLOPY */}
-          {sec === 'urlopy' && showVacations && (
-            <article className="card">
-              <div className="card-head">
-                <div className="lhs"><span className="card-title">Urlopy {new Date().getFullYear()}</span></div>
-                <span className="pill">{usedVacDays} / {empPool} dni</span>
-              </div>
-              <div style={{ display: 'flex', gap: 24, marginBottom: 14, fontSize: 20, fontWeight: 700 }}>
-                <div><div className="tnum">{usedVacDays}</div><div style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink-3)' }}>Wykorzystane</div></div>
-                <div><div className="tnum" style={{ color: 'var(--acc-a)' }}>{Math.max(0, empPool - usedVacDays)}</div><div style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink-3)' }}>Pozostało</div></div>
-              </div>
-              {vacs.length === 0 ? (
-                <div className="agenda-empty">Brak urlopów.</div>
-              ) : (
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 12px', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                  {vacs.map((v) => (
-                    <li key={v.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                      <div><span style={{ fontWeight: 500 }}>{fmt(v.start_date)} — {fmt(v.end_date)}</span><span style={{ fontSize: 11, color: 'var(--ink-3)', marginLeft: 8 }}>{v.type}</span></div>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <span className="tnum">{v.days} dni</span>
-                        <button type="button" onClick={() => delVac.mutate(v.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <input className="fi" type="date" value={vacStart} onChange={(e) => setVacStart(e.target.value)} />
-                <input className="fi" type="date" value={vacEnd} onChange={(e) => setVacEnd(e.target.value)} />
-                <input type="number" className="fi-num" placeholder="Dni" value={vacDays} onChange={(e) => setVacDays(e.target.value)} inputMode="numeric" />
-                <select className="fi-sel" value={vacType} onChange={(e) => setVacType(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
-                  {['wypoczynkowy', 'na żądanie', 'okolicznościowy', 'bezpłatny'].map((t) => <option key={t}>{t}</option>)}
-                </select>
-                <button className="add-btn" type="button" onClick={() => { if (!vacStart || !vacEnd || !vacDays) return; addVac.mutate({ start_date: vacStart, end_date: vacEnd, days: parseInt(vacDays), type: vacType }); setVacStart(''); setVacEnd(''); setVacDays(''); }}>+</button>
-              </div>
-            </article>
-          )}
-        </section>
-      </main>
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Dodaj urlop"
+        footer={<>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowAdd(false)}>Anuluj</button>
+          <button className="btn btn-primary btn-sm" onClick={() => {
+            if (!start || !end) return;
+            const days = Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1;
+            addVacation({ startDate: start, endDate: end, days, type, status: 'planned', notes });
+            setStart(''); setEnd(''); setNotes(''); setShowAdd(false);
+          }}>Dodaj</button>
+        </>}>
+        <div className="form-grid">
+          <Field label="Od"><input type="date" className="input" value={start} onChange={e => setStart(e.target.value)} /></Field>
+          <Field label="Do"><input type="date" className="input" value={end} onChange={e => setEnd(e.target.value)} /></Field>
+        </div>
+        <Field label="Typ urlopu"><select className="select" value={type} onChange={e => setType(e.target.value)}>
+          {['Wypoczynkowy','Na żądanie','Bezpłatny','Okolicznościowy','Chorobowy'].map(t => <option key={t}>{t}</option>)}
+        </select></Field>
+        <Field label="Notatki"><textarea className="textarea" value={notes} onChange={e => setNotes(e.target.value)} rows={2} /></Field>
+      </Modal>
     </div>
   );
 }

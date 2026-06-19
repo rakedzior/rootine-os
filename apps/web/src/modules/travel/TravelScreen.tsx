@@ -1,319 +1,286 @@
 import { useState } from 'react';
-import { useIsFeatureVisible } from '@/features/config/useConfig';
-import {
-  useTrips, useCreateTrip, useDeleteTrip,
-  useTripItems, useAddTripItem, useDeleteTripItem,
-  useTripDocuments, useAddTripDocument, useDeleteTripDocument,
-  useBucketList, useAddBucketItem, usePatchBucketItem, useDeleteBucketItem,
-} from '@/features/travel/hooks';
-import '@/styles/travel.css';
+import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, ProgressBar, IcoTrash } from '@/components/common';
+import { useLocalStore, type Trip } from '@/store/localStore';
 
-const PIN = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-);
+const TABS = [
+  { id: 'podroze',  label: 'Podróże' },
+  { id: 'pakowanie', label: 'Pakowanie' },
+  { id: 'wishlist', label: 'Wishlist' },
+];
 
-const STATUS_LABEL: Record<string, string> = { dream: 'Marzenie', planned: 'W planach', done: 'Zrobione' };
-
-function fmt(d: string | null) {
-  if (!d) return '—';
+function fmtDate(d: string) {
   return new Date(d).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' });
 }
-
-function daysUntil(d: string | null) {
-  if (!d) return null;
-  const diff = Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
-  return diff;
+function tripDays(t: Trip) {
+  return Math.ceil((new Date(t.endDate).getTime() - new Date(t.startDate).getTime()) / 86400000) + 1;
 }
 
 export function TravelScreen() {
-  const showNext = useIsFeatureVisible('travel.next_trip');
-  const showDocs = useIsFeatureVisible('travel.documents');
-  const showBucket = useIsFeatureVisible('travel.bucket_list');
-  const showPacking = useIsFeatureVisible('travel.packing');
-  const showAttractions = useIsFeatureVisible('travel.attractions');
+  const [tab, setTab] = useState('podroze');
+  return (
+    <div className="module-page">
+      <div className="module-header">
+        <h1 className="module-title">✈️ Podróże</h1>
+        <SubTabs tabs={TABS} active={tab} onChange={setTab} />
+      </div>
+      {tab === 'podroze'   && <TravelList />}
+      {tab === 'pakowanie' && <TravelPacking />}
+      {tab === 'wishlist'  && <TravelWishlist />}
+    </div>
+  );
+}
 
-  const tripsQ = useTrips();
-  const createTrip = useCreateTrip();
-  const deleteTrip = useDeleteTrip();
+// ─── PODRÓŻE ──────────────────────────────────────────────────
 
-  const [newDest, setNewDest] = useState('');
-  const [newCountry, setNewCountry] = useState('');
-  const [newStart, setNewStart] = useState('');
-  const [newEnd, setNewEnd] = useState('');
-  const [showAddTrip, setShowAddTrip] = useState(false);
+function TravelList() {
+  const { trips, addTrip, deleteTrip } = useLocalStore();
+  const [showAdd, setShowAdd] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(trips[0]?.id ?? null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Trip['status'] | 'all'>('all');
 
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [title, setTitle] = useState('');
+  const [country, setCountry] = useState('');
+  const [city, setCity] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [emoji, setEmoji] = useState('🌍');
+  const [budget, setBudget] = useState<number | undefined>();
 
-  const itemsQ = useTripItems(selectedTripId);
-  const addItem = useAddTripItem();
-  const delItem = useDeleteTripItem();
-  const [newItemTitle, setNewItemTitle] = useState('');
-  const [newItemType, setNewItemType] = useState<'flight' | 'lodging' | 'transport' | 'attraction' | 'packing'>('attraction');
-
-  const docsQ = useTripDocuments();
-  const addDoc = useAddTripDocument();
-  const delDoc = useDeleteTripDocument();
-  const [newDocName, setNewDocName] = useState('');
-  const [newDocExp, setNewDocExp] = useState('');
-
-  const bucketQ = useBucketList();
-  const addBucket = useAddBucketItem();
-  const patchBucket = usePatchBucketItem();
-  const deleteBucket = useDeleteBucketItem();
-  const [newBucket, setNewBucket] = useState('');
-
-  const trips = tripsQ.data ?? [];
-  const today = new Date().toISOString().split('T')[0];
-  const upcomingTrips = trips.filter((t) => !t.end_date || t.end_date >= today).sort((a, b) => (a.start_date ?? '').localeCompare(b.start_date ?? ''));
-  const nextTrip = upcomingTrips[0] ?? null;
-
-  const docs = docsQ.data ?? [];
-  const bucket = bucketQ.data ?? [];
-  const items = itemsQ.data ?? [];
-  const packingItems = items.filter((i) => i.type === 'packing');
-  const attractionItems = items.filter((i) => i.type === 'attraction');
-
-  function addTrip() {
-    if (!newDest.trim()) return;
-    createTrip.mutate({ dest: newDest.trim(), country: newCountry || null, start_date: newStart || null, end_date: newEnd || null });
-    setNewDest(''); setNewCountry(''); setNewStart(''); setNewEnd(''); setShowAddTrip(false);
-  }
-
-  function addTripItem() {
-    if (!newItemTitle.trim()) return;
-    addItem.mutate({ trip_id: selectedTripId, type: newItemType, title: newItemTitle.trim() });
-    setNewItemTitle('');
-  }
-
-  function addDocument() {
-    if (!newDocName.trim()) return;
-    addDoc.mutate({ name: newDocName.trim(), expires_on: newDocExp || null });
-    setNewDocName(''); setNewDocExp('');
-  }
-
-  const totalCountries = new Set(trips.map((t) => t.country).filter(Boolean)).size;
+  const statusLabels: Record<string, string> = { planned: 'Planowana', active: 'W trakcie', completed: 'Zakończona', archived: 'Archiwum' };
+  const filtered = filter === 'all' ? trips.filter(t => t.status !== 'archived') : trips.filter(t => t.status === filter);
+  const selected = trips.find(t => t.id === selectedId);
 
   return (
-    <main className="travel">
-      <div className="grid" id="overview">
-        {/* LEFT */}
-        <section className="col">
-          {showNext && (
-            <article className="card">
-              <div className="card-head">
-                <div className="lhs"><span className="idx">01</span><span className="card-title">Najbliższy wyjazd</span></div>
-                {nextTrip && <span className="pill accent"><span className="led" />{nextTrip.status}</span>}
-              </div>
-              {nextTrip ? (
-                <>
-                  <div className="th-dest">{nextTrip.dest}<span className="cc">{nextTrip.country ? ` · ${nextTrip.country}` : ''}</span></div>
-                  <div className="th-sub">
-                    {daysUntil(nextTrip.start_date) != null
-                      ? daysUntil(nextTrip.start_date)! > 0
-                        ? `Za ${daysUntil(nextTrip.start_date)} dni`
-                        : daysUntil(nextTrip.start_date)! === 0
-                        ? 'Dziś!'
-                        : 'W trakcie'
-                      : 'Data nieustalona'}
-                  </div>
-                  <div className="th-grid">
-                    <div className="th-cell"><div className="k">Wylot</div><div className="v">{fmt(nextTrip.start_date)}</div></div>
-                    <div className="th-cell"><div className="k">Powrót</div><div className="v">{fmt(nextTrip.end_date)}</div></div>
-                    <div className="th-cell"><div className="k">Status</div><div className="v">{nextTrip.status}</div></div>
-                    <div className="th-cell"><div className="k">Kraj</div><div className="v">{nextTrip.country ?? '—'}</div></div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                    <button className="ov-btn" type="button" onClick={() => setSelectedTripId(nextTrip.id === selectedTripId ? null : nextTrip.id)}>
-                      {selectedTripId === nextTrip.id ? 'Odznacz' : 'Zarządzaj →'}
-                    </button>
-                    <button type="button" onClick={() => deleteTrip.mutate(nextTrip.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)', fontSize: 12 }}>Usuń</button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="th-dest" style={{ color: 'var(--ink-3)' }}>Brak wyjazdów</div>
-                  <button className="ov-btn" type="button" onClick={() => setShowAddTrip(true)}>Dodaj wyjazd →</button>
-                </>
-              )}
-              {showAddTrip && (
-                <div style={{ marginTop: 12, display: 'grid', gap: 6 }}>
-                  <input className="fi" type="text" placeholder="Destynacja*" value={newDest} onChange={(e) => setNewDest(e.target.value)} />
-                  <input className="fi" type="text" placeholder="Kraj" value={newCountry} onChange={(e) => setNewCountry(e.target.value)} />
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <input className="fi" type="date" value={newStart} onChange={(e) => setNewStart(e.target.value)} style={{ flex: 1 }} />
-                    <input className="fi" type="date" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} style={{ flex: 1 }} />
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button className="add-btn" type="button" onClick={addTrip}>Zapisz</button>
-                    <button type="button" onClick={() => setShowAddTrip(false)} style={{ background: 'var(--surface-inset)', border: 'none', borderRadius: 'var(--r-sm)', padding: '6px 12px', cursor: 'pointer' }}>Anuluj</button>
-                  </div>
-                </div>
-              )}
-            </article>
-          )}
+    <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 16, alignItems: 'start' }}>
+      {/* Sidebar */}
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Podróże</span>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>+ Nowa</button>
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+          {(['all','planned','active','completed'] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              style={{ padding: '3px 10px', borderRadius: 99, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 600, background: filter === f ? 'var(--green)' : 'var(--surface-3)', color: filter === f ? 'white' : 'var(--ink-2)' }}>
+              {f === 'all' ? 'Wszystkie' : statusLabels[f]}
+            </button>
+          ))}
+        </div>
 
-          {showDocs && (
-            <article className="card">
-              <div className="card-head">
-                <div className="lhs"><span className="idx">02</span><span className="card-title">Dokumenty podróżne</span></div>
-                <span className="pill">{docs.length}</span>
+        {filtered.length === 0
+          ? <EmptyState title="Brak podróży" cta="Zaplanuj podróż" onCta={() => setShowAdd(true)} />
+          : filtered.map(trip => (
+            <div key={trip.id}
+              onClick={() => setSelectedId(trip.id)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid var(--border-soft)', cursor: 'pointer' }}>
+              <span style={{ fontSize: 24 }}>{trip.coverEmoji}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: selectedId === trip.id ? 'var(--green-text)' : 'var(--ink)' }}>{trip.title}</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{fmtDate(trip.startDate)} · {tripDays(trip)} dni</div>
               </div>
-              {docs.length === 0 ? (
-                <div className="agenda-empty">Dodaj dokumenty (paszport, EKUZ, ubezpieczenie).</div>
-              ) : (
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {docs.map((d) => (
-                    <li key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                      <div>
-                        <span style={{ fontWeight: 500 }}>{d.name}</span>
-                        {d.expires_on && <span style={{ fontSize: 11, color: 'var(--ink-3)', marginLeft: 8 }}>wygasa {fmt(d.expires_on)}</span>}
-                      </div>
-                      <button type="button" onClick={() => delDoc.mutate(d.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <div style={{ display: 'flex', gap: 6 }}>
-                <input className="fi" type="text" placeholder="Nazwa dokumentu" value={newDocName} onChange={(e) => setNewDocName(e.target.value)} style={{ flex: 1 }} />
-                <input className="fi" type="date" value={newDocExp} onChange={(e) => setNewDocExp(e.target.value)} style={{ width: 130 }} />
-                <button className="add-btn" type="button" onClick={addDocument}>+</button>
-              </div>
-            </article>
-          )}
-        </section>
-
-        {/* CENTER */}
-        <section className="col">
-          <article className="card">
-            <div className="card-head">
-              <div className="lhs"><span className="idx">03</span><span className="card-title">Nadchodzące wyjazdy</span></div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span className="pill">{upcomingTrips.length}</span>
-                <button type="button" onClick={() => setShowAddTrip(true)} style={{ background: 'var(--surface-inset)', border: 'none', borderRadius: 'var(--r-sm)', padding: '4px 10px', cursor: 'pointer', fontSize: 12 }}>+ Dodaj</button>
-              </div>
+              <span className={`badge ${trip.status === 'active' ? 'badge-green' : trip.status === 'planned' ? 'badge-gray' : 'badge-gray'}`} style={{ fontSize: 10 }}>{statusLabels[trip.status]}</span>
             </div>
-            {upcomingTrips.length === 0 ? (
-              <div className="agenda-empty">Brak zaplanowanych wyjazdów.</div>
-            ) : (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {upcomingTrips.map((t) => (
-                  <li key={t.id} style={{ padding: '8px 10px', background: 'var(--surface-inset)', borderRadius: 'var(--r-sm)', cursor: 'pointer', border: selectedTripId === t.id ? '1px solid var(--acc-a)' : '1px solid transparent' }}
-                    onClick={() => setSelectedTripId(selectedTripId === t.id ? null : t.id)}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontWeight: 600 }}>{t.dest}</span>
-                      <span style={{ fontSize: 11, padding: '2px 6px', background: 'var(--surface)', borderRadius: 3 }}>{t.status}</span>
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>{fmt(t.start_date)} — {fmt(t.end_date)}</div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </article>
-
-          {selectedTripId && showAttractions && (
-            <article className="card">
-              <div className="card-head">
-                <div className="lhs"><span className="idx">04</span><span className="card-title">Plan wyjazdu</span></div>
-                <select className="fi-sel" value={newItemType} onChange={(e) => setNewItemType(e.target.value as typeof newItemType)} style={{ fontSize: 12, padding: '2px 6px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
-                  <option value="attraction">Atrakcja</option>
-                  <option value="flight">Lot</option>
-                  <option value="lodging">Nocleg</option>
-                  <option value="transport">Transport</option>
-                  <option value="packing">Pakowanie</option>
-                </select>
-              </div>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-                <input className="fi" type="text" placeholder="Tytuł" value={newItemTitle} onChange={(e) => setNewItemTitle(e.target.value)} style={{ flex: 1 }} onKeyDown={(e) => e.key === 'Enter' && addTripItem()} />
-                <button className="add-btn" type="button" onClick={addTripItem}>+</button>
-              </div>
-              {attractionItems.length === 0 ? (
-                <div className="agenda-empty">Brak atrakcji — dodaj plan.</div>
-              ) : (
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {attractionItems.map((i) => (
-                    <li key={i.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                      <span>{i.title}</span>
-                      <button type="button" onClick={() => delItem.mutate({ id: i.id, tripId: i.trip_id })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </article>
-          )}
-
-          {showBucket && (
-            <article className="card">
-              <div className="card-head">
-                <div className="lhs"><span className="idx">05</span><span className="card-title">Lista marzeń</span></div>
-                <span className="pill">{bucket.length}</span>
-              </div>
-              {bucket.length === 0 ? (
-                <div className="agenda-empty">Dodaj pierwsze miejsce na liście marzeń.</div>
-              ) : (
-                bucket.map((b) => (
-                  <div key={b.id} className="wish">
-                    <span className="pin">{PIN}</span>
-                    <div className="wi"><div className="n">{b.name}</div>{b.note && <div className="t">{b.note}</div>}</div>
-                    <span className="wtag" style={{ cursor: 'pointer' }} onClick={() => patchBucket.mutate({ id: b.id, patch: { status: b.status === 'dream' ? 'planned' : b.status === 'planned' ? 'done' : 'dream' } })}>
-                      {STATUS_LABEL[b.status]}
-                    </span>
-                    <button type="button" onClick={() => deleteBucket.mutate(b.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)', marginLeft: 4 }}>×</button>
-                  </div>
-                ))
-              )}
-              <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                <input className="fi" type="text" placeholder="Miejsce marzenie…" value={newBucket} onChange={(e) => setNewBucket(e.target.value)} style={{ flex: 1 }} onKeyDown={(e) => { if (e.key === 'Enter' && newBucket.trim()) { addBucket.mutate({ name: newBucket.trim() }); setNewBucket(''); } }} />
-                <button className="add-btn" type="button" onClick={() => { if (newBucket.trim()) { addBucket.mutate({ name: newBucket.trim() }); setNewBucket(''); } }}>+</button>
-              </div>
-            </article>
-          )}
-        </section>
-
-        {/* RIGHT */}
-        <section className="col">
-          <article className="card">
-            <div className="card-head">
-              <div className="lhs"><span className="idx">06</span><span className="card-title">Licznik podróży</span></div>
-              <span className="pill">Statystyki</span>
-            </div>
-            <div className="tstat">
-              <div className="cell"><div className="v">{totalCountries}</div><div className="k">Krajów</div></div>
-              <div className="cell"><div className="v">{trips.length}</div><div className="k">Wyjazdów</div></div>
-              <div className="cell"><div className="v">{trips.filter((t) => t.status === 'done').length}</div><div className="k">Zrobionych</div></div>
-              <div className="cell"><div className="v">{bucket.filter((b) => b.status !== 'done').length}</div><div className="k">Na liście marzeń</div></div>
-            </div>
-          </article>
-
-          {selectedTripId && showPacking && (
-            <article className="card">
-              <div className="card-head">
-                <div className="lhs"><span className="idx">07</span><span className="card-title">Lista pakowania</span></div>
-                <span className="pill">{packingItems.length}</span>
-              </div>
-              {packingItems.length === 0 ? (
-                <div className="agenda-empty">Dodaj rzeczy do spakowania.</div>
-              ) : (
-                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 8px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {packingItems.map((i) => (
-                    <li key={i.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                      <span>{i.title}</span>
-                      <button type="button" onClick={() => delItem.mutate({ id: i.id, tripId: i.trip_id })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <div style={{ display: 'flex', gap: 6 }}>
-                <input className="fi" type="text" placeholder="Dodaj do bagażu…" style={{ flex: 1 }}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) { addItem.mutate({ trip_id: selectedTripId, type: 'packing', title: (e.target as HTMLInputElement).value.trim() }); (e.target as HTMLInputElement).value = ''; } }} />
-                <button className="add-btn" type="button" onClick={(e) => {
-                  const inp = (e.currentTarget.previousSibling as HTMLInputElement);
-                  if (inp?.value.trim()) { addItem.mutate({ trip_id: selectedTripId, type: 'packing', title: inp.value.trim() }); inp.value = ''; }
-                }}>+</button>
-              </div>
-            </article>
-          )}
-        </section>
+          ))
+        }
       </div>
-    </main>
+
+      {/* Detail */}
+      {selected ? (
+        <div className="card">
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span style={{ fontSize: 48 }}>{selected.coverEmoji}</span>
+              <div>
+                <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>{selected.title}</h2>
+                <div style={{ fontSize: 14, color: 'var(--ink-3)', marginTop: 4 }}>{selected.country}{selected.city ? `, ${selected.city}` : ''}</div>
+                <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 2 }}>
+                  {fmtDate(selected.startDate)} — {fmtDate(selected.endDate)} · {tripDays(selected)} dni
+                </div>
+              </div>
+            </div>
+            <button className="icon-btn" onClick={() => setDeleteId(selected.id)}><IcoTrash /></button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+            {[
+              { label: 'Status', val: statusLabels[selected.status] },
+              { label: 'Budżet', val: selected.budget ? `${selected.budget.toLocaleString('pl-PL')} PLN` : 'Nie ustawiony' },
+              { label: 'Długość', val: `${tripDays(selected)} nocy` },
+            ].map(item => (
+              <div key={item.label} style={{ background: 'var(--surface-3)', borderRadius: 10, padding: '10px 14px' }}>
+                <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{item.label}</div>
+                <div style={{ fontWeight: 700, fontSize: 14, marginTop: 2 }}>{item.val}</div>
+              </div>
+            ))}
+          </div>
+
+          {selected.notes && <p style={{ fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.6 }}>{selected.notes}</p>}
+        </div>
+      ) : (
+        <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
+          <EmptyState title="Wybierz podróż" desc="Kliknij podróż po lewej, aby zobaczyć szczegóły." />
+        </div>
+      )}
+
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Nowa podróż"
+        footer={<>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowAdd(false)}>Anuluj</button>
+          <button className="btn btn-primary btn-sm" onClick={() => {
+            if (!title.trim() || !startDate || !endDate) return;
+            addTrip({ title, country, city: city || undefined, startDate, endDate, status: 'planned', coverEmoji: emoji, notes: '', budget, isArchived: false });
+            setTitle(''); setCountry(''); setCity(''); setStartDate(''); setEndDate(''); setBudget(undefined); setShowAdd(false);
+          }}>Zapisz</button>
+        </>}>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <Field label="Emoji"><input className="input" value={emoji} onChange={e => setEmoji(e.target.value)} style={{ width: 60, textAlign: 'center', fontSize: 22 }} /></Field>
+          <Field label="Nazwa podróży" required><input className="input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Np. Bali — wakacje" style={{ width: '100%' }} /></Field>
+        </div>
+        <div className="form-grid">
+          <Field label="Kraj"><input className="input" value={country} onChange={e => setCountry(e.target.value)} placeholder="Indonezja" /></Field>
+          <Field label="Miasto"><input className="input" value={city} onChange={e => setCity(e.target.value)} placeholder="Denpasar (opcjonalnie)" /></Field>
+          <Field label="Data wyjazdu" required><input type="date" className="input" value={startDate} onChange={e => setStartDate(e.target.value)} /></Field>
+          <Field label="Data powrotu" required><input type="date" className="input" value={endDate} onChange={e => setEndDate(e.target.value)} /></Field>
+          <Field label="Budżet (PLN)"><input type="number" className="input" value={budget ?? ''} onChange={e => setBudget(e.target.value ? +e.target.value : undefined)} placeholder="Opcjonalnie" /></Field>
+        </div>
+      </Modal>
+      <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { deleteTrip(deleteId!); setSelectedId(null); setDeleteId(null); }} label="tę podróż" />
+    </div>
+  );
+}
+
+// ─── PAKOWANIE ────────────────────────────────────────────────
+
+function TravelPacking() {
+  const { packingTemplates } = useLocalStore();
+  const [selectedId, setSelectedId] = useState<string | null>(packingTemplates[0]?.id ?? null);
+  const selected = packingTemplates.find(t => t.id === selectedId);
+
+  const grouped: Record<string, { id: string; name: string; category: string; quantity: number; packed: boolean }[]> = {};
+  selected?.items.forEach(item => {
+    if (!grouped[item.category]) grouped[item.category] = [];
+    grouped[item.category].push(item);
+  });
+
+  const packedCount = selected?.items.filter(i => i.packed).length ?? 0;
+  const totalCount = selected?.items.length ?? 0;
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 16, alignItems: 'start' }}>
+      <div className="card">
+        <div className="card-head"><span className="card-title">Szablony</span></div>
+        {packingTemplates.map(t => (
+          <div key={t.id} onClick={() => setSelectedId(t.id)}
+            style={{ padding: '10px 0', borderBottom: '1px solid var(--border-soft)', cursor: 'pointer', color: selectedId === t.id ? 'var(--green-text)' : 'var(--ink)' }}>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>{t.name}</div>
+            <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>{t.items.length} elementów</div>
+          </div>
+        ))}
+        {packingTemplates.length === 0 && <EmptyState title="Brak szablonów" />}
+      </div>
+
+      {selected ? (
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{selected.name}</h2>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--green-text)' }}>{packedCount}/{totalCount} spakowane</span>
+          </div>
+          <ProgressBar value={packedCount} max={totalCount} size="md" />
+          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {Object.entries(grouped).map(([cat, items]) => (
+              <div key={cat}>
+                <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink-3)', marginBottom: 8 }}>{cat}</div>
+                {items.map((item: { id: string; name: string; category: string; quantity: number; packed: boolean }) => (
+                  <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid var(--border-soft)' }}>
+                    <div style={{ width: 18, height: 18, borderRadius: 4, border: `1.5px solid ${item.packed ? 'var(--green-mid)' : 'var(--border)'}`, background: item.packed ? 'var(--green-mid)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'white', flexShrink: 0, cursor: 'pointer' }}>
+                      {item.packed && '✓'}
+                    </div>
+                    <span style={{ fontSize: 13, flex: 1, textDecoration: item.packed ? 'line-through' : 'none', color: item.packed ? 'var(--ink-3)' : 'var(--ink)' }}>{item.name}</span>
+                    {item.quantity > 1 && <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>×{item.quantity}</span>}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200 }}>
+          <EmptyState title="Wybierz szablon" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── WISHLIST ─────────────────────────────────────────────────
+
+function TravelWishlist() {
+  const { wishlist, addWishlistPlace } = useLocalStore();
+  const [showAdd, setShowAdd] = useState(false);
+  const [country, setCountry] = useState('');
+  const [city, setCity] = useState('');
+  const [priority, setPriority] = useState(3);
+
+  const unvisited = wishlist.filter(w => !w.visited);
+  const visited = wishlist.filter(w => w.visited);
+
+  return (
+    <div style={{ maxWidth: 700, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Dodaj miejsce</button>
+      </div>
+
+      {unvisited.length > 0 && (
+        <div className="card">
+          <div className="card-head"><span className="card-title">🗺 Chcę odwiedzić ({unvisited.length})</span></div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+            {unvisited.sort((a,b) => b.priority - a.priority).map(place => (
+              <div key={place.id} style={{ background: 'var(--surface-3)', borderRadius: 10, padding: '12px 14px' }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{place.country}</div>
+                {place.city && <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>{place.city}</div>}
+                <div style={{ marginTop: 8, display: 'flex', gap: 2 }}>
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <span key={i} style={{ fontSize: 14, color: i < place.priority ? 'var(--p-mid)' : 'var(--border)' }}>★</span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {visited.length > 0 && (
+        <div className="card">
+          <div className="card-head"><span className="card-title">✅ Odwiedzone ({visited.length})</span></div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {visited.map(place => (
+              <span key={place.id} style={{ padding: '6px 14px', background: 'var(--green-soft2)', color: 'var(--green-text)', borderRadius: 99, fontSize: 13, fontWeight: 600 }}>
+                {place.city ? `${place.city}, ` : ''}{place.country}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {unvisited.length === 0 && visited.length === 0 && (
+        <div className="card"><EmptyState title="Pusta lista życzeń" desc="Dodaj miejsca, które chcesz odwiedzić." cta="Dodaj miejsce" onCta={() => setShowAdd(true)} /></div>
+      )}
+
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Dodaj miejsce"
+        footer={<>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowAdd(false)}>Anuluj</button>
+          <button className="btn btn-primary btn-sm" onClick={() => {
+            if (!country.trim()) return;
+            addWishlistPlace({ country, city: city || undefined, priority, notes: '', visited: false });
+            setCountry(''); setCity(''); setPriority(3); setShowAdd(false);
+          }}>Dodaj</button>
+        </>}>
+        <div className="form-grid">
+          <Field label="Kraj" required><input className="input" value={country} onChange={e => setCountry(e.target.value)} placeholder="Japonia" /></Field>
+          <Field label="Miasto"><input className="input" value={city} onChange={e => setCity(e.target.value)} placeholder="Tokio (opcjonalnie)" /></Field>
+        </div>
+        <Field label={`Priorytet: ${priority}/5`}><input type="range" min={1} max={5} value={priority} onChange={e => setPriority(+e.target.value)} style={{ width: '100%' }} /></Field>
+      </Modal>
+    </div>
   );
 }

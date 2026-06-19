@@ -19,7 +19,7 @@ export function AccountSettings() {
   }, []);
 
   async function toggleTheme() {
-    const next: Theme = theme === 'light' ? 'dark' : 'light';
+    const next: Theme = theme === 'dark' ? 'white-lotus' : 'dark';
     setThemeState(next);
     await setTheme(next);
   }
@@ -197,5 +197,5 @@ export function AccountSettings() {
         )}
       </article>
     </>
-  );
+    );
 }

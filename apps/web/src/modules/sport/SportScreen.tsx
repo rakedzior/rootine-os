@@ -1,484 +1,616 @@
-import { useState } from 'react';
-import { useIsFeatureVisible } from '@/features/config/useConfig';
-import {
-  useReadinessToday, useUpsertReadiness,
-  useBodyMeasurements, useAddBodyMeasurement,
-  useWorkouts, useCreateWorkout, useDeleteWorkout, usePatchWorkout,
-  useWorkoutSets, useAddWorkoutSet, useDeleteWorkoutSet,
-} from '@/features/sport/hooks';
-import { useStravaActivities } from '@/features/integrations/hooks';
-import '@/styles/health.css';
+import { useState, useEffect, useRef } from 'react';
+import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, SectionHead, IcoTrash } from '@/components/common';
+import { useLocalStore, type WorkoutTemplate, type WorkoutSet, type WorkoutSession, type SportExercise } from '@/store/localStore';
 
-// 1RM Epley: w * (1 + reps/30)
-function epley(weight: number, reps: number) {
-  if (reps <= 0) return weight;
-  return Math.round(weight * (1 + reps / 30));
+const SPORT_TABS = [
+  { id: 'dzisiaj',   label: 'Dzisiaj' },
+  { id: 'szablony',  label: 'Szablony' },
+  { id: 'sesja',     label: 'Aktywna sesja' },
+  { id: 'historia',  label: 'Historia' },
+  { id: 'analiza',   label: 'Analiza' },
+  { id: 'cwiczenia', label: 'Ćwiczenia' },
+  { id: 'odczucia',  label: 'Odczucia' },
+];
+
+function fmtTime(sec: number) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function fmtDate(d: string) {
+  return new Date(d).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function volFromSets(sets: WorkoutSet[]) {
+  return sets.filter(s => s.completed).reduce((a, s) => a + s.weight * s.reps, 0);
 }
 
 export function SportScreen() {
-  const showReadiness = useIsFeatureVisible('sport.readiness');
-  const showBody = useIsFeatureVisible('sport.body_measurements');
-  const showWorkout = useIsFeatureVisible('sport.today_workout');
-  const showLogger = useIsFeatureVisible('sport.workout_logger');
-  const showHistory = useIsFeatureVisible('sport.session_history');
-  const showProg = useIsFeatureVisible('sport.load_progression');
-  const showRunning = useIsFeatureVisible('sport.running');
-  const showRehab = useIsFeatureVisible('sport.rehab_mobility');
+  const [tab, setTab] = useState('dzisiaj');
+  const { activeSession } = useLocalStore();
 
-  // Readiness
-  const readinessQ = useReadinessToday();
-  const upsertReadiness = useUpsertReadiness();
-  const [sleepH, setSleepH] = useState('');
-  const [hrv, setHrv] = useState('');
-  const [hr, setHr] = useState('');
-  const [soreness, setSoreness] = useState('');
-  const r = readinessQ.data;
-
-  function saveReadiness() {
-    upsertReadiness.mutate({
-      sleep_h: sleepH ? parseFloat(sleepH) : undefined,
-      hrv_ms: hrv ? parseInt(hrv) : undefined,
-      resting_hr: hr ? parseInt(hr) : undefined,
-      soreness: soreness ? parseInt(soreness) : undefined,
-    });
-    setSleepH(''); setHrv(''); setHr(''); setSoreness('');
-  }
-
-  const readinessScore = r
-    ? Math.round(
-        ((r.sleep_h ?? 0) / 9) * 40 +
-        ((r.hrv_ms ?? 0) / 80) * 30 +
-        ((r.resting_hr ? Math.max(0, (80 - r.resting_hr) / 30) : 0)) * 20 +
-        ((r.soreness != null ? (5 - r.soreness) / 5 : 0)) * 10,
-      )
-    : null;
-
-  // Body measurements
-  const bodyQ = useBodyMeasurements();
-  const addMeasure = useAddBodyMeasurement();
-  const [bWeight, setBWeight] = useState('');
-  const [bFat, setBFat] = useState('');
-  const [bLean, setBLean] = useState('');
-  const latestBody = (bodyQ.data ?? [])[0] ?? null;
-
-  function saveMeasurement() {
-    addMeasure.mutate({
-      weight: bWeight ? parseFloat(bWeight) : null,
-      body_fat: bFat ? parseFloat(bFat) : null,
-      lean_mass: bLean ? parseFloat(bLean) : null,
-    });
-    setBWeight(''); setBFat(''); setBLean('');
-  }
-
-  // Workouts
-  const workoutsQ = useWorkouts();
-  const createWorkout = useCreateWorkout();
-  const deleteWorkout = useDeleteWorkout();
-  const patchWorkout = usePatchWorkout();
-  const [newWoName, setNewWoName] = useState('');
-  const [newWoType, setNewWoType] = useState('');
-  const [selectedWoId, setSelectedWoId] = useState<string | null>(null);
-  const workouts = workoutsQ.data ?? [];
-  const todayWo = workouts.find((w) => w.date === new Date().toISOString().split('T')[0]) ?? null;
-
-  function addWorkout() {
-    if (!newWoName.trim()) return;
-    createWorkout.mutate({ name: newWoName.trim(), type: newWoType || null });
-    setNewWoName(''); setNewWoType('');
-  }
-
-  // Workout sets logger
-  const setsQ = useWorkoutSets(selectedWoId);
-  const addSet = useAddWorkoutSet();
-  const delSet = useDeleteWorkoutSet();
-  const [exName, setExName] = useState('');
-  const [setWeight, setSetWeight] = useState('');
-  const [setReps, setSetReps] = useState('');
-  const [setRir, setSetRir] = useState('');
-  const sets = setsQ.data ?? [];
-
-  function logSet() {
-    if (!exName.trim() || !setWeight || !setReps) return;
-    const nextNo = sets.filter((s) => s.exercise_name === exName.trim()).length + 1;
-    addSet.mutate({
-      workout_id: selectedWoId,
-      exercise_name: exName.trim(),
-      weight: parseFloat(setWeight),
-      reps: parseInt(setReps),
-      set_no: nextNo,
-      rir: setRir ? parseInt(setRir) : null,
-    });
-    setSetWeight(''); setSetReps(''); setSetRir('');
-  }
-
-  const card = (title: string, body: string, pill?: string) => (
-    <article className="card">
-      <div className="card-head">
-        <div className="lhs"><span className="card-title">{title}</span></div>
-        {pill && <span className="pill">{pill}</span>}
-      </div>
-      <div className="agenda-empty">{body}</div>
-    </article>
-  );
-
-  const score = readinessScore ?? 0;
-  const dash = 263.9;
-  const offset = dash - (dash * Math.min(100, score)) / 100;
+  useEffect(() => {
+    if (activeSession && tab !== 'sesja') setTab('sesja');
+  }, [activeSession]);
 
   return (
-    <main className="grid">
-      {/* LEFT: recovery */}
-      <section className="col">
-        {showReadiness && (
-          <article className="card">
-            <div className="card-head">
-              <div className="lhs"><span className="card-title">Regeneracja i gotowość</span></div>
-              <span className="pill">Dziś</span>
-            </div>
-            <div className="readiness-top">
-              <div className="h-ring">
-                <svg viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="42" fill="none" stroke="var(--surface-inset)" strokeWidth="9" />
-                  <circle cx="50" cy="50" r="42" fill="none"
-                    stroke={score >= 70 ? 'var(--acc-a)' : score >= 40 ? 'var(--acc-b)' : 'var(--acc-b)'}
-                    strokeWidth="9" strokeLinecap="round"
-                    strokeDasharray={dash} strokeDashoffset={offset}
-                    transform="rotate(-90 50 50)" />
-                </svg>
-                <div className="rt"><b className="tnum">{readinessScore ?? '—'}</b><small>Gotowość</small></div>
-              </div>
-              <div className="meta">
-                <div className="a">{r ? (score >= 70 ? 'Dobra gotowość' : score >= 40 ? 'Umiarkowana' : 'Potrzeba odpoczynku') : 'Brak danych'}</div>
-                <div className="b">Sen / HRV / tętno</div>
-              </div>
-            </div>
-            <div className="stat-grid">
-              <div className="stat-cell"><div className="k"><i style={{ background: 'var(--acc-a)' }} />Sen</div><div className="v tnum">{r?.sleep_h ?? '—'}<small>h</small></div></div>
-              <div className="stat-cell"><div className="k"><i style={{ background: 'var(--ev-blue)' }} />HRV</div><div className="v tnum">{r?.hrv_ms ?? '—'}<small>ms</small></div></div>
-              <div className="stat-cell"><div className="k"><i style={{ background: 'var(--acc-b)' }} />Tętno spocz.</div><div className="v tnum">{r?.resting_hr ?? '—'}<small>bpm</small></div></div>
-              <div className="stat-cell"><div className="k"><i style={{ background: 'var(--ev-lav)' }} />Zakwasy</div><div className="v">{r?.soreness != null ? `${r.soreness}/5` : '—'}</div></div>
-            </div>
-            <div className="meas" style={{ marginTop: 12 }}>
-              <div className="meas-row">
-                <span className="mn">Sen</span>
-                <input type="number" placeholder="h" value={sleepH} onChange={(e) => setSleepH(e.target.value)} inputMode="decimal" />
-                <span className="mu">h</span>
-              </div>
-              <div className="meas-row">
-                <span className="mn">HRV</span>
-                <input type="number" placeholder="ms" value={hrv} onChange={(e) => setHrv(e.target.value)} inputMode="numeric" />
-                <span className="mu">ms</span>
-              </div>
-              <div className="meas-row">
-                <span className="mn">Tętno spocz.</span>
-                <input type="number" placeholder="bpm" value={hr} onChange={(e) => setHr(e.target.value)} inputMode="numeric" />
-                <span className="mu">bpm</span>
-              </div>
-              <div className="meas-row">
-                <span className="mn">Zakwasy</span>
-                <input type="number" placeholder="0–5" value={soreness} onChange={(e) => setSoreness(e.target.value)} inputMode="numeric" min={0} max={5} />
-                <span className="mu">/5</span>
-              </div>
-            </div>
-            <button className="meas-edit" style={{ marginTop: 12, width: '100%' }} type="button" onClick={saveReadiness} disabled={upsertReadiness.isPending}>
-              {upsertReadiness.isPending ? 'Zapisywanie…' : 'Zapisz gotowość'}
-            </button>
-          </article>
-        )}
+    <div className="module-page">
+      <div className="module-header">
+        <h1 className="module-title">🏋️ Sport</h1>
+        <SubTabs tabs={SPORT_TABS} active={tab} onChange={setTab} />
+      </div>
 
-        {showBody && (
-          <article className="card">
-            <div className="card-head">
-              <div className="lhs"><span className="card-title">Pomiary ciała</span></div>
-              <span className="pill">30 dni</span>
-            </div>
-            {latestBody ? (
-              <div className="metric-head">
-                <div className="big tnum">{latestBody.weight ?? '—'}<small> kg</small></div>
-                <div className="delta">{latestBody.body_fat != null ? `${latestBody.body_fat}% tłuszczu` : '—'}</div>
-              </div>
-            ) : (
-              <div className="metric-head"><div className="big tnum">—<small> kg</small></div><div className="delta">Brak pomiarów</div></div>
-            )}
-            <div className="stat-grid" style={{ marginTop: 14 }}>
-              <div className="stat-cell"><div className="k">Tłuszcz</div><div className="v tnum">{latestBody?.body_fat ?? '—'}<small>%</small></div></div>
-              <div className="stat-cell"><div className="k">Masa beztłuszcz.</div><div className="v tnum">{latestBody?.lean_mass ?? '—'}<small>kg</small></div></div>
-            </div>
-            <div className="meas" style={{ marginTop: 12 }}>
-              <div className="meas-row">
-                <span className="mn">Waga</span>
-                <input type="number" placeholder="0.0" value={bWeight} onChange={(e) => setBWeight(e.target.value)} inputMode="decimal" />
-                <span className="mu">kg</span>
-              </div>
-              <div className="meas-row">
-                <span className="mn">Tłuszcz</span>
-                <input type="number" placeholder="0.0" value={bFat} onChange={(e) => setBFat(e.target.value)} inputMode="decimal" />
-                <span className="mu">%</span>
-              </div>
-              <div className="meas-row">
-                <span className="mn">LBM</span>
-                <input type="number" placeholder="0.0" value={bLean} onChange={(e) => setBLean(e.target.value)} inputMode="decimal" />
-                <span className="mu">kg</span>
-              </div>
-            </div>
-            <button className="meas-edit" style={{ marginTop: 12, width: '100%' }} type="button" onClick={saveMeasurement} disabled={addMeasure.isPending}>
-              {addMeasure.isPending ? 'Zapisywanie…' : 'Zapisz pomiar'}
-            </button>
-          </article>
-        )}
-
-        <article className="card">
-          <div className="card-head">
-            <div className="lhs"><span className="card-title">Integracje</span></div>
-          </div>
-          <div className="integ">
-            <div className="integ-row">
-              <div className="integ-icon strava">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="white">
-                  <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066m-7.008-5.599l2.836 5.598h4.172L10.463 0l-7 13.828h4.169" />
-                </svg>
-              </div>
-              <div className="integ-info"><div className="integ-name">Strava</div></div>
-              <div className="integ-status">Niepołączono</div>
-            </div>
-          </div>
-          <p style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)', marginTop: 10, marginBottom: 0 }}>Strava w Fazie 3.</p>
-        </article>
-      </section>
-
-      {/* CENTER: training */}
-      <section className="col">
-        {showWorkout && (
-          <article className="card">
-            <div className="card-head">
-              <div className="lhs"><span className="card-title">Dzisiejszy trening</span></div>
-              <span className="pill">{todayWo ? todayWo.status : 'Brak'}</span>
-            </div>
-            {todayWo ? (
-              <div>
-                <div className="th-name" style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}>{todayWo.name}</div>
-                {todayWo.type && <div className="th-sub">{todayWo.type}</div>}
-                <div className="sess-actions" style={{ marginTop: 10 }}>
-                  <button className="btn-primary" type="button"
-                    onClick={() => patchWorkout.mutate({ id: todayWo.id, patch: { status: 'done' } })}
-                    disabled={todayWo.status === 'done'}>
-                    {todayWo.status === 'done' ? '✓ Zrobione' : 'Oznacz jako zrobione'}
-                  </button>
-                  <button className="btn-ghost" type="button" onClick={() => setSelectedWoId(todayWo.id)}>
-                    Logger →
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div className="agenda-empty" style={{ marginBottom: 12 }}>Brak sesji na dziś.</div>
-                <div className="he-grid" style={{ marginBottom: 8 }}>
-                  <input type="text" className="fi" placeholder="Nazwa treningu" value={newWoName} onChange={(e) => setNewWoName(e.target.value)} />
-                  <input type="text" className="fi" placeholder="Typ (Push, Pull…)" value={newWoType} onChange={(e) => setNewWoType(e.target.value)} />
-                </div>
-                <button className="btn-primary" type="button" onClick={addWorkout} disabled={createWorkout.isPending}>
-                  + Dodaj trening
-                </button>
-              </div>
-            )}
-          </article>
-        )}
-
-        {showLogger && (
-          <article className="card">
-            <div className="card-head">
-              <div className="lhs"><span className="card-title">Logger serii</span></div>
-              {workouts.length > 0 && (
-                <select className="fi-sel" value={selectedWoId ?? ''} onChange={(e) => setSelectedWoId(e.target.value || null)}
-                  style={{ fontSize: 12, padding: '4px 28px 4px 8px', width: 'auto', maxWidth: 200 }}>
-                  <option value="">-- Wybierz sesję --</option>
-                  {workouts.map((w) => <option key={w.id} value={w.id}>{w.date} · {w.name}</option>)}
-                </select>
-              )}
-            </div>
-            {!selectedWoId ? (
-              <div className="agenda-empty">Wybierz sesję powyżej lub utwórz trening.</div>
-            ) : (
-              <>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12, alignItems: 'center' }}>
-                  <input type="text" className="fi" placeholder="Ćwiczenie" value={exName} onChange={(e) => setExName(e.target.value)} style={{ flex: '2 1 120px' }} />
-                  <input type="number" className="set-inp" placeholder="kg" value={setWeight} onChange={(e) => setSetWeight(e.target.value)} inputMode="decimal" style={{ width: 64 }} />
-                  <input type="number" className="set-inp" placeholder="powt." value={setReps} onChange={(e) => setSetReps(e.target.value)} inputMode="numeric" style={{ width: 64 }} />
-                  <input type="number" className="set-inp" placeholder="RIR" value={setRir} onChange={(e) => setSetRir(e.target.value)} inputMode="numeric" style={{ width: 52 }} />
-                  <button className="btn-primary" type="button" onClick={logSet} disabled={addSet.isPending} style={{ padding: '8px 14px', flexShrink: 0 }}>
-                    Loguj
-                  </button>
-                </div>
-                {sets.length === 0 ? (
-                  <div className="agenda-empty">Brak serii — dodaj pierwszą.</div>
-                ) : (
-                  <div className="logger">
-                    {Object.entries(
-                      sets.reduce<Record<string, typeof sets>>((acc, s) => {
-                        (acc[s.exercise_name] ??= []).push(s);
-                        return acc;
-                      }, {}),
-                    ).map(([ex, exSets]) => (
-                      <div key={ex} className="lg-ex">
-                        <div className="lg-ex-head">
-                          <span className="n">{ex}</span>
-                          <span className="t">{exSets.length} ser.</span>
-                        </div>
-                        <div className="set-cols">
-                          <div>#</div><div>kg</div><div>Powt.</div><div>≈1RM</div><div />
-                        </div>
-                        {exSets.map((s) => (
-                          <div key={s.id} className="set-row">
-                            <span className="sn">{s.set_no}</span>
-                            <span className="tnum" style={{ fontSize: 13, fontWeight: 600 }}>{s.weight}</span>
-                            <span className="tnum" style={{ fontSize: 13 }}>{s.reps}</span>
-                            <span className="tnum" style={{ fontSize: 12, color: 'var(--acc-a-ink)', fontWeight: 600 }}>
-                              {epley(s.weight, s.reps)}
-                            </span>
-                            <button type="button" onClick={() => delSet.mutate({ id: s.id, workoutId: selectedWoId })}
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-4)', fontSize: 15, lineHeight: 1 }}>
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </article>
-        )}
-
-        {showHistory && (
-          <article className="card">
-            <div className="card-head">
-              <div className="lhs"><span className="card-title">Historia sesji</span></div>
-              <span className="pill">{workouts.length} sesji</span>
-            </div>
-            {workouts.length === 0 ? (
-              <div className="agenda-empty">Brak sesji treningowych.</div>
-            ) : (
-              <>
-                {workouts.slice(0, 8).map((w) => (
-                  <div key={w.id} className="sh-row">
-                    <div className="sh-date">
-                      <div className="dd">{w.date.slice(8, 10)}</div>
-                      <div className="mo">{w.date.slice(5, 7)}.{w.date.slice(2, 4)}</div>
-                    </div>
-                    <div className="sh-main">
-                      <div className="n">
-                        <span className="sh-tag" style={{ background: w.status === 'done' ? 'var(--acc-a)' : 'var(--surface-inset)' }} />
-                        {w.name}
-                      </div>
-                      {w.type && <div className="m">{w.type}</div>}
-                    </div>
-                    <div className="sh-feel">
-                      <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 5, background: w.status === 'done' ? 'var(--acc-a-soft)' : 'var(--surface-inset)', color: w.status === 'done' ? 'var(--acc-a-ink)' : 'var(--ink-3)', fontFamily: 'var(--mono)', fontWeight: 600 }}>
-                        {w.status}
-                      </span>
-                    </div>
-                    <button type="button" onClick={() => deleteWorkout.mutate(w.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-4)', fontSize: 16, padding: '0 4px', flexShrink: 0 }}>
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </>
-            )}
-          </article>
-        )}
-      </section>
-
-      {/* RIGHT: plan & progress */}
-      <section className="col">
-        {showProg && (
-          <article className="card">
-            <div className="card-head">
-              <div className="lhs"><span className="card-title">Progresja i 1RM</span></div>
-              <span className="pill">Epley</span>
-            </div>
-            {sets.length === 0 ? (
-              <div className="agenda-empty">Zaloguj serie, aby zobaczyć szacowane 1RM.</div>
-            ) : (
-              <>
-                {Object.entries(
-                  sets.reduce<Record<string, { w: number; r: number }>>((acc, s) => {
-                    const e1rm = epley(s.weight, s.reps);
-                    if (!acc[s.exercise_name] || e1rm > epley(acc[s.exercise_name].w, acc[s.exercise_name].r)) {
-                      acc[s.exercise_name] = { w: s.weight, r: s.reps };
-                    }
-                    return acc;
-                  }, {}),
-                ).map(([ex, { w, r }]) => (
-                  <div key={ex} className="pb-row">
-                    <div className="pb-mark" style={{ background: 'var(--acc-a)' }} />
-                    <div className="nm"><div className="n">{ex}</div><div className="d">{w}kg × {r} powt.</div></div>
-                    <div className="pb-val tnum">{epley(w, r)}<small>kg</small></div>
-                  </div>
-                ))}
-              </>
-            )}
-          </article>
-        )}
-        {showRunning && <RunningCard />}
-        {showRehab && card('Rehabilitacja i mobilność', 'Ćwiczenia rehab i mobility.', 'Rutyna')}
-      </section>
-    </main>
+      {tab === 'dzisiaj'   && <SportToday onStartSession={() => setTab('sesja')} />}
+      {tab === 'szablony'  && <SportTemplates />}
+      {tab === 'sesja'     && <SportActiveSession onSessionEnd={() => setTab('historia')} />}
+      {tab === 'historia'  && <SportHistory />}
+      {tab === 'analiza'   && <SportAnalysis />}
+      {tab === 'cwiczenia' && <SportExercises />}
+      {tab === 'odczucia'  && <SportFeelings />}
+    </div>
   );
 }
 
-function RunningCard() {
-  const activQ = useStravaActivities(10);
-  const runs = (activQ.data ?? []).filter((a) => a.type === 'Run' || a.type === 'VirtualRun');
+// ─── DZISIAJ ──────────────────────────────────────────────────
 
-  function fmt(distM: number | null) {
-    if (!distM) return '—';
-    return `${(distM / 1000).toFixed(2)} km`;
-  }
-  function fmtPace(s: number | null) {
-    if (!s) return '—';
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m}:${String(sec).padStart(2, '0')} /km`;
-  }
-  function fmtDur(s: number | null) {
-    if (!s) return '—';
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    return h > 0 ? `${h}h ${m}min` : `${m}min`;
+function SportToday({ onStartSession }: { onStartSession: () => void }) {
+  const { templates, sessions, startSession } = useLocalStore();
+  const nextTemplate = templates.find(t => t.isActive) ?? templates[0];
+  const lastSession = sessions[0];
+  const weekSessions = sessions.filter(s => {
+    const diff = (Date.now() - new Date(s.date).getTime()) / 86400000;
+    return diff <= 7;
+  });
+  const weekVol = weekSessions.reduce((a, s) => a + s.exercises.reduce((b, e) => b + volFromSets(e.sets), 0), 0);
+  const weekTime = weekSessions.reduce((a, s) => a + (s.duration ?? 0), 0);
+
+  function handleStart() {
+    if (!nextTemplate) return;
+    startSession({
+      templateId: nextTemplate.id,
+      templateName: nextTemplate.name,
+      sportType: nextTemplate.sportType,
+      currentExerciseIndex: 0,
+      exercises: nextTemplate.exercises.map(e => ({
+        ...e,
+        sets: e.sets.map(s => ({ ...s, completed: false }))
+      })),
+    });
+    onStartSession();
   }
 
   return (
-    <article className="card">
-      <div className="card-head">
-        <div className="lhs"><span className="card-title">Bieganie</span></div>
-        {activQ.isFetching && <span style={{ fontSize: 11, color: 'var(--ink-3)', fontFamily: 'var(--mono)' }}>↻</span>}
-      </div>
-      {runs.length === 0 ? (
-        <div className="note-peek">
-          {activQ.isLoading ? 'Ładowanie…' : 'Brak biegów · Połącz Stravę w Ustawienia → Integracje'}
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
-          {runs.map((r) => (
-            <div key={r.id} className="sh-row">
-              <div className="sh-date">
-                {new Date(r.start_date).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
-              </div>
-              <div className="sh-main">
-                <div className="sh-title">{r.name}</div>
-                <div className="m" style={{ display: 'flex', gap: 10 }}>
-                  <span>{fmt(r.distance_m)}</span>
-                  <span>{fmtDur(r.duration_s)}</span>
-                  {r.avg_pace_s && <span>{fmtPace(r.avg_pace_s)}</span>}
-                  {r.avg_hr && <span>♥ {r.avg_hr}</span>}
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, alignItems: 'start' }}>
+      <div className="col">
+        <div className="card">
+          <div className="card-head"><span className="card-title">Dzisiejszy trening</span></div>
+          {nextTemplate ? (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--green-soft2)', display: 'grid', placeItems: 'center', fontSize: 20 }}>🏋️</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>{nextTemplate.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{nextTemplate.sportType} · {nextTemplate.estimatedDuration} min</div>
                 </div>
               </div>
+              <button className="btn btn-primary" style={{ width: '100%' }} onClick={handleStart}>▶ Rozpocznij sesję</button>
+            </>
+          ) : (
+            <EmptyState title="Brak szablonu" desc="Dodaj szablon treningowy." />
+          )}
+        </div>
+
+        {lastSession && (
+          <div className="card">
+            <div className="card-head"><span className="card-title">Ostatnia sesja</span></div>
+            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{lastSession.templateName}</div>
+            <div style={{ fontSize: 12, color: 'var(--ink-3)', marginBottom: 10 }}>{fmtDate(lastSession.date)}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {[
+                { label: 'Czas', val: `${lastSession.duration ?? 0} min` },
+                { label: 'Objętość', val: `${(lastSession.exercises.reduce((a, e) => a + volFromSets(e.sets), 0) / 1000).toFixed(1)} t` },
+              ].map(item => (
+                <div key={item.label} style={{ background: 'var(--surface-3)', borderRadius: 8, padding: '8px 10px' }}>
+                  <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{item.label}</div>
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>{item.val}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="col">
+        <div className="card">
+          <div className="card-head"><span className="card-title">Tydzień</span></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {[
+              { label: 'Treningi', val: `${weekSessions.length}` },
+              { label: 'Czas', val: `${weekTime} min` },
+              { label: 'Objętość', val: `${Math.round(weekVol / 100) / 10} t` },
+            ].map(item => (
+              <div key={item.label} style={{ background: 'var(--surface-3)', borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{item.label}</div>
+                <div style={{ fontWeight: 800, fontSize: 22 }}>{item.val}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="col">
+        <div className="card">
+          <div className="card-head"><span className="card-title">Aktywności</span></div>
+          {['Siłownia','Bieganie','Wspinaczka','Mobilność','Rehabilitacja'].map(type => (
+            <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: '1px solid var(--border-soft)' }}>
+              <span style={{ flex: 1, fontSize: 13 }}>{type}</span>
+              <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--green-text)' }}>
+                {weekSessions.filter(s => s.sportType === type).length}
+              </span>
             </div>
           ))}
         </div>
-      )}
-    </article>
+      </div>
+    </div>
+  );
+}
+
+// ─── SZABLONY ─────────────────────────────────────────────────
+
+function SportTemplates() {
+  const { templates, addTemplate, updateTemplate, deleteTemplate, exercises } = useLocalStore();
+  const [showAdd, setShowAdd] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const editingTemplate = templates.find(t => t.id === editId);
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 16, alignItems: 'start' }}>
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Szablony</span>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>+ Nowy</button>
+        </div>
+        {templates.length === 0
+          ? <EmptyState title="Brak szablonów" cta="Dodaj szablon" onCta={() => setShowAdd(true)} />
+          : templates.map(t => (
+            <div key={t.id}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid var(--border-soft)', cursor: 'pointer', background: editId===t.id ? 'var(--green-soft2)' : undefined, margin: '0 -16px' }}
+              onClick={() => setEditId(t.id)}
+            >
+              <span style={{ fontSize: 20 }}>🏋️</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{t.sportType} · {t.exercises.length} ćw.</div>
+              </div>
+              <span className={`badge ${t.isActive ? 'badge-green' : 'badge-gray'}`}>{t.isActive ? 'Aktywny' : ''}</span>
+              <button className="icon-btn" onClick={e => { e.stopPropagation(); setDeleteId(t.id); }}><IcoTrash /></button>
+            </div>
+          ))
+        }
+      </div>
+
+      {editingTemplate
+        ? <TemplateDetail template={editingTemplate} onUpdate={p => updateTemplate(editingTemplate.id, p)} />
+        : <div className="card" style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:200 }}>
+            <EmptyState title="Wybierz szablon" desc="Kliknij szablon po lewej." />
+          </div>
+      }
+
+      <AddTemplateModal open={showAdd} onClose={() => setShowAdd(false)} exercises={exercises}
+        onSave={data => { addTemplate(data); setShowAdd(false); }} />
+      <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)}
+        onConfirm={() => { deleteTemplate(deleteId!); setEditId(null); setDeleteId(null); }} label="ten szablon" />
+    </div>
+  );
+}
+
+function TemplateDetail({ template, onUpdate }: { template: WorkoutTemplate; onUpdate: (p: Partial<WorkoutTemplate>) => void }) {
+  return (
+    <div className="card">
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+        <div>
+          <h2 style={{ fontSize:18, fontWeight:700 }}>{template.name}</h2>
+          <div style={{ fontSize:13, color:'var(--ink-3)', marginTop:2 }}>{template.sportType} · ~{template.estimatedDuration} min</div>
+        </div>
+        <button className={`btn btn-sm ${template.isActive ? 'btn-secondary' : 'btn-primary'}`}
+          onClick={() => onUpdate({ isActive: !template.isActive })}>
+          {template.isActive ? 'Dezaktywuj' : 'Aktywuj'}
+        </button>
+      </div>
+      {template.description && <p style={{ fontSize:13, color:'var(--ink-2)', marginBottom:16 }}>{template.description}</p>}
+      <SectionHead title="Ćwiczenia" />
+      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+        {template.exercises.map((ex, i) => (
+          <div key={ex.exerciseId} style={{ background:'var(--surface-3)', borderRadius:10, padding:'12px 14px' }}>
+            <div style={{ fontWeight:600, fontSize:14, marginBottom:4 }}>{i+1}. {ex.exerciseName}</div>
+            <div style={{ fontSize:12, color:'var(--ink-3)' }}>
+              {ex.sets.length} serii · {ex.sets[0]?.reps} pow. · {ex.sets[0]?.weight > 0 ? `${ex.sets[0].weight} kg` : 'masa ciała'}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AddTemplateModal({ open, onClose, onSave }: { open: boolean; onClose: () => void; exercises: SportExercise[]; onSave: (t: Omit<WorkoutTemplate,'id'|'createdAt'|'updatedAt'>) => void }) {
+  const [name, setName] = useState('');
+  const [sportType, setSportType] = useState('Siłownia');
+  const [desc, setDesc] = useState('');
+  const [duration, setDuration] = useState(60);
+
+  return (
+    <Modal open={open} onClose={onClose} title="Nowy szablon"
+      footer={<>
+        <button className="btn btn-secondary btn-sm" onClick={onClose}>Anuluj</button>
+        <button className="btn btn-primary btn-sm" onClick={() => {
+          if (!name.trim()) return;
+          onSave({ name, sportType, description: desc, estimatedDuration: duration, exercises: [], isActive: true });
+          setName(''); setDesc('');
+        }}>Zapisz</button>
+      </>}>
+      <Field label="Nazwa" required><input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Np. Push A — Klatka" /></Field>
+      <Field label="Typ"><select className="select" value={sportType} onChange={e => setSportType(e.target.value)}>
+        {['Siłownia','Bieganie','Wspinaczka','Mobilność','Rehabilitacja'].map(t => <option key={t}>{t}</option>)}
+      </select></Field>
+      <Field label="Opis"><textarea className="textarea" value={desc} onChange={e => setDesc(e.target.value)} rows={2} /></Field>
+      <Field label={`Czas: ${duration} min`}><input type="range" min={15} max={180} step={5} value={duration} onChange={e => setDuration(+e.target.value)} style={{ width:'100%' }} /></Field>
+    </Modal>
+  );
+}
+
+// ─── AKTYWNA SESJA ────────────────────────────────────────────
+
+function SportActiveSession({ onSessionEnd }: { onSessionEnd: () => void }) {
+  const { activeSession, updateActiveSession, completeSession, cancelSession } = useLocalStore();
+  const [timerSec, setTimerSec] = useState(0);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [showComplete, setShowComplete] = useState(false);
+  const [completionNotes, setCompletionNotes] = useState('');
+  const [completionPain, setCompletionPain] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const id = setInterval(() => setElapsed(e => e + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (timerRunning) {
+      intervalRef.current = setInterval(() => setTimerSec(s => { if (s <= 1) { setTimerRunning(false); return 0; } return s - 1; }), 1000);
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [timerRunning]);
+
+  if (!activeSession) {
+    return (
+      <div className="card" style={{ maxWidth:500 }}>
+        <EmptyState title="Brak aktywnej sesji" desc="Przejdź do zakładki Dzisiaj i kliknij Rozpocznij sesję." />
+      </div>
+    );
+  }
+
+  const { templateName, sportType, currentExerciseIndex, exercises } = activeSession;
+  const currentEx = exercises[currentExerciseIndex];
+
+  function updateSet(exIdx: number, setIdx: number, field: keyof WorkoutSet, value: number | boolean | string) {
+    const newEx = exercises.map((ex, i) =>
+      i === exIdx ? { ...ex, sets: ex.sets.map((s, j) => j === setIdx ? { ...s, [field]: value } : s) } : ex
+    );
+    updateActiveSession({ exercises: newEx });
+  }
+
+  function markSetDone(exIdx: number, setIdx: number) {
+    updateSet(exIdx, setIdx, 'completed', true);
+    const rest = exercises[exIdx].sets[setIdx].restTime;
+    setTimerSec(rest); setTimerRunning(true);
+  }
+
+  return (
+    <div style={{ display:'grid', gridTemplateColumns:'1fr 320px', gap:16, alignItems:'start' }}>
+      <div className="col">
+        {/* Header */}
+        <div className="card" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 20px' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <span style={{ fontSize:20 }}>🏋️</span>
+            <div>
+              <div style={{ fontWeight:700, fontSize:16 }}>{templateName}</div>
+              <div style={{ fontSize:12, color:'var(--ink-3)' }}>{sportType}</div>
+            </div>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ textAlign:'right' }}>
+              <div style={{ fontFamily:'var(--mono)', fontWeight:700, fontSize:22 }}>{fmtTime(elapsed)}</div>
+              <div style={{ fontSize:11, color:'var(--ink-3)' }}>Czas trwania</div>
+            </div>
+            <button className="btn btn-danger btn-sm" onClick={() => setShowComplete(true)}>● ZAKOŃCZ</button>
+          </div>
+        </div>
+
+        {/* Exercise tabs */}
+        <div className="card" style={{ padding:'12px 16px' }}>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+            {exercises.map((ex, i) => {
+              const done = ex.sets.every(s => s.completed);
+              return (
+                <button key={ex.exerciseId}
+                  onClick={() => updateActiveSession({ currentExerciseIndex: i })}
+                  style={{ padding:'5px 12px', borderRadius:99, border:'none', cursor:'pointer', fontSize:12, fontWeight:600,
+                    background: i===currentExerciseIndex ? 'var(--green)' : done ? 'var(--green-soft2)' : 'var(--surface-3)',
+                    color: i===currentExerciseIndex ? 'white' : done ? 'var(--green-text)' : 'var(--ink-2)' }}>
+                  {i+1}. {ex.exerciseName}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Sets table */}
+        {currentEx && (
+          <div className="card">
+            <div style={{ fontWeight:700, fontSize:16, marginBottom:14 }}>{currentEx.exerciseName}</div>
+            <div style={{ overflowX:'auto' }}>
+              <table className="table" style={{ minWidth:480 }}>
+                <thead>
+                  <tr>
+                    <th style={{ width:50 }}>SERIA</th>
+                    <th>POWT.</th>
+                    <th>CIĘŻAR (kg)</th>
+                    <th>RIR</th>
+                    <th>ODPOCZYNEK</th>
+                    <th>STATUS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentEx.sets.map((set, si) => (
+                    <tr key={si} style={{ background: set.completed ? 'var(--green-soft2)' : undefined }}>
+                      <td style={{ fontWeight:600 }}>{set.setNumber}</td>
+                      <td><input type="number" defaultValue={set.reps} min={1}
+                        onChange={e => updateSet(currentExerciseIndex, si, 'reps', +e.target.value)}
+                        style={{ width:52, padding:'3px 6px', border:'1px solid var(--border)', borderRadius:6, fontSize:13, textAlign:'center' }} /></td>
+                      <td><input type="number" defaultValue={set.weight} min={0} step={2.5}
+                        onChange={e => updateSet(currentExerciseIndex, si, 'weight', +e.target.value)}
+                        style={{ width:68, padding:'3px 6px', border:'1px solid var(--border)', borderRadius:6, fontSize:13, textAlign:'center' }} /></td>
+                      <td><input type="number" defaultValue={set.rir} min={0} max={5}
+                        onChange={e => updateSet(currentExerciseIndex, si, 'rir', +e.target.value)}
+                        style={{ width:48, padding:'3px 6px', border:'1px solid var(--border)', borderRadius:6, fontSize:13, textAlign:'center' }} /></td>
+                      <td style={{ fontSize:13 }}>{Math.floor(set.restTime/60)}:{String(set.restTime%60).padStart(2,'0')}</td>
+                      <td>{set.completed
+                        ? <span className="badge badge-green">✓ Zrobione</span>
+                        : <button className="btn btn-primary btn-sm" onClick={() => markSetDone(currentExerciseIndex, si)}>START</button>
+                      }</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Rest timer sidebar */}
+      <div className="col">
+        <div className="card" style={{ textAlign:'center', padding:24 }}>
+          <div style={{ fontSize:11, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--ink-3)', marginBottom:12 }}>Timer odpoczynku</div>
+          <div style={{ fontFamily:'var(--mono)', fontWeight:800, fontSize:48, letterSpacing:-2, lineHeight:1 }}>{fmtTime(timerSec)}</div>
+          <div style={{ display:'flex', gap:8, justifyContent:'center', marginTop:14 }}>
+            {timerRunning
+              ? <button className="btn btn-secondary" onClick={() => setTimerRunning(false)}>⏸ Pauza</button>
+              : <button className="btn btn-primary" onClick={() => setTimerRunning(true)}>▶ Start</button>}
+            <button className="btn btn-ghost" onClick={() => { setTimerSec(0); setTimerRunning(false); }}>Reset</button>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginTop:12 }}>
+            {[30,60,90,120,150,180].map(s => (
+              <button key={s} className="btn btn-secondary btn-sm" onClick={() => { setTimerSec(s); setTimerRunning(true); }}>
+                {s<60?`${s}s`:`${s/60}min`}
+              </button>
+            ))}
+          </div>
+        </div>
+        {exercises[currentExerciseIndex+1] && (
+          <div className="card">
+            <div style={{ fontSize:12, color:'var(--ink-3)', marginBottom:4 }}>Następne ćwiczenie</div>
+            <div style={{ fontWeight:600 }}>{exercises[currentExerciseIndex+1].exerciseName}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Complete modal */}
+      <Modal open={showComplete} onClose={() => setShowComplete(false)} title="Zakończ trening"
+        footer={<>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowComplete(false)}>Anuluj</button>
+          <button className="btn btn-primary btn-sm" onClick={() => { completeSession(completionNotes, completionPain); onSessionEnd(); }}>Zakończ i zapisz</button>
+        </>}>
+        <div style={{ background:'var(--surface-3)', borderRadius:10, padding:'12px 14px', marginBottom:12 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, textAlign:'center' }}>
+            <div><div style={{ fontSize:11, color:'var(--ink-3)' }}>Czas</div><div style={{ fontWeight:700 }}>{fmtTime(elapsed)}</div></div>
+            <div><div style={{ fontSize:11, color:'var(--ink-3)' }}>Serie</div><div style={{ fontWeight:700 }}>{exercises.reduce((a,e)=>a+e.sets.filter(s=>s.completed).length,0)}</div></div>
+            <div><div style={{ fontSize:11, color:'var(--ink-3)' }}>Objętość</div><div style={{ fontWeight:700 }}>{(exercises.reduce((a,e)=>a+volFromSets(e.sets),0)/1000).toFixed(1)}t</div></div>
+          </div>
+        </div>
+        <Field label="Komentarz"><textarea className="textarea" value={completionNotes} onChange={e => setCompletionNotes(e.target.value)} rows={2} /></Field>
+        <Field label={`Ból po treningu: ${completionPain}/10`}><input type="range" min={0} max={10} value={completionPain} onChange={e => setCompletionPain(+e.target.value)} style={{ width:'100%' }} /></Field>
+        <button className="btn btn-ghost btn-sm" onClick={() => { cancelSession(); onSessionEnd(); }} style={{ color:'var(--p-high)', marginTop:4 }}>
+          Porzuć bez zapisywania
+        </button>
+      </Modal>
+    </div>
+  );
+}
+
+// ─── HISTORIA ─────────────────────────────────────────────────
+
+function SportHistory() {
+  const { sessions } = useLocalStore();
+  if (!sessions || sessions.length === 0) return <EmptyState title="Brak historii treningów" desc="Ukończ pierwszą sesję, aby zobaczyć historię." />;
+
+  const sorted = [...sessions].sort((a, b) => b.date.localeCompare(a.date));
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {sorted.map((s: WorkoutSession) => <SessionCard key={s.id} session={s} />)}
+    </div>
+  );
+}
+
+function SessionCard({ session }: { session: WorkoutSession }) {
+  const totalVol = session.exercises.reduce((sum, ex) => sum + volFromSets(ex.sets), 0);
+  const totalSets = session.exercises.reduce((sum, ex) => sum + ex.sets.filter(s => s.completed).length, 0);
+  return (
+    <div className="card">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>{session.templateName}</div>
+          <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{new Date(session.date).toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+        </div>
+        <div style={{ display: 'flex', gap: 16, fontSize: 13, color: 'var(--ink-3)' }}>
+          {session.duration && <span>⏱ {session.duration} min</span>}
+          <span>📦 {totalSets} serii</span>
+          <span>💪 {totalVol.toLocaleString('pl-PL')} kg obj.</span>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {session.exercises.map(ex => (
+          <span key={ex.exerciseId} style={{ fontSize: 12, padding: '3px 8px', background: 'var(--surface-3)', borderRadius: 6 }}>{ex.exerciseName}</span>
+        ))}
+      </div>
+      {session.notesAfterTraining && <div style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 8, fontStyle: 'italic' }}>"{session.notesAfterTraining}"</div>}
+    </div>
+  );
+}
+
+// ─── ANALIZA ──────────────────────────────────────────────────
+
+function SportAnalysis() {
+  const { sessions } = useLocalStore();
+  const last8 = [...(sessions || [])].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8).reverse();
+  const totalVols = last8.map(s => s.exercises.reduce((sum, ex) => sum + volFromSets(ex.sets), 0));
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="card">
+        <div className="card-head"><span className="card-title">Wolumen (ostatnie 8 treningów)</span></div>
+        {last8.length === 0
+          ? <EmptyState title="Brak danych" desc="Ukończ treningi, aby zobaczyć analizę." />
+          : (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 120 }}>
+              {last8.map((s, i) => {
+                const maxVol = Math.max(...totalVols, 1);
+                const pct = totalVols[i] / maxVol;
+                return (
+                  <div key={s.id} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    <div style={{ fontSize: 10, color: 'var(--ink-3)', fontVariantNumeric: 'tabular-nums' }}>{Math.round(totalVols[i] / 1000)}k</div>
+                    <div style={{ width: '100%', background: 'var(--green-soft2)', borderRadius: '4px 4px 0 0', height: `${Math.max(pct * 80, 4)}px`, transition: 'height 0.3s' }} />
+                    <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{new Date(s.date).toLocaleDateString('pl-PL', { day: 'numeric', month: 'numeric' })}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )
+        }
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+        {[
+          { label: 'Treningi (łącznie)', val: (sessions || []).length },
+          { label: 'Ten miesiąc', val: (sessions || []).filter(s => s.date.startsWith(new Date().toISOString().slice(0,7))).length },
+          { label: 'Seria dni', val: 0 },
+        ].map(stat => (
+          <div key={stat.label} className="card" style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 32, fontWeight: 800 }}>{stat.val}</div>
+            <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 4 }}>{stat.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── ĆWICZENIA ────────────────────────────────────────────────
+
+function SportExercises() {
+  const { exercises, addExercise } = useLocalStore();
+  const [showAdd, setShowAdd] = useState(false);
+  const [name, setName] = useState('');
+  const [muscle, setMuscle] = useState('Klatka');
+  const [equipment, setEquipment] = useState('Sztanga');
+
+  const MUSCLES = ['Klatka','Plecy','Nogi','Barki','Biceps','Triceps','Brzuch','Cardio'];
+  const EQUIPMENTS = ['Sztanga','Hantle','Maszyna','Własna waga','Kettlebell','Linka'];
+
+  return (
+    <div style={{ maxWidth: 700 }}>
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Baza ćwiczeń ({exercises.length})</span>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>+ Nowe ćwiczenie</button>
+        </div>
+        <table className="table">
+          <thead><tr><th>NAZWA</th><th>MIĘSIEŃ</th><th>SPRZĘT</th></tr></thead>
+          <tbody>
+            {exercises.map(ex => (
+              <tr key={ex.id}>
+                <td style={{ fontWeight: 600 }}>{ex.name}</td>
+                <td><span className="badge badge-gray">{ex.muscleGroup}</span></td>
+                <td style={{ color: 'var(--ink-3)', fontSize: 13 }}>{ex.equipment}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Nowe ćwiczenie"
+        footer={<>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowAdd(false)}>Anuluj</button>
+          <button className="btn btn-primary btn-sm" onClick={() => {
+            if (!name.trim()) return;
+            addExercise({ name, muscleGroup: muscle, equipment, sportType: '', notes: '' });
+            setName(''); setShowAdd(false);
+          }}>Dodaj</button>
+        </>}>
+        <Field label="Nazwa ćwiczenia" required><input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Np. Wyciskanie sztangi" /></Field>
+        <div className="form-grid">
+          <Field label="Partia mięśniowa"><select className="select" value={muscle} onChange={e => setMuscle(e.target.value)}>{MUSCLES.map(m => <option key={m}>{m}</option>)}</select></Field>
+          <Field label="Sprzęt"><select className="select" value={equipment} onChange={e => setEquipment(e.target.value)}>{EQUIPMENTS.map(e => <option key={e}>{e}</option>)}</select></Field>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// ─── ODCZUCIA ─────────────────────────────────────────────────
+
+function SportFeelings() {
+  const feelings: any[] = [];
+  const sorted = [...(feelings || [])].sort((a, b) => b.date.localeCompare(a.date));
+
+  return (
+    <div style={{ maxWidth: 700 }}>
+      <div className="card">
+        <div className="card-head"><span className="card-title">Dziennik odczuć</span></div>
+        {sorted.length === 0
+          ? <EmptyState title="Brak odczuć" desc="Odczucia możesz dodać po zakończeniu sesji treningowej." />
+          : sorted.map(f => (
+            <div key={f.id} style={{ padding: '12px 0', borderBottom: '1px solid var(--border-soft)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ fontWeight: 600 }}>{new Date(f.date).toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                <div style={{ display: 'flex', gap: 12, fontSize: 13 }}>
+                  <span>Energia: <strong>{f.energyLevel}/10</strong></span>
+                  <span>Sen: <strong>{f.sleepHours}h</strong></span>
+                  {f.bodyWeight && <span>Waga: <strong>{f.bodyWeight}kg</strong></span>}
+                </div>
+              </div>
+              {f.notes && <div style={{ fontSize: 13, color: 'var(--ink-2)', fontStyle: 'italic' }}>"{f.notes}"</div>}
+              {f.soreness && f.soreness.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+                  {f.soreness.map((s: string) => <span key={s} style={{ fontSize: 11, padding: '2px 7px', background: 'rgba(239,68,68,0.08)', color: 'var(--p-high)', borderRadius: 99 }}>{s}</span>)}
+                </div>
+              )}
+            </div>
+          ))
+        }
+      </div>
+    </div>
   );
 }

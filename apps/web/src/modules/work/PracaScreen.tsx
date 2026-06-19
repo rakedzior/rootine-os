@@ -1,313 +1,352 @@
 import { useState } from 'react';
-import { useIsFeatureVisible } from '@/features/config/useConfig';
-import {
-  useWorkCompanies, useAddCompany, useDeleteCompany,
-  useWorkProjects, useAddProject, useDeleteProject,
-  useWorkTasks, useAddWorkTask, useMoveWorkTask, useDeleteWorkTask,
-  useSubtasks, useAddSubtask, useToggleSubtask, useDeleteSubtask,
-} from '@/features/work/hooks';
-import type { WorkTaskStatus } from '@/features/work/types';
-import '@/styles/work.css';
+import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, ProgressBar, StatusBadge, PriorityBadge, SectionHead, IcoTrash } from '@/components/common';
+import { useLocalStore, type WorkProject, type WorkTask, type Priority, type TaskStatus } from '@/store/localStore';
 
-type Sec = 'dashboard' | 'companies' | 'tasks';
-
-const SECTIONS: { key: Sec; label: string }[] = [
-  { key: 'dashboard', label: 'Kanban' },
-  { key: 'companies', label: 'Firmy & Projekty' },
-  { key: 'tasks', label: 'Zadania' },
+const TABS = [
+  { id: 'zadania',   label: 'Zadania' },
+  { id: 'projekty',  label: 'Projekty' },
+  { id: 'konteksty', label: 'Konteksty' },
 ];
 
-const COLUMNS: { status: WorkTaskStatus; label: string }[] = [
-  { status: 'todo', label: 'Do zrobienia' },
-  { status: 'doing', label: 'W toku' },
-  { status: 'done', label: 'Zrobione' },
-];
-
-function fmt(d: string | null) {
-  if (!d) return null;
-  const diff = Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
-  return { date: new Date(d).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' }), overdue: diff < 0, soon: diff >= 0 && diff <= 3 };
+function fmtDate(d?: string) {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
 }
 
 export function PracaScreen() {
-  const showKanban = useIsFeatureVisible('work.kanban');
-  const showCompanies = useIsFeatureVisible('work.companies');
-  const showTasks = useIsFeatureVisible('work.tasks');
-
-  const [sec, setSec] = useState<Sec>('dashboard');
-
-  const companiesQ = useWorkCompanies();
-  const addCompany = useAddCompany();
-  const deleteCompany = useDeleteCompany();
-  const projectsQ = useWorkProjects();
-  const addProject = useAddProject();
-  const deleteProject = useDeleteProject();
-  const tasksQ = useWorkTasks();
-  const addTask = useAddWorkTask();
-  const moveTask = useMoveWorkTask();
-  const deleteTask = useDeleteWorkTask();
-
-  const [newCompName, setNewCompName] = useState('');
-  const [newCompType, setNewCompType] = useState<'client' | 'own'>('client');
-  const [newProjName, setNewProjName] = useState('');
-  const [newProjComp, setNewProjComp] = useState('');
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskStatus, setNewTaskStatus] = useState<WorkTaskStatus>('todo');
-  const [newTaskDue, setNewTaskDue] = useState('');
-  const [newTaskProject, setNewTaskProject] = useState('');
-
-  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
-
-  const companies = companiesQ.data ?? [];
-  const projects = projectsQ.data ?? [];
-  const tasks = tasksQ.data ?? [];
-
-  function handleAddCompany() {
-    if (!newCompName.trim()) return;
-    addCompany.mutate({ name: newCompName.trim(), type: newCompType });
-    setNewCompName('');
-  }
-
-  function handleAddProject() {
-    if (!newProjName.trim()) return;
-    addProject.mutate({ name: newProjName.trim(), companyId: newProjComp || null });
-    setNewProjName('');
-  }
-
-  function handleAddTask() {
-    if (!newTaskTitle.trim()) return;
-    addTask.mutate({ title: newTaskTitle.trim(), status: newTaskStatus, due_date: newTaskDue || null, project_id: newTaskProject || null });
-    setNewTaskTitle(''); setNewTaskDue('');
-  }
-
-  const tasksByStatus = (status: WorkTaskStatus) => tasks.filter((t) => t.status === status);
-
+  const [tab, setTab] = useState('zadania');
   return (
-    <div className="app" style={{ minHeight: 'auto' }}>
-      <div className="work-subnav">
-        {SECTIONS.map((s) => (
-          <button key={s.key} className={`work-nav-btn${sec === s.key ? ' active' : ''}`} type="button" onClick={() => setSec(s.key)}>
-            {s.label}
-          </button>
-        ))}
+    <div className="module-page">
+      <div className="module-header">
+        <h1 className="module-title">💼 Praca</h1>
+        <SubTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
-
-      <main className="grid" style={{ gridTemplateColumns: '1fr', maxWidth: 1200 }}>
-        <section className="col">
-          {/* KANBAN */}
-          {sec === 'dashboard' && showKanban && (
-            <article className="card">
-              <div className="card-head">
-                <div className="lhs"><span className="card-title">Kanban projektów</span></div>
-                <span className="pill">{tasks.length} zadań</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--gap)' }}>
-                {COLUMNS.map(({ status, label }) => (
-                  <div key={status} style={{ background: 'var(--surface-inset)', borderRadius: 'var(--r-mid)', padding: 12, minHeight: 200 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>{label}</span>
-                      <span style={{ fontSize: 12, color: 'var(--ink-3)', fontWeight: 400 }}>{tasksByStatus(status).length}</span>
-                    </div>
-                    {tasksByStatus(status).length === 0 ? (
-                      <div className="agenda-empty" style={{ fontSize: 12 }}>Brak zadań</div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {tasksByStatus(status).map((t) => {
-                          const due = fmt(t.due_date);
-                          return (
-                            <div key={t.id} style={{ background: 'var(--surface)', borderRadius: 'var(--r-sm)', padding: '8px 10px', fontSize: 13 }}>
-                              <div style={{ fontWeight: 500, marginBottom: 4 }}>{t.title}</div>
-                              {due && (
-                                <div style={{ fontSize: 11, color: due.overdue ? 'var(--acc-b)' : due.soon ? 'var(--ev-yellow)' : 'var(--ink-3)' }}>
-                                  {due.overdue ? '⚠ ' : ''}{due.date}
-                                </div>
-                              )}
-                              {t.project_id && (
-                                <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{projects.find((p) => p.id === t.project_id)?.name ?? ''}</div>
-                              )}
-                              <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
-                                {status !== 'todo' && (
-                                  <button type="button" onClick={() => moveTask.mutate({ id: t.id, status: status === 'doing' ? 'todo' : 'doing' })}
-                                    style={{ fontSize: 11, padding: '2px 6px', background: 'var(--surface-inset)', border: 'none', borderRadius: 3, cursor: 'pointer' }}>←</button>
-                                )}
-                                {status !== 'done' && (
-                                  <button type="button" onClick={() => moveTask.mutate({ id: t.id, status: status === 'todo' ? 'doing' : 'done' })}
-                                    style={{ fontSize: 11, padding: '2px 6px', background: 'var(--surface-inset)', border: 'none', borderRadius: 3, cursor: 'pointer' }}>→</button>
-                                )}
-                                <button type="button" onClick={() => deleteTask.mutate(t.id)}
-                                  style={{ fontSize: 11, padding: '2px 6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)', marginLeft: 'auto' }}>×</button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-              {/* Quick add */}
-              <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
-                <input className="fi" type="text" placeholder="Nowe zadanie…" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddTask()} style={{ flex: 2, minWidth: 160 }} />
-                <select className="fi-sel" value={newTaskStatus} onChange={(e) => setNewTaskStatus(e.target.value as WorkTaskStatus)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
-                  <option value="todo">Do zrobienia</option>
-                  <option value="doing">W toku</option>
-                  <option value="done">Zrobione</option>
-                </select>
-                {projects.length > 0 && (
-                  <select className="fi-sel" value={newTaskProject} onChange={(e) => setNewTaskProject(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
-                    <option value="">— projekt —</option>
-                    {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                )}
-                <input className="fi" type="date" value={newTaskDue} onChange={(e) => setNewTaskDue(e.target.value)} style={{ width: 140 }} />
-                <button className="add-btn" type="button" onClick={handleAddTask} disabled={addTask.isPending}>+ Dodaj</button>
-              </div>
-            </article>
-          )}
-
-          {/* COMPANIES & PROJECTS */}
-          {sec === 'companies' && showCompanies && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap)' }}>
-              <article className="card">
-                <div className="card-head"><div className="lhs"><span className="card-title">Firmy / Klienci</span></div><span className="pill">{companies.length}</span></div>
-                {companies.length === 0 ? (
-                  <div className="agenda-empty">Brak firm — dodaj pierwszą.</div>
-                ) : (
-                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {companies.map((c) => (
-                      <li key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                        <div><span style={{ fontWeight: 500 }}>{c.name}</span><span style={{ fontSize: 11, color: 'var(--ink-3)', marginLeft: 8 }}>{c.type}</span></div>
-                        <button type="button" onClick={() => deleteCompany.mutate(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input className="fi" type="text" placeholder="Nazwa firmy" value={newCompName} onChange={(e) => setNewCompName(e.target.value)} style={{ flex: 1 }} onKeyDown={(e) => e.key === 'Enter' && handleAddCompany()} />
-                  <select className="fi-sel" value={newCompType} onChange={(e) => setNewCompType(e.target.value as 'client' | 'own')} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
-                    <option value="client">Klient</option>
-                    <option value="own">Własna</option>
-                  </select>
-                  <button className="add-btn" type="button" onClick={handleAddCompany}>+</button>
-                </div>
-              </article>
-
-              <article className="card">
-                <div className="card-head"><div className="lhs"><span className="card-title">Projekty</span></div><span className="pill">{projects.length}</span></div>
-                {projects.length === 0 ? (
-                  <div className="agenda-empty">Brak projektów.</div>
-                ) : (
-                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {projects.map((p) => (
-                      <li key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                        <div>
-                          <span style={{ fontWeight: 500 }}>{p.name}</span>
-                          {p.company_id && <span style={{ fontSize: 11, color: 'var(--ink-3)', marginLeft: 8 }}>{companies.find((c) => c.id === p.company_id)?.name}</span>}
-                        </div>
-                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                          <span style={{ fontSize: 11, padding: '1px 5px', background: 'var(--surface-inset)', borderRadius: 3 }}>{p.status}</span>
-                          <button type="button" onClick={() => deleteProject.mutate(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input className="fi" type="text" placeholder="Nazwa projektu" value={newProjName} onChange={(e) => setNewProjName(e.target.value)} style={{ flex: 1 }} onKeyDown={(e) => e.key === 'Enter' && handleAddProject()} />
-                  {companies.length > 0 && (
-                    <select className="fi-sel" value={newProjComp} onChange={(e) => setNewProjComp(e.target.value)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
-                      <option value="">— firma —</option>
-                      {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  )}
-                  <button className="add-btn" type="button" onClick={handleAddProject}>+</button>
-                </div>
-              </article>
-            </div>
-          )}
-
-          {/* TASKS LIST */}
-          {sec === 'tasks' && showTasks && (
-            <article className="card">
-              <div className="card-head"><div className="lhs"><span className="card-title">Zadania</span></div><span className="pill">{tasks.length}</span></div>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
-                <input className="fi" type="text" placeholder="Nowe zadanie…" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddTask()} style={{ flex: 2, minWidth: 160 }} />
-                <select className="fi-sel" value={newTaskStatus} onChange={(e) => setNewTaskStatus(e.target.value as WorkTaskStatus)} style={{ fontSize: 13, padding: '6px 8px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface)', color: 'inherit' }}>
-                  <option value="todo">Do zrobienia</option>
-                  <option value="doing">W toku</option>
-                  <option value="done">Zrobione</option>
-                </select>
-                <input className="fi" type="date" value={newTaskDue} onChange={(e) => setNewTaskDue(e.target.value)} style={{ width: 140 }} />
-                <button className="add-btn" type="button" onClick={handleAddTask} disabled={addTask.isPending}>+ Dodaj</button>
-              </div>
-              {tasks.length === 0 ? (
-                <div className="agenda-empty">Brak zadań.</div>
-              ) : (
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {tasks.map((t) => {
-                    const due = fmt(t.due_date);
-                    return (
-                      <li key={t.id}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', background: 'var(--surface-inset)', borderRadius: 'var(--r-sm)', cursor: 'pointer' }}
-                          onClick={() => setExpandedTaskId(expandedTaskId === t.id ? null : t.id)}>
-                          <div>
-                            <span style={{ fontWeight: 500, fontSize: 13 }}>{t.title}</span>
-                            {due && <span style={{ fontSize: 11, marginLeft: 8, color: due.overdue ? 'var(--acc-b)' : due.soon ? 'var(--ev-yellow)' : 'var(--ink-3)' }}>{due.date}</span>}
-                          </div>
-                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                            <div style={{ display: 'flex', gap: 4 }}>
-                              {(['todo', 'doing', 'done'] as WorkTaskStatus[]).map((s) => (
-                                <button key={s} type="button" onClick={(e) => { e.stopPropagation(); moveTask.mutate({ id: t.id, status: s }); }}
-                                  style={{ fontSize: 10, padding: '2px 6px', borderRadius: 3, border: 'none', cursor: 'pointer', background: t.status === s ? 'var(--acc-a)' : 'var(--surface)', color: t.status === s ? '#fff' : 'inherit' }}>
-                                  {s === 'todo' ? 'To do' : s === 'doing' ? 'Doing' : 'Done'}
-                                </button>
-                              ))}
-                            </div>
-                            <button type="button" onClick={(e) => { e.stopPropagation(); deleteTask.mutate(t.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)' }}>×</button>
-                          </div>
-                        </div>
-                        {expandedTaskId === t.id && <SubtaskPanel taskId={t.id} />}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </article>
-          )}
-        </section>
-      </main>
+      {tab === 'zadania'   && <PracaZadania />}
+      {tab === 'projekty'  && <PracaProjekty />}
+      {tab === 'konteksty' && <PracaKonteksty />}
     </div>
   );
 }
 
-function SubtaskPanel({ taskId }: { taskId: string }) {
-  const subtasksQ = useSubtasks(taskId);
-  const addSub = useAddSubtask();
-  const toggleSub = useToggleSubtask();
-  const deleteSub = useDeleteSubtask();
+// ─── ZADANIA ──────────────────────────────────────────────────
+
+function PracaZadania() {
+  const { workTasks, workContexts, workProjects, activeWorkContextId, addWorkTask, updateWorkTask, deleteWorkTask } = useLocalStore();
+  const [showAdd, setShowAdd] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<TaskStatus | 'all'>('all');
+  const [filterCtx, setFilterCtx] = useState<string | 'all'>('all');
+
   const [title, setTitle] = useState('');
+  const [desc, setDesc] = useState('');
+  const [priority, setPriority] = useState<Priority>('mid');
+  const [status, setStatus] = useState<TaskStatus>('todo');
+  const [projectId, setProjectId] = useState('');
+  const [dueDate, setDueDate] = useState('');
 
-  const subs = subtasksQ.data ?? [];
+  const activeCtx = filterCtx === 'all'
+    ? workContexts.find(c => c.active)
+    : workContexts.find(c => c.id === filterCtx);
 
-  function add() {
-    if (!title.trim()) return;
-    addSub.mutate({ taskId, title: title.trim() });
-    setTitle('');
-  }
+  let tasks = workTasks;
+  if (filterCtx !== 'all') tasks = tasks.filter(t => t.workContextId === filterCtx);
+  else if (activeCtx) tasks = tasks.filter(t => t.workContextId === activeCtx.id);
+  if (filterStatus !== 'all') tasks = tasks.filter(t => t.status === filterStatus);
+
+  const grouped: Record<TaskStatus, WorkTask[]> = { todo: [], active: [], waiting: [], done: [], blocked: [] };
+  tasks.forEach(t => grouped[t.status]?.push(t));
+
+  const visibleGroups: { status: TaskStatus; label: string; color: string }[] = [
+    { status: 'active',  label: 'W trakcie',    color: 'var(--green-text)' },
+    { status: 'todo',    label: 'Do zrobienia', color: 'var(--ink-2)' },
+    { status: 'waiting', label: 'Oczekuje',     color: 'var(--p-mid)' },
+    { status: 'blocked', label: 'Zablokowane',  color: 'var(--p-high)' },
+    { status: 'done',    label: 'Zrobione',     color: 'var(--ink-3)' },
+  ];
 
   return (
-    <div style={{ padding: '8px 10px 8px 20px', background: 'var(--surface)', borderRadius: '0 0 var(--r-sm) var(--r-sm)', borderTop: '1px solid var(--border)' }}>
-      {subs.map((s) => (
-        <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0', fontSize: 13 }}>
-          <input type="checkbox" checked={s.done} onChange={(e) => toggleSub.mutate({ id: s.id, done: e.target.checked, taskId })} style={{ cursor: 'pointer' }} />
-          <span style={{ textDecoration: s.done ? 'line-through' : 'none', color: s.done ? 'var(--ink-3)' : 'inherit', flex: 1 }}>{s.title}</span>
-          <button type="button" onClick={() => deleteSub.mutate({ id: s.id, taskId })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)', fontSize: 12 }}>×</button>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 16, alignItems: 'start' }}>
+      <div className="col">
+        {/* Filters */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <select className="select" style={{ width: 'auto' }} value={filterCtx} onChange={e => setFilterCtx(e.target.value)}>
+            <option value="all">Wszystkie konteksty</option>
+            {workContexts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          {(['all','todo','active','waiting','done'] as const).map(f => (
+            <button key={f} onClick={() => setFilterStatus(f)}
+              style={{ padding: '5px 12px', borderRadius: 99, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, background: filterStatus === f ? 'var(--green)' : 'var(--surface-3)', color: filterStatus === f ? 'white' : 'var(--ink-2)' }}>
+              {f === 'all' ? 'Wszystkie' : f === 'todo' ? 'Todo' : f === 'active' ? 'Aktywne' : f === 'waiting' ? 'Oczekuje' : 'Zrobione'}
+            </button>
+          ))}
+          <button className="btn btn-primary btn-sm" style={{ marginLeft: 'auto' }} onClick={() => setShowAdd(true)}>+ Nowe zadanie</button>
         </div>
-      ))}
-      <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-        <input className="fi" type="text" placeholder="Subtask…" value={title} onChange={(e) => setTitle(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} style={{ flex: 1, fontSize: 12 }} />
-        <button type="button" onClick={add} style={{ fontSize: 12, padding: '4px 10px', background: 'var(--surface-inset)', border: 'none', borderRadius: 'var(--r-sm)', cursor: 'pointer' }}>+</button>
+
+        {/* Grouped tasks */}
+        {tasks.length === 0
+          ? <div className="card"><EmptyState title="Brak zadań" desc="Dodaj pierwsze zadanie." cta="Dodaj zadanie" onCta={() => setShowAdd(true)} /></div>
+          : visibleGroups.map(grp => {
+            const grpTasks = filterStatus === 'all' ? grouped[grp.status] : (grp.status === filterStatus ? grouped[grp.status] : []);
+            if (grpTasks.length === 0) return null;
+            return (
+              <div key={grp.status}>
+                <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: grp.color, marginBottom: 8 }}>
+                  {grp.label} ({grpTasks.length})
+                </div>
+                {grpTasks.map(task => (
+                  <WorkTaskCard key={task.id} task={task} projects={workProjects}
+                    onUpdate={p => updateWorkTask(task.id, p)}
+                    onDelete={() => setDeleteId(task.id)} />
+                ))}
+              </div>
+            );
+          })
+        }
       </div>
+
+      {/* Sidebar: stats */}
+      <div className="col">
+        <div className="card">
+          <div className="card-head"><span className="card-title">Podsumowanie</span></div>
+          {visibleGroups.slice(0, 4).map(grp => (
+            <div key={grp.status} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid var(--border-soft)' }}>
+              <span style={{ fontSize: 13 }}>{grp.label}</span>
+              <span style={{ fontWeight: 700, color: grp.color }}>{grouped[grp.status].length}</span>
+            </div>
+          ))}
+        </div>
+
+        {activeWorkContextId && (
+          <div className="card">
+            <div className="card-head"><span className="card-title">Aktywny kontekst</span></div>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>{workContexts.find(c => c.id === activeWorkContextId)?.name}</div>
+          </div>
+        )}
+      </div>
+
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Nowe zadanie"
+        footer={<>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowAdd(false)}>Anuluj</button>
+          <button className="btn btn-primary btn-sm" onClick={() => {
+            if (!title.trim()) return;
+            const ctxId = filterCtx !== 'all' ? filterCtx : (activeCtx?.id ?? workContexts[0]?.id ?? '');
+            addWorkTask({ workContextId: ctxId, projectId: projectId || undefined, title, description: desc, status, priority, dueDate: dueDate || undefined, notes: '' });
+            setTitle(''); setDesc(''); setDueDate(''); setShowAdd(false);
+          }}>Dodaj</button>
+        </>}>
+        <Field label="Tytuł" required><input className="input" value={title} onChange={e => setTitle(e.target.value)} autoFocus /></Field>
+        <Field label="Opis"><textarea className="textarea" value={desc} onChange={e => setDesc(e.target.value)} rows={2} /></Field>
+        <div className="form-grid">
+          <Field label="Status"><select className="select" value={status} onChange={e => setStatus(e.target.value as TaskStatus)}>
+            <option value="todo">Do zrobienia</option><option value="active">W trakcie</option>
+            <option value="waiting">Oczekuje</option><option value="blocked">Zablokowane</option>
+          </select></Field>
+          <Field label="Priorytet"><select className="select" value={priority} onChange={e => setPriority(e.target.value as Priority)}>
+            <option value="low">Niski</option><option value="mid">Średni</option><option value="high">Wysoki</option>
+          </select></Field>
+          <Field label="Projekt"><select className="select" value={projectId} onChange={e => setProjectId(e.target.value)}>
+            <option value="">Brak projektu</option>
+            {workProjects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select></Field>
+          <Field label="Termin"><input type="date" className="input" value={dueDate} onChange={e => setDueDate(e.target.value)} /></Field>
+        </div>
+      </Modal>
+      <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { deleteWorkTask(deleteId!); setDeleteId(null); }} label="to zadanie" />
+    </div>
+  );
+}
+
+function WorkTaskCard({ task, projects, onUpdate, onDelete }: { task: WorkTask; projects: WorkProject[]; onUpdate: (p: Partial<WorkTask>) => void; onDelete: () => void }) {
+  const project = projects.find(p => p.id === task.projectId);
+  const isOverdue = task.dueDate && task.dueDate < new Date().toISOString().split('T')[0] && task.status !== 'done';
+
+  return (
+    <div className="card" style={{ marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <div onClick={() => onUpdate({ status: task.status === 'done' ? 'todo' : 'done' })}
+          style={{ width: 20, height: 20, borderRadius: 99, border: `2px solid ${task.status === 'done' ? 'var(--green-mid)' : 'var(--border)'}`, background: task.status === 'done' ? 'var(--green-mid)' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'white', flexShrink: 0, marginTop: 1 }}>
+          {task.status === 'done' && '✓'}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, textDecoration: task.status === 'done' ? 'line-through' : 'none', color: task.status === 'done' ? 'var(--ink-3)' : 'var(--ink)' }}>{task.title}</div>
+          {task.description && <div style={{ fontSize: 12, color: 'var(--ink-3)', marginBottom: 6 }}>{task.description}</div>}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <PriorityBadge priority={task.priority} />
+            <StatusBadge status={task.status} />
+            {project && <span className="badge badge-gray">{project.name}</span>}
+            {task.dueDate && <span style={{ fontSize: 11, color: isOverdue ? 'var(--p-high)' : 'var(--ink-3)', fontWeight: isOverdue ? 600 : 400 }}>📅 {fmtDate(task.dueDate)}{isOverdue ? ' ⚠' : ''}</span>}
+          </div>
+        </div>
+        <button className="icon-btn" onClick={onDelete}><IcoTrash /></button>
+      </div>
+    </div>
+  );
+}
+
+// ─── PROJEKTY ─────────────────────────────────────────────────
+
+function PracaProjekty() {
+  const { workProjects, workContexts, workTasks, addWorkProject, deleteWorkProject } = useLocalStore();
+  const [showAdd, setShowAdd] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(workProjects[0]?.id ?? null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [desc, setDesc] = useState('');
+  const [ctxId, setCtxId] = useState(workContexts[0]?.id ?? '');
+  const [deadline, setDeadline] = useState('');
+
+  const selected = workProjects.find(p => p.id === selectedId);
+  const projectTasks = selected ? workTasks.filter(t => t.projectId === selected.id) : [];
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 16, alignItems: 'start' }}>
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Projekty</span>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>+</button>
+        </div>
+        {workProjects.length === 0
+          ? <EmptyState title="Brak projektów" cta="Nowy projekt" onCta={() => setShowAdd(true)} />
+          : workProjects.map(p => {
+            const ctx = workContexts.find(c => c.id === p.workContextId);
+            return (
+              <div key={p.id} onClick={() => setSelectedId(p.id)}
+                style={{ padding: '10px 0', borderBottom: '1px solid var(--border-soft)', cursor: 'pointer' }}>
+                <div style={{ fontWeight: 600, fontSize: 14, color: selectedId === p.id ? 'var(--green-text)' : 'var(--ink)', marginBottom: 4 }}>{p.name}</div>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  {ctx && <span className="badge badge-gray" style={{ fontSize: 10 }}>{ctx.name}</span>}
+                  <StatusBadge status={p.status} />
+                </div>
+                <div style={{ marginTop: 6 }}>
+                  <ProgressBar value={p.progress} size="sm" />
+                  <div style={{ fontSize: 10, color: 'var(--ink-3)', marginTop: 2 }}>{p.progress}%</div>
+                </div>
+              </div>
+            );
+          })
+        }
+      </div>
+
+      {selected ? (
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+            <div>
+              <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{selected.name}</h2>
+              <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 4 }}>
+                {workContexts.find(c => c.id === selected.workContextId)?.name}
+                {selected.deadline && ` · Do ${fmtDate(selected.deadline)}`}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <StatusBadge status={selected.status} />
+              <button className="icon-btn" onClick={() => setDeleteId(selected.id)}><IcoTrash /></button>
+            </div>
+          </div>
+
+          {selected.description && <p style={{ fontSize: 14, color: 'var(--ink-2)', marginBottom: 16 }}>{selected.description}</p>}
+
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>Postęp</span>
+              <span style={{ fontWeight: 700 }}>{selected.progress}%</span>
+            </div>
+            <ProgressBar value={selected.progress} size="lg" />
+          </div>
+
+          <SectionHead title={`Zadania (${projectTasks.length})`} />
+          {projectTasks.length === 0
+            ? <div style={{ fontSize: 13, color: 'var(--ink-3)', textAlign: 'center', padding: '16px 0' }}>Brak zadań w tym projekcie</div>
+            : projectTasks.map(task => (
+              <div key={task.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: '1px solid var(--border-soft)' }}>
+                <div style={{ width: 16, height: 16, borderRadius: 99, border: `1.5px solid ${task.status === 'done' ? 'var(--green-mid)' : 'var(--border)'}`, background: task.status === 'done' ? 'var(--green-mid)' : 'transparent', flexShrink: 0 }} />
+                <span style={{ flex: 1, fontSize: 13, textDecoration: task.status === 'done' ? 'line-through' : 'none', color: task.status === 'done' ? 'var(--ink-3)' : 'var(--ink)' }}>{task.title}</span>
+                <PriorityBadge priority={task.priority} />
+              </div>
+            ))
+          }
+        </div>
+      ) : (
+        <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200 }}>
+          <EmptyState title="Wybierz projekt" />
+        </div>
+      )}
+
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Nowy projekt"
+        footer={<>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowAdd(false)}>Anuluj</button>
+          <button className="btn btn-primary btn-sm" onClick={() => {
+            if (!name.trim()) return;
+            addWorkProject({ workContextId: ctxId, name, description: desc, status: 'todo', deadline: deadline || undefined, progress: 0, notes: '' });
+            setName(''); setDesc(''); setDeadline(''); setShowAdd(false);
+          }}>Utwórz</button>
+        </>}>
+        <Field label="Nazwa projektu" required><input className="input" value={name} onChange={e => setName(e.target.value)} /></Field>
+        <Field label="Opis"><textarea className="textarea" value={desc} onChange={e => setDesc(e.target.value)} rows={2} /></Field>
+        <div className="form-grid">
+          <Field label="Kontekst"><select className="select" value={ctxId} onChange={e => setCtxId(e.target.value)}>
+            {workContexts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select></Field>
+          <Field label="Termin"><input type="date" className="input" value={deadline} onChange={e => setDeadline(e.target.value)} /></Field>
+        </div>
+      </Modal>
+      <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { deleteWorkProject(deleteId!); setSelectedId(null); setDeleteId(null); }} label="ten projekt" />
+    </div>
+  );
+}
+
+// ─── KONTEKSTY ────────────────────────────────────────────────
+
+function PracaKonteksty() {
+  const { workContexts, workTasks, workProjects, addWorkContext, setActiveWorkContext } = useLocalStore();
+  const [showAdd, setShowAdd] = useState(false);
+  const [name, setName] = useState('');
+  const [company, setCompany] = useState('');
+
+  return (
+    <div style={{ maxWidth: 700 }}>
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Konteksty pracy</span>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>+ Nowy kontekst</button>
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--ink-3)', marginBottom: 16 }}>Konteksty pozwalają rozdzielić zadania między różne role: freelancer, etat, projekt osobisty.</p>
+        {workContexts.map(ctx => {
+          const ctxTasks = workTasks.filter(t => t.workContextId === ctx.id);
+          const ctxProjects = workProjects.filter(p => p.workContextId === ctx.id);
+          return (
+            <div key={ctx.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0', borderBottom: '1px solid var(--border-soft)' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: ctx.active ? 'var(--green-soft2)' : 'var(--surface-3)', display: 'grid', placeItems: 'center', fontSize: 20, flexShrink: 0 }}>
+                💼
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{ctx.name}</div>
+                {ctx.company && <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{ctx.company}</div>}
+                <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>{ctxTasks.length} zadań · {ctxProjects.length} projektów</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {ctx.active && <span className="badge badge-green">Aktywny</span>}
+                {!ctx.active && (
+                  <button className="btn btn-secondary btn-sm" onClick={() => setActiveWorkContext(ctx.id)}>Ustaw aktywny</button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Nowy kontekst pracy"
+ 
+        footer={<>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowAdd(false)}>Anuluj</button>
+          <button className="btn btn-primary btn-sm" onClick={() => {
+            if (!name.trim()) return;
+            addWorkContext({ name, company, active: false });
+            setName(''); setCompany(''); setShowAdd(false);
+          }}>Utwórz</button>
+        </>}>
+        <Field label="Nazwa kontekstu" required><input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Np. Freelance" /></Field>
+        <Field label="Firma / klient"><input className="input" value={company} onChange={e => setCompany(e.target.value)} placeholder="Np. Acme Corp" /></Field>
+      </Modal>
     </div>
   );
 }

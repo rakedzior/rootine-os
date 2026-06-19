@@ -1,235 +1,298 @@
-import { useEffect, useMemo, useState } from 'react';
-import {
-  useGoals, useCreateGoal, useUpdateGoal, useDeleteGoal,
-  useMilestones, useCreateMilestone, useToggleMilestone, useUpdateMilestone, useDeleteMilestone,
-} from '@/features/goals/hooks';
-import { categoryIconClass, computeGoalProgress, type Goal, type Milestone } from '@/features/goals/types';
+import { useState } from 'react';
+import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, ProgressBar, StatusBadge, PriorityBadge, IcoTrash } from '@/components/common';
+import { useLocalStore, type Goal, type GoalTask, type GoalType, type Priority } from '@/store/localStore';
 
-const CATEGORIES = ['Siła', 'Nauka', 'Finanse', 'Zdrowie', 'Inne'];
+const TABS = [
+  { id: 'lista',     label: 'Lista celów' },
+  { id: 'dzisiaj',   label: 'Dzisiaj' },
+  { id: 'ukonczone', label: 'Ukończone' },
+];
 
-const CHECK = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 6L9 17l-5-5" />
-  </svg>
-);
-const TRASH = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14" />
-  </svg>
-);
+const CATEGORIES = ['Zdrowie', 'Finanse', 'Kariera', 'Edukacja', 'Relacje', 'Hobby', 'Inne'];
 
 export function GoalsScreen() {
-  const goalsQ = useGoals();
-  const milestonesQ = useMilestones();
-  const create = useCreateGoal();
-  const [name, setName] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
-
-  const goals = goalsQ.data ?? [];
-  const milestones = milestonesQ.data ?? [];
-
-  const byGoal = useMemo(() => {
-    const map = new Map<string, Milestone[]>();
-    for (const m of milestones) {
-      const arr = map.get(m.goal_id) ?? [];
-      arr.push(m);
-      map.set(m.goal_id, arr);
-    }
-    return map;
-  }, [milestones]);
-
-  const goalName = useMemo(() => new Map(goals.map((g) => [g.id, g.name])), [goals]);
-  const avgProgress = goals.length
-    ? Math.round(goals.reduce((s, g) => s + g.progress, 0) / goals.length)
-    : 0;
-  const upcoming = milestones.filter((m) => !m.done).slice(0, 12);
-
-  const addGoal = (e: React.FormEvent) => {
-    e.preventDefault();
-    const n = name.trim();
-    if (!n) return;
-    create.mutate({ name: n, category });
-    setName('');
-  };
-
+  const [tab, setTab] = useState('lista');
   return (
-    <main className="grid">
-      {/* LEFT: new goal + summary */}
-      <section className="col">
-        <article className="card">
-          <div className="card-head">
-            <div className="lhs"><span className="card-title">Nowy cel</span></div>
-          </div>
-          <form className="capture" onSubmit={addGoal} style={{ flexWrap: 'wrap', gap: 10 }}>
-            <div className="field" style={{ flex: '1 1 100%' }}>
-              <span className="lead">Cel</span>
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nazwa celu…" />
-            </div>
-            <select className="he-select" value={category} onChange={(e) => setCategory(e.target.value)} style={{ flex: '1 1 130px' }}>
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <button className="btn" type="submit" disabled={create.isPending} style={{ flex: '1 1 100px' }}>Dodaj</button>
-          </form>
-        </article>
-
-        <article className="card">
-          <div className="card-head">
-            <div className="lhs"><span className="card-title">Momentum</span></div>
-            <span className="pill accent">{avgProgress}%</span>
-          </div>
-          <div className="hb-score" style={{ margin: '4px auto 0' }}>
-            <svg viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="43" fill="none" stroke="var(--surface-inset)" strokeWidth="8" />
-              <circle cx="50" cy="50" r="43" fill="none" stroke="var(--acc-a)" strokeWidth="8" strokeLinecap="round"
-                strokeDasharray="270.2" strokeDashoffset={270.2 - (270.2 * avgProgress) / 100} transform="rotate(-90 50 50)" />
-            </svg>
-            <div className="v tnum">{avgProgress}</div>
-          </div>
-          <div className="note-peek" style={{ textAlign: 'center', marginTop: 8 }}>
-            {goals.length} {goals.length === 1 ? 'cel' : 'celów'} · średni postęp
-          </div>
-        </article>
-      </section>
-
-      {/* CENTER: goal cards */}
-      <section className="col">
-        {goalsQ.isLoading && <article className="card"><div className="note-peek">Ładowanie celów…</div></article>}
-        {goalsQ.isError && (
-          <article className="card">
-            <div className="auth-banner warn">Nie udało się wczytać celów.</div>
-            <button className="he-btn ghost" type="button" onClick={() => goalsQ.refetch()}>Spróbuj ponownie</button>
-          </article>
-        )}
-        {goalsQ.data && goals.length === 0 && (
-          <article className="card"><div className="agenda-empty">Brak celów. Dodaj pierwszy po lewej.</div></article>
-        )}
-        {goals.map((g) => (
-          <GoalCard key={g.id} goal={g} milestones={byGoal.get(g.id) ?? []} />
-        ))}
-      </section>
-
-      {/* RIGHT: upcoming milestones */}
-      <section className="col">
-        <article className="card">
-          <div className="card-head">
-            <div className="lhs"><span className="card-title">Kamienie milowe</span></div>
-            <span className="pill">Do zrobienia</span>
-          </div>
-          <div className="todos">
-            {upcoming.length === 0 && <div className="agenda-empty">Brak otwartych kamieni.</div>}
-            {upcoming.map((m) => (
-              <div className="todo" key={m.id} style={{ cursor: 'default' }}>
-                <span className="t">{m.title}</span>
-                <span className="todo-cat">{goalName.get(m.goal_id) ?? ''}</span>
-              </div>
-            ))}
-          </div>
-        </article>
-      </section>
-    </main>
+    <div className="module-page">
+      <div className="module-header">
+        <h1 className="module-title">🎯 Cele</h1>
+        <SubTabs tabs={TABS} active={tab} onChange={setTab} />
+      </div>
+      {tab === 'lista'     && <GoalsList />}
+      {tab === 'dzisiaj'   && <GoalsToday />}
+      {tab === 'ukonczone' && <GoalsDone />}
+    </div>
   );
 }
 
-function GoalCard({ goal, milestones }: { goal: Goal; milestones: Milestone[] }) {
-  const update = useUpdateGoal();
-  const del = useDeleteGoal();
-  const createM = useCreateMilestone();
-  const toggleM = useToggleMilestone();
-  const updateM = useUpdateMilestone();
-  const delM = useDeleteMilestone();
-  const [manual, setManual] = useState(goal.progress);
-  const [mTitle, setMTitle] = useState('');
+// ─── LISTA CELÓW ──────────────────────────────────────────────
 
-  const hasMilestones = milestones.length > 0;
-  const derived = hasMilestones ? computeGoalProgress(milestones) : null;
-  const shown = derived ?? manual;
+function GoalsList() {
+  const { goals, addGoal, deleteGoal } = useLocalStore();
+  const [showAdd, setShowAdd] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(goals[0]?.id ?? null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (derived !== null && derived !== goal.progress) {
-      update.mutate({ id: goal.id, patch: { progress: derived } });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [derived, goal.progress, goal.id]);
-
-  const commitManual = () => {
-    if (manual !== goal.progress) update.mutate({ id: goal.id, patch: { progress: manual } });
-  };
-
-  const addMilestone = (e: React.FormEvent) => {
-    e.preventDefault();
-    const t = mTitle.trim();
-    if (!t) return;
-    createM.mutate({ goalId: goal.id, title: t });
-    setMTitle('');
-  };
-
-  const setWeight = (m: Milestone, raw: string) => {
-    const v = raw.trim() === '' ? null : Math.max(0, Math.min(100, Number(raw)));
-    updateM.mutate({ id: m.id, patch: { weight: Number.isNaN(v as number) ? null : v } });
-  };
+  const active = goals.filter(g => !g.archived);
+  const selected = active.find(g => g.id === selectedId);
 
   return (
-    <article className="card">
-      <div className="goal" style={{ paddingTop: 0 }}>
-        <div className="gh">
-          <span className="gn">
-            <span className={`gic ${categoryIconClass(goal.category)}`} />
-            {goal.name}
-            {goal.category && <small>{goal.category}</small>}
-          </span>
-          <span className="gp tnum">{shown}%</span>
+    <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 16, alignItems: 'start' }}>
+      {/* Sidebar */}
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Cele</span>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>+ Nowy</button>
         </div>
-        <div className="track"><i style={{ width: `${shown}%` }} /></div>
+        {active.length === 0
+          ? <EmptyState title="Brak celów" cta="Dodaj cel" onCta={() => setShowAdd(true)} />
+          : active.map(g => (
+            <div key={g.id}
+              onClick={() => setSelectedId(g.id)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid var(--border-soft)', cursor: 'pointer' }}>
+              <span style={{ fontSize: 22 }}>{g.emoji}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: selectedId === g.id ? 'var(--green-text)' : 'var(--ink)' }}>{g.title}</div>
+                <ProgressBar value={g.progress} size="sm" />
+              </div>
+              <span style={{ fontSize: 12, color: 'var(--ink-3)', flexShrink: 0 }}>{g.progress}%</span>
+            </div>
+          ))
+        }
       </div>
 
-      {hasMilestones ? (
-        <div className="diet-hint" style={{ marginTop: 8 }}>
-          Postęp z kamieni ({milestones.filter((m) => m.done).length}/{milestones.length}). Pole „%" = własna waga; puste = równy podział.
-        </div>
-      ) : (
-        <input
-          type="range" min={0} max={100} value={manual}
-          onChange={(e) => setManual(Number(e.target.value))}
-          onPointerUp={commitManual} onBlur={commitManual} onKeyUp={commitManual}
-          style={{ width: '100%', marginTop: 12 }}
-        />
-      )}
-
-      <div className="todos" style={{ marginTop: 8 }}>
-        {milestones.map((m) => (
-          <div key={m.id} className={`todo ed-row${m.done ? ' done' : ''}`}
-            onClick={() => toggleM.mutate({ id: m.id, done: !m.done })}>
-            <span className="check">{CHECK}</span>
-            <span className="t">{m.title}</span>
-            <input
-              className="auth-input mono"
-              style={{ width: 56, padding: '4px 6px', textAlign: 'right' }}
-              inputMode="numeric"
-              placeholder="auto"
-              defaultValue={m.weight ?? ''}
-              onClick={(e) => e.stopPropagation()}
-              onBlur={(e) => setWeight(m, e.target.value)}
-              title="Waga w % (puste = auto)"
-            />
-            <button className="fl-del" type="button" aria-label="Usuń kamień milowy"
-              onClick={(e) => { e.stopPropagation(); delM.mutate(m.id); }}>
-              {TRASH}
-            </button>
+      {/* Detail */}
+      {selected
+        ? <GoalDetail goal={selected} onDelete={() => setDeleteId(selected.id)} />
+        : <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
+            <EmptyState title="Wybierz cel" desc="Kliknij cel po lewej, aby zobaczyć szczegóły." />
           </div>
-        ))}
-      </div>
+      }
 
-      <form className="capture" onSubmit={addMilestone} style={{ marginTop: 10 }}>
-        <div className="field">
-          <span className="lead">Kamień</span>
-          <input value={mTitle} onChange={(e) => setMTitle(e.target.value)} placeholder="Dodaj kamień milowy…" />
+      <AddGoalModal open={showAdd} onClose={() => setShowAdd(false)} onSave={data => { addGoal(data); setShowAdd(false); }} />
+      <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { deleteGoal(deleteId!); setSelectedId(null); setDeleteId(null); }} label="ten cel" />
+    </div>
+  );
+}
+
+function GoalDetail({ goal, onDelete }: { goal: Goal; onDelete: () => void }) {
+  const { addGoalTask, updateGoalTask } = useLocalStore();
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [taskTitle, setTaskTitle] = useState('');
+  const [taskPriority, setTaskPriority] = useState<Priority>('mid');
+  const [taskDue, setTaskDue] = useState('');
+
+  function handleAddTask() {
+    if (!taskTitle.trim()) return;
+    addGoalTask(goal.id, { title: taskTitle.trim(), description: '', status: 'todo', priority: taskPriority, dueDate: taskDue || undefined });
+    setTaskTitle(''); setTaskDue(''); setShowAddTask(false);
+  }
+
+  return (
+    <div className="col">
+      <div className="card">
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 32 }}>{goal.emoji}</span>
+            <div>
+              <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{goal.title}</h2>
+              <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 2 }}>{goal.category} · {goal.type === 'project' ? 'Projekt' : 'Prosty cel'}</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {goal.priority && <PriorityBadge priority={goal.priority} />}
+            <button className="icon-btn" onClick={onDelete}><IcoTrash /></button>
+          </div>
         </div>
-        <button className="btn" type="submit">Dodaj</button>
-      </form>
 
-      <div className="hydro-actions" style={{ marginTop: 12 }}>
-        <button className="he-btn ghost" type="button" onClick={() => del.mutate(goal.id)}>Usuń cel</button>
+        {goal.description && <p style={{ fontSize: 14, color: 'var(--ink-2)', marginBottom: 16 }}>{goal.description}</p>}
+
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontSize: 13, color: 'var(--ink-3)' }}>Postęp</span>
+            <span style={{ fontWeight: 700 }}>{goal.progress}%</span>
+          </div>
+          <ProgressBar value={goal.progress} size="lg" />
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {goal.deadline && <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>Termin: <strong>{new Date(goal.deadline).toLocaleDateString('pl-PL')}</strong></span>}
+          {goal.streak !== undefined && goal.streak > 0 && <span style={{ fontSize: 12 }}>🔥 Seria: <strong>{goal.streak} dni</strong></span>}
+        </div>
       </div>
-    </article>
+
+      {/* Tasks */}
+      <div className="card">
+        <div className="card-head">
+          <span className="card-title">Zadania</span>
+          <button className="btn btn-primary btn-sm" onClick={() => setShowAddTask(!showAddTask)}>+ Dodaj</button>
+        </div>
+
+        {showAddTask && (
+          <div style={{ background: 'var(--surface-3)', borderRadius: 10, padding: 12, marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <input className="input" value={taskTitle} onChange={e => setTaskTitle(e.target.value)} placeholder="Tytuł zadania" onKeyDown={e => e.key === 'Enter' && handleAddTask()} autoFocus />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <select className="select" value={taskPriority} onChange={e => setTaskPriority(e.target.value as Priority)} style={{ flex: 1 }}>
+                <option value="low">Niski</option>
+                <option value="mid">Średni</option>
+                <option value="high">Wysoki</option>
+              </select>
+              <input type="date" className="input" value={taskDue} onChange={e => setTaskDue(e.target.value)} style={{ flex: 1 }} />
+              <button className="btn btn-primary btn-sm" onClick={handleAddTask}>Dodaj</button>
+            </div>
+          </div>
+        )}
+
+        {goal.tasks.length === 0
+          ? <EmptyState title="Brak zadań" desc="Dodaj pierwsze zadanie do tego celu." />
+          : goal.tasks.map(task => (
+            <GoalTaskItem key={task.id} task={task} onUpdate={(p) => updateGoalTask(goal.id, task.id, p)} />
+          ))
+        }
+      </div>
+    </div>
+  );
+}
+
+function GoalTaskItem({ task, onUpdate }: { task: GoalTask; onUpdate: (p: Partial<GoalTask>) => void }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-soft)' }}>
+      <div
+        onClick={() => onUpdate({ status: task.status === 'done' ? 'todo' : 'done' })}
+        style={{ width: 20, height: 20, borderRadius: 99, border: `2px solid ${task.status === 'done' ? 'var(--green-mid)' : 'var(--border)'}`, background: task.status === 'done' ? 'var(--green-mid)' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'white', flexShrink: 0 }}>
+        {task.status === 'done' && '✓'}
+      </div>
+      <span style={{ flex: 1, fontSize: 13, textDecoration: task.status === 'done' ? 'line-through' : 'none', color: task.status === 'done' ? 'var(--ink-3)' : 'var(--ink)' }}>{task.title}</span>
+      {task.priority && <PriorityBadge priority={task.priority} />}
+      {task.dueDate && <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{new Date(task.dueDate).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}</span>}
+      <StatusBadge status={task.status} />
+    </div>
+  );
+}
+
+function AddGoalModal({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (g: Omit<Goal,'id'|'createdAt'|'updatedAt'|'tasks'|'milestones'>) => void }) {
+  const [title, setTitle] = useState('');
+  const [emoji, setEmoji] = useState('🎯');
+  const [desc, setDesc] = useState('');
+  const [category, setCategory] = useState('Inne');
+  const [type, setType] = useState<GoalType>('simple');
+  const [priority, setPriority] = useState<Priority>('mid');
+  const [deadline, setDeadline] = useState('');
+
+  return (
+    <Modal open={open} onClose={onClose} title="Nowy cel"
+      footer={<>
+        <button className="btn btn-secondary btn-sm" onClick={onClose}>Anuluj</button>
+        <button className="btn btn-primary btn-sm" onClick={() => {
+          if (!title.trim()) return;
+          onSave({ title, emoji, description: desc, category, type, priority, deadline: deadline || undefined, progress: 0, archived: false });
+          setTitle(''); setDesc('');
+        }}>Utwórz cel</button>
+      </>}>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <Field label="Emoji">
+          <input className="input" value={emoji} onChange={e => setEmoji(e.target.value)} style={{ width: 60, textAlign: 'center', fontSize: 20 }} />
+        </Field>
+        <Field label="Tytuł celu" required>
+          <input className="input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Np. Przebiec maraton" style={{ width: '100%' }} />
+        </Field>
+      </div>
+      <Field label="Opis"><textarea className="textarea" value={desc} onChange={e => setDesc(e.target.value)} rows={2} /></Field>
+      <div className="form-grid">
+        <Field label="Kategoria"><select className="select" value={category} onChange={e => setCategory(e.target.value)}>
+          {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+        </select></Field>
+        <Field label="Typ"><select className="select" value={type} onChange={e => setType(e.target.value as GoalType)}>
+          <option value="simple">Prosty cel</option>
+          <option value="project">Projekt</option>
+        </select></Field>
+        <Field label="Priorytet"><select className="select" value={priority} onChange={e => setPriority(e.target.value as Priority)}>
+          <option value="low">Niski</option>
+          <option value="mid">Sredni</option>
+          <option value="high">Wysoki</option>
+        </select></Field>
+        <Field label="Termin"><input type="date" className="input" value={deadline} onChange={e => setDeadline(e.target.value)} /></Field>
+      </div>
+    </Modal>
+  );
+}
+
+// ─── DZISIAJ ──────────────────────────────────────────────────
+
+function GoalsToday() {
+  const { goals, updateGoalTask } = useLocalStore();
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  const dueToday = goals.flatMap(g =>
+    g.tasks.filter(t => t.dueDate === todayStr && t.status !== 'done')
+      .map(t => ({ ...t, goalTitle: g.title, goalEmoji: g.emoji, goalId: g.id }))
+  );
+  const overdue = goals.flatMap(g =>
+    g.tasks.filter(t => t.dueDate && t.dueDate < todayStr && t.status !== 'done')
+      .map(t => ({ ...t, goalTitle: g.title, goalEmoji: g.emoji, goalId: g.id }))
+  );
+
+  return (
+    <div style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {overdue.length > 0 && (
+        <div className="card" style={{ border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.03)' }}>
+          <div className="card-head"><span className="card-title" style={{ color: 'var(--p-high)' }}>Przeterminowane ({overdue.length})</span></div>
+          {overdue.map(t => (
+            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-soft)' }}>
+              <span>{t.goalEmoji}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 500 }}>{t.title}</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{t.goalTitle} · {new Date(t.dueDate!).toLocaleDateString('pl-PL')}</div>
+              </div>
+              <button className="btn btn-sm btn-secondary" onClick={() => updateGoalTask(t.goalId, t.id, { status: 'done' })}>Zrób</button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="card">
+        <div className="card-head"><span className="card-title">Na dzis</span></div>
+        {dueToday.length === 0
+          ? <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--ink-3)', fontSize: 13 }}>Brak zadan na dzis!</div>
+          : dueToday.map(t => (
+            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-soft)' }}>
+              <div onClick={() => updateGoalTask(t.goalId, t.id, { status: 'done' })}
+                style={{ width: 20, height: 20, borderRadius: 99, border: '2px solid var(--border)', cursor: 'pointer', flexShrink: 0 }} />
+              <span style={{ fontSize: 18 }}>{t.goalEmoji}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 500 }}>{t.title}</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{t.goalTitle}</div>
+              </div>
+              {t.priority && <PriorityBadge priority={t.priority} />}
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  );
+}
+
+// ─── UKONCZONE ────────────────────────────────────────────────
+
+function GoalsDone() {
+  const { goals, updateGoal } = useLocalStore();
+  const done = goals.filter(g => g.archived || g.progress >= 100);
+  return (
+    <div style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {done.length === 0
+        ? <div className="card"><EmptyState title="Brak ukończonych celów" desc="Ukonczone lub zarchiwizowane cele pojawia sie tutaj." /></div>
+        : done.map(g => (
+          <div key={g.id} className="card">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 28 }}>{g.emoji}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{g.title}</div>
+                <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{g.category} · {g.progress}%</div>
+              </div>
+              <button className="btn btn-ghost btn-sm" onClick={() => updateGoal(g.id, { archived: false })}>Wznow</button>
+            </div>
+          </div>
+        ))
+      }
+    </div>
   );
 }
