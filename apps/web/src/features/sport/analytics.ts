@@ -2,7 +2,7 @@
  * Pure helpers over Sport local-store data (sessions/templates/feelings).
  * Kept separate from SportScreen.tsx so the views stay focused on rendering.
  */
-import type { WorkoutSession, WorkoutSet, WorkoutTemplate, FeelingEntry } from '@/store/localStore';
+import type { WorkoutSession, WorkoutSet, WorkoutTemplate, WorkoutExercise, FeelingEntry } from '@/store/localStore';
 import { findExercise, type SportKey, type MuscleKey } from './catalog';
 import { muscleSetFromExercises, type HighlightLevel } from './BodyMap';
 
@@ -247,4 +247,159 @@ export function generateInsights(
 
   if (insights.length === 0) insights.push('Brak wyraźnych odchyleń — trzymaj obecne tempo.');
   return insights;
+}
+
+// ─── ZAANGAŻOWANE MIĘŚNIE (sesje, nie tylko szablony) ───────────
+
+export function exercisesMuscles(exercises: WorkoutExercise[]): Partial<Record<MuscleKey, HighlightLevel>> {
+  const defs = exercises.map((e) => findExercise(e.exerciseId)).filter((e): e is NonNullable<typeof e> => !!e);
+  return muscleSetFromExercises(defs);
+}
+
+export function sessionsMuscles(sessions: WorkoutSession[]): Partial<Record<MuscleKey, HighlightLevel>> {
+  return exercisesMuscles(sessions.flatMap((s) => s.exercises));
+}
+
+export function muscleCountsToHighlight(counts: Partial<Record<MuscleKey, number>>): Partial<Record<MuscleKey, HighlightLevel>> {
+  const values = Object.values(counts) as number[];
+  if (values.length === 0) return {};
+  const max = Math.max(...values);
+  const out: Partial<Record<MuscleKey, HighlightLevel>> = {};
+  for (const [key, count] of Object.entries(counts) as [MuscleKey, number][]) {
+    const ratio = count / max;
+    out[key] = ratio >= 0.66 ? 'primary' : ratio >= 0.33 ? 'secondary' : 'stabilizer';
+  }
+  return out;
+}
+
+// ─── ZAKRES DAT (Historia / Analiza) ────────────────────────────
+
+export function sessionsInRange(sessions: WorkoutSession[], startStr: string, endStr: string): WorkoutSession[] {
+  return sessions.filter((s) => s.date >= startStr && s.date <= endStr);
+}
+
+export interface MonthSummary {
+  count: number; totalMinutes: number; totalVolumeKg: number; totalSets: number; mostFrequentSport: string | null;
+}
+
+export function monthSummary(sessions: WorkoutSession[], month: Date): MonthSummary {
+  const y = month.getFullYear(); const m = month.getMonth();
+  const startStr = new Date(y, m, 1).toISOString().split('T')[0];
+  const endStr = new Date(y, m + 1, 0).toISOString().split('T')[0];
+  const inMonth = sessionsInRange(sessions, startStr, endStr);
+  const bySport = new Map<string, number>();
+  for (const s of inMonth) bySport.set(s.sportType, (bySport.get(s.sportType) ?? 0) + 1);
+  let mostFrequentSport: string | null = null; let best = 0;
+  for (const [sport, count] of bySport) if (count > best) { best = count; mostFrequentSport = sport; }
+  return {
+    count: inMonth.length,
+    totalMinutes: inMonth.reduce((a, s) => a + (s.duration ?? 0), 0),
+    totalVolumeKg: inMonth.reduce((a, s) => a + sessionVolume(s), 0),
+    totalSets: inMonth.reduce((a, s) => a + sessionSetCount(s), 0),
+    mostFrequentSport,
+  };
+}
+
+export function monthHeatmapData(sessions: WorkoutSession[], month: Date): Map<string, { date: string; intensity: number; count: number }> {
+  const y = month.getFullYear(); const m = month.getMonth();
+  const byDate = new Map<string, { count: number; volume: number }>();
+  for (const s of sessions) {
+    if (new Date(s.date).getFullYear() !== y || new Date(s.date).getMonth() !== m) continue;
+    const entry = byDate.get(s.date) ?? { count: 0, volume: 0 };
+    entry.count += 1; entry.volume += sessionVolume(s) + (s.duration ?? 0) * 5;
+    byDate.set(s.date, entry);
+  }
+  const maxVolume = Math.max(...[...byDate.values()].map((v) => v.volume), 1);
+  const out = new Map<string, { date: string; intensity: number; count: number }>();
+  for (const [date, v] of byDate) out.set(date, { date, intensity: v.volume / maxVolume, count: v.count });
+  return out;
+}
+
+// ─── ZAKRES / PORÓWNANIE (Analiza) ──────────────────────────────
+
+export function statsForDateRange(sessions: WorkoutSession[], startMs: number, endMs: number): WeekStats {
+  return statsForWindow(sessions, startMs, endMs);
+}
+
+export interface RangeComparison { current: WeekStats; previous: WeekStats; deltaPct: Record<keyof WeekStats, number | null>; }
+
+export function compareRanges(sessions: WorkoutSession[], days: number): RangeComparison {
+  const now = Date.now();
+  const current = statsForWindow(sessions, now - days * 86400000, now);
+  const previous = statsForWindow(sessions, now - 2 * days * 86400000, now - days * 86400000);
+  function pct(c: number, p: number): number | null {
+    if (p > 0) return Math.round(((c - p) / p) * 100);
+    return c > 0 ? 100 : null;
+  }
+  return {
+    current, previous,
+    deltaPct: {
+      count: pct(current.count, previous.count),
+      minutes: pct(current.minutes, previous.minutes),
+      volumeKg: pct(current.volumeKg, previous.volumeKg),
+      sets: pct(current.sets, previous.sets),
+    },
+  };
+}
+
+export function avgRir(sessions: WorkoutSession[]): number | null {
+  const rirs = sessions.flatMap((s) => s.exercises.flatMap((e) => e.sets)).filter((s) => s.completed).map((s) => s.rir);
+  return rirs.length ? rirs.reduce((a, r) => a + r, 0) / rirs.length : null;
+}
+
+export function sportDistribution(sessions: WorkoutSession[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const s of sessions) out[s.sportType] = (out[s.sportType] ?? 0) + 1;
+  return out;
+}
+
+export interface TrendPoint { label: string; value: number; }
+
+/** Weekly buckets (most recent `weeks` weeks) for a metric extracted from each week's sessions. */
+export function weeklyTrend(sessions: WorkoutSession[], weeks: number, metric: (s: WorkoutSession[]) => number): TrendPoint[] {
+  const out: TrendPoint[] = [];
+  const now = new Date();
+  for (let i = weeks - 1; i >= 0; i--) {
+    const end = now.getTime() - i * 7 * 86400000;
+    const start = end - 7 * 86400000;
+    const bucket = sessions.filter((s) => { const t = new Date(s.date).getTime(); return t >= start && t < end; });
+    out.push({ label: `Tydz. ${weeks - i}`, value: metric(bucket) });
+  }
+  return out;
+}
+
+// ─── ODCZUCIA: TRENDY I WSKAZÓWKI ───────────────────────────────
+
+export function feelingTrend(feelings: FeelingEntry[], field: 'energy' | 'pain' | 'recovery' | 'stress', limit = 10): TrendPoint[] {
+  return [...feelings]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(-limit)
+    .map((f) => ({ label: new Date(f.date).toLocaleDateString('pl-PL', { day: 'numeric', month: 'numeric' }), value: f[field] }));
+}
+
+export function avgFeeling(feelings: FeelingEntry[], field: 'energy' | 'pain' | 'recovery' | 'stress' | 'readiness'): number | null {
+  if (feelings.length === 0) return null;
+  return feelings.reduce((a, f) => a + f[field], 0) / feelings.length;
+}
+
+export function feelingTips(feelings: FeelingEntry[]): string[] {
+  const tips: string[] = [];
+  const recent = [...feelings].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+  if (recent.length < 2) return ['Dodaj kilka wpisów odczuć, aby zobaczyć spersonalizowane wskazówki.'];
+
+  const recoveryTrend = recent[0].recovery - recent[recent.length - 1].recovery;
+  if (recoveryTrend > 1) tips.push('Twoja regeneracja rośnie — świetna praca!');
+  else if (recoveryTrend < -1) tips.push('Regeneracja spada w ostatnich wpisach — rozważ dzień wolny.');
+
+  const avgStiffness = recent.reduce((a, f) => a + f.stiffness, 0) / recent.length;
+  if (avgStiffness >= 5) tips.push('Zwróć uwagę na sztywność — rozważ dodatkową mobilność.');
+
+  const avgStress = recent.reduce((a, f) => a + f.stress, 0) / recent.length;
+  if (avgStress >= 6) tips.push('Stres jest podwyższony — spróbuj technik oddechowych przed snem.');
+
+  const avgSleep = recent.reduce((a, f) => a + f.sleep, 0) / recent.length;
+  if (avgSleep < 6) tips.push('Sen poniżej 6h średnio — to często główny czynnik gorszej regeneracji.');
+
+  if (tips.length === 0) tips.push('Wszystko wygląda stabilnie — utrzymuj obecne nawyki.');
+  return tips;
 }
