@@ -1060,3 +1060,29 @@ body{
   .today-layout{ grid-template-columns: 1fr; }
   .today-aside{ display: none; }
 }
+
+/* ============================================================
+   STANDALONE BUTTON VARIANTS (used in BottomSheets & cards)
+   ============================================================ */
+.btn-primary{
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--acc-a); color: #fff;
+  border: none; border-radius: var(--r-mid);
+  padding: 13px 20px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700;
+  cursor: pointer; transition: .15s; width: 100%;
+}
+.btn-primary:hover:not(:disabled){ filter: brightness(.93); }
+.btn-primary:active:not(:disabled){ transform: scale(.98); }
+.btn-primary:disabled{ opacity: .45; cursor: not-allowed; }
+
+.btn-ghost{
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: transparent; color: var(--ink-2);
+  border: 1px solid var(--border); border-radius: var(--r-mid);
+  padding: 11px 18px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; font-weight: 600;
+  cursor: pointer; transition: .15s; width: 100%;
+}
+.btn-ghost:hover{ background: var(--surface-2); color: var(--ink); }
+.btn-ghost:active{ transform: scale(.98); }
