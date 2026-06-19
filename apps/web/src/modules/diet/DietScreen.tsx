@@ -472,7 +472,7 @@ function DietProdukty() {
 
   // FatSecret search panel
   const [fsQuery, setFsQuery] = useState('');
-  const { results: fsResults, isSearching: fsSearching } = useFoodSearch(fsQuery);
+  const { results: fsResults, isSearching: fsSearching, error: fsError } = useFoodSearch(fsQuery);
   const externalOnly = fsResults.filter(r => r.source === 'external');
 
   const filtered = foodItems.filter(f => !search || f.name.toLowerCase().includes(search.toLowerCase()));
@@ -532,6 +532,7 @@ function DietProdukty() {
           <input className="input" value={fsQuery} onChange={e => setFsQuery(e.target.value)} placeholder="Np. kurczak, jajko, chleb..." />
         </div>
         {fsSearching && <div style={{ fontSize: 13, color: 'var(--ink-3)', textAlign: 'center', padding: '8px 0' }}>Szukam...</div>}
+        {fsError && <div style={{ fontSize: 12, color: 'var(--p-high)', padding: '8px 12px', background: 'var(--surface-3)', borderRadius: 8 }}>Blad: {fsError}</div>}
         {!fsSearching && fsQuery && externalOnly.length === 0 && (
           <p style={{ fontSize: 13, color: 'var(--ink-3)', textAlign: 'center' }}>Brak wynikow.</p>
         )}

@@ -187,15 +187,64 @@ export async function fetchNutritionDailyHistory(days = 30): Promise<NutritionDa
   return ((data ?? []) as NutritionDaily[]).map(normNutrition);
 }
 
-// ── external food search (FatSecret via Edge Function) ────────────────────────
+// ── external food search — Open Food Facts (no key, no IP restrictions, CORS ok) ──
+//
+// Docs: https://wiki.openfoodfacts.org/API
+// Polish products: search on world.openfoodfacts.org with lc=pl
+// Called directly from the browser — no Edge Function needed.
 
-export async function searchFoodExternal(query: string, lang = 'pl'): Promise<FoodSearchResult[]> {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token ?? '';
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fatsecret-search?q=${encodeURIComponent(query)}&lang=${lang}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-  if (!res.ok) throw new Error(`Food search failed: ${res.status}`);
-  const json = await res.json() as { foods?: FoodSearchResult[]; error?: string };
-  if (json.error) throw new Error(json.error);
-  return json.foods ?? [];
+interface OFFProduct {
+  product_name?: string;
+  product_name_pl?: string;
+  brands?: string;
+  nutriments?: {
+    'energy-kcal_100g'?: number;
+    proteins_100g?: number;
+    carbohydrates_100g?: number;
+    fat_100g?: number;
+  };
+}
+
+interface OFFResponse {
+  products: OFFProduct[];
+  count: number;
+}
+
+export async function searchFoodExternal(query: string, _lang = 'pl'): Promise<FoodSearchResult[]> {
+  const params = new URLSearchParams({
+    search_terms: query,
+    search_simple: '1',
+    action: 'process',
+    json: '1',
+    page_size: '20',
+    // Filter to products that have nutritional data
+    fields: 'product_name,product_name_pl,brands,nutriments',
+  });
+
+  const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?${params}`);
+  if (!res.ok) throw new Error(`Open Food Facts error: ${res.status}`);
+
+  const json = await res.json() as OFFResponse;
+  const products = json.products ?? [];
+
+  return products
+    .map((p): FoodSearchResult | null => {
+      const name = (p.product_name_pl || p.product_name || '').trim();
+      if (!name) return null;
+      const n = p.nutriments ?? {};
+      const kcal = n['energy-kcal_100g'] ?? 0;
+      // Skip products with no nutrition data at all
+      if (kcal === 0 && !n.proteins_100g && !n.carbohydrates_100g && !n.fat_100g) return null;
+      return {
+        external_id: `off_${encodeURIComponent(name)}`,
+        name: p.brands ? `${name} (${p.brands})` : name,
+        kcal: Math.round(kcal),
+        protein: Number((n.proteins_100g ?? 0).toFixed(1)),
+        carb: Number((n.carbohydrates_100g ?? 0).toFixed(1)),
+        fat: Number((n.fat_100g ?? 0).toFixed(1)),
+        per_amount: 100,
+        unit: 'g',
+      };
+    })
+    .filter((p): p is FoodSearchResult => p !== null);
 }
