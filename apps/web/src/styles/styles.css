@@ -579,6 +579,12 @@ button.active .sub-tab-icon { opacity: 1; }
 .habit-chip.done { background: var(--acc-a-soft); border-color: var(--acc-a-soft); }
 .habit-chip.done:not(:disabled):hover { background: var(--acc-a-soft); border-color: var(--acc-a); transform: translateY(-1px); }
 
+/* ============================================================ SPORT */
+.sport-select-card { transition: background var(--t), border-color var(--t), transform var(--t); }
+.sport-select-card:hover { border-color: var(--acc-line); transform: translateY(-1px); }
+.template-row { transition: background var(--t), border-color var(--t); }
+.template-row:hover { background: var(--surface-2); }
+
 .goal-row { padding: 13px 0; border-top: 1px solid var(--border-soft); }
 .goal-row:first-child { border-top: 0; padding-top: 4px; }
 .goal-gh { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }

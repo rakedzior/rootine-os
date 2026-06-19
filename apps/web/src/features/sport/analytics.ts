@@ -18,6 +18,51 @@ export function sessionSetCount(session: WorkoutSession): number {
   return session.exercises.reduce((a, e) => a + e.sets.filter((s) => s.completed).length, 0);
 }
 
+export interface TemplateStats { duration: number; exerciseCount: number; setCount: number; volumeKg: number; }
+
+/** Planned/estimated stats for a template — ignores `completed`, since it hasn't been performed yet. */
+export function templateStats(t: WorkoutTemplate): TemplateStats {
+  return {
+    duration: t.estimatedDuration,
+    exerciseCount: t.exercises.length,
+    setCount: t.exercises.reduce((a, e) => a + e.sets.length, 0),
+    volumeKg: t.exercises.reduce((a, e) => a + e.sets.reduce((b, s) => b + s.weight * s.reps, 0), 0),
+  };
+}
+
+export interface WeekStats { count: number; minutes: number; volumeKg: number; sets: number; }
+
+function statsForWindow(sessions: WorkoutSession[], startMs: number, endMs: number): WeekStats {
+  const windowed = sessions.filter((s) => { const t = new Date(s.date).getTime(); return t >= startMs && t < endMs; });
+  return {
+    count: windowed.length,
+    minutes: windowed.reduce((a, s) => a + (s.duration ?? 0), 0),
+    volumeKg: windowed.reduce((a, s) => a + sessionVolume(s), 0),
+    sets: windowed.reduce((a, s) => a + sessionSetCount(s), 0),
+  };
+}
+
+export interface WeekOverWeek { current: WeekStats; previous: WeekStats; deltaPct: Record<keyof WeekStats, number | null>; }
+
+export function weekOverWeek(sessions: WorkoutSession[]): WeekOverWeek {
+  const now = Date.now();
+  const current = statsForWindow(sessions, now - 7 * 86400000, now);
+  const previous = statsForWindow(sessions, now - 14 * 86400000, now - 7 * 86400000);
+  function pct(c: number, p: number): number | null {
+    if (p > 0) return Math.round(((c - p) / p) * 100);
+    return c > 0 ? 100 : null;
+  }
+  return {
+    current, previous,
+    deltaPct: {
+      count: pct(current.count, previous.count),
+      minutes: pct(current.minutes, previous.minutes),
+      volumeKg: pct(current.volumeKg, previous.volumeKg),
+      sets: pct(current.sets, previous.sets),
+    },
+  };
+}
+
 export function filterBySport(sessions: WorkoutSession[], sport: SportKey | 'Wszystko'): WorkoutSession[] {
   if (sport === 'Wszystko') return sessions;
   return sessions.filter((s) => s.sportType === sport);
