@@ -37,8 +37,7 @@ function fmtDate(d: string) {
 }
 
 function SportBadge({ sport }: { sport: string }) {
-  const def = SPORTS.find((s) => s.key === sport);
-  return <span className="badge badge-gray">{def?.emoji ?? '•'} {sport}</span>;
+  return <span className="badge badge-gray" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><SportTileIcon label={sport} kind="sport" size={14} /> {sport}</span>;
 }
 
 function plCount(n: number, one: string, few: string, many: string): string {
@@ -62,17 +61,138 @@ function startOfWeek(d: Date): Date {
   return copy;
 }
 
+type TileIconKind = 'all' | 'sport' | 'category';
+type TileIconVariant = 'all' | 'gym' | 'pull' | 'legs' | 'run' | 'climb' | 'mobility' | 'rehab' | 'category';
+
+function iconToken(label: string): string {
+  return label.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function iconVariantForLabel(label: string, kind: TileIconKind): TileIconVariant {
+  const token = iconToken(label);
+  if (kind === 'all' || token === 'wszystko') return 'all';
+  if (token.includes('pull') || token.includes('plecy') || token.includes('biceps')) return 'pull';
+  if (token.includes('legs') || token.includes('nogi') || token.includes('lower') || token.includes('uda') || token.includes('poslad')) return 'legs';
+  if (token.includes('bieg') || token.includes('run') || token.includes('tempo') || token.includes('interwal')) return 'run';
+  if (token.includes('wspin') || token.includes('boulder') || token.includes('lina')) return 'climb';
+  if (token.includes('mobil') || token.includes('biodra') || token.includes('kregoslup') || token.includes('nadgarst') || token.includes('kostki')) return 'mobility';
+  if (token.includes('rehab') || token.includes('kolano') || token.includes('bark') || token.includes('lokiec') || token.includes('skokowy')) return 'rehab';
+  if (token.includes('silownia') || token.includes('push') || token.includes('upper') || token.includes('full') || token.includes('sila') || token.includes('hypertrof') || token.includes('deload')) return 'gym';
+  return kind === 'sport' ? 'gym' : 'category';
+}
+
+function SportTileIcon({ label, kind = 'sport', active = false, size = 32 }: { label: string; kind?: TileIconKind; active?: boolean; size?: number }) {
+  const variant = iconVariantForLabel(label, kind);
+  const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+
+  function paths() {
+    if (variant === 'all') return (
+      <>
+        <rect x="4" y="4" width="6" height="6" rx="1.5" />
+        <rect x="14" y="4" width="6" height="6" rx="1.5" />
+        <rect x="4" y="14" width="6" height="6" rx="1.5" />
+        <rect x="14" y="14" width="6" height="6" rx="1.5" />
+      </>
+    );
+    if (variant === 'pull') return (
+      <>
+        <path d="M5 5h14" />
+        <path d="M8 5v5" />
+        <path d="M16 5v5" />
+        <circle cx="12" cy="10" r="2" />
+        <path d="M12 12v4" />
+        <path d="M9 14l-2 4" />
+        <path d="M15 14l2 4" />
+      </>
+    );
+    if (variant === 'legs') return (
+      <>
+        <path d="M8 5l4 4 4-4" />
+        <path d="M12 9v5" />
+        <path d="M12 14l-4 6" />
+        <path d="M12 14l5 5" />
+        <path d="M6 20h5" />
+        <path d="M15 19h4" />
+      </>
+    );
+    if (variant === 'run') return (
+      <>
+        <circle cx="14" cy="5" r="2" />
+        <path d="M12 8l-3 3 4 2 2 6" />
+        <path d="M13 13l-4 6" />
+        <path d="M10 10l5 1 3-2" />
+        <path d="M4 18h3" />
+      </>
+    );
+    if (variant === 'climb') return (
+      <>
+        <path d="M3 20L10 6l4 8 3-4 4 10H3z" />
+        <circle cx="14" cy="8" r="1.6" />
+        <path d="M14 10l-2 3 3 2" />
+        <path d="M12 13l-3 1" />
+        <path d="M15 15l2 2" />
+      </>
+    );
+    if (variant === 'mobility') return (
+      <>
+        <circle cx="12" cy="5" r="2" />
+        <path d="M12 7v5" />
+        <path d="M7 10h10" />
+        <path d="M12 12l-4 6" />
+        <path d="M12 12l5 5" />
+        <path d="M6 18h5" />
+      </>
+    );
+    if (variant === 'rehab') return (
+      <>
+        <path d="M20 8.5c0 5.5-8 10.5-8 10.5S4 14 4 8.5A4.2 4.2 0 0 1 12 6a4.2 4.2 0 0 1 8 2.5z" />
+        <path d="M12 9v6" />
+        <path d="M9 12h6" />
+      </>
+    );
+    if (variant === 'category') return (
+      <>
+        <path d="M5 7h14" />
+        <path d="M5 12h14" />
+        <path d="M5 17h14" />
+        <circle cx="9" cy="7" r="1.5" />
+        <circle cx="15" cy="12" r="1.5" />
+        <circle cx="11" cy="17" r="1.5" />
+      </>
+    );
+    return (
+      <>
+        <path d="M5 12h14" />
+        <path d="M7 9v6" />
+        <path d="M17 9v6" />
+        <path d="M3 10v4" />
+        <path d="M21 10v4" />
+        <path d="M9 7v10" />
+        <path d="M15 7v10" />
+      </>
+    );
+  }
+
+  return (
+    <span style={{ width: size, height: size, display: 'inline-grid', placeItems: 'center', color: active ? 'var(--acc)' : 'var(--ink-2)' }}>
+      <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" {...common}>
+        {paths()}
+      </svg>
+    </span>
+  );
+}
+
 interface SportSelectorRowProps {
-  active: SportKey | 'Wszystko';
-  onSelect: (s: SportKey | 'Wszystko') => void;
-  countLabel: (s: SportKey | 'Wszystko') => string;
+  active: string | 'Wszystko';
+  onSelect: (s: string | 'Wszystko') => void;
+  countLabel: (s: string | 'Wszystko') => string;
   includeAll?: boolean;
 }
 
 function SportSelectorRow({ active, onSelect, countLabel, includeAll = true }: SportSelectorRowProps) {
-  const items: { key: SportKey | 'Wszystko'; emoji: string; label: string }[] = [
-    ...(includeAll ? [{ key: 'Wszystko' as const, emoji: '🗂️', label: 'Wszystko' }] : []),
-    ...SPORTS.map((s) => ({ key: s.key, emoji: s.emoji, label: s.key })),
+  const items: { key: string | 'Wszystko'; label: string }[] = [
+    ...(includeAll ? [{ key: 'Wszystko' as const, label: 'Wszystko' }] : []),
+    ...SPORTS.map((s) => ({ key: s.key, label: s.key })),
   ];
   return (
     <div className="card" style={{ display: 'grid', gridTemplateColumns: `repeat(${items.length}, 1fr)`, gap: 10 }}>
@@ -91,7 +211,7 @@ function SportSelectorRow({ active, onSelect, countLabel, includeAll = true }: S
               cursor: 'pointer',
             }}
           >
-            <span style={{ fontSize: 24 }}>{it.emoji}</span>
+            <SportTileIcon label={it.label} kind={it.key === 'Wszystko' ? 'all' : 'sport'} active={isActive} size={34} />
             <span style={{ fontSize: 12.5, fontWeight: 700, color: isActive ? 'var(--acc-ink)' : 'var(--ink)' }}>{it.label}</span>
             <span style={{ fontSize: 10.5, color: 'var(--ink-3)', textAlign: 'center' }}>{countLabel(it.key)}</span>
           </button>
@@ -103,7 +223,7 @@ function SportSelectorRow({ active, onSelect, countLabel, includeAll = true }: S
 
 export function SportScreen() {
   const [tab, setTab] = useState('dzisiaj');
-  const [templatesSportFilter, setTemplatesSportFilter] = useState<SportKey | 'Wszystko'>('Wszystko');
+  const [templatesSportFilter, setTemplatesSportFilter] = useState<string | 'Wszystko'>('Wszystko');
   const { activeSession, startSession } = useLocalStore();
 
   useEffect(() => {
@@ -300,7 +420,7 @@ function WeekStrip({ sessions, activeTemplates }: { sessions: WorkoutSession[]; 
                       border: `1px solid ${item.done ? 'rgba(45,216,158,.25)' : 'var(--border-soft)'}`,
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                        <span style={{ fontSize: 15 }}>{SPORTS.find((s) => s.key === item.template.sportType)?.emoji ?? '•'}</span>
+                        <SportTileIcon label={item.template.sportType} kind="sport" active={item.done} size={18} />
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.template.name}</div>
                           <div style={{ fontSize: 10.5, color: 'var(--ink-3)', marginTop: 2 }}>
@@ -398,7 +518,7 @@ function SportToday({ onStartSession }: { onStartSession: () => void; onQuickAct
               <div>
                 <div style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 800, marginBottom: 12 }}>Dzisiejszy trening</div>
                 <h2 style={{ margin: 0, fontSize: 30, lineHeight: 1.08, color: 'var(--ink)', letterSpacing: 0 }}>{selectedTemplate?.name ?? 'Brak treningu'}</h2>
-                {selectedTemplate && <div className="badge" style={{ marginTop: 12, background: 'rgba(255,255,255,.08)', borderColor: 'rgba(255,255,255,.12)' }}>{SPORTS.find((s) => s.key === selectedTemplate.sportType)?.emoji} {selectedTemplate.sportType}</div>}
+                {selectedTemplate && <div className="badge" style={{ marginTop: 12, background: 'rgba(255,255,255,.08)', borderColor: 'rgba(255,255,255,.12)', display: 'inline-flex', alignItems: 'center', gap: 6 }}><SportTileIcon label={selectedTemplate.sportType} kind="sport" size={15} /> {selectedTemplate.sportType}</div>}
               </div>
               {todayPlans.length > 1 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(6,19,24,.72)', border: '1px solid var(--border-soft)', borderRadius: 12, padding: 6 }}>
@@ -495,23 +615,157 @@ function durationBucket(min: number): 'short' | 'mid' | 'long' {
 
 type TemplateSort = 'recent' | 'name' | 'duration';
 
-function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: { sportFilter: SportKey | 'Wszystko'; onSportFilterChange: (s: SportKey | 'Wszystko') => void; onStartTemplate: (t: WorkoutTemplate) => void }) {
+const CUSTOM_SPORTS_KEY = 'rootine.customSports';
+const CUSTOM_TEMPLATE_CATEGORIES_KEY = 'rootine.customTemplateCategories';
+const HIDDEN_TEMPLATE_SPORTS_KEY = 'rootine.hiddenTemplateSports';
+const SYSTEM_ALL_CATEGORY = 'Wszystko';
+
+type TemplateCategoryFilter =
+  | { id: 'all'; label: 'Wszystko'; kind: 'all'; value: 'Wszystko'; editable: false }
+  | { id: string; label: string; kind: 'sport' | 'category'; value: string; editable: boolean };
+
+function categoryOptionsForSport(sport: string, customCategories: string[] = []): string[] {
+  const base = sport in TEMPLATE_CATEGORIES ? TEMPLATE_CATEGORIES[sport as SportKey] : [];
+  const merged = [...base, ...customCategories];
+  return merged.length > 0 ? [...new Set(merged)] : ['Ogólne'];
+}
+
+function useCustomSports() {
+  const [customSports, setCustomSports] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(CUSTOM_SPORTS_KEY) ?? '[]') as string[];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(CUSTOM_SPORTS_KEY, JSON.stringify(customSports));
+  }, [customSports]);
+
+  function addCustomSport(name: string) {
+    const clean = name.trim();
+    if (!clean) return;
+    setCustomSports((prev) => prev.some((s) => s.toLowerCase() === clean.toLowerCase()) ? prev : [...prev, clean]);
+  }
+
+  function removeCustomSport(name: string) {
+    setCustomSports((prev) => prev.filter((s) => s !== name));
+  }
+
+  function renameCustomSport(oldName: string, newName: string) {
+    const clean = newName.trim();
+    if (!clean) return;
+    setCustomSports((prev) => prev.map((s) => s === oldName ? clean : s));
+  }
+
+  return { customSports, addCustomSport, removeCustomSport, renameCustomSport };
+}
+
+function useCustomTemplateCategories() {
+  const [customTemplateCategories, setCustomTemplateCategories] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(CUSTOM_TEMPLATE_CATEGORIES_KEY) ?? '[]') as string[];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(CUSTOM_TEMPLATE_CATEGORIES_KEY, JSON.stringify(customTemplateCategories));
+  }, [customTemplateCategories]);
+
+  function addCustomTemplateCategory(name: string) {
+    const clean = name.trim();
+    if (!clean || clean.toLowerCase() === SYSTEM_ALL_CATEGORY.toLowerCase()) return;
+    setCustomTemplateCategories((prev) => prev.some((c) => c.toLowerCase() === clean.toLowerCase()) ? prev : [...prev, clean]);
+  }
+
+  function removeCustomTemplateCategory(name: string) {
+    setCustomTemplateCategories((prev) => prev.filter((c) => c !== name));
+  }
+
+  function renameCustomTemplateCategory(oldName: string, newName: string) {
+    const clean = newName.trim();
+    if (!clean || clean.toLowerCase() === SYSTEM_ALL_CATEGORY.toLowerCase()) return;
+    setCustomTemplateCategories((prev) => prev.map((c) => c === oldName ? clean : c));
+  }
+
+  return { customTemplateCategories, addCustomTemplateCategory, removeCustomTemplateCategory, renameCustomTemplateCategory };
+}
+
+function countForCategoryFilter(filter: TemplateCategoryFilter, templates: WorkoutTemplate[]) {
+  if (filter.kind === 'all') return templates.length;
+  if (filter.kind === 'sport') return templates.filter((t) => t.sportType === filter.value).length;
+  return templates.filter((t) => t.category === filter.value).length;
+}
+
+function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: { sportFilter: string | 'Wszystko'; onSportFilterChange: (s: string | 'Wszystko') => void; onStartTemplate: (t: WorkoutTemplate) => void }) {
   const { templates, addTemplate, updateTemplate, deleteTemplate, exercises } = useLocalStore();
+  const { customSports, addCustomSport, removeCustomSport, renameCustomSport } = useCustomSports();
+  const { customTemplateCategories, addCustomTemplateCategory, removeCustomTemplateCategory, renameCustomTemplateCategory } = useCustomTemplateCategories();
+  const [hiddenTemplateSports, setHiddenTemplateSports] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(HIDDEN_TEMPLATE_SPORTS_KEY) ?? '[]') as string[];
+    } catch {
+      return [];
+    }
+  });
   const [showAdd, setShowAdd] = useState(false);
+  const [categoryEditor, setCategoryEditor] = useState<{ mode: 'add' | 'edit'; filter?: TemplateCategoryFilter } | null>(null);
+  const [categoryName, setCategoryName] = useState('');
+  const [categoryKind, setCategoryKind] = useState<'sport' | 'category'>('category');
+  const [deleteCategory, setDeleteCategory] = useState<TemplateCategoryFilter | null>(null);
+  const [sportError, setSportError] = useState('');
   const [editId, setEditId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [activeCategoryId, setActiveCategoryId] = useState('all');
   const [filters, setFilters] = useState<TemplateFilters>(DEFAULT_FILTERS);
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<TemplateSort>('recent');
-  const editingTemplate = templates.find(t => t.id === editId);
 
-  const categories = sportFilter === 'Wszystko' ? Object.values(TEMPLATE_CATEGORIES).flat() : TEMPLATE_CATEGORIES[sportFilter];
-  const countForSport = (s: SportKey | 'Wszystko') => templates.filter((t) => s === 'Wszystko' || t.sportType === s).length;
+  useEffect(() => {
+    localStorage.setItem(HIDDEN_TEMPLATE_SPORTS_KEY, JSON.stringify(hiddenTemplateSports));
+  }, [hiddenTemplateSports]);
+
+  const sportNames = [
+    ...SPORTS.map((s) => s.key).filter((sport) => !hiddenTemplateSports.includes(sport)),
+    ...customSports,
+    ...templates.map((t) => t.sportType).filter((sport) => !hiddenTemplateSports.includes(sport) && !SPORTS.some((s) => s.key === sport)),
+  ];
+  const sportOptions = [...new Set(sportNames)];
+  const templateSportOptions = sportOptions.length > 0 ? sportOptions : ['Ogólne'];
+  const templateCategoryNames = [...new Set([
+    ...customTemplateCategories,
+    ...templates.map((t) => t.category).filter((c): c is string => !!c && c !== SYSTEM_ALL_CATEGORY),
+  ])];
+  const categoryFilters: TemplateCategoryFilter[] = [
+    { id: 'all', label: SYSTEM_ALL_CATEGORY, kind: 'all', value: SYSTEM_ALL_CATEGORY, editable: false },
+    ...sportOptions.map((sport) => ({ id: `sport:${sport}`, label: sport, kind: 'sport' as const, value: sport, editable: true })),
+    ...templateCategoryNames.map((category) => ({ id: `category:${category}`, label: category, kind: 'category' as const, value: category, editable: true })),
+  ];
+  const activeCategory = categoryFilters.find((f) => f.id === activeCategoryId) ?? categoryFilters[0];
+  const editingTemplate = templates.find(t => t.id === editId) ?? null;
+
+  useEffect(() => {
+    if (sportFilter !== 'Wszystko') setActiveCategoryId(`sport:${sportFilter}`);
+  }, [sportFilter]);
+
+  useEffect(() => {
+    if (!editId && templates.length > 0) {
+      const first = templates.find((t) => {
+        if (activeCategory.kind === 'all') return true;
+        if (activeCategory.kind === 'sport') return t.sportType === activeCategory.value;
+        return t.category === activeCategory.value;
+      }) ?? templates[0];
+      setEditId(first.id);
+    }
+  }, [editId, templates, activeCategory]);
 
   const filtered = templates.filter((t) => {
-    if (sportFilter !== 'Wszystko' && t.sportType !== sportFilter) return false;
+    if (activeCategory.kind === 'sport' && t.sportType !== activeCategory.value) return false;
+    if (activeCategory.kind === 'category' && t.category !== activeCategory.value) return false;
     if (query.trim() && !t.name.toLowerCase().includes(query.trim().toLowerCase())) return false;
-    if (filters.category !== 'any' && t.category !== filters.category) return false;
     if (filters.level !== 'any' && t.level !== filters.level) return false;
     if (filters.duration !== 'any' && durationBucket(t.estimatedDuration) !== filters.duration) return false;
     if (filters.equipment !== 'any' && !(t.equipmentTags ?? []).includes(filters.equipment)) return false;
@@ -526,67 +780,165 @@ function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: {
     return b.updatedAt.localeCompare(a.updatedAt);
   });
 
+  const selectedTemplate = editingTemplate ?? filtered[0] ?? null;
+
+  function selectCategory(filter: TemplateCategoryFilter) {
+    setActiveCategoryId(filter.id);
+    onSportFilterChange(filter.kind === 'sport' ? filter.value : SYSTEM_ALL_CATEGORY);
+    setFilters(DEFAULT_FILTERS);
+    const first = templates.find((t) => {
+      if (filter.kind === 'all') return true;
+      if (filter.kind === 'sport') return t.sportType === filter.value;
+      return t.category === filter.value;
+    });
+    setEditId(first?.id ?? null);
+  }
+
+  function openCategoryEditor(mode: 'add' | 'edit', filter?: TemplateCategoryFilter, kind: 'sport' | 'category' = 'category') {
+    if (filter?.kind === 'all') return;
+    setCategoryEditor({ mode, filter });
+    setCategoryName(mode === 'edit' && filter ? filter.label : '');
+    setCategoryKind(filter?.kind === 'sport' || filter?.kind === 'category' ? filter.kind : kind);
+    setSportError('');
+  }
+
+  function handleSaveCategory() {
+    const clean = categoryName.trim();
+    if (!clean) return;
+    if (clean.toLowerCase() === SYSTEM_ALL_CATEGORY.toLowerCase()) {
+      setSportError('Wszystko jest kategorią systemową i nie można jej nadpisać.');
+      return;
+    }
+    const current = categoryEditor?.filter;
+    const duplicate = categoryFilters.some((filter) => filter.id !== current?.id && filter.label.toLowerCase() === clean.toLowerCase());
+    if (duplicate) {
+      setSportError('Taka kategoria już istnieje.');
+      return;
+    }
+
+    if (categoryEditor?.mode === 'edit' && current) {
+      if (current.kind === 'sport') {
+        if (customSports.includes(current.value)) renameCustomSport(current.value, clean);
+        else {
+          addCustomSport(clean);
+          setHiddenTemplateSports((prev) => prev.includes(current.value) ? prev : [...prev, current.value]);
+        }
+        templates.filter((t) => t.sportType === current.value).forEach((template) => updateTemplate(template.id, { sportType: clean }));
+        setActiveCategoryId(`sport:${clean}`);
+        onSportFilterChange(clean);
+      } else if (current.kind === 'category') {
+        if (customTemplateCategories.includes(current.value)) renameCustomTemplateCategory(current.value, clean);
+        else addCustomTemplateCategory(clean);
+        templates.filter((t) => t.category === current.value).forEach((template) => updateTemplate(template.id, { category: clean }));
+        setActiveCategoryId(`category:${clean}`);
+        onSportFilterChange(SYSTEM_ALL_CATEGORY);
+      }
+    } else if (categoryKind === 'sport') {
+      addCustomSport(clean);
+      setActiveCategoryId(`sport:${clean}`);
+      onSportFilterChange(clean);
+    } else {
+      addCustomTemplateCategory(clean);
+      setActiveCategoryId(`category:${clean}`);
+      onSportFilterChange(SYSTEM_ALL_CATEGORY);
+    }
+
+    setCategoryName('');
+    setCategoryEditor(null);
+    setSportError('');
+  }
+
+  function handleConfirmDeleteCategory() {
+    if (!deleteCategory || deleteCategory.kind === 'all') return;
+    if (deleteCategory.kind === 'sport') {
+      const fallbackSport = templateSportOptions.find((sport) => sport !== deleteCategory.value) ?? 'Ogólne';
+      templates.filter((t) => t.sportType === deleteCategory.value).forEach((template) => updateTemplate(template.id, { sportType: fallbackSport }));
+      if (customSports.includes(deleteCategory.value)) removeCustomSport(deleteCategory.value);
+      else setHiddenTemplateSports((prev) => prev.includes(deleteCategory.value) ? prev : [...prev, deleteCategory.value]);
+    } else {
+      templates.filter((t) => t.category === deleteCategory.value).forEach((template) => updateTemplate(template.id, { category: 'Ogólne' }));
+      removeCustomTemplateCategory(deleteCategory.value);
+    }
+    setActiveCategoryId('all');
+    onSportFilterChange(SYSTEM_ALL_CATEGORY);
+    setDeleteCategory(null);
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <SportSelectorRow
-        active={sportFilter}
-        onSelect={(s) => { onSportFilterChange(s); setFilters(DEFAULT_FILTERS); }}
-        countLabel={(s) => plCount(countForSport(s), 'szablon', 'szablony', 'szablonów')}
-      />
-
-      <div className="card">
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          <select className="select" value={filters.category} onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value }))}>
-            <option value="any">Kategoria: wszystkie</option>
-            {[...new Set(categories)].map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select className="select" value={filters.level} onChange={(e) => setFilters((f) => ({ ...f, level: e.target.value as Difficulty | 'any' }))}>
-            <option value="any">Poziom: wszystkie</option>
-            {(['beginner', 'intermediate', 'advanced'] as const).map((l) => <option key={l} value={l}>{DIFFICULTY_LABEL[l]}</option>)}
-          </select>
-          <select className="select" value={filters.duration} onChange={(e) => setFilters((f) => ({ ...f, duration: e.target.value as TemplateFilters['duration'] }))}>
-            <option value="any">Czas: wszystkie</option>
-            <option value="short">&lt; 30 min</option>
-            <option value="mid">30–60 min</option>
-            <option value="long">&gt; 60 min</option>
-          </select>
-          <select className="select" value={filters.equipment} onChange={(e) => setFilters((f) => ({ ...f, equipment: e.target.value }))}>
-            <option value="any">Sprzęt: wszystkie</option>
-            {EQUIPMENT_OPTIONS.map((eq) => <option key={eq} value={eq}>{eq}</option>)}
-          </select>
-          <select className="select" value={filters.muscle} onChange={(e) => setFilters((f) => ({ ...f, muscle: e.target.value as MuscleKey | 'any' }))}>
-            <option value="any">Partia: wszystkie</option>
-            {MUSCLES.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
-          </select>
+      <div className="card" style={{ padding: 12 }}>
+        <div className="card-head" style={{ marginBottom: 10 }}>
+          <span className="card-title">Kategorie</span>
+          <button className="btn btn-secondary btn-sm" onClick={() => openCategoryEditor('add')}>+ Dodaj kategorię</button>
         </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(132px, 1fr))', gap: 10 }}>
+          {categoryFilters.map((filter) => {
+            const isActive = activeCategory.id === filter.id;
+            const count = countForCategoryFilter(filter, templates);
+            const canEdit = filter.kind === 'category' || filter.editable;
+            return (
+              <div key={filter.id} role="button" tabIndex={0} className="sport-select-card" onClick={() => selectCategory(filter)} onKeyDown={(e) => { if (e.key === 'Enter') selectCategory(filter); }} style={{
+                minHeight: 98, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 7,
+                padding: '14px 10px', borderRadius: 'var(--r-mid)', position: 'relative', cursor: 'pointer',
+                border: `1.5px solid ${isActive ? 'var(--acc)' : 'var(--border)'}`,
+                background: isActive ? 'linear-gradient(180deg, rgba(224,42,139,.18), rgba(15,44,54,.88))' : 'var(--surface)',
+                boxShadow: isActive ? '0 0 0 1px rgba(224,42,139,.22), inset 0 0 30px rgba(224,42,139,.08)' : undefined,
+                outline: 'none',
+              }}>
+                {canEdit && (
+                  <div style={{ position: 'absolute', top: 7, right: 7, display: 'flex', gap: 4 }}>
+                    <button className="icon-btn" style={{ width: 24, height: 24, fontSize: 11 }} onClick={(e) => { e.stopPropagation(); openCategoryEditor('edit', filter); }} aria-label={`Zmień nazwę kategorii ${filter.label}`}>✎</button>
+                    <button className="icon-btn" style={{ width: 24, height: 24, fontSize: 13 }} onClick={(e) => { e.stopPropagation(); setDeleteCategory(filter); }} aria-label={`Usuń kategorię ${filter.label}`}>×</button>
+                  </div>
+                )}
+                <SportTileIcon label={filter.label} kind={filter.kind === 'all' ? 'all' : filter.kind} active={isActive} size={34} />
+                <span style={{ fontSize: 14, fontWeight: 900, color: isActive ? 'var(--ink)' : 'var(--ink-2)', textAlign: 'center' }}>{filter.label}</span>
+                <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{filter.label} {count}</span>
+              </div>
+            );
+          })}
+        </div>
+        {sportError && <div style={{ marginTop: 10, fontSize: 12, color: 'var(--danger-ink)' }}>{sportError}</div>}
       </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr 280px', gap: 16, alignItems: 'start' }}>
-        <div className="card">
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 380px) minmax(0, 1fr)', gap: 16, alignItems: 'start' }}>
+        <div className="card" style={{ minHeight: 720 }}>
           <div className="card-head"><span className="card-title">Szablony</span></div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <input className="input" placeholder="Szukaj szablonu…" value={query} onChange={(e) => setQuery(e.target.value)} style={{ flex: 1 }} />
-            <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>+ Nowy</button>
+            <input className="input" placeholder="Szukaj szablonu..." value={query} onChange={(e) => setQuery(e.target.value)} style={{ flex: 1 }} />
+            <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>+ Nowy szablon</button>
           </div>
-          <select className="select" value={sort} onChange={(e) => setSort(e.target.value as TemplateSort)} style={{ width: '100%', marginBottom: 10 }}>
-            <option value="recent">Sortuj: Ostatnio używane</option>
-            <option value="name">Sortuj: Nazwa A–Z</option>
-            <option value="duration">Sortuj: Czas trwania</option>
-          </select>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
+            <select className="select" value={sort} onChange={(e) => setSort(e.target.value as TemplateSort)}>
+              <option value="recent">Sortuj: Ostatnio używane</option>
+              <option value="name">Sortuj: Nazwa A-Z</option>
+              <option value="duration">Sortuj: Czas trwania</option>
+            </select>
+            <select className="select" value={filters.level} onChange={(e) => setFilters((f) => ({ ...f, level: e.target.value as Difficulty | 'any' }))}>
+              <option value="any">Poziom: wszystkie</option>
+              {(['beginner', 'intermediate', 'advanced'] as const).map((l) => <option key={l} value={l}>{DIFFICULTY_LABEL[l]}</option>)}
+            </select>
+            <select className="select" value={filters.duration} onChange={(e) => setFilters((f) => ({ ...f, duration: e.target.value as TemplateFilters['duration'] }))}>
+              <option value="any">Czas: wszystkie</option>
+              <option value="short">&lt; 30 min</option>
+              <option value="mid">30-60 min</option>
+              <option value="long">&gt; 60 min</option>
+            </select>
+          </div>
+
           {filtered.length === 0
             ? <EmptyState title="Brak szablonów" desc="Zmień filtry albo dodaj nowy szablon." cta="Dodaj szablon" onCta={() => setShowAdd(true)} />
-            : <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{filtered.map(t => (
+            : <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 610, overflowY: 'auto', paddingRight: 2 }}>{filtered.map(t => (
               <div key={t.id}
                 className="template-row"
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, cursor: 'pointer', border: `1px solid ${editId===t.id ? 'var(--acc-line)' : 'transparent'}`, background: editId===t.id ? 'var(--acc-soft)' : 'var(--surface-inset)' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 12px', borderRadius: 10, cursor: 'pointer', border: `1px solid ${selectedTemplate?.id===t.id ? 'var(--acc-line)' : 'var(--border-soft)'}`, background: selectedTemplate?.id===t.id ? 'linear-gradient(90deg, rgba(224,42,139,.18), rgba(15,44,54,.72))' : 'var(--surface-inset)' }}
                 onClick={() => setEditId(t.id)}
               >
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface-3)', display: 'grid', placeItems: 'center', fontSize: 17, flexShrink: 0 }}>
-                  {SPORTS.find((s) => s.key === t.sportType)?.emoji ?? '🏋️'}
+                <div style={{ width: 42, height: 42, borderRadius: 10, background: 'var(--acc-soft)', display: 'grid', placeItems: 'center', fontSize: 19, flexShrink: 0 }}>
+                  <SportTileIcon label={t.sportType} kind="sport" active={selectedTemplate?.id===t.id} size={24} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 13.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</div>
-                  <div style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>
+                  <div style={{ fontWeight: 800, fontSize: 13.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginTop: 2 }}>
                     {t.sportType} · ~{t.estimatedDuration} min · {t.exercises.length} ćw.
                   </div>
                 </div>
@@ -595,20 +947,41 @@ function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: {
               </div>
             ))}</div>
           }
+          <div style={{ marginTop: 12, fontSize: 11, color: 'var(--ink-4)' }}>
+            Wyświetlam {filtered.length} z {templates.length} szablonów
+          </div>
         </div>
 
-        {editingTemplate
-          ? <TemplateDetail template={editingTemplate} catalogExercises={exercises} onUpdate={p => updateTemplate(editingTemplate.id, p)} onStart={() => onStartTemplate(editingTemplate)} />
-          : <div className="card" style={{ gridColumn: '2 / 4', display:'flex', alignItems:'center', justifyContent:'center', minHeight:200 }}>
-              <EmptyState title="Wybierz szablon" desc="Kliknij szablon po lewej." />
+        {selectedTemplate
+          ? <TemplateDetail template={selectedTemplate} catalogExercises={exercises} sportOptions={templateSportOptions} customTemplateCategories={customTemplateCategories} onUpdate={p => updateTemplate(selectedTemplate.id, p)} onStart={() => onStartTemplate(selectedTemplate)} />
+          : <div className="card" style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:420 }}>
+              <EmptyState title="Wybierz szablon" desc="Kliknij szablon po lewej albo dodaj nowy." />
             </div>
         }
       </div>
 
-      <AddTemplateModal open={showAdd} onClose={() => setShowAdd(false)} defaultSport={sportFilter === 'Wszystko' ? 'Siłownia' : sportFilter}
-        onSave={data => { addTemplate(data); setShowAdd(false); }} />
+      <AddTemplateModal open={showAdd} onClose={() => setShowAdd(false)} defaultSport={activeCategory.kind === 'sport' ? activeCategory.value : templateSportOptions[0]} sportOptions={templateSportOptions} customTemplateCategories={customTemplateCategories}
+        onSave={data => { addTemplate(data); setShowAdd(false); setEditId(null); }} />
       <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)}
         onConfirm={() => { deleteTemplate(deleteId!); setEditId(null); setDeleteId(null); }} label="ten szablon" />
+      <ConfirmDelete open={!!deleteCategory} onClose={() => setDeleteCategory(null)}
+        onConfirm={handleConfirmDeleteCategory} label={`kategorię "${deleteCategory?.label ?? ''}"`} />
+      <Modal open={!!categoryEditor} onClose={() => { setCategoryEditor(null); setCategoryName(''); setSportError(''); }} title={categoryEditor?.mode === 'edit' ? 'Zmień nazwę kategorii' : 'Nowa kategoria'}
+        footer={<>
+          <button className="btn btn-secondary btn-sm" onClick={() => setCategoryEditor(null)}>Anuluj</button>
+          <button className="btn btn-primary btn-sm" onClick={handleSaveCategory}>{categoryEditor?.mode === 'edit' ? 'Zapisz' : 'Dodaj'}</button>
+        </>}
+      >
+        {categoryEditor?.mode !== 'edit' && (
+          <Field label="Typ kategorii">
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" className={`pill ${categoryKind === 'category' ? 'accent' : ''}`} onClick={() => setCategoryKind('category')}>Typ treningu</button>
+              <button type="button" className={`pill ${categoryKind === 'sport' ? 'accent' : ''}`} onClick={() => setCategoryKind('sport')}>Sport</button>
+            </div>
+          </Field>
+        )}
+        <Field label="Nazwa" required><input className="input" value={categoryName} onChange={(e) => setCategoryName(e.target.value)} placeholder={categoryKind === 'sport' ? 'Np. Pływanie' : 'Np. Push siłowy'} autoFocus /></Field>
+      </Modal>
     </div>
   );
 }
@@ -622,11 +995,12 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TemplateDetail({ template, catalogExercises, onUpdate, onStart }: { template: WorkoutTemplate; catalogExercises: SportExercise[]; onUpdate: (p: Partial<WorkoutTemplate>) => void; onStart: () => void }) {
+function TemplateDetail({ template, catalogExercises, sportOptions, customTemplateCategories, onUpdate, onStart }: { template: WorkoutTemplate; catalogExercises: SportExercise[]; sportOptions: string[]; customTemplateCategories: string[]; onUpdate: (p: Partial<WorkoutTemplate>) => void; onStart: () => void }) {
   const [pickerId, setPickerId] = useState('');
   const muscles = templateMuscles(template);
   const stats = templateStats(template);
   const sportExercises = EXERCISE_CATALOG.filter((e) => e.sport === template.sportType);
+  const categoryOptions = categoryOptionsForSport(template.sportType, customTemplateCategories);
 
   function addExerciseToTemplate() {
     const def = findExercise(pickerId) ?? catalogExercises.find((e) => e.id === pickerId);
@@ -650,84 +1024,105 @@ function TemplateDetail({ template, catalogExercises, onUpdate, onStart }: { tem
   }
 
   return (
-    <>
-      <div className="card">
-        <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:14, gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--acc-soft)', display: 'grid', placeItems: 'center', fontSize: 20, flexShrink: 0 }}>
-              {SPORTS.find((s) => s.key === template.sportType)?.emoji ?? '🏋️'}
+    <div className="card" style={{ minHeight: 720, padding: 0, overflow: 'hidden' }}>
+      <div style={{ padding: '22px 24px 18px', borderBottom: '1px solid var(--border-soft)' }}>
+        <div className="card-head" style={{ marginBottom: 18 }}><span className="card-title">Wybierz szablon</span></div>
+        <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
+            <div style={{ width: 54, height: 54, borderRadius: 14, background: 'var(--acc-soft)', display: 'grid', placeItems: 'center', fontSize: 25, flexShrink: 0 }}>
+              <SportTileIcon label={template.sportType} kind="sport" active size={30} />
             </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <h2 style={{ fontSize:17, fontWeight:700 }}>{template.name}</h2>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <h2 style={{ fontSize:22, fontWeight:900, margin: 0 }}>{template.name}</h2>
                 {template.isActive && <span className="badge badge-green" style={{ fontSize: 8.5 }}>AKTYWNY</span>}
               </div>
-              <div style={{ fontSize:12.5, color:'var(--ink-3)', marginTop:2 }}>{template.sportType} · ~{template.estimatedDuration} min · {template.exercises.length} ćwiczeń</div>
+              <div style={{ fontSize:12.5, color:'var(--ink-3)', marginTop:5 }}>{template.sportType} · ~{template.estimatedDuration} min · {template.exercises.length} ćwiczeń</div>
             </div>
           </div>
-          <button className="btn btn-primary btn-sm" onClick={onStart}>▶ Użyj szablonu</button>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button className="btn btn-primary btn-sm" onClick={onStart}>▶ Użyj szablonu</button>
+            <button className="btn btn-secondary btn-sm" onClick={() => onUpdate({ isActive: !template.isActive })}>{template.isActive ? 'Dezaktywuj' : 'Aktywuj'}</button>
+          </div>
         </div>
-
-        {template.goal && <p style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 12 }}>{template.goal}</p>}
-        {template.description && <p style={{ fontSize:13, color:'var(--ink-2)', marginBottom:12 }}>{template.description}</p>}
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
+        {(template.goal || template.description) && (
+          <p style={{ fontSize: 13.5, color: 'var(--ink-2)', margin: '18px 0 0', maxWidth: 720, lineHeight: 1.6 }}>
+            {template.description || template.goal}
+          </p>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0, marginTop: 18, border: '1px solid var(--border-soft)', borderRadius: 10, overflow: 'hidden' }}>
           <StatBox label="Czas" value={`~${stats.duration} min`} />
           <StatBox label="Serii roboczych" value={`${stats.setCount}`} />
-          <StatBox label="Objętość" value={stats.volumeKg > 0 ? `${(stats.volumeKg / 1000).toFixed(1)} t` : '–'} />
-          <StatBox label="Poziom" value={template.level ? DIFFICULTY_LABEL[template.level] : '–'} />
+          <StatBox label="Objętość" value={stats.volumeKg > 0 ? `${(stats.volumeKg / 1000).toFixed(1)} t` : '-'} />
+          <StatBox label="Poziom" value={template.level ? DIFFICULTY_LABEL[template.level] : '-'} />
         </div>
+      </div>
 
-        <SectionHead title={`Ćwiczenia (${template.exercises.length})`} />
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-          {template.exercises.map((ex, i) => (
-            <div key={ex.exerciseId} style={{ background:'var(--surface-3)', borderRadius:10, padding:'10px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 700, color: 'var(--ink-3)', flexShrink: 0 }}>{i + 1}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight:600, fontSize:13.5 }}>{ex.exerciseName}</div>
-                <div style={{ fontSize:11.5, color:'var(--ink-3)' }}>
-                  {ex.sets.length} serii · {ex.sets[0]?.reps} pow. · {ex.sets[0]?.weight > 0 ? `${ex.sets[0].weight} kg` : 'masa ciała'}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.35fr) minmax(260px, .85fr)', minHeight: 430 }}>
+        <div style={{ padding: 22, borderRight: '1px solid var(--border-soft)' }}>
+          <SectionHead title={`Ćwiczenia (${template.exercises.length})`} />
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {template.exercises.map((ex, i) => (
+              <div key={ex.exerciseId} style={{ background:'var(--surface-3)', border: '1px solid var(--border-soft)', borderRadius:10, padding:'10px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 800, color: 'var(--ink-3)', flexShrink: 0 }}>{i + 1}</span>
+                <div style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--surface)', display: 'grid', placeItems: 'center', color: 'var(--ink-3)', flexShrink: 0 }}><SportTileIcon label={template.sportType} kind="sport" size={20} /></div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight:800, fontSize:13.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.exerciseName}</div>
+                  <div style={{ fontSize:11.5, color:'var(--ink-3)' }}>
+                    {ex.sets.length} serii · {ex.sets[0]?.reps} pow. · {ex.sets[0]?.weight > 0 ? `${ex.sets[0].weight} kg` : 'masa ciała'}
+                  </div>
                 </div>
+                <button className="icon-btn" onClick={() => removeExercise(ex.exerciseId)}><IcoTrash /></button>
               </div>
-              <button className="icon-btn" onClick={() => removeExercise(ex.exerciseId)}><IcoTrash /></button>
-            </div>
-          ))}
-          {template.exercises.length === 0 && <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>Ten szablon nie ma jeszcze ćwiczeń.</div>}
-        </div>
-        <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-          <select className="select" style={{ flex: 1 }} value={pickerId} onChange={(e) => setPickerId(e.target.value)}>
-            <option value="">Wybierz ćwiczenie z bazy…</option>
-            {sportExercises.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
-          </select>
-          <button className="btn btn-secondary btn-sm" disabled={!pickerId} onClick={addExerciseToTemplate}>+ Dodaj</button>
+            ))}
+            {template.exercises.length === 0 && <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>Ten szablon nie ma jeszcze ćwiczeń.</div>}
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <select className="select" style={{ flex: 1 }} value={pickerId} onChange={(e) => setPickerId(e.target.value)}>
+              <option value="">Wybierz ćwiczenie z bazy...</option>
+              {sportExercises.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+            </select>
+            <button className="btn btn-secondary btn-sm" disabled={!pickerId} onClick={addExerciseToTemplate}>+ Dodaj</button>
+          </div>
         </div>
 
-        <button className="btn btn-ghost btn-sm" style={{ marginTop: 14 }} onClick={() => onUpdate({ isActive: !template.isActive })}>
-          {template.isActive ? 'Dezaktywuj szablon' : 'Aktywuj szablon'}
-        </button>
+        <div style={{ padding: 22 }}>
+          <SectionHead title="Partie mięśniowe" />
+          <BodyMap highlight={muscles} size={104} />
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 10, fontSize: 11, color: 'var(--ink-3)', flexWrap: 'wrap' }}>
+            <span><i style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: 'var(--acc)', marginRight: 4 }} />Główne partie</span>
+            <span><i style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: 'var(--acc-b)', marginRight: 4 }} />Dodatkowe partie</span>
+          </div>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div className="card">
-          <div className="card-head"><span className="card-title">Partie mięśniowe</span></div>
-          <BodyMap highlight={muscles} size={64} compact />
+      <div style={{ padding: 22, borderTop: '1px solid var(--border-soft)' }}>
+        <SectionHead title="Informacje" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
+          <Field label="Sport"><select className="select" value={template.sportType} onChange={(e) => onUpdate({ sportType: e.target.value, category: categoryOptionsForSport(e.target.value, customTemplateCategories)[0] })}>
+            {sportOptions.map((sport) => <option key={sport} value={sport}>{sport}</option>)}
+          </select></Field>
+          <Field label="Kategoria"><select className="select" value={template.category ?? categoryOptions[0]} onChange={(e) => onUpdate({ category: e.target.value })}>
+            {categoryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select></Field>
+          <Field label="Czas"><input className="input" type="number" min={5} step={5} value={template.estimatedDuration} onChange={(e) => onUpdate({ estimatedDuration: +e.target.value })} /></Field>
+          <Field label="Poziom"><select className="select" value={template.level ?? 'intermediate'} onChange={(e) => onUpdate({ level: e.target.value as Difficulty })}>
+            {(['beginner', 'intermediate', 'advanced'] as const).map(l => <option key={l} value={l}>{DIFFICULTY_LABEL[l]}</option>)}
+          </select></Field>
         </div>
-        <div className="card">
-          <div className="card-head"><span className="card-title">Informacje</span></div>
-          <InfoRow label="Sprzęt" value={(template.equipmentTags ?? []).join(', ') || '—'} />
-          <InfoRow label="Cel" value={template.goal || '—'} />
-          <InfoRow label="Poziom" value={template.level ? DIFFICULTY_LABEL[template.level] : '—'} />
-          <InfoRow label="Ostatnio aktualizowany" value={fmtDate(template.updatedAt)} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+          <Field label="Cel"><input className="input" value={template.goal ?? ''} onChange={(e) => onUpdate({ goal: e.target.value })} /></Field>
+          <Field label="Sprzęt"><input className="input" value={(template.equipmentTags ?? []).join(', ')} onChange={(e) => onUpdate({ equipmentTags: e.target.value.split(',').map((x) => x.trim()).filter(Boolean) })} /></Field>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
-function AddTemplateModal({ open, onClose, defaultSport, onSave }: { open: boolean; onClose: () => void; defaultSport: SportKey; onSave: (t: Omit<WorkoutTemplate,'id'|'createdAt'|'updatedAt'>) => void }) {
+function AddTemplateModal({ open, onClose, defaultSport, sportOptions, customTemplateCategories, onSave }: { open: boolean; onClose: () => void; defaultSport: string; sportOptions: string[]; customTemplateCategories: string[]; onSave: (t: Omit<WorkoutTemplate,'id'|'createdAt'|'updatedAt'>) => void }) {
   const [name, setName] = useState('');
-  const [sportType, setSportType] = useState<SportKey>(defaultSport);
-  const [category, setCategory] = useState(TEMPLATE_CATEGORIES[defaultSport][0]);
+  const [sportType, setSportType] = useState(defaultSport);
+  const [category, setCategory] = useState(categoryOptionsForSport(defaultSport, customTemplateCategories)[0]);
   const [level, setLevel] = useState<Difficulty>('intermediate');
   const [goal, setGoal] = useState('');
   const [desc, setDesc] = useState('');
@@ -735,8 +1130,8 @@ function AddTemplateModal({ open, onClose, defaultSport, onSave }: { open: boole
   const [equipmentTags, setEquipmentTags] = useState<string[]>([]);
 
   useEffect(() => {
-    if (open) { setSportType(defaultSport); setCategory(TEMPLATE_CATEGORIES[defaultSport][0]); }
-  }, [open, defaultSport]);
+    if (open) { setSportType(defaultSport); setCategory(categoryOptionsForSport(defaultSport, customTemplateCategories)[0]); }
+  }, [open, defaultSport, customTemplateCategories]);
 
   function toggleEquipment(eq: string) {
     setEquipmentTags((prev) => prev.includes(eq) ? prev.filter((e) => e !== eq) : [...prev, eq]);
@@ -754,11 +1149,11 @@ function AddTemplateModal({ open, onClose, defaultSport, onSave }: { open: boole
       </>}>
       <Field label="Nazwa" required><input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Np. Push A — Klatka" /></Field>
       <div className="form-grid">
-        <Field label="Sport"><select className="select" value={sportType} onChange={e => { const s = e.target.value as SportKey; setSportType(s); setCategory(TEMPLATE_CATEGORIES[s][0]); }}>
-          {SPORTS.map(s => <option key={s.key} value={s.key}>{s.emoji} {s.key}</option>)}
+        <Field label="Sport"><select className="select" value={sportType} onChange={e => { const s = e.target.value; setSportType(s); setCategory(categoryOptionsForSport(s, customTemplateCategories)[0]); }}>
+          {sportOptions.map(s => <option key={s} value={s}>{s}</option>)}
         </select></Field>
         <Field label="Kategoria"><select className="select" value={category} onChange={e => setCategory(e.target.value)}>
-          {TEMPLATE_CATEGORIES[sportType].map(c => <option key={c}>{c}</option>)}
+          {categoryOptionsForSport(sportType, customTemplateCategories).map(c => <option key={c}>{c}</option>)}
         </select></Field>
       </div>
       <div className="form-grid">
@@ -856,7 +1251,7 @@ function SportActiveSession({ onSessionEnd }: { onSessionEnd: () => void }) {
       <div className="card">
         <div className="card-head"><span className="card-title">Trening</span></div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-          <span style={{ fontSize: 18 }}>{SPORTS.find((s) => s.key === sportType)?.emoji ?? '🏋️'}</span>
+          <SportTileIcon label={sportType} kind="sport" size={20} />
           <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.25 }}>{templateName}</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -1039,8 +1434,8 @@ function SportHistory({ onRepeat }: { onRepeat: () => void }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <SportSelectorRow
         active={sportFilter}
-        onSelect={setSportFilter}
-        countLabel={(s) => plCount(countForSport(s), 'sesja', 'sesje', 'sesji')}
+        onSelect={(s) => setSportFilter(s as SportKey | 'Wszystko')}
+        countLabel={(s) => plCount(countForSport(s as SportKey | 'Wszystko'), 'sesja', 'sesje', 'sesji')}
       />
 
       <div className="card" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -1240,8 +1635,8 @@ function SportAnalysis() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <SportSelectorRow
         active={sport}
-        onSelect={setSport}
-        countLabel={(s) => plCount(filterBySport(sessions, s).length, 'sesja', 'sesje', 'sesji')}
+        onSelect={(s) => setSport(s as SportKey | 'Wszystko')}
+        countLabel={(s) => plCount(filterBySport(sessions, s as SportKey | 'Wszystko').length, 'sesja', 'sesje', 'sesji')}
       />
 
       <div className="card" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1558,7 +1953,7 @@ function SportExercises() {
         <input className="input" placeholder="Szukaj nazwy, partii, sprzętu…" value={query} onChange={(e) => setQuery(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
         <select className="select" value={sportFilter} onChange={(e) => setSportFilter(e.target.value as SportKey | 'Wszystko')}>
           <option value="Wszystko">Sport: wszystkie</option>
-          {SPORTS.map((s) => <option key={s.key} value={s.key}>{s.emoji} {s.key}</option>)}
+          {SPORTS.map((s) => <option key={s.key} value={s.key}>{s.key}</option>)}
         </select>
       </div>
 
@@ -1613,7 +2008,7 @@ function SportExercises() {
         </>}>
         <Field label="Nazwa ćwiczenia" required><input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Np. Wyciskanie sztangi" /></Field>
         <div className="form-grid">
-          <Field label="Sport"><select className="select" value={sport} onChange={e => setSport(e.target.value as SportKey)}>{SPORTS.map(s => <option key={s.key} value={s.key}>{s.emoji} {s.key}</option>)}</select></Field>
+          <Field label="Sport"><select className="select" value={sport} onChange={e => setSport(e.target.value as SportKey)}>{SPORTS.map(s => <option key={s.key} value={s.key}>{s.key}</option>)}</select></Field>
           <Field label="Sprzęt"><select className="select" value={equipment} onChange={e => setEquipment(e.target.value)}>{EQUIPMENT_OPTIONS.map(e => <option key={e}>{e}</option>)}</select></Field>
         </div>
         <Field label="Główne partie (wymagane, można kilka)" required>

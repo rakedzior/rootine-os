@@ -34,8 +34,8 @@ function normItem(r: MealItem): MealItem {
 
 // ── meal_items ────────────────────────────────────────────────────────────────
 
-export async function fetchTodayMealItems(): Promise<MealItem[]> {
-  const d = today();
+export async function fetchTodayMealItems(date?: string): Promise<MealItem[]> {
+  const d = date ?? today();
   const meals = await fetchTodayMeals(d);
   const mealIds = meals.map((meal) => meal.id);
   if (mealIds.length === 0) return [];
@@ -83,6 +83,17 @@ export async function insertMealItem(input: NewMealItemInput): Promise<MealItem>
 export async function deleteMealItem(id: string): Promise<void> {
   const { error } = await supabase.from('meal_items').delete().eq('id', id);
   if (error) throw error;
+}
+
+export async function updateMealItem(id: string, patch: Partial<Pick<MealItem, 'name' | 'kcal' | 'protein' | 'carb' | 'fat' | 'amount'>>): Promise<MealItem> {
+  const { data, error } = await supabase
+    .from('meal_items')
+    .update(patch)
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return normItem(data as MealItem);
 }
 
 // ── meals ─────────────────────────────────────────────────────────────────────
@@ -151,6 +162,22 @@ export async function insertFoodItem(input: NewFoodItemInput): Promise<FoodItem>
     .single();
   if (error) throw error;
   return normFood(data as FoodItem);
+}
+
+export async function updateFoodItem(id: string, patch: Partial<NewFoodItemInput>): Promise<FoodItem> {
+  const { data, error } = await supabase
+    .from('food_items')
+    .update(patch)
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return normFood(data as FoodItem);
+}
+
+export async function deleteFoodItem(id: string): Promise<void> {
+  const { error } = await supabase.from('food_items').delete().eq('id', id);
+  if (error) throw error;
 }
 
 // ── nutrition_daily ───────────────────────────────────────────────────────────
