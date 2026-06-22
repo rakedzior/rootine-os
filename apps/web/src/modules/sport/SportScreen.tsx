@@ -7,7 +7,7 @@ import {
   EXERCISE_CATALOG, findExercise, type SportKey, type MuscleKey, type Difficulty,
 } from '@/features/sport/catalog';
 import {
-  volFromSets, sessionVolume, sessionSetCount, filterBySport, weekSummary, templateMuscles, templateStats,
+  volFromSets, sessionVolume, sessionSetCount, filterBySport, templateMuscles, templateStats,
   computePRs, topExercisesByVolume, muscleSetCounts, streakDays, dailyBuckets, runningStats, weekOverWeek,
   byCategoryCount, mostFrequentExercises, generateInsights, exercisesMuscles, sessionsMuscles, muscleCountsToHighlight,
   monthSummary, monthHeatmapData, compareRanges, sportDistribution, weeklyTrend, sessionsInLastNDays, avgRir,
@@ -155,19 +155,97 @@ function StatBox({ label, value }: { label: string; value: string }) {
   );
 }
 
-function DayStateBar({ label, value, max = 10 }: { label: string; value: number; max?: number }) {
-  const pct = Math.max(0, Math.min(100, (value / max) * 100));
-  return (
-    <div style={{ marginBottom: 9 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
-        <span style={{ color: 'var(--ink-2)' }}>{label}</span>
-        <span style={{ fontWeight: 700 }}>{value}/{max}</span>
-      </div>
-      <div style={{ height: 5, borderRadius: 99, background: 'var(--surface-3)', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: 'var(--acc)', borderRadius: 99 }} />
-      </div>
-    </div>
-  );
+type PlannedWorkout = {
+  key: string;
+  template: WorkoutTemplate;
+  done?: boolean;
+  session?: WorkoutSession;
+};
+
+const TRAINING_PHOTOS = {
+  push: 'https://source.unsplash.com/1600x1000/?bench-press,gym',
+  pull: 'https://source.unsplash.com/1600x1000/?pull-up,gym',
+  legs: 'https://source.unsplash.com/1600x1000/?barbell-squat,gym',
+  run: 'https://source.unsplash.com/1600x1000/?running,runner',
+  climb: 'https://source.unsplash.com/1600x1000/?rock-climbing,climber',
+  mobility: 'https://source.unsplash.com/1600x1000/?stretching,mobility',
+  rehab: 'https://source.unsplash.com/1600x1000/?physical-therapy,rehab',
+  gym: 'https://source.unsplash.com/1600x1000/?gym,workout',
+};
+
+function templateKind(template: WorkoutTemplate): keyof typeof TRAINING_PHOTOS {
+  const haystack = `${template.name} ${template.category ?? ''} ${template.sportType}`.toLowerCase();
+  if (haystack.includes('push')) return 'push';
+  if (haystack.includes('pull')) return 'pull';
+  if (haystack.includes('legs') || haystack.includes('nogi') || haystack.includes('przysiad')) return 'legs';
+  if (template.sportType === 'Bieganie') return 'run';
+  if (template.sportType === 'Wspinaczka') return 'climb';
+  if (template.sportType === 'Mobilność') return 'mobility';
+  if (template.sportType === 'Rehabilitacja') return 'rehab';
+  return 'gym';
+}
+
+function templatePhoto(template: WorkoutTemplate): string {
+  return TRAINING_PHOTOS[templateKind(template)];
+}
+
+function plannedTemplatesForDate(date: Date, activeTemplates: WorkoutTemplate[]): WorkoutTemplate[] {
+  if (activeTemplates.length === 0) return [];
+  const weekStart = startOfWeek(new Date());
+  const dayOffset = Math.round((date.getTime() - weekStart.getTime()) / 86400000);
+  const strength = activeTemplates.filter((t) => t.sportType !== 'Mobilność' && t.sportType !== 'Rehabilitacja');
+  const recovery = activeTemplates.filter((t) => t.sportType === 'Mobilność' || t.sportType === 'Rehabilitacja');
+  const basePool = strength.length > 0 ? strength : activeTemplates;
+  const normalized = ((dayOffset % 7) + 7) % 7;
+
+  if (normalized === 6 && recovery.length > 0) return [recovery[0]];
+
+  const base = basePool[((normalized % basePool.length) + basePool.length) % basePool.length];
+  const items = base ? [base] : [];
+  const needsRecovery = recovery.length > 0 && (normalized === 0 || normalized === 2 || normalized === 4);
+  if (needsRecovery) {
+    const extra = recovery[normalized % recovery.length];
+    if (extra && !items.some((t) => t.id === extra.id)) items.push(extra);
+  }
+  return items;
+}
+
+function plannedWorkoutsForDate(date: Date, activeTemplates: WorkoutTemplate[], sessions: WorkoutSession[]): PlannedWorkout[] {
+  const dateStr = toDateStr(date);
+  const completed = sessions
+    .filter((s) => s.date === dateStr)
+    .map((session) => {
+      const template = activeTemplates.find((t) => t.id === session.templateId)
+        ?? activeTemplates.find((t) => t.sportType === session.sportType);
+      return template ? { key: session.id, template, done: true, session } : null;
+    })
+    .filter(Boolean) as PlannedWorkout[];
+
+  const completedTemplateIds = new Set(completed.map((item) => item.template.id));
+  const planned = plannedTemplatesForDate(date, activeTemplates)
+    .filter((template) => !completedTemplateIds.has(template.id))
+    .map((template) => ({ key: `${dateStr}-${template.id}`, template }));
+
+  return [...completed, ...planned];
+}
+
+function workoutMetricStats(workout: PlannedWorkout | null) {
+  if (!workout) return null;
+  if (workout.session) {
+    return {
+      duration: workout.session.duration ?? workout.template.estimatedDuration,
+      exerciseCount: workout.session.exercises.length,
+      setCount: sessionSetCount(workout.session),
+      volumeKg: sessionVolume(workout.session),
+    };
+  }
+  return templateStats(workout.template);
+}
+
+function primaryMuscles(muscles: Partial<Record<MuscleKey, 'primary' | 'secondary' | 'stabilizer'>>) {
+  return Object.entries(muscles)
+    .filter(([, lvl]) => lvl === 'primary')
+    .map(([k]) => k as MuscleKey);
 }
 
 function WeekStrip({ sessions, activeTemplates }: { sessions: WorkoutSession[]; activeTemplates: WorkoutTemplate[] }) {
@@ -180,8 +258,8 @@ function WeekStrip({ sessions, activeTemplates }: { sessions: WorkoutSession[]; 
 
   const monthFmt = (d: Date) => d.toLocaleDateString('pl-PL', { month: 'long' });
   const rangeLabel = weekStart.getMonth() === weekEnd.getMonth()
-    ? `${weekStart.getDate()}–${weekEnd.getDate()} ${monthFmt(weekStart)} ${weekEnd.getFullYear()}`
-    : `${weekStart.getDate()} ${monthFmt(weekStart)} – ${weekEnd.getDate()} ${monthFmt(weekEnd)} ${weekEnd.getFullYear()}`;
+    ? `${weekStart.getDate()}-${weekEnd.getDate()} ${monthFmt(weekStart)} ${weekEnd.getFullYear()}`
+    : `${weekStart.getDate()} ${monthFmt(weekStart)} - ${weekEnd.getDate()} ${monthFmt(weekEnd)} ${weekEnd.getFullYear()}`;
 
   return (
     <div className="card">
@@ -194,22 +272,18 @@ function WeekStrip({ sessions, activeTemplates }: { sessions: WorkoutSession[]; 
           <button className="icon-btn" onClick={() => setWeekStart((w) => addDays(w, 7))} aria-label="Następny tydzień">›</button>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(120px, 1fr))', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
         {weekDays.map((date) => {
           const dateStr = toDateStr(date);
           const isToday = dateStr === todayStr;
-          const session = sessions.find((s) => s.date === dateStr);
-          const dayOffset = Math.round((date.getTime() - today.getTime()) / 86400000);
-          const suggestion = !session && dayOffset >= 0 && activeTemplates.length > 0
-            ? activeTemplates[((dayOffset % activeTemplates.length) + activeTemplates.length) % activeTemplates.length]
-            : null;
-          const isPastEmpty = !session && dayOffset < 0;
+          const dayItems = plannedWorkoutsForDate(date, activeTemplates, sessions);
           return (
             <div key={dateStr} style={{
-              borderRadius: 'var(--r-mid)', padding: '10px 8px', minHeight: 116,
+              borderRadius: 'var(--r-mid)', padding: '10px 8px', minHeight: 136,
               border: `1.5px solid ${isToday ? 'var(--acc)' : 'var(--border-soft)'}`,
-              background: isToday ? 'var(--acc-soft)' : 'var(--surface-inset)',
-              display: 'flex', flexDirection: 'column', gap: 5,
+              background: isToday ? 'linear-gradient(180deg, rgba(224,42,139,.16), rgba(10,31,38,.86))' : 'var(--surface-inset)',
+              boxShadow: isToday ? '0 0 0 1px rgba(224,42,139,.22), 0 10px 25px rgba(224,42,139,.12)' : undefined,
+              display: 'flex', flexDirection: 'column', gap: 7,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 700 }}>
@@ -217,22 +291,30 @@ function WeekStrip({ sessions, activeTemplates }: { sessions: WorkoutSession[]; 
                 </span>
                 {isToday && <span className="badge badge-green" style={{ fontSize: 8 }}>Dziś</span>}
               </div>
-              {session ? (
-                <>
-                  <span style={{ fontSize: 16 }}>{SPORTS.find((s) => s.key === session.sportType)?.emoji}</span>
-                  <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.25 }}>{session.templateName ?? session.sportType}</div>
-                  <div style={{ fontSize: 10.5, color: 'var(--ink-3)' }}>{session.sportType} · {session.duration ?? 0} min</div>
-                  <span className="badge badge-green" style={{ marginTop: 'auto', alignSelf: 'flex-start', fontSize: 8.5 }}>✓ Zrobione</span>
-                </>
-              ) : suggestion ? (
-                <>
-                  <span style={{ fontSize: 16, opacity: .75 }}>{SPORTS.find((s) => s.key === suggestion.sportType)?.emoji}</span>
-                  <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.25, color: 'var(--ink-2)' }}>{suggestion.name}</div>
-                  <div style={{ fontSize: 10.5, color: 'var(--ink-3)' }}>{suggestion.sportType} · {suggestion.estimatedDuration} min</div>
-                </>
+              {dayItems.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minHeight: 0 }}>
+                  {dayItems.map((item) => (
+                    <div key={item.key} style={{
+                      borderRadius: 10, padding: '8px 9px',
+                      background: item.done ? 'rgba(45,216,158,.11)' : 'rgba(255,255,255,.045)',
+                      border: `1px solid ${item.done ? 'rgba(45,216,158,.25)' : 'var(--border-soft)'}`,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                        <span style={{ fontSize: 15 }}>{SPORTS.find((s) => s.key === item.template.sportType)?.emoji ?? '•'}</span>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.template.name}</div>
+                          <div style={{ fontSize: 10.5, color: 'var(--ink-3)', marginTop: 2 }}>
+                            {item.template.sportType} · {item.session?.duration ?? item.template.estimatedDuration} min
+                          </div>
+                        </div>
+                      </div>
+                      {item.done && <span className="badge badge-green" style={{ marginTop: 6, alignSelf: 'flex-start', fontSize: 8.5 }}>✓ Zrobione</span>}
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'var(--ink-4)' }}>
-                  {isPastEmpty ? 'Odpoczynek' : '—'}
+                  Odpoczynek
                 </div>
               )}
             </div>
@@ -248,22 +330,23 @@ function WeekStatsRow({ sessions }: { sessions: WorkoutSession[] }) {
   function deltaLabel(pct: number | null) {
     if (pct == null) return null;
     const up = pct >= 0;
-    return <div style={{ fontSize: 10.5, color: up ? 'var(--success-ink)' : 'var(--danger-ink)', fontWeight: 700, marginTop: 2 }}>{up ? '▲' : '▼'} {Math.abs(pct)}% vs poprzedni tydzień</div>;
+    return <div style={{ fontSize: 10.5, color: up ? 'var(--success-ink)' : 'var(--danger-ink)', fontWeight: 700, marginTop: 4 }}>{up ? '▲' : '▼'} {Math.abs(pct)}% vs poprzedni tydzień</div>;
   }
   const boxes = [
     { label: 'Czas treningu', value: `${Math.floor(current.minutes / 60)} h ${current.minutes % 60} min`, delta: deltaPct.minutes },
     { label: 'Objętość', value: `${(current.volumeKg / 1000).toFixed(1)} t`, delta: deltaPct.volumeKg },
     { label: 'Treningi', value: `${current.count}`, delta: deltaPct.count },
-    { label: 'Serii roboczych', value: `${current.sets}`, delta: deltaPct.sets },
+    { label: 'Serie robocze', value: `${current.sets}`, delta: deltaPct.sets },
+    { label: 'Kalorie', value: `${Math.round(current.minutes * 10.5).toLocaleString('pl-PL')} kcal`, delta: deltaPct.minutes },
   ];
   return (
     <div className="card">
       <div className="card-head"><span className="card-title">Statystyki tygodnia</span></div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(118px, 1fr))', gap: 10, overflowX: 'auto', paddingBottom: 2 }}>
         {boxes.map((b) => (
-          <div key={b.label} style={{ background: 'var(--surface-3)', borderRadius: 10, padding: '10px 12px' }}>
+          <div key={b.label} style={{ background: 'var(--surface-3)', border: '1px solid var(--border-soft)', borderRadius: 10, padding: '12px 13px', minHeight: 88 }}>
             <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{b.label}</div>
-            <div style={{ fontWeight: 800, fontSize: 19, marginTop: 2 }}>{b.value}</div>
+            <div style={{ fontWeight: 900, fontSize: 21, marginTop: 4 }}>{b.value}</div>
             {deltaLabel(b.delta)}
           </div>
         ))}
@@ -272,155 +355,124 @@ function WeekStatsRow({ sessions }: { sessions: WorkoutSession[] }) {
   );
 }
 
-function SportToday({ onStartSession, onQuickAction }: { onStartSession: () => void; onQuickAction: (tab: string, sport?: SportKey) => void }) {
-  const { templates, sessions, feelings, startSession, repeatSession } = useLocalStore();
+function SportToday({ onStartSession }: { onStartSession: () => void; onQuickAction: (tab: string, sport?: SportKey) => void }) {
+  const { templates, sessions, startSession } = useLocalStore();
   const activeTemplates = templates.filter((t) => t.isActive);
-  const [focusSport, setFocusSport] = useState<SportKey>(() => (activeTemplates[0]?.sportType as SportKey) ?? 'Siłownia');
-  const sportTemplates = activeTemplates.filter((t) => t.sportType === focusSport);
-  const [swapIdx, setSwapIdx] = useState(0);
-  useEffect(() => { setSwapIdx(0); }, [focusSport]);
-  const nextTemplate = sportTemplates.length > 0 ? sportTemplates[swapIdx % sportTemplates.length] : null;
-  const lastSession = sessions[0];
-  const week = weekSummary(sessions, SPORT_KEYS);
-  const muscles = useMemo(() => templateMuscles(nextTemplate), [nextTemplate]);
-  const lastFeeling = feelings[0];
-  const stats = nextTemplate ? templateStats(nextTemplate) : null;
-  const primaryMuscleKeys = Object.entries(muscles).filter(([, lvl]) => lvl === 'primary').map(([k]) => k as MuscleKey);
+  const todayPlans = plannedWorkoutsForDate(new Date(), activeTemplates, sessions);
+  const [todayIdx, setTodayIdx] = useState(0);
+  useEffect(() => {
+    setTodayIdx(0);
+  }, [todayPlans.map((p) => p.key).join('|')]);
+
+  const selectedPlan = todayPlans.length > 0 ? todayPlans[((todayIdx % todayPlans.length) + todayPlans.length) % todayPlans.length] : null;
+  const selectedTemplate = selectedPlan?.template ?? null;
+  const stats = workoutMetricStats(selectedPlan);
+  const muscles = useMemo(() => templateMuscles(selectedTemplate), [selectedTemplate]);
+  const primaryMuscleKeys = primaryMuscles(muscles);
+  const photo = selectedTemplate ? templatePhoto(selectedTemplate) : TRAINING_PHOTOS.gym;
+  const trendSport = (selectedTemplate?.sportType ?? 'Siłownia') as SportKey;
 
   function handleStart() {
-    if (!nextTemplate) return;
+    if (!selectedTemplate) return;
     startSession({
-      templateId: nextTemplate.id,
-      templateName: nextTemplate.name,
-      sportType: nextTemplate.sportType,
+      templateId: selectedTemplate.id,
+      templateName: selectedTemplate.name,
+      sportType: selectedTemplate.sportType,
       currentExerciseIndex: 0,
-      exercises: nextTemplate.exercises.map(e => ({ ...e, sets: e.sets.map(s => ({ ...s, completed: false })) })),
+      exercises: selectedTemplate.exercises.map(e => ({ ...e, sets: e.sets.map(s => ({ ...s, completed: false })) })),
     });
     onStartSession();
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <SportSelectorRow
-        active={focusSport}
-        includeAll={false}
-        onSelect={(s) => setFocusSport(s as SportKey)}
-        countLabel={(s) => plCount(week.bySport[s as SportKey] ?? 0, 'trening', 'treningi', 'treningów') + ' w tym tygodniu'}
-      />
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2.35fr) minmax(260px, .85fr)', gap: 16, alignItems: 'stretch' }}>
+        <div className="card" style={{
+          position: 'relative', overflow: 'hidden', minHeight: 430, padding: 0,
+          backgroundImage: `linear-gradient(90deg, rgba(8,24,30,.96) 0%, rgba(8,24,30,.78) 42%, rgba(8,24,30,.25) 72%, rgba(8,24,30,.72) 100%), url("${photo}")`,
+          backgroundSize: 'cover', backgroundPosition: 'center',
+        }}>
+          <div style={{ position: 'absolute', inset: 0, border: '1px solid rgba(224,42,139,.22)', borderRadius: 'inherit', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: 430, padding: 28 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 800, marginBottom: 12 }}>Dzisiejszy trening</div>
+                <h2 style={{ margin: 0, fontSize: 30, lineHeight: 1.08, color: 'var(--ink)', letterSpacing: 0 }}>{selectedTemplate?.name ?? 'Brak treningu'}</h2>
+                {selectedTemplate && <div className="badge" style={{ marginTop: 12, background: 'rgba(255,255,255,.08)', borderColor: 'rgba(255,255,255,.12)' }}>{SPORTS.find((s) => s.key === selectedTemplate.sportType)?.emoji} {selectedTemplate.sportType}</div>}
+              </div>
+              {todayPlans.length > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(6,19,24,.72)', border: '1px solid var(--border-soft)', borderRadius: 12, padding: 6 }}>
+                  <button className="icon-btn" onClick={() => setTodayIdx((i) => i - 1)} aria-label="Poprzedni trening">‹</button>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)' }}>{((todayIdx % todayPlans.length) + todayPlans.length) % todayPlans.length + 1}/{todayPlans.length}</span>
+                  <button className="icon-btn" onClick={() => setTodayIdx((i) => i + 1)} aria-label="Następny trening">›</button>
+                </div>
+              )}
+            </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr', gap: 16, alignItems: 'start' }}>
-        {/* Dzisiejszy trening — duża karta */}
-        <div className="card">
-          <div className="card-head">
-            <span className="card-title">Dzisiejszy trening</span>
-          </div>
-          {nextTemplate && stats ? (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                <div style={{ width: 46, height: 46, borderRadius: 12, background: 'var(--acc-soft)', display: 'grid', placeItems: 'center', fontSize: 22, flexShrink: 0 }}>
-                  {SPORTS.find((s) => s.key === nextTemplate.sportType)?.emoji ?? '🏋️'}
+            {selectedTemplate && stats ? (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(92px, 1fr))', maxWidth: 560, gap: 1, marginTop: 28, borderTop: '1px solid rgba(255,255,255,.08)', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+                  {[
+                    ['Czas', `~${stats.duration} min`],
+                    ['Ćwiczenia', `${stats.exerciseCount}`],
+                    ['Serie robocze', `${stats.setCount}`],
+                    ['Objętość', stats.volumeKg > 0 ? `${(stats.volumeKg / 1000).toFixed(1)} t` : '-'],
+                  ].map(([label, value]) => (
+                    <div key={label} style={{ padding: '14px 12px 14px 0', borderRight: '1px solid rgba(255,255,255,.08)' }}>
+                      <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{label}</div>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--ink)', marginTop: 3 }}>{value}</div>
+                    </div>
+                  ))}
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 17 }}>{nextTemplate.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>{nextTemplate.sportType}{nextTemplate.level && ` · ${DIFFICULTY_LABEL[nextTemplate.level]}`}</div>
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 14 }}>
-                <StatBox label="Czas" value={`~${stats.duration} min`} />
-                <StatBox label="Ćwiczenia" value={`${stats.exerciseCount}`} />
-                <StatBox label="Serie robocze" value={`${stats.setCount}`} />
-                <StatBox label="Objętość" value={stats.volumeKg > 0 ? `${(stats.volumeKg / 1000).toFixed(1)} t` : '–'} />
-              </div>
-              {nextTemplate.goal && <p style={{ fontSize: 13, color: 'var(--ink-2)', marginBottom: 14 }}>{nextTemplate.goal}</p>}
-              {primaryMuscleKeys.length > 0 && (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-3)', marginBottom: 8 }}>Główne partie mięśniowe</div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {primaryMuscleKeys.map((m) => <span key={m} className="badge badge-green">💪 {MUSCLE_LABEL[m]}</span>)}
+                <p style={{ maxWidth: 560, fontSize: 14, lineHeight: 1.65, color: 'var(--ink-2)', margin: '20px 0 0' }}>
+                  {selectedTemplate.description || selectedTemplate.goal || 'Trening zaplanowany na dziś. Przejdź przez sesję i zapisz wyniki do historii.'}
+                </p>
+                {primaryMuscleKeys.length > 0 && (
+                  <div style={{ marginTop: 22 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--ink-3)', marginBottom: 10 }}>Główne partie mięśniowe</div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {primaryMuscleKeys.slice(0, 4).map((m) => <span key={m} className="badge" style={{ background: 'rgba(224,42,139,.16)', borderColor: 'rgba(224,42,139,.35)' }}>✦ {MUSCLE_LABEL[m]}</span>)}
+                    </div>
                   </div>
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleStart}>▶ Rozpocznij sesję</button>
-                {sportTemplates.length > 1 && (
-                  <button className="btn btn-secondary" onClick={() => setSwapIdx((i) => i + 1)}>⇄ Zamień</button>
                 )}
-              </div>
-              {lastSession && (
-                <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: 'var(--ink-3)' }}>
-                  <span>Ostatnia: <strong style={{ color: 'var(--ink)' }}>{lastSession.templateName ?? lastSession.sportType}</strong> · {fmtDate(lastSession.date)}</span>
-                  <button className="btn btn-ghost btn-sm" onClick={() => { repeatSession(lastSession.id); onStartSession(); }}>Powtórz</button>
+                <div style={{ marginTop: 'auto', display: 'flex', gap: 10, alignItems: 'center', maxWidth: 430 }}>
+                  <button className="btn btn-primary" style={{ flex: 1, minHeight: 50, fontSize: 15 }} onClick={handleStart}>▶ Rozpocznij sesję</button>
+                  {selectedPlan?.done && <span className="badge badge-green">✓ Zrobione</span>}
                 </div>
-              )}
-            </>
-          ) : (
-            <EmptyState title="Brak aktywnego szablonu" desc={`Dodaj szablon dla: ${focusSport}.`} cta="Dodaj szablon" onCta={() => onQuickAction('szablony', focusSport)} />
-          )}
+              </>
+            ) : (
+              <div style={{ marginTop: 24, maxWidth: 420 }}>
+                <EmptyState title="Brak aktywnego szablonu" desc="Dodaj aktywny szablon, żeby ekran Dzisiaj miał co zaplanować." />
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Co dziś pracuje */}
-        <div className="card">
+        <div className="card" style={{ minHeight: 430, display: 'flex', flexDirection: 'column' }}>
           <div className="card-head"><span className="card-title">Co dziś pracuje?</span></div>
           {Object.keys(muscles).length > 0 ? (
             <>
-              <BodyMap highlight={muscles} />
-              <div style={{ display: 'flex', gap: 14, justifyContent: 'center', marginTop: 10, fontSize: 11, color: 'var(--ink-3)' }}>
-                <span><i style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: 'var(--acc)', marginRight: 4 }} />Główne</span>
-                <span><i style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: 'var(--acc-b)', marginRight: 4 }} />Pomocnicze</span>
-                <span><i style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: 'var(--ink-4)', marginRight: 4 }} />Stabilizatory</span>
+              <div style={{ flex: 1, display: 'grid', placeItems: 'center' }}>
+                <BodyMap highlight={muscles} size={118} />
+              </div>
+              <div style={{ display: 'flex', gap: 14, justifyContent: 'center', marginTop: 10, fontSize: 11, color: 'var(--ink-3)', flexWrap: 'wrap' }}>
+                <span><i style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: 'var(--acc)', marginRight: 4 }} />Główne partie</span>
+                <span><i style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: 'var(--acc-b)', marginRight: 4 }} />Dodatkowe partie</span>
               </div>
             </>
           ) : (
             <EmptyState title="Brak danych o partiach" desc="Ten szablon nie ma jeszcze ćwiczeń z bazy." />
           )}
         </div>
-
-        {/* Aktywności w tygodniu + Stan dnia */}
-        <div className="card">
-          <div className="card-head"><span className="card-title">Aktywności w tygodniu</span></div>
-          <div style={{ marginBottom: 12 }}>
-            {SPORT_KEYS.map((s) => (
-              <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 12.5 }}>
-                <span style={{ flex: 1, color: 'var(--ink-2)' }}>{s}</span>
-                <span style={{ fontWeight: 700 }}>{week.bySport[s] ?? 0}</span>
-              </div>
-            ))}
-          </div>
-          <button className="btn btn-ghost btn-sm" style={{ padding: 0, marginBottom: 14 }} onClick={() => onQuickAction('analiza')}>Zobacz analizę →</button>
-
-          <div style={{ borderTop: '1px solid var(--border-soft)', paddingTop: 12 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-3)', marginBottom: 10 }}>Stan dnia</div>
-            {lastFeeling ? (
-              <>
-                <DayStateBar label="Energia" value={lastFeeling.energy} />
-                <DayStateBar label="Gotowość" value={lastFeeling.readiness} />
-                <div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 4 }}>Ostatni wpis: {fmtDate(lastFeeling.date)}</div>
-              </>
-            ) : (
-              <button className="btn btn-secondary btn-sm" onClick={() => onQuickAction('odczucia')}>+ Dodaj odczucia</button>
-            )}
-          </div>
-        </div>
       </div>
 
       <WeekStrip sessions={sessions} activeTemplates={activeTemplates} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 380px) 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(280px, .9fr)', gap: 16 }}>
         <WeekStatsRow sessions={sessions} />
         <div className="card">
           <div className="card-head"><span className="card-title">Trend objętości</span></div>
-          <VolumeChart sessions={filterBySport(sessions, focusSport)} />
-        </div>
-      </div>
-
-      {/* Szybkie akcje */}
-      <div className="card">
-        <div className="card-head"><span className="card-title">Szybkie akcje</span></div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
-          <button className="btn btn-secondary" onClick={() => onQuickAction('szablony')}>+ Dodaj trening</button>
-          <button className="btn btn-secondary" onClick={() => onQuickAction('odczucia')}>+ Dodaj odczucia</button>
-          <button className="btn btn-secondary" onClick={() => onQuickAction('szablony', 'Mobilność')}>+ Dodaj mobilność</button>
-          <button className="btn btn-secondary" onClick={() => onQuickAction('szablony', 'Rehabilitacja')}>+ Dodaj rehabilitację</button>
+          <VolumeChart sessions={filterBySport(sessions, trendSport)} />
         </div>
       </div>
     </div>
