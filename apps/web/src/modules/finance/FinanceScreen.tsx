@@ -12,15 +12,16 @@ import {
 
 const TABS = [
   { id: 'przeglad', label: 'Przegląd', icon: () => <TabIcon name="overview" /> },
-  { id: 'konta', label: 'Konta', icon: () => <TabIcon name="accounts" /> },
-  { id: 'budzet', label: 'Budżet', icon: () => <TabIcon name="budget" /> },
-  { id: 'oszczednosci', label: 'Oszczędności', icon: () => <TabIcon name="savings" /> },
-  { id: 'cykliczne', label: 'Płatności', icon: () => <TabIcon name="payments" /> },
-  { id: 'jdg', label: 'JDG', icon: () => <TabIcon name="business" /> },
+  { id: 'miesieczne', label: 'Miesięczne', icon: () => <TabIcon name="calendar" /> },
 ];
 
-type FinanceTab = 'przeglad' | 'konta' | 'budzet' | 'oszczednosci' | 'cykliczne' | 'jdg';
-type IconName = 'overview' | 'accounts' | 'budget' | 'savings' | 'payments' | 'business' | 'edit' | 'plus' | 'reset' | 'check';
+type FinanceTab = 'przeglad' | 'miesieczne';
+type FinanceTone = 'blue' | 'violet' | 'teal' | 'pink';
+type IconName =
+  | 'overview' | 'calendar' | 'accounts' | 'budget' | 'savings' | 'payments' | 'business'
+  | 'due' | 'paid' | 'edit' | 'plus' | 'reset' | 'check'
+  | 'home' | 'transport' | 'food' | 'entertainment' | 'health' | 'utilities' | 'phone'
+  | 'shield' | 'car' | 'travel' | 'cash' | 'bank' | 'wallet' | 'other';
 
 const CATEGORY_OPTIONS = ['Mieszkanie', 'Transport', 'Jedzenie', 'Rozrywka', 'Zdrowie', 'JDG', 'Auto', 'Inne'];
 const ACCOUNT_TYPES = ['główne', 'oszczędnościowe', 'gotówka', 'karta', 'walutowe', 'inwestycje'];
@@ -73,6 +74,70 @@ function num(value: string, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function normalized(value: string) {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function iconForAccount(account: Account): IconName {
+  const source = normalized(`${account.type} ${account.name} ${account.institution ?? ''}`);
+  if (source.includes('oszczed')) return 'bank';
+  if (source.includes('gotow') || source.includes('cash')) return 'wallet';
+  if (source.includes('walut') || source.includes('inwest')) return 'cash';
+  return 'accounts';
+}
+
+function toneForAccount(account: Account): FinanceTone {
+  const source = normalized(`${account.type} ${account.name}`);
+  if (source.includes('oszczed')) return 'violet';
+  if (source.includes('gotow')) return 'teal';
+  if (source.includes('wspol') || source.includes('inwest')) return 'pink';
+  return 'blue';
+}
+
+function iconForCategory(category: string, name = ''): IconName {
+  const source = normalized(`${category} ${name}`);
+  if (source.includes('miesz') || source.includes('czynsz')) return 'home';
+  if (source.includes('transport') || source.includes('parking')) return 'transport';
+  if (source.includes('jedz')) return 'food';
+  if (source.includes('rozryw') || source.includes('netflix')) return 'entertainment';
+  if (source.includes('zdrow') || source.includes('silown')) return 'health';
+  if (source.includes('prad') || source.includes('internet') || source.includes('dom')) return 'utilities';
+  if (source.includes('telefon') || source.includes('abonament')) return 'phone';
+  if (source.includes('ubez')) return 'shield';
+  if (source.includes('auto') || source.includes('samoch') || source.includes('oc')) return 'car';
+  if (source.includes('jdg') || source.includes('ksieg') || source.includes('faktur')) return 'business';
+  return 'other';
+}
+
+function toneForCategory(category: string): FinanceTone {
+  const source = normalized(category);
+  if (source.includes('miesz') || source.includes('transport') || source.includes('auto')) return 'blue';
+  if (source.includes('jedz') || source.includes('dom') || source.includes('ubez')) return 'teal';
+  if (source.includes('rozryw')) return 'violet';
+  return 'pink';
+}
+
+function iconForSavings(goal: SavingsGoal): IconName {
+  const source = normalized(`${goal.name} ${goal.notes ?? ''}`);
+  if (source.includes('podusz') || source.includes('bezpiec')) return 'shield';
+  if (source.includes('wakac') || source.includes('urlop')) return 'travel';
+  if (source.includes('samoch') || source.includes('auto')) return 'car';
+  return 'savings';
+}
+
+function toneForSavings(goal: SavingsGoal): FinanceTone {
+  const source = normalized(`${goal.name} ${goal.notes ?? ''}`);
+  if (source.includes('wakac') || source.includes('urlop')) return 'pink';
+  if (source.includes('samoch') || source.includes('auto')) return 'blue';
+  return 'teal';
+}
+
+function iconForJdg(key: keyof JdgMonth): IconName {
+  if (key === 'invoiceIssued' || key === 'documentsSent') return 'payments';
+  if (key === 'accountingPaid') return 'business';
+  return 'budget';
+}
+
 export function FinanceScreen() {
   const [tab, setTab] = useState<FinanceTab>('przeglad');
   const [month, setMonth] = useState(currentYearMonth());
@@ -83,30 +148,21 @@ export function FinanceScreen() {
         <SubTabs tabs={TABS} active={tab} onChange={(id) => setTab(id as FinanceTab)} />
       </div>
 
-      {tab === 'przeglad' && <FinanceDashboard month={month} onMonthChange={setMonth} onNavigate={setTab} />}
-      {tab === 'konta' && <FinanceFocus month={month} onMonthChange={setMonth}><AccountsPanel detailed /></FinanceFocus>}
-      {tab === 'budzet' && <FinanceFocus month={month} onMonthChange={setMonth}><BudgetPanel month={month} detailed /></FinanceFocus>}
-      {tab === 'oszczednosci' && <FinanceFocus month={month} onMonthChange={setMonth}><SavingsPanel detailed /></FinanceFocus>}
-      {tab === 'cykliczne' && <FinanceFocus month={month} onMonthChange={setMonth}><RecurringPanel month={month} detailed /></FinanceFocus>}
-      {tab === 'jdg' && <FinanceFocus month={month} onMonthChange={setMonth}><JdgPanel month={month} detailed /></FinanceFocus>}
+      {tab === 'przeglad' && <FinanceOverview month={month} onNavigate={setTab} />}
+      {tab === 'miesieczne' && <FinanceMonthly month={month} onMonthChange={setMonth} />}
     </div>
   );
 }
 
-function FinanceDashboard({ month, onMonthChange, onNavigate }: { month: string; onMonthChange: (month: string) => void; onNavigate: (tab: FinanceTab) => void }) {
-  const { accounts, savingsGoals, recurringExpenses, budgetCategories } = useLocalStore();
+function FinanceOverview({ month, onNavigate }: { month: string; onNavigate: (tab: FinanceTab) => void }) {
+  const { accounts, savingsGoals, recurringExpenses } = useLocalStore();
   const activeAccounts = accounts.filter((a) => !a.archived);
-  const monthBudget = budgetCategories.filter((c) => c.month === month);
   const totalBalance = activeAccounts.reduce((sum, account) => sum + account.balance, 0);
   const totalSavings = savingsGoals.reduce((sum, goal) => sum + goal.currentAmount, 0);
   const monthlyFixed = recurringExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const planned = monthBudget.reduce((sum, cat) => sum + cat.plannedAmount, 0);
-  const actual = monthBudget.reduce((sum, cat) => sum + cat.actualAmount, 0);
 
   return (
     <div className="finance-shell">
-      <FinanceMonthBar month={month} onMonthChange={onMonthChange} />
-
       <div className="finance-kpi-grid">
         <MetricCard
           icon="accounts"
@@ -114,7 +170,7 @@ function FinanceDashboard({ month, onMonthChange, onNavigate }: { month: string;
           value={fmtPLN(totalBalance)}
           note={`${activeAccounts.length} aktywne konta`}
           tone="blue"
-          onEdit={() => onNavigate('konta')}
+          onEdit={() => onNavigate('przeglad')}
         />
         <MetricCard
           icon="savings"
@@ -122,37 +178,65 @@ function FinanceDashboard({ month, onMonthChange, onNavigate }: { month: string;
           value={fmtPLN(totalSavings)}
           note={`${savingsGoals.length} cele oszczędnościowe`}
           tone="violet"
-          onEdit={() => onNavigate('oszczednosci')}
+          onEdit={() => onNavigate('przeglad')}
         />
         <MetricCard
           icon="payments"
           label="Miesięczne stałe wydatki"
           value={fmtPLN(monthlyFixed)}
-          note={`${fmtPLN(actual)} z ${fmtPLN(planned)} budżetu`}
+          note={`Stałe koszty w ${fmtMonth(month)}`}
           tone="teal"
-          onEdit={() => onNavigate('cykliczne')}
+          onEdit={() => onNavigate('miesieczne')}
         />
       </div>
 
       <div className="finance-dashboard-grid">
         <AccountsPanel />
-        <BudgetPanel month={month} />
         <SavingsPanel />
+        <FixedExpensesPanel onConfigure={() => onNavigate('miesieczne')} />
       </div>
 
-      <div className="finance-bottom-grid">
-        <RecurringPanel month={month} />
-        <JdgPanel month={month} />
+      <div className="finance-overview-cta">
+        <div className="finance-cta-copy">
+          <FinanceIcon name="calendar" />
+          <span>Budżet, płatności cykliczne oraz elementy JDG znajdziesz w zakładce Miesięczne.</span>
+        </div>
+        <button className="btn btn-ghost" type="button" onClick={() => onNavigate('miesieczne')}>Przejdź do Miesięczne</button>
       </div>
     </div>
   );
 }
 
-function FinanceFocus({ month, onMonthChange, children }: { month: string; onMonthChange: (month: string) => void; children: ReactNode }) {
+function FinanceMonthly({ month, onMonthChange }: { month: string; onMonthChange: (month: string) => void }) {
+  const { budgetCategories, recurringExpenses, financialReminders } = useLocalStore();
+  const categories = budgetCategories.filter((cat) => cat.month === month);
+  const planned = categories.reduce((sum, cat) => sum + cat.plannedAmount, 0);
+  const actual = categories.reduce((sum, cat) => sum + cat.actualAmount, 0);
+  const paidRecurring = recurringExpenses.filter((item) => item.paidThisMonth).reduce((sum, item) => sum + item.amount, 0);
+  const dueRecurring = recurringExpenses.filter((item) => !item.paidThisMonth).reduce((sum, item) => sum + item.amount, 0);
+  const monthReminders = financialReminders.filter((reminder) => reminder.dueDate.startsWith(month));
+  const paidReminders = monthReminders.filter((reminder) => reminder.completed).reduce((sum, reminder) => sum + (reminder.amount ?? 0), 0);
+  const dueReminders = monthReminders.filter((reminder) => !reminder.completed).reduce((sum, reminder) => sum + (reminder.amount ?? 0), 0);
+  const paid = paidRecurring + paidReminders;
+  const due = dueRecurring + dueReminders;
+  const remaining = planned - actual;
+  const budgetPct = clampPct((actual / Math.max(planned, 1)) * 100);
+
   return (
     <div className="finance-shell">
       <FinanceMonthBar month={month} onMonthChange={onMonthChange} />
-      {children}
+
+      <div className="finance-kpi-grid">
+        <MetricCard icon="due" label="Do zapłaty" value={fmtPLN(due)} note={`Pozostało w ${fmtMonth(month)}`} tone="pink" />
+        <MetricCard icon="paid" label="Opłacone" value={fmtPLN(paid)} note={`Opłacone w ${fmtMonth(month)}`} tone="teal" />
+        <BudgetMetric planned={planned} actual={actual} remaining={remaining} pct={budgetPct} />
+      </div>
+
+      <div className="finance-monthly-grid">
+        <BudgetPanel month={month} detailed />
+        <RecurringPanel month={month} detailed />
+        <JdgPanel month={month} detailed />
+      </div>
     </div>
   );
 }
@@ -172,21 +256,46 @@ function FinanceMonthBar({ month, onMonthChange }: { month: string; onMonthChang
   );
 }
 
-function MetricCard({ icon, label, value, note, tone, onEdit }: { icon: IconName; label: string; value: string; note: string; tone: 'blue' | 'violet' | 'teal'; onEdit: () => void }) {
+function MetricCard({ icon, label, value, note, tone, onEdit }: { icon: IconName; label: string; value: string; note: string; tone: FinanceTone; onEdit?: () => void }) {
   return (
     <article className={`finance-metric finance-metric-${tone}`}>
       <div className="finance-metric-icon"><FinanceIcon name={icon} /></div>
       <div className="finance-metric-body">
         <div className="finance-metric-label">
           {label}
-          <button className="finance-inline-edit" type="button" onClick={onEdit} aria-label={`Edytuj: ${label}`}>
-            <FinanceIcon name="edit" />
-          </button>
+          {onEdit && (
+            <button className="finance-inline-edit" type="button" onClick={onEdit} aria-label={`Edytuj: ${label}`}>
+              <FinanceIcon name="edit" />
+            </button>
+          )}
         </div>
         <div className="finance-metric-value">{value}</div>
         <div className="finance-metric-note">{note}</div>
       </div>
       <MiniSparkline tone={tone} />
+    </article>
+  );
+}
+
+function BudgetMetric({ planned, actual, remaining, pct }: { planned: number; actual: number; remaining: number; pct: number }) {
+  return (
+    <article className="finance-metric finance-budget-metric">
+      <div className="finance-metric-icon"><FinanceIcon name="budget" /></div>
+      <div className="finance-budget-metric-body">
+        <div className="finance-metric-label">
+          Budżet miesiąca
+          <span className="finance-inline-edit" aria-hidden="true"><FinanceIcon name="edit" /></span>
+        </div>
+        <div className="finance-budget-metric-stats">
+          <Stat label="Zaplanowane" value={fmtPLN(planned)} />
+          <Stat label="Wydane" value={fmtPLN(actual)} />
+          <Stat label="Pozostało" value={fmtPLN(remaining)} danger={remaining < 0} />
+        </div>
+        <div className="finance-budget-meter">
+          <span style={{ width: `${pct}%` }} />
+          <strong>{fmtNumber(pct)}%</strong>
+        </div>
+      </div>
     </article>
   );
 }
@@ -237,7 +346,7 @@ function AccountsPanel({ detailed = false }: { detailed?: boolean }) {
                   <tr key={account.id}>
                     <td>
                       <button className="finance-name-btn" type="button" onClick={() => setEditing(account)}>
-                        <span className="finance-dot" style={{ background: account.color }}>{account.name.slice(0, 1).toUpperCase()}</span>
+                        <span className={`finance-icon-tile finance-tone-${toneForAccount(account)}`}><FinanceIcon name={iconForAccount(account)} /></span>
                         <span>{account.name}</span>
                       </button>
                     </td>
@@ -320,7 +429,7 @@ function BudgetPanel({ month, detailed = false }: { month: string; detailed?: bo
               return (
                 <div key={cat.id} className="finance-budget-row">
                   <button className="finance-budget-main" type="button" onClick={() => setEditing(cat)}>
-                    <span className="finance-color-dot" style={{ background: cat.color }} />
+                    <span className={`finance-icon-tile finance-tone-${toneForCategory(cat.name)}`}><FinanceIcon name={iconForCategory(cat.name)} /></span>
                     <span>{cat.name}</span>
                   </button>
                   <div className="finance-budget-values">
@@ -384,7 +493,7 @@ function SavingsPanel({ detailed = false }: { detailed?: boolean }) {
               return (
                 <div key={goal.id} className="finance-saving-row">
                   <button className="finance-saving-main" type="button" onClick={() => setEditing(goal)}>
-                    <span className="finance-saving-icon">{goal.emoji || '$'}</span>
+                    <span className={`finance-icon-tile finance-tone-${toneForSavings(goal)}`}><FinanceIcon name={iconForSavings(goal)} /></span>
                     <span>
                       <strong>{goal.name}</strong>
                       <small>{goal.notes || 'Cel oszczędnościowy'}</small>
@@ -428,6 +537,54 @@ function SavingsPanel({ detailed = false }: { detailed?: boolean }) {
   );
 }
 
+function FixedExpensesPanel({ onConfigure }: { onConfigure: () => void }) {
+  const { recurringExpenses } = useLocalStore();
+  const total = recurringExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const grouped = Array.from(recurringExpenses.reduce((map, expense) => {
+    map.set(expense.category, (map.get(expense.category) ?? 0) + expense.amount);
+    return map;
+  }, new Map<string, number>()).entries())
+    .map(([category, amount]) => ({ category, amount, pct: clampPct((amount / Math.max(total, 1)) * 100) }))
+    .sort((a, b) => b.amount - a.amount);
+
+  return (
+    <SectionCard
+      title="Stałe wydatki"
+      action={<button className="finance-inline-edit" type="button" onClick={onConfigure} aria-label="Skonfiguruj stałe wydatki"><FinanceIcon name="edit" /></button>}
+    >
+      {grouped.length === 0 ? (
+        <EmptyState title="Brak stałych wydatków" cta="Skonfiguruj" onCta={onConfigure} />
+      ) : (
+        <div className="finance-fixed-list">
+          {grouped.map((item) => {
+            const icon = iconForCategory(item.category);
+            const tone = toneForCategory(item.category);
+            return (
+              <button key={item.category} className="finance-fixed-row" type="button" onClick={onConfigure}>
+                <span className={`finance-icon-tile finance-tone-${tone}`}><FinanceIcon name={icon} /></span>
+                <span className="finance-fixed-main">
+                  <strong>{item.category}</strong>
+                  <span className="finance-progress"><span style={{ width: `${item.pct}%` }} /></span>
+                </span>
+                <span className="finance-fixed-amount">{fmtPLN(item.amount)}</span>
+                <span className="finance-fixed-share">{fmtNumber(item.pct)}%</span>
+              </button>
+            );
+          })}
+          <div className="finance-fixed-total">
+            <span>Łączne stałe wydatki</span>
+            <strong>{fmtPLN(total)} / mies.</strong>
+          </div>
+        </div>
+      )}
+      <button className="finance-config-strip" type="button" onClick={onConfigure}>
+        <FinanceIcon name="business" />
+        <span>Skonfiguruj stałe wydatki</span>
+      </button>
+    </SectionCard>
+  );
+}
+
 function RecurringPanel({ month, detailed = false }: { month: string; detailed?: boolean }) {
   const { recurringExpenses, addRecurringExpense, updateRecurringExpense, deleteRecurringExpense } = useLocalStore();
   const [editing, setEditing] = useState<RecurringExpense | null>(null);
@@ -464,6 +621,7 @@ function RecurringPanel({ month, detailed = false }: { month: string; detailed?:
                 >
                   {expense.paidThisMonth && <FinanceIcon name="check" />}
                 </button>
+                <span className={`finance-icon-tile finance-tone-${toneForCategory(expense.category)}`}><FinanceIcon name={iconForCategory(expense.category, expense.name)} /></span>
                 <button className="finance-payment-name" type="button" onClick={() => setEditing(expense)}>
                   <strong>{expense.name}</strong>
                   <small>{expense.category} - termin {dueDateFor(month, expense.dueDay)}</small>
@@ -587,6 +745,7 @@ function JdgPanel({ month, detailed = false }: { month: string; detailed?: boole
                   onClick={() => updateJdgMonth(entry.id, { [check.key]: !checked } as Partial<JdgMonth>)}
                 >
                   <span className="finance-check">{checked && <FinanceIcon name="check" />}</span>
+                  <span className={`finance-icon-tile finance-tone-${checked ? 'teal' : 'pink'}`}><FinanceIcon name={iconForJdg(check.key)} /></span>
                   <span>{check.label}</span>
                 </button>
               );
@@ -811,10 +970,11 @@ function ReminderModal({ open, reminder, month, onClose, onSave }: { open: boole
   );
 }
 
-function MiniSparkline({ tone }: { tone: 'blue' | 'violet' | 'teal' }) {
+function MiniSparkline({ tone }: { tone: FinanceTone }) {
   const points = useMemo(() => {
     if (tone === 'violet') return '0,34 12,31 24,33 36,22 48,18 60,24 72,20 84,12 96,10 108,3';
     if (tone === 'teal') return '0,29 12,28 24,18 36,19 48,12 60,15 72,10 84,11 96,5 108,4';
+    if (tone === 'pink') return '0,30 12,19 24,23 36,16 48,18 60,12 72,8 84,9 96,2 108,11';
     return '0,30 12,24 24,27 36,17 48,13 60,19 72,15 84,9 96,10 108,2';
   }, [tone]);
   return (
@@ -842,6 +1002,23 @@ function FinanceIcon({ name }: { name: IconName }) {
       {name === 'plus' && <><path d="M12 5v14M5 12h14" {...common} /></>}
       {name === 'reset' && <><path d="M3 12a9 9 0 1 0 3-6.7" {...common} /><path d="M3 4v6h6" {...common} /></>}
       {name === 'check' && <><path d="M20 6 9 17l-5-5" {...common} /></>}
+      {name === 'calendar' && <><rect x="4" y="5" width="16" height="15" rx="2.5" {...common} /><path d="M8 3v4M16 3v4M4 10h16" {...common} /><path d="M8 14h3M14 14h2M8 17h2" {...common} /></>}
+      {name === 'due' && <><circle cx="12" cy="12" r="8.5" {...common} /><path d="M12 7v5l3 2M12 18h.01" {...common} /></>}
+      {name === 'paid' && <><circle cx="12" cy="12" r="8.5" {...common} /><path d="m8 12.5 2.6 2.6L16.5 9" {...common} /></>}
+      {name === 'home' && <><path d="M3.5 11.5 12 4l8.5 7.5" {...common} /><path d="M5.5 10.5V20h13v-9.5" {...common} /><path d="M10 20v-5h4v5" {...common} /></>}
+      {name === 'transport' && <><rect x="4" y="7" width="16" height="9" rx="2" {...common} /><path d="M7 7l1.5-3h7L17 7M7 16v2M17 16v2M7.5 12h.01M16.5 12h.01" {...common} /></>}
+      {name === 'food' && <><path d="M7 3v8M4.5 3v5.5a2.5 2.5 0 0 0 5 0V3M7 11v10" {...common} /><path d="M15 3v18M15 3c3 1.3 4.5 3.7 4.5 7v1H15" {...common} /></>}
+      {name === 'entertainment' && <><path d="M7 15h10l1.8 2.2a2.2 2.2 0 0 0 3.6-2.2l-1.2-5.3A4 4 0 0 0 17.3 6H6.7a4 4 0 0 0-3.9 3.7L1.6 15a2.2 2.2 0 0 0 3.6 2.2L7 15z" {...common} /><path d="M7.5 10v3M6 11.5h3M15.5 11h.01M18 13h.01" {...common} /></>}
+      {name === 'health' && <><path d="M20.5 8.8c0 5-8.5 10-8.5 10s-8.5-5-8.5-10A4.6 4.6 0 0 1 12 6.2a4.6 4.6 0 0 1 8.5 2.6z" {...common} /><path d="M8 12h2l1-2.5 2 5 1-2.5h2" {...common} /></>}
+      {name === 'utilities' && <><path d="m13 2-8 12h6l-1 8 9-13h-6l0-7z" {...common} /></>}
+      {name === 'phone' && <><path d="M6.5 4.5 9 3l2.5 4-1.8 1.3a12 12 0 0 0 6 6l1.3-1.8 4 2.5-1.5 2.5a3 3 0 0 1-3.4 1.3C10.8 17.2 6.8 13.2 5.2 7.9a3 3 0 0 1 1.3-3.4z" {...common} /></>}
+      {name === 'shield' && <><path d="M12 21s7-3.5 7-9.5V5l-7-3-7 3v6.5C5 17.5 12 21 12 21z" {...common} /><path d="M9 12l2 2 4-5" {...common} /></>}
+      {name === 'car' && <><path d="M5 14h14l-1.5-5.5A3 3 0 0 0 14.6 6H9.4a3 3 0 0 0-2.9 2.5L5 14z" {...common} /><path d="M5 14v4M19 14v4M7.5 18h.01M16.5 18h.01M8 11h8" {...common} /></>}
+      {name === 'travel' && <><path d="M4 12a8 8 0 0 1 16 0" {...common} /><path d="M4 12h16M8 12c0-4 4-8 4-8s4 4 4 8M12 12v8M9 20h6" {...common} /></>}
+      {name === 'cash' && <><rect x="3" y="6" width="18" height="12" rx="2" {...common} /><circle cx="12" cy="12" r="2.5" {...common} /><path d="M6.5 9.5v.01M17.5 14.5v.01" {...common} /></>}
+      {name === 'bank' && <><path d="M4 10h16M5 20h14M6 10v10M10 10v10M14 10v10M18 10v10M3.5 8 12 3l8.5 5" {...common} /></>}
+      {name === 'wallet' && <><path d="M4 7.5h14a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5.5A2.5 2.5 0 0 1 3 17.5v-11A2.5 2.5 0 0 1 5.5 4H17" {...common} /><path d="M16 13h4M16 13a1.5 1.5 0 0 0 0 3h4" {...common} /></>}
+      {name === 'other' && <><circle cx="12" cy="12" r="8" {...common} /><path d="M8 12h.01M12 12h.01M16 12h.01" {...common} /></>}
     </svg>
   );
 }
