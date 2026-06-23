@@ -1245,6 +1245,106 @@ button.active .sub-tab-icon { opacity: 1; }
   .goals-header-actions { width: 100%; }
 }
 
+/* ============================================================ OFFICE (BIURO) */
+.office-shell { display: flex; flex-direction: column; gap: var(--gap); width: 100%; min-width: 0; }
+
+.office-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.office-header-main { display: flex; align-items: flex-start; gap: 14px; }
+.office-header-icon {
+  width: 44px; height: 44px; flex-shrink: 0; border-radius: var(--r-mid); display: grid; place-items: center;
+  color: var(--acc-ink); background: var(--acc-soft);
+}
+.office-header-icon svg { width: 24px; height: 24px; }
+.office-header-main h1 { font-family: var(--font-display); font-size: var(--fs-h1); font-weight: 600; letter-spacing: -.02em; color: var(--ink); margin: 0; }
+.office-header-main p { font-size: 13px; color: var(--ink-3); margin: 4px 0 0; }
+.office-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.office-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); }
+.office-metric {
+  display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: var(--r-mid);
+  background: var(--surface); border: 1px solid var(--border); box-shadow: var(--sh-1);
+}
+.office-metric-clickable { cursor: pointer; text-align: left; width: 100%; transition: var(--t); }
+.office-metric-clickable:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+.office-metric-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--r-mid); border: 1px solid var(--border-soft); background: var(--surface-inset); flex-shrink: 0; }
+.office-metric-icon svg { width: 19px; height: 19px; }
+.office-metric-pink .office-metric-icon { color: var(--acc); background: var(--acc-soft); }
+.office-metric-blue .office-metric-icon { color: var(--ev-blue); background: var(--ev-blue-bg); }
+.office-metric-teal .office-metric-icon { color: var(--success-ink); background: var(--success-soft); }
+.office-metric-violet .office-metric-icon { color: var(--ev-lav); background: var(--ev-lav-bg); }
+.office-metric-body { min-width: 0; }
+.office-metric-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+.office-metric-value { margin-top: 3px; font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -.02em; color: var(--ink); }
+.office-metric-note { margin-top: 2px; font-size: 11.5px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.office-layout { display: grid; grid-template-columns: minmax(220px, 25%) minmax(0, 1fr); gap: var(--gap); align-items: start; }
+
+.office-sidebar { display: flex; flex-direction: column; min-width: 0; }
+.office-category-list { display: flex; flex-direction: column; gap: 4px; }
+.office-category-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--r-mid); border: 1px solid transparent;
+  background: transparent; cursor: pointer; text-align: left; width: 100%;
+}
+.office-category-row:hover { background: var(--surface-2); }
+.office-category-row.is-active { border-color: var(--acc-line); background: var(--acc-soft); }
+.office-category-icon { width: 30px; height: 30px; flex-shrink: 0; display: grid; place-items: center; border-radius: var(--r-sm); background: var(--surface-inset); color: var(--ink-3); }
+.office-category-icon svg { width: 15px; height: 15px; }
+.office-category-row.is-active .office-category-icon { color: var(--acc-ink); background: var(--acc-soft); }
+.office-category-info { flex: 1; min-width: 0; }
+.office-category-info strong { display: block; font-size: 13px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.office-category-sub { font-size: 11px; color: var(--ink-3); }
+.office-category-count { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--ink-3); flex-shrink: 0; }
+.office-category-row.is-active .office-category-count { color: var(--acc-ink); }
+.office-add-category-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; padding: 10px; border-radius: var(--r-mid);
+  border: 1px dashed var(--border); background: transparent; color: var(--ink-3); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: var(--t);
+}
+.office-add-category-btn:hover { color: var(--ink); background: var(--surface-2); }
+.office-add-category-btn svg { width: 14px; height: 14px; }
+
+.office-main { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.office-tabs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.office-tab { padding: 6px 14px; border-radius: 99px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; background: var(--surface-3); color: var(--ink-2); }
+.office-tab.is-active { background: var(--acc); color: white; }
+
+.office-task-row { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-top: 1px solid var(--border-soft); }
+.office-tasks-list > .office-task-row:first-child { border-top: 0; }
+.office-task-check {
+  width: 20px; height: 20px; border-radius: 99px; border: 2px solid var(--border); background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; color: white; padding: 0;
+}
+.office-task-row.is-done .office-task-check { background: var(--acc); border-color: var(--acc); }
+.office-task-check svg { width: 11px; height: 11px; }
+.office-task-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; color: var(--ink); }
+.office-task-row.is-done .office-task-title { text-decoration: line-through; color: var(--ink-3); }
+
+.office-completed-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.office-completed-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: var(--r-mid); background: var(--surface-inset); }
+.office-completed-check { width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; background: var(--success-soft); color: var(--success-ink); }
+.office-completed-check svg { width: 14px; height: 14px; }
+.office-completed-info { flex: 1; min-width: 0; }
+.office-completed-info strong { display: block; font-size: 13.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.office-completed-info small { font-size: 11.5px; color: var(--ink-3); }
+
+.office-link-inline { background: transparent; border: 0; padding: 0; color: var(--acc-ink); font-family: var(--font-mono); font-size: 11px; font-weight: 600; cursor: pointer; }
+.office-link-inline:hover { text-decoration: underline; }
+
+.office-vacation-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.office-vacation-stat { background: var(--surface-inset); border-radius: var(--r-sm); padding: 10px 12px; }
+.office-vacation-stat span { display: block; font-size: 11px; color: var(--ink-3); margin-bottom: 4px; }
+.office-vacation-stat strong { font-family: var(--font-mono); font-size: 18px; color: var(--ink); }
+
+@media (max-width: 1220px) {
+  .office-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .office-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .office-kpi-grid { grid-template-columns: 1fr; }
+  .office-header { flex-direction: column; }
+  .office-header-actions { width: 100%; }
+  .office-vacation-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 /* ============================================================ SKELETON / LOADING */
 .skeleton { background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 37%, var(--surface-2) 63%); background-size: 400% 100%; animation: skel 1.4s var(--ease) infinite; border-radius: var(--r-sm); }
 @keyframes skel { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }

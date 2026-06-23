@@ -1204,20 +1204,27 @@ function ExercisePickerModal({ open, onClose, sportType, catalogExercises, onPic
   const [query, setQuery] = useState('');
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newMuscle, setNewMuscle] = useState('');
+  const [newPrimary, setNewPrimary] = useState<MuscleKey[]>([]);
   const [newEquipment, setNewEquipment] = useState('');
 
   useEffect(() => {
-    if (!open) { setQuery(''); setShowNew(false); setNewName(''); setNewMuscle(''); setNewEquipment(''); }
+    if (!open) { setQuery(''); setShowNew(false); setNewName(''); setNewPrimary([]); setNewEquipment(''); }
   }, [open]);
 
   const results = catalogExercises.filter((e) => e.sportType === sportType && (!query.trim() || e.name.toLowerCase().includes(query.trim().toLowerCase())));
 
+  function toggleNewPrimary(key: MuscleKey) {
+    setNewPrimary((prev) => prev.includes(key) ? prev.filter((m) => m !== key) : [...prev, key]);
+  }
+
   function saveNew() {
-    if (!newName.trim()) return;
-    const created = addExercise({ name: newName.trim(), sportType, muscleGroup: newMuscle.trim(), equipment: newEquipment.trim(), notes: '' });
+    if (!newName.trim() || newPrimary.length === 0) return;
+    const created = addExercise({
+      name: newName.trim(), sportType, muscleGroup: MUSCLE_LABEL[newPrimary[0]], equipment: newEquipment.trim(), notes: '',
+      primaryMuscles: newPrimary,
+    });
     onPick(created);
-    setNewName(''); setNewMuscle(''); setNewEquipment(''); setShowNew(false);
+    setNewName(''); setNewPrimary([]); setNewEquipment(''); setShowNew(false);
   }
 
   return (
@@ -1238,13 +1245,17 @@ function ExercisePickerModal({ open, onClose, sportType, catalogExercises, onPic
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <Field label="Nazwa" required><input className="input" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Np. Przysiad bułgarski" autoFocus /></Field>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <Field label="Partia mięśniowa"><input className="input" value={newMuscle} onChange={(e) => setNewMuscle(e.target.value)} /></Field>
-              <Field label="Sprzęt"><input className="input" value={newEquipment} onChange={(e) => setNewEquipment(e.target.value)} /></Field>
-            </div>
+            <Field label="Główne partie (wymagane, można kilka)" required>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {MUSCLES.map((m) => (
+                  <button key={m.key} type="button" className={`pill ${newPrimary.includes(m.key) ? 'accent' : ''}`} onClick={() => toggleNewPrimary(m.key)}>{m.label}</button>
+                ))}
+              </div>
+            </Field>
+            <Field label="Sprzęt (opcjonalnie)"><input className="input" value={newEquipment} onChange={(e) => setNewEquipment(e.target.value)} /></Field>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               <button className="btn btn-secondary btn-sm" onClick={() => setShowNew(false)}>Anuluj</button>
-              <button className="btn btn-primary btn-sm" onClick={saveNew} disabled={!newName.trim()}>Zapisz i dodaj</button>
+              <button className="btn btn-primary btn-sm" onClick={saveNew} disabled={!newName.trim() || newPrimary.length === 0}>Zapisz i dodaj</button>
             </div>
           </div>
         )}
@@ -2542,7 +2553,6 @@ function SportFeelings({ initialSessionId, onConsumeInitialSession }: { initialS
       loadSession(initialSessionId);
       onConsumeInitialSession?.();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSessionId]);
 
   const selectedSession = sessions.find((s) => s.id === selectedSessionId) ?? null;
@@ -2598,6 +2608,7 @@ function SportFeelings({ initialSessionId, onConsumeInitialSession }: { initialS
             <FeelingsForm value={draft} onChange={setDraft} />
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               <button className="btn btn-secondary btn-sm" onClick={() => loadSession(selectedSessionId)}>Anuluj</button>
+              <button className="btn btn-secondary btn-sm" onClick={() => handleSave('pending')}>Dodaj później</button>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => handleSave('completed')}>Zapisz</button>
             </div>
           </>

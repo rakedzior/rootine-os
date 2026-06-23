@@ -322,6 +322,7 @@ interface LocalStore {
 
   // Office
   officeTasks: OfficeTask[];
+  officeCategories: string[];
   officeDocuments: OfficeDocument[];
   cars: Car[];
   insurances: Insurance[];
@@ -396,6 +397,8 @@ interface LocalStore {
   addOfficeTask: (t: Omit<OfficeTask, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateOfficeTask: (id: string, patch: Partial<OfficeTask>) => void;
   deleteOfficeTask: (id: string) => void;
+  addOfficeCategory: (name: string) => void;
+  deleteOfficeCategory: (name: string) => void;
   addOfficeDocument: (d: Omit<OfficeDocument, 'id' | 'createdAt'>) => void;
   updateOfficeDocument: (id: string, patch: Partial<OfficeDocument>) => void;
   deleteOfficeDocument: (id: string) => void;
@@ -408,6 +411,7 @@ interface LocalStore {
   addInsurance: (i: Omit<Insurance, 'id' | 'createdAt'>) => void;
   deleteInsurance: (id: string) => void;
   addVacation: (v: Omit<VacationEntry, 'id' | 'createdAt'>) => void;
+  updateVacation: (id: string, patch: Partial<VacationEntry>) => void;
   deleteVacation: (id: string) => void;
 
   // ACTIONS — Travel
@@ -686,11 +690,12 @@ const MOCK_SESSIONS: WorkoutSession[] = [
 ];
 
 const MOCK_OFFICE_TASKS: OfficeTask[] = [
-  { id: 'ot1', createdAt: now(), updatedAt: now(), title: 'Złożyć PIT za 2025', dueDate: '2026-06-20', priority: 'high', institution: 'Urząd Skarbowy', category: 'Podatki', status: 'todo', notes: '', isArchived: false },
-  { id: 'ot2', createdAt: now(), updatedAt: now(), title: 'Wymiana oleju w aucie', dueDate: '2026-07-15', priority: 'mid', institution: 'Warsztat ABC', category: 'Auto', status: 'todo', notes: '', isArchived: false },
-  { id: 'ot3', createdAt: now(), updatedAt: now(), title: 'Odnowić dowód osobisty', dueDate: '2026-06-28', priority: 'high', institution: 'Urząd Miasta', category: 'Dokumenty', status: 'todo', notes: '', isArchived: false },
-  { id: 'ot4', createdAt: now(), updatedAt: now(), title: 'ZUS — opłata za maj', dueDate: '2026-06-10', priority: 'high', institution: 'ZUS', category: 'JDG', status: 'done', notes: '', isArchived: false },
+  { id: 'ot1', createdAt: now(), updatedAt: now(), title: 'Złożyć PIT za 2025', dueDate: '2026-06-20', priority: 'high', institution: 'Urząd Skarbowy', category: 'Zadania urzędowe', status: 'todo', notes: '', isArchived: false },
+  { id: 'ot2', createdAt: now(), updatedAt: now(), title: 'Wymiana oleju w aucie', dueDate: '2026-07-15', priority: 'mid', institution: 'Warsztat ABC', category: 'Samochód', status: 'active', notes: '', isArchived: false },
+  { id: 'ot3', createdAt: now(), updatedAt: now(), title: 'Odnowić dowód osobisty', dueDate: '2026-06-28', priority: 'high', institution: 'Urząd Miasta', category: 'Zadania urzędowe', status: 'todo', notes: '', isArchived: false },
+  { id: 'ot4', createdAt: now(), updatedAt: now(), title: 'ZUS — opłata za maj', dueDate: '2026-06-10', priority: 'high', institution: 'ZUS', category: 'Zadania urzędowe', status: 'done', notes: '', isArchived: false },
   { id: 'ot5', createdAt: now(), updatedAt: now(), title: 'Ubezpieczenie mieszkania', dueDate: '2026-07-05', priority: 'low', institution: 'PZU', category: 'Ubezpieczenia', status: 'todo', notes: '', isArchived: false },
+  { id: 'ot6', createdAt: now(), updatedAt: now(), title: 'Złożyć wniosek urlopowy', dueDate: '2026-06-30', priority: 'mid', institution: 'Wakacje', category: 'Urlopy', status: 'active', notes: '', isArchived: false },
 ];
 const MOCK_OFFICE_DOCS: OfficeDocument[] = [
   { id: 'od1', createdAt: now(), name: 'Dowód osobisty', category: 'Dokumenty', documentNumber: 'ABC12345', issueDate: '2016-03-12', expiryDate: '2026-07-28', reminderEnabled: true, notes: '', isArchived: false },
@@ -941,6 +946,7 @@ export const useLocalStore = create<LocalStore>()(
       feelings: [],
       sportCategories: MOCK_SPORT_CATEGORIES,
       officeTasks: MOCK_OFFICE_TASKS,
+      officeCategories: ['Zadania urzędowe', 'Dokumenty', 'Samochód', 'Ubezpieczenia', 'Urlopy'],
       officeDocuments: MOCK_OFFICE_DOCS,
       cars: MOCK_CARS,
       insurances: [],
@@ -1122,6 +1128,8 @@ export const useLocalStore = create<LocalStore>()(
       addOfficeTask: (t) => set(s => ({ officeTasks: [{ ...t, id: uid(), createdAt: now(), updatedAt: now() }, ...s.officeTasks] })),
       updateOfficeTask: (id, patch) => set(s => ({ officeTasks: s.officeTasks.map(t => t.id === id ? { ...t, ...patch, updatedAt: now() } : t) })),
       deleteOfficeTask: (id) => set(s => ({ officeTasks: s.officeTasks.filter(t => t.id !== id) })),
+      addOfficeCategory: (name) => set(s => (s.officeCategories.includes(name) ? {} : { officeCategories: [...s.officeCategories, name] })),
+      deleteOfficeCategory: (name) => set(s => ({ officeCategories: s.officeCategories.filter(c => c !== name) })),
       addOfficeDocument: (d) => set(s => ({ officeDocuments: [{ ...d, id: uid(), createdAt: now() }, ...s.officeDocuments] })),
       updateOfficeDocument: (id, patch) => set(s => ({ officeDocuments: s.officeDocuments.map(d => d.id === id ? { ...d, ...patch } : d) })),
       deleteOfficeDocument: (id) => set(s => ({ officeDocuments: s.officeDocuments.filter(d => d.id !== id) })),
@@ -1139,6 +1147,7 @@ export const useLocalStore = create<LocalStore>()(
       addInsurance: (i) => set(s => ({ insurances: [...s.insurances, { ...i, id: uid(), createdAt: now() }] })),
       deleteInsurance: (id) => set(s => ({ insurances: s.insurances.filter(i => i.id !== id) })),
       addVacation: (v) => set(s => ({ vacations: [...s.vacations, { ...v, id: uid(), createdAt: now() }] })),
+      updateVacation: (id, patch) => set(s => ({ vacations: s.vacations.map(v => v.id === id ? { ...v, ...patch } : v) })),
       deleteVacation: (id) => set(s => ({ vacations: s.vacations.filter(v => v.id !== id) })),
 
       // Travel actions

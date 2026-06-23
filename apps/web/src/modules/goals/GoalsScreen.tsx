@@ -281,7 +281,6 @@ function GoalDetail({ goal, onAddToday, onAddPlanner, onEdit, onToggleComplete, 
       for (const t of collectTasks(goal.tasks)) next.add(t.id);
       return next;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goal.id, flatCount]);
 
   function toggleExpand(id: string) {

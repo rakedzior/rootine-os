@@ -88,7 +88,6 @@ export function useWorkoutImage(sportType: string, focusAreas: string[] | undefi
       setFetched(url);
     });
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [manualImage, query]);
 
   return manualImage ?? fetched;
