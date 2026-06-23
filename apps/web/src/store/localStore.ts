@@ -247,6 +247,7 @@ export interface RecurringExpense {
   id: string; createdAt: string;
   name: string; amount: number; category: string;
   dueDay: number; frequency: string; reminderEnabled: boolean;
+  paidThisMonth?: boolean;
 }
 export interface BudgetCategory {
   id: string; name: string; plannedAmount: number; actualAmount: number; month: string; color: string;
@@ -390,6 +391,7 @@ interface LocalStore {
   updateOfficeDocument: (id: string, patch: Partial<OfficeDocument>) => void;
   deleteOfficeDocument: (id: string) => void;
   updateJdgMonth: (id: string, patch: Partial<JdgMonth>) => void;
+  addJdgMonth: (month: string) => void;
   addInsurance: (i: Omit<Insurance, 'id' | 'createdAt'>) => void;
   deleteInsurance: (id: string) => void;
   addVacation: (v: Omit<VacationEntry, 'id' | 'createdAt'>) => void;
@@ -423,9 +425,17 @@ interface LocalStore {
   deleteAccount: (id: string) => void;
   addSavingsGoal: (g: Omit<SavingsGoal, 'id' | 'createdAt'>) => void;
   updateSavingsGoal: (id: string, patch: Partial<SavingsGoal>) => void;
+  deleteSavingsGoal: (id: string) => void;
+  addBudgetCategory: (c: Omit<BudgetCategory, 'id'>) => void;
+  updateBudgetCategory: (id: string, patch: Partial<BudgetCategory>) => void;
+  deleteBudgetCategory: (id: string) => void;
+  resetBudgetMonth: (month: string) => void;
   addRecurringExpense: (e: Omit<RecurringExpense, 'id' | 'createdAt'>) => void;
   updateRecurringExpense: (id: string, patch: Partial<RecurringExpense>) => void;
   deleteRecurringExpense: (id: string) => void;
+  addFinancialReminder: (r: Omit<FinancialReminder, 'id'>) => void;
+  updateFinancialReminder: (id: string, patch: Partial<FinancialReminder>) => void;
+  deleteFinancialReminder: (id: string) => void;
   toggleFinancialReminder: (id: string) => void;
 
 
@@ -1051,6 +1061,9 @@ export const useLocalStore = create<LocalStore>()(
       updateOfficeDocument: (id, patch) => set(s => ({ officeDocuments: s.officeDocuments.map(d => d.id === id ? { ...d, ...patch } : d) })),
       deleteOfficeDocument: (id) => set(s => ({ officeDocuments: s.officeDocuments.filter(d => d.id !== id) })),
       updateJdgMonth: (id, patch) => set(s => ({ jdgMonths: s.jdgMonths.map(j => j.id === id ? { ...j, ...patch } : j) })),
+      addJdgMonth: (month) => set(s => s.jdgMonths.some(j => j.month === month)
+        ? {}
+        : { jdgMonths: [{ id: uid(), month, invoiceIssued: false, documentsSent: false, accountingPaid: false, zusPaid: false, pitPaid: false, vatPaid: false, notes: '' }, ...s.jdgMonths] }),
       addInsurance: (i) => set(s => ({ insurances: [...s.insurances, { ...i, id: uid(), createdAt: now() }] })),
       deleteInsurance: (id) => set(s => ({ insurances: s.insurances.filter(i => i.id !== id) })),
       addVacation: (v) => set(s => ({ vacations: [...s.vacations, { ...v, id: uid(), createdAt: now() }] })),
@@ -1094,9 +1107,17 @@ export const useLocalStore = create<LocalStore>()(
       deleteAccount: (id) => set(s => ({ accounts: s.accounts.map(a => a.id === id ? { ...a, archived: true } : a) })),
       addSavingsGoal: (g) => set(s => ({ savingsGoals: [...s.savingsGoals, { ...g, id: uid(), createdAt: now() }] })),
       updateSavingsGoal: (id, patch) => set(s => ({ savingsGoals: s.savingsGoals.map(g => g.id === id ? { ...g, ...patch } : g) })),
+      deleteSavingsGoal: (id) => set(s => ({ savingsGoals: s.savingsGoals.filter(g => g.id !== id) })),
+      addBudgetCategory: (c) => set(s => ({ budgetCategories: [...s.budgetCategories, { ...c, id: uid() }] })),
+      updateBudgetCategory: (id, patch) => set(s => ({ budgetCategories: s.budgetCategories.map(c => c.id === id ? { ...c, ...patch } : c) })),
+      deleteBudgetCategory: (id) => set(s => ({ budgetCategories: s.budgetCategories.filter(c => c.id !== id) })),
+      resetBudgetMonth: (month) => set(s => ({ budgetCategories: s.budgetCategories.map(c => c.month === month ? { ...c, actualAmount: 0 } : c) })),
       addRecurringExpense: (e) => set(s => ({ recurringExpenses: [...s.recurringExpenses, { ...e, id: uid(), createdAt: now() }] })),
       updateRecurringExpense: (id, patch) => set(s => ({ recurringExpenses: s.recurringExpenses.map(e => e.id === id ? { ...e, ...patch } : e) })),
       deleteRecurringExpense: (id) => set(s => ({ recurringExpenses: s.recurringExpenses.filter(e => e.id !== id) })),
+      addFinancialReminder: (r) => set(s => ({ financialReminders: [...s.financialReminders, { ...r, id: uid() }] })),
+      updateFinancialReminder: (id, patch) => set(s => ({ financialReminders: s.financialReminders.map(r => r.id === id ? { ...r, ...patch } : r) })),
+      deleteFinancialReminder: (id) => set(s => ({ financialReminders: s.financialReminders.filter(r => r.id !== id) })),
       toggleFinancialReminder: (id) => set(s => ({ financialReminders: s.financialReminders.map(r => r.id === id ? { ...r, completed: !r.completed } : r) })),
 
       // Goals actions
