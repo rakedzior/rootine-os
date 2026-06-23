@@ -1,183 +1,468 @@
-import { useState } from 'react';
-import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, IcoEdit, IcoTrash } from '@/components/common';
-import { useLocalStore, type Note, type NoteType, type ChecklistItem } from '@/store/localStore';
+import { useEffect, useMemo, useState } from 'react';
+import { Modal, EmptyState, ConfirmDelete, Field, IcoTrash } from '@/components/common';
+import { useLocalStore, type ChecklistItem, type Note, type NoteType } from '@/store/localStore';
+import '@/styles/notes.css';
 
-const TABS = [
-  { id: 'wszystkie', label: 'Wszystkie',       icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> },
-  { id: 'sticky',    label: 'Przyklejone',     icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="15 3 15 9 21 9"/></svg> },
-  { id: 'listy',     label: 'Listy kontrolne', icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
-  { id: 'pelne',     label: 'Pełne notatki',   icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
+type NoteIconName =
+  | 'note' | 'pin' | 'tag' | 'clock' | 'calendar' | 'plus' | 'filter' | 'grid' | 'list' | 'settings'
+  | 'idea' | 'project' | 'people' | 'user' | 'star' | 'book' | 'archive' | 'bold'
+  | 'italic' | 'underline' | 'strike' | 'align' | 'check' | 'link' | 'image' | 'table'
+  | 'code' | 'undo' | 'redo' | 'more' | 'save' | 'document';
+
+type NoteCategory = {
+  id: string;
+  label: string;
+  icon: NoteIconName;
+  tone: string;
+  matcher: (note: Note) => boolean;
+};
+
+const NOTE_COLORS = ['#1b2b33', '#21333d', '#14222a', '#261b33', '#1b3330'];
+
+const CATEGORIES: NoteCategory[] = [
+  { id: 'all', label: 'Wszystkie notatki', icon: 'note', tone: 'pink', matcher: () => true },
+  { id: 'ideas', label: 'Pomysły', icon: 'idea', tone: 'teal', matcher: (n) => matches(n, ['pomysł', 'pomysl', 'idea', 'inspir']) },
+  { id: 'projects', label: 'Projekty', icon: 'project', tone: 'blue', matcher: (n) => matches(n, ['projekt', 'aplikacja', 'product', 'mvp']) },
+  { id: 'meetings', label: 'Spotkania', icon: 'people', tone: 'teal', matcher: (n) => matches(n, ['spotkan', 'zespół', 'zespol', 'meeting']) },
+  { id: 'personal', label: 'Osobiste', icon: 'user', tone: 'violet', matcher: (n) => matches(n, ['osobiste', 'cele', 'plan']) },
+  { id: 'inspiration', label: 'Inspiracje', icon: 'star', tone: 'amber', matcher: (n) => matches(n, ['inspir', 'produkt', 'wakacje']) },
+  { id: 'reading', label: 'Do przeczytania', icon: 'book', tone: 'amber', matcher: (n) => matches(n, ['czyt', 'research', 'książ', 'ksiaz']) },
+  { id: 'archive', label: 'Archiwum', icon: 'archive', tone: 'gray', matcher: (n) => n.archived },
 ];
 
-const NOTE_COLORS = ['#FEF3C7','#D1FAE5','#DBEAFE','#FCE7F3','#EDE9FE','#F3F3F0'];
+function matches(note: Note, terms: string[]) {
+  const source = `${note.title} ${note.content} ${note.category} ${note.tags.join(' ')}`.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return terms.some((term) => source.includes(term.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()));
+}
 
+function fmtDate(date: string) {
+  return new Date(`${date}`).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function fmtTime(date: string) {
+  return new Date(`${date}`).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+}
+
+function relativeTime(date: string) {
+  const diff = Date.now() - new Date(date).getTime();
+  const minutes = Math.max(1, Math.round(diff / 60000));
+  if (minutes < 60) return `${minutes} min temu`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} godz. temu`;
+  return `${Math.round(hours / 24)} dni temu`;
+}
+
+function wordCount(note: Note) {
+  return `${note.content.split(/\s+/).filter(Boolean).length} słów`;
+}
+
+function categoryFor(note: Note) {
+  return CATEGORIES.find((cat) => cat.id !== 'all' && cat.id !== 'archive' && cat.matcher(note)) ?? CATEGORIES[0];
+}
+
+function notePreview(note: Note) {
+  if (note.content.trim()) return note.content.trim();
+  if (note.checklistItems?.length) return note.checklistItems.map((item) => item.text).join(', ');
+  return 'Szybka notatka bez treści.';
+}
 
 export function NotesScreen() {
-  const [tab, setTab] = useState('wszystkie');
-  return (
-    <div className="module-page">
-      <div className="module-header no-title">
-        <SubTabs tabs={TABS} active={tab} onChange={setTab} />
-      </div>
-      <NotesGrid filter={tab} />
-    </div>
-  );
-}
-
-function NotesGrid({ filter }: { filter: string }) {
   const { notes, addNote, updateNote, deleteNote } = useLocalStore();
+  const [categoryId, setCategoryId] = useState('all');
+  const [selectedId, setSelectedId] = useState<string | null>(notes.find((note) => !note.archived)?.id ?? null);
   const [showAdd, setShowAdd] = useState(false);
-  const [editNote, setEditNote] = useState<Note | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
+  const [quickText, setQuickText] = useState('');
 
-  const filtered = notes
-    .filter(n => !n.archived)
-    .filter(n => filter === 'wszystkie' ? true : filter === 'sticky' ? n.type === 'sticky' : filter === 'listy' ? n.type === 'checklist' : n.type === 'full')
-    .filter(n => !search || n.title.toLowerCase().includes(search.toLowerCase()) || n.content.toLowerCase().includes(search.toLowerCase()));
+  const activeCategory = CATEGORIES.find((cat) => cat.id === categoryId) ?? CATEGORIES[0];
+  const visibleNotes = useMemo(() => {
+    const base = categoryId === 'archive' ? notes.filter((note) => note.archived) : notes.filter((note) => !note.archived);
+    return base.filter(activeCategory.matcher).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  }, [activeCategory, categoryId, notes]);
+  const selected = notes.find((note) => note.id === selectedId) ?? visibleNotes[0] ?? notes.find((note) => !note.archived);
+  const pinned = notes.filter((note) => note.pinned && !note.archived).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const recent = notes.filter((note) => !note.archived).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 5);
+  const tags = buildTags(notes);
 
-  const pinned = filtered.filter(n => n.pinned);
-  const unpinned = filtered.filter(n => !n.pinned);
+  useEffect(() => {
+    if (!selectedId && selected) setSelectedId(selected.id);
+    if (selectedId && !notes.some((note) => note.id === selectedId)) setSelectedId(visibleNotes[0]?.id ?? null);
+  }, [notes, selected, selectedId, visibleNotes]);
+
+  function saveQuickNote() {
+    if (!quickText.trim()) return;
+    addNote({
+      title: quickText.trim().split('\n')[0].slice(0, 60),
+      content: quickText.trim(),
+      type: 'sticky',
+      color: NOTE_COLORS[0],
+      category: 'Pomysły',
+      tags: ['Pomysły'],
+      pinned: false,
+      archived: false,
+    });
+    setQuickText('');
+  }
 
   return (
-    <div>
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-        <input className="input" style={{ flex: 1 }} value={search} onChange={e => setSearch(e.target.value)} placeholder="Szukaj w notatkach…" />
-        <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Nowa notatka</button>
-      </div>
-
-      {pinned.length > 0 && (
-        <>
-          <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink-3)', marginBottom: 10 }}>📌 Przypięte</div>
-          <div className="notes-grid" style={{ marginBottom: 20 }}>
-            {pinned.map(n => <NoteCard key={n.id} note={n} onEdit={() => setEditNote(n)} onDelete={() => setDeleteId(n.id)} onUpdate={p => updateNote(n.id, p)} />)}
+    <div className="module-page notes-os">
+      <header className="notes-hero">
+        <div className="notes-title-block">
+          <span className="notes-hero-icon"><NoteIcon name="note" /></span>
+          <div>
+            <h1>Notatki</h1>
+            <p>Wszystkie notatki, pomysły i szybkie zapisy w jednym miejscu.</p>
           </div>
-        </>
-      )}
+        </div>
+        <div className="notes-actions">
+          <button className="btn btn-primary" type="button" onClick={() => setShowAdd(true)}><NoteIcon name="plus" /> Nowa notatka</button>
+          <button type="button"><NoteIcon name="filter" /> Filtry</button>
+          <button type="button" aria-label="Widok kafelków"><NoteIcon name="grid" /></button>
+          <button type="button" aria-label="Widok listy"><NoteIcon name="list" /></button>
+          <button type="button" aria-label="Ustawienia"><NoteIcon name="settings" /></button>
+        </div>
+      </header>
 
-      {unpinned.length === 0 && pinned.length === 0
-        ? <EmptyState title="Brak notatek" desc="Dodaj pierwszą notatkę." cta="Nowa notatka" onCta={() => setShowAdd(true)} />
-        : unpinned.length > 0 && (
-          <div className="notes-grid">
-            {unpinned.map(n => <NoteCard key={n.id} note={n} onEdit={() => setEditNote(n)} onDelete={() => setDeleteId(n.id)} onUpdate={p => updateNote(n.id, p)} />)}
+      <section className="notes-kpis">
+        <NoteKpi icon="document" label="Wszystkie notatki" value={notes.filter((n) => !n.archived).length} note="+ 12 od wczoraj" tone="violet" />
+        <NoteKpi icon="star" label="Przypięte" value={pinned.length} note="+ 3 od wczoraj" tone="amber" />
+        <NoteKpi icon="tag" label="Kategorie" value={CATEGORIES.length - 2} note="+ 1 nowa" tone="teal" />
+        <NoteKpi icon="clock" label="Ostatnio edytowane" value={recent.length + 9} note="w tym tygodniu" tone="orange" />
+      </section>
+
+      <section className="notes-layout">
+        <aside className="notes-sidebar notes-card">
+          <div className="notes-card-head">
+            <h2>Kategorie</h2>
+            <button type="button" aria-label="Dodaj kategorię"><NoteIcon name="plus" /></button>
           </div>
-        )
-      }
+          <div className="notes-category-list">
+            {CATEGORIES.map((cat) => {
+              const count = cat.id === 'all'
+                ? notes.filter((note) => !note.archived).length
+                : notes.filter(cat.matcher).length;
+              return (
+                <button key={cat.id} className={`notes-category notes-tone-${cat.tone} ${categoryId === cat.id ? 'is-active' : ''}`} type="button" onClick={() => setCategoryId(cat.id)}>
+                  <span><NoteIcon name={cat.icon} /></span>
+                  <strong>{cat.label}</strong>
+                  <em>{count}</em>
+                </button>
+              );
+            })}
+          </div>
+          <button className="notes-add-category" type="button"><NoteIcon name="plus" /> Dodaj kategorię</button>
+        </aside>
 
-      <NoteModal open={showAdd} onClose={() => setShowAdd(false)} onSave={data => { addNote(data); setShowAdd(false); }} />
-      <NoteModal open={!!editNote} note={editNote ?? undefined} onClose={() => setEditNote(null)} onSave={data => { updateNote(editNote!.id, data); setEditNote(null); }} />
-      <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { deleteNote(deleteId!); setDeleteId(null); }} label="tę notatkę" />
+        <main className="notes-center">
+          {selected ? (
+            <EditorPanel note={selected} onUpdate={(patch) => updateNote(selected.id, patch)} onDelete={() => setDeleteId(selected.id)} />
+          ) : (
+            <div className="notes-card notes-empty-center"><EmptyState title="Brak notatek" cta="Nowa notatka" onCta={() => setShowAdd(true)} /></div>
+          )}
+
+          <section className="notes-card notes-board">
+            <div className="notes-board-head">
+              <h2>Moje notatki</h2>
+              <div>
+                <button className="is-active" type="button">Wszystkie</button>
+                <button type="button">Przypięte <span>{pinned.length}</span></button>
+                <button type="button">Ostatnio edytowane</button>
+                <button type="button">Udostępnione <span>6</span></button>
+              </div>
+              <label>Sortuj: Ostatnia aktualizacja <select aria-label="Sortowanie"><option>Ostatnia aktualizacja</option></select></label>
+            </div>
+
+            <div className="notes-card-grid">
+              {visibleNotes.length === 0 ? (
+                <EmptyState title="Brak notatek w tej kategorii" />
+              ) : visibleNotes.slice(0, 5).map((note) => (
+                <NoteTile key={note.id} note={note} selected={selected?.id === note.id} onSelect={() => setSelectedId(note.id)} onPin={() => updateNote(note.id, { pinned: !note.pinned })} />
+              ))}
+            </div>
+            <button className="notes-all-link" type="button">Zobacz wszystkie notatki <span>→</span></button>
+          </section>
+        </main>
+
+        <aside className="notes-side">
+          <section className="notes-card notes-quick">
+            <h2>Szybka notatka</h2>
+            <textarea value={quickText} onChange={(event) => setQuickText(event.target.value)} placeholder="Zapisz szybką myśl, zadanie lub pomysł..." />
+            <div className="notes-mini-toolbar">
+              <NoteIcon name="bold" /><NoteIcon name="italic" /><NoteIcon name="list" /><NoteIcon name="align" /><NoteIcon name="check" /><NoteIcon name="link" /><NoteIcon name="image" />
+              <button type="button" onClick={saveQuickNote}>Zapisz</button>
+            </div>
+          </section>
+
+          <SideList title="Przypięte" notes={pinned.slice(0, 5)} onSelect={setSelectedId} pin />
+          <SideList title="Ostatnio edytowane" notes={recent} onSelect={setSelectedId} />
+
+          <section className="notes-card notes-tags">
+            <div className="notes-card-head"><h2>Popularne tagi</h2><button type="button">Zobacz wszystkie →</button></div>
+            <div>
+              {tags.map((tag) => <span key={tag.name}>{tag.name} <em>{tag.count}</em></span>)}
+            </div>
+          </section>
+        </aside>
+      </section>
+
+      <section className="notes-card notes-activity">
+        <h2>Ostatnia aktywność</h2>
+        <div>
+          {recent.slice(0, 5).map((note, index) => (
+            <article className={`notes-activity-item notes-tone-${categoryFor(note).tone}`} key={note.id}>
+              <span><NoteIcon name={index % 3 === 0 ? 'note' : index % 3 === 1 ? 'document' : 'tag'} /></span>
+              <strong>{index % 2 === 0 ? 'Zaktualizowano notatkę' : 'Utworzono notatkę'}</strong>
+              <small>{note.title}</small>
+              <em>{relativeTime(note.updatedAt)}</em>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <NoteModal open={showAdd} onClose={() => setShowAdd(false)} onSave={(data) => { addNote(data); setShowAdd(false); }} />
+      <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { if (deleteId) deleteNote(deleteId); setDeleteId(null); }} label="tę notatkę" />
     </div>
   );
 }
 
-function NoteCard({ note, onEdit, onDelete, onUpdate }: { note: Note; onEdit: () => void; onDelete: () => void; onUpdate: (p: Partial<Note>) => void }) {
+function buildTags(notes: Note[]) {
+  const map = new Map<string, number>();
+  notes.forEach((note) => note.tags.forEach((tag) => map.set(tag, (map.get(tag) ?? 0) + 1)));
+  return Array.from(map.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+}
+
+function NoteKpi({ icon, label, value, note, tone }: { icon: NoteIconName; label: string; value: number; note: string; tone: string }) {
   return (
-    <div style={{ background: note.color || 'var(--surface)', border: '1px solid var(--border-soft)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', minHeight: 120 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-        <div style={{ fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{note.title || 'Bez tytułu'}</div>
-        <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-          <button className="icon-btn" onClick={() => onUpdate({ pinned: !note.pinned })} title={note.pinned ? 'Odepnij' : 'Przypnij'} style={{ fontSize: 13, opacity: note.pinned ? 1 : 0.4 }}>📌</button>
-          <button className="icon-btn" onClick={onEdit}><IcoEdit /></button>
-          <button className="icon-btn" onClick={onDelete}><IcoTrash /></button>
+    <article className={`notes-kpi notes-tone-${tone}`}>
+      <span><NoteIcon name={icon} /></span>
+      <div>
+        <small>{label}</small>
+        <strong>{value}</strong>
+        <em>{note}</em>
+      </div>
+      <Spark />
+    </article>
+  );
+}
+
+function Spark() {
+  return (
+    <svg viewBox="0 0 120 42" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="2,23 18,26 32,18 45,23 58,14 72,20 86,25 101,17 118,9" />
+    </svg>
+  );
+}
+
+function EditorPanel({ note, onUpdate, onDelete }: { note: Note; onUpdate: (patch: Partial<Note>) => void; onDelete: () => void }) {
+  const [draft, setDraft] = useState(note.content);
+
+  useEffect(() => {
+    setDraft(note.content);
+  }, [note.id, note.content]);
+
+  function saveDraft() {
+    if (draft !== note.content) onUpdate({ content: draft });
+  }
+
+  const cat = categoryFor(note);
+
+  return (
+    <section className="notes-card notes-editor">
+      <div className="notes-editor-head">
+        <div>
+          <h2>{note.title || 'Bez tytułu'} <button type="button" onClick={() => onUpdate({ pinned: !note.pinned })}><NoteIcon name="pin" /></button></h2>
+          <div className="notes-editor-tags">
+            <span className={`notes-tone-${cat.tone}`}>{cat.label.replace('Wszystkie notatki', 'Pomysły')}</span>
+            {note.tags.slice(0, 2).map((tag) => <span key={tag}>{tag}</span>)}
+            <button type="button"><NoteIcon name="plus" /> Dodaj tag</button>
+          </div>
+        </div>
+        <div className="notes-editor-meta">
+          <span>Zapisano {relativeTime(note.updatedAt)}</span>
+          <NoteIcon name="check" />
+          <span><NoteIcon name="calendar" /> {fmtDate(note.updatedAt)}, {fmtTime(note.updatedAt)}</span>
+          <button type="button" onClick={onDelete} aria-label="Usuń notatkę"><NoteIcon name="more" /></button>
         </div>
       </div>
 
-      {note.type === 'checklist' && note.checklistItems ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {note.checklistItems.map(item => (
-            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div onClick={() => {
-                const updated = note.checklistItems!.map(i => i.id === item.id ? { ...i, done: !i.done } : i);
-                onUpdate({ checklistItems: updated });
-              }} style={{ width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${item.done ? 'var(--green-mid)' : 'var(--border)'}`, background: item.done ? 'var(--green-mid)' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: 'white', flexShrink: 0 }}>
-                {item.done && '✓'}
-              </div>
-              <span style={{ fontSize: 12, textDecoration: item.done ? 'line-through' : 'none', color: item.done ? 'var(--ink-3)' : 'var(--ink)' }}>{item.text}</span>
-            </div>
-          ))}
-          <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 4 }}>
-            {note.checklistItems.filter(i => i.done).length}/{note.checklistItems.length} zrobione
-          </div>
-        </div>
-      ) : (
-        <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 5, WebkitBoxOrient: 'vertical' as const }}>
-          {note.content}
-        </div>
-      )}
+      <div className="notes-toolbar">
+        <select aria-label="Format"><option>Akapit</option><option>Nagłówek</option></select>
+        {(['bold', 'italic', 'underline', 'strike', 'tag', 'list', 'align', 'grid', 'link', 'image', 'table', 'code', 'undo', 'redo'] as NoteIconName[]).map((icon) => (
+          <button key={icon} type="button"><NoteIcon name={icon} /></button>
+        ))}
+        <button type="button" onClick={saveDraft}><NoteIcon name="save" /></button>
+      </div>
 
-      {note.tags.length > 0 && (
-        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 'auto' }}>
-          {note.tags.map(tag => (
-            <span key={tag} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 99, background: 'rgba(0,0,0,0.08)', color: 'var(--ink-2)' }}>#{tag}</span>
-          ))}
-        </div>
-      )}
-    </div>
+      <div className="notes-editor-body">
+        <textarea value={draft} onChange={(event) => setDraft(event.target.value)} onBlur={saveDraft} />
+        {note.type === 'checklist' && note.checklistItems && (
+          <div className="notes-inline-checklist">
+            {note.checklistItems.map((item) => (
+              <button key={item.id} type="button" className={item.done ? 'is-done' : ''} onClick={() => {
+                onUpdate({ checklistItems: note.checklistItems!.map((entry) => entry.id === item.id ? { ...entry, done: !entry.done } : entry) });
+              }}>
+                <span><NoteIcon name="check" /></span>{item.text}
+              </button>
+            ))}
+          </div>
+        )}
+        <em>{wordCount({ ...note, content: draft })}</em>
+      </div>
+    </section>
+  );
+}
+
+function NoteTile({ note, selected, onSelect, onPin }: { note: Note; selected: boolean; onSelect: () => void; onPin: () => void }) {
+  const cat = categoryFor(note);
+  return (
+    <article className={`notes-tile ${selected ? 'is-selected' : ''}`}>
+      <button type="button" className="notes-tile-main" onClick={onSelect}>
+        <span className={`notes-tile-cat notes-tone-${cat.tone}`}>{cat.label === 'Wszystkie notatki' ? 'Pomysły' : cat.label}</span>
+        <strong>{note.title}</strong>
+        <p>{notePreview(note)}</p>
+        <time>{fmtDate(note.updatedAt)}, {fmtTime(note.updatedAt)}</time>
+        <NoteIcon name="more" />
+      </button>
+      <button type="button" onClick={onPin} className={`notes-tile-pin ${note.pinned ? 'is-pinned' : ''}`} aria-label="Przypnij"><NoteIcon name="pin" /></button>
+    </article>
+  );
+}
+
+function SideList({ title, notes, onSelect, pin = false }: { title: string; notes: Note[]; onSelect: (id: string) => void; pin?: boolean }) {
+  return (
+    <section className="notes-card notes-side-list">
+      <div className="notes-card-head"><h2>{title}</h2><button type="button">Zobacz wszystkie →</button></div>
+      {notes.map((note) => {
+        const cat = categoryFor(note);
+        return (
+          <button key={note.id} type="button" onClick={() => onSelect(note.id)} className={`notes-side-row notes-tone-${cat.tone}`}>
+            <i />
+            <strong>{note.title}</strong>
+            <span>{pin ? fmtDate(note.updatedAt).replace('2026', '') : relativeTime(note.updatedAt)}</span>
+            {pin && <NoteIcon name="pin" />}
+          </button>
+        );
+      })}
+    </section>
   );
 }
 
 function NoteModal({ open, onClose, note, onSave }: { open: boolean; onClose: () => void; note?: Note; onSave: (n: Omit<Note,'id'|'createdAt'|'updatedAt'>) => void }) {
-  const [title, setTitle] = useState(note?.title ?? '');
-  const [content, setContent] = useState(note?.content ?? '');
-  const [type, setType] = useState<NoteType>(note?.type ?? 'sticky');
-  const [color] = useState(note?.color ?? NOTE_COLORS[0]);
-  const [tags] = useState(note?.tags?.join(', ') ?? '');
-  const [items, setItems] = useState<ChecklistItem[]>(note?.checklistItems ?? []);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [type, setType] = useState<NoteType>('sticky');
+  const [category, setCategory] = useState('Pomysły');
+  const [tags, setTags] = useState('');
+  const [items, setItems] = useState<ChecklistItem[]>([]);
   const [newItem, setNewItem] = useState('');
+
+  useEffect(() => {
+    setTitle(note?.title ?? '');
+    setContent(note?.content ?? '');
+    setType(note?.type ?? 'sticky');
+    setCategory(note?.category || 'Pomysły');
+    setTags(note?.tags?.join(', ') ?? '');
+    setItems(note?.checklistItems ?? []);
+  }, [note, open]);
 
   function handleSave() {
     onSave({
-      title, content, type, color,
-      category: '',
-      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+      title: title.trim() || 'Bez tytułu',
+      content,
+      type,
+      color: note?.color ?? NOTE_COLORS[0],
+      category,
+      tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean),
       pinned: note?.pinned ?? false,
-      archived: false,
+      archived: note?.archived ?? false,
       checklistItems: type === 'checklist' ? items : undefined,
     });
-    setTitle(''); setContent(''); setItems([]);
+    setTitle('');
+    setContent('');
+    setItems([]);
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={note ? 'Edytuj notatkę' : 'Nowa notatka'} size="md"
-      footer={<>
-        <button className="btn btn-secondary btn-sm" onClick={onClose}>Anuluj</button>
-        <button className="btn btn-primary btn-sm" onClick={handleSave}>Zapisz</button>
-      </>}>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        {['sticky','full','checklist'].map(t => (
-          <button key={t} onClick={() => setType(t as NoteType)}
-            style={{ padding: '5px 12px', borderRadius: 99, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, background: type === t ? 'var(--green)' : 'var(--surface-3)', color: type === t ? 'white' : 'var(--ink-2)' }}>
-            {t === 'sticky' ? '🗒 Karteczka' : t === 'full' ? '📄 Pełna' : '✅ Lista'}
+    <Modal open={open} onClose={onClose} title={note ? 'Edytuj notatkę' : 'Nowa notatka'} size="md" footer={
+      <>
+        <button className="btn btn-ghost" type="button" onClick={onClose}>Anuluj</button>
+        <button className="btn btn-primary" type="button" onClick={handleSave}>Zapisz</button>
+      </>
+    }>
+      <div className="notes-modal-types">
+        {(['sticky','full','checklist'] as NoteType[]).map((option) => (
+          <button key={option} type="button" onClick={() => setType(option)} className={type === option ? 'is-active' : ''}>
+            {option === 'sticky' ? 'Karteczka' : option === 'full' ? 'Pełna' : 'Lista'}
           </button>
         ))}
       </div>
-      <Field label="Tytuł"><input className="input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Tytuł notatki…" /></Field>
-      {type !== 'checklist'
-        ? <Field label="Treść"><textarea className="textarea" value={content} onChange={e => setContent(e.target.value)} rows={type === 'full' ? 8 : 4} placeholder="Treść notatki…" /></Field>
-        : (
-          <Field label="Lista">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
-              {items.map((item) => (
-                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 14, height: 14, borderRadius: 3, border: '1.5px solid var(--border)', background: item.done ? 'var(--green-mid)' : 'transparent', cursor: 'pointer', flexShrink: 0 }}
-                    onClick={() => setItems(prev => prev.map(it => it.id === item.id ? { ...it, done: !it.done } : it))} />
-                  <span style={{ flex: 1, fontSize: 13, textDecoration: item.done ? 'line-through' : 'none', color: 'var(--ink)' }}>{item.text}</span>
-                  <button className="icon-btn" style={{ padding: 2 }} onClick={() => setItems(prev => prev.filter(it => it.id !== item.id))}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
-                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </button>
-                </div>
-              ))}
-              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                <input className="input" style={{ flex: 1, fontSize: 13 }} value={newItem} onChange={e => setNewItem(e.target.value)}
-                  placeholder="Dodaj pozycję..." onKeyDown={e => { if (e.key === 'Enter' && newItem.trim()) { setItems(prev => [...prev, { id: Date.now().toString(), text: newItem.trim(), done: false }]); setNewItem(''); }}} />
-                <button className="btn btn-primary btn-sm" onClick={() => { if (newItem.trim()) { setItems(prev => [...prev, { id: Date.now().toString(), text: newItem.trim(), done: false }]); setNewItem(''); }}}>+</button>
+      <Field label="Tytuł"><input className="input" value={title} onChange={(event) => setTitle(event.target.value)} /></Field>
+      <div className="form-grid">
+        <Field label="Kategoria"><input className="input" value={category} onChange={(event) => setCategory(event.target.value)} /></Field>
+        <Field label="Tagi"><input className="input" value={tags} onChange={(event) => setTags(event.target.value)} placeholder="AI, Aplikacja" /></Field>
+      </div>
+      {type !== 'checklist' ? (
+        <Field label="Treść"><textarea className="textarea" value={content} onChange={(event) => setContent(event.target.value)} rows={7} /></Field>
+      ) : (
+        <Field label="Lista">
+          <div className="notes-modal-list">
+            {items.map((item) => (
+              <div key={item.id}>
+                <button type="button" onClick={() => setItems((prev) => prev.map((entry) => entry.id === item.id ? { ...entry, done: !entry.done } : entry))} className={item.done ? 'is-done' : ''}><NoteIcon name="check" /></button>
+                <span>{item.text}</span>
+                <button type="button" onClick={() => setItems((prev) => prev.filter((entry) => entry.id !== item.id))}><IcoTrash /></button>
               </div>
+            ))}
+            <div>
+              <input className="input" value={newItem} onChange={(event) => setNewItem(event.target.value)} placeholder="Dodaj pozycję..." />
+              <button className="btn btn-primary btn-sm" type="button" onClick={() => { if (newItem.trim()) { setItems((prev) => [...prev, { id: Date.now().toString(), text: newItem.trim(), done: false }]); setNewItem(''); } }}>+</button>
             </div>
-          </Field>
-        )}
-      </Modal>
-    );
+          </div>
+        </Field>
+      )}
+    </Modal>
+  );
+}
+
+function NoteIcon({ name }: { name: NoteIconName }) {
+  const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      {name === 'note' && <><path d="M6 3h9l3 3v15H6V3zM15 3v4h4M9 12h6M9 16h4" {...common} /></>}
+      {name === 'pin' && <><path d="m14 4 6 6-3 1-4 4-1 5-2-2-4 4-2-2 4-4-2-2 5-1 4-4-1-5z" {...common} /></>}
+      {name === 'tag' && <><path d="M20 12 12 20 4 12V4h8l8 8z" {...common} /><path d="M8 8h.01" {...common} /></>}
+      {name === 'clock' && <><circle cx="12" cy="12" r="8.5" {...common} /><path d="M12 7v5l3 2" {...common} /></>}
+      {name === 'calendar' && <><rect x="4" y="5" width="16" height="15" rx="2" {...common} /><path d="M8 3v4M16 3v4M4 10h16" {...common} /></>}
+      {name === 'plus' && <><path d="M12 5v14M5 12h14" {...common} /></>}
+      {name === 'filter' && <><path d="M4 5h16l-6 7v5l-4 2v-7L4 5z" {...common} /></>}
+      {name === 'grid' && <><rect x="4" y="4" width="6" height="6" rx="1.5" {...common} /><rect x="14" y="4" width="6" height="6" rx="1.5" {...common} /><rect x="4" y="14" width="6" height="6" rx="1.5" {...common} /><rect x="14" y="14" width="6" height="6" rx="1.5" {...common} /></>}
+      {name === 'list' && <><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" {...common} /></>}
+      {name === 'settings' && <><circle cx="12" cy="12" r="3" {...common} /><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.3 3.1a7 7 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.3 3.1h5l.3-3.1a7 7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.5c.1-.3.1-.7.1-1z" {...common} /></>}
+      {name === 'idea' && <><path d="M9 18h6M10 22h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 4H9c0-2 0-3-1-4z" {...common} /></>}
+      {name === 'project' && <><rect x="4" y="5" width="16" height="14" rx="2" {...common} /><path d="M8 9h8M8 13h5" {...common} /></>}
+      {name === 'people' && <><circle cx="9" cy="8" r="3" {...common} /><circle cx="17" cy="9" r="2.5" {...common} /><path d="M3 20a6 6 0 0 1 12 0M14 20a4.5 4.5 0 0 1 7 0" {...common} /></>}
+      {name === 'user' && <><circle cx="12" cy="8" r="3.5" {...common} /><path d="M5 21a7 7 0 0 1 14 0" {...common} /></>}
+      {name === 'star' && <><path d="m12 3 2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8L12 3z" {...common} /></>}
+      {name === 'book' && <><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 1 4 17.5v-12zM4 17.5A2.5 2.5 0 0 0 6.5 20" {...common} /><path d="M8 7h8" {...common} /></>}
+      {name === 'archive' && <><rect x="4" y="5" width="16" height="4" rx="1" {...common} /><path d="M6 9v10h12V9M10 13h4" {...common} /></>}
+      {name === 'bold' && <><path d="M7 5h6a3 3 0 0 1 0 6H7zM7 11h7a4 4 0 0 1 0 8H7z" {...common} /></>}
+      {name === 'italic' && <><path d="M10 5h8M6 19h8M14 5l-4 14" {...common} /></>}
+      {name === 'underline' && <><path d="M7 5v6a5 5 0 0 0 10 0V5M5 21h14" {...common} /></>}
+      {name === 'strike' && <><path d="M5 12h14M8 7a4 4 0 0 1 7-1M9 17a4 4 0 0 0 7-1" {...common} /></>}
+      {name === 'align' && <><path d="M4 6h16M4 10h11M4 14h16M4 18h11" {...common} /></>}
+      {name === 'check' && <><path d="M20 6 9 17l-5-5" {...common} /></>}
+      {name === 'link' && <><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1" {...common} /><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" {...common} /></>}
+      {name === 'image' && <><rect x="4" y="5" width="16" height="14" rx="2" {...common} /><circle cx="9" cy="10" r="1.5" {...common} /><path d="m6 17 4-4 3 3 2-2 3 3" {...common} /></>}
+      {name === 'table' && <><rect x="4" y="5" width="16" height="14" rx="2" {...common} /><path d="M4 10h16M4 15h16M10 5v14M15 5v14" {...common} /></>}
+      {name === 'code' && <><path d="m9 8-4 4 4 4M15 8l4 4-4 4" {...common} /></>}
+      {name === 'undo' && <><path d="M9 7H4v5" {...common} /><path d="M4 12a8 8 0 0 1 13.5-5.8" {...common} /></>}
+      {name === 'redo' && <><path d="M15 7h5v5" {...common} /><path d="M20 12A8 8 0 0 0 6.5 6.2" {...common} /></>}
+      {name === 'more' && <><path d="M12 7h.01M12 12h.01M12 17h.01" {...common} /></>}
+      {name === 'save' && <><path d="M5 3h12l2 2v16H5V3z" {...common} /><path d="M8 3v6h8V3M8 21v-7h8v7" {...common} /></>}
+      {name === 'document' && <><path d="M7 3h7l4 4v14H7V3zM14 3v5h5M10 13h6M10 17h4" {...common} /></>}
+    </svg>
+  );
 }
