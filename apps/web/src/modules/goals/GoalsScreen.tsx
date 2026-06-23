@@ -16,8 +16,7 @@ export function GoalsScreen() {
   const [tab, setTab] = useState('lista');
   return (
     <div className="module-page">
-      <div className="module-header">
-        <span className="module-title">Cele</span>
+      <div className="module-header no-title">
         <SubTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
       {tab === 'lista'     && <GoalsList />}

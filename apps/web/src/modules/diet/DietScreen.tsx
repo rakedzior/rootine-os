@@ -104,7 +104,6 @@ function FoodSearchDropdown({ query, onQueryChange, onSelect, placeholder }: Foo
 export function DietScreen() {
   return (
     <div className="module-page">
-      <div className="module-header"><span className="module-title">Dieta</span></div>
       <DietHub />
     </div>
   );

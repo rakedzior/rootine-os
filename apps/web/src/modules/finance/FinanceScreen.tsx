@@ -19,8 +19,7 @@ export function FinanceScreen() {
   const [tab, setTab] = useState('przeglad');
   return (
     <div className="module-page">
-      <div className="module-header">
-        <span className="module-title">Finanse</span>
+      <div className="module-header no-title">
         <SubTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
       {tab === 'przeglad'     && <FinancePrzeglad />}

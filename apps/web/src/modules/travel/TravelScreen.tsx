@@ -19,8 +19,7 @@ export function TravelScreen() {
   const [tab, setTab] = useState('podroze');
   return (
     <div className="module-page">
-      <div className="module-header">
-        <span className="module-title">Podróże</span>
+      <div className="module-header no-title">
         <SubTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
       {tab === 'podroze'   && <TravelList />}

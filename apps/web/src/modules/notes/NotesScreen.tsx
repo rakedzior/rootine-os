@@ -16,8 +16,7 @@ export function NotesScreen() {
   const [tab, setTab] = useState('wszystkie');
   return (
     <div className="module-page">
-      <div className="module-header">
-        <span className="module-title">Notatki</span>
+      <div className="module-header no-title">
         <SubTabs tabs={TABS} active={tab} onChange={setTab} />
       </div>
       <NotesGrid filter={tab} />
@@ -182,4 +181,3 @@ function NoteModal({ open, onClose, note, onSave }: { open: boolean; onClose: ()
       </Modal>
     );
 }
-

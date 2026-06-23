@@ -1271,8 +1271,8 @@ export function StartScreen() {
     <div className="module-page">
       <div style={{
         display: 'flex', flexDirection: 'column',
-        padding: 'var(--gap)', gap: 'var(--gap)',
-        maxWidth: 1640, margin: '0 auto', width: '100%', boxSizing: 'border-box',
+        gap: 'var(--gap)',
+        width: '100%', boxSizing: 'border-box',
       }}>
         {/* TOP ROW: Today + Calendar — fixed min-height, not flex-grow */}
         <div className="planer-top-grid">
