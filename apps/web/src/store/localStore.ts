@@ -184,11 +184,12 @@ export interface VacationEntry {
 export interface VacationBalance {
   yearlyLimit: number; usedDays: number; plannedDays: number;
 }
+export interface JdgItem {
+  id: string; label: string; dueDay?: number;
+}
 export interface JdgMonth {
   id: string; month: string;
-  invoiceIssued: boolean; documentsSent: boolean;
-  accountingPaid: boolean; zusPaid: boolean;
-  pitPaid: boolean; vatPaid: boolean; notes: string;
+  completed: string[]; notes: string;
 }
 
 // — TRAVEL —
@@ -243,11 +244,14 @@ export interface Account {
   currency: string; institution?: string; archived: boolean;
   color: string;
 }
+export interface RecurringFolder {
+  id: string; name: string;
+}
 export interface RecurringExpense {
   id: string; createdAt: string;
   name: string; amount: number; category: string;
   dueDay: number; frequency: string; reminderEnabled: boolean;
-  paidThisMonth?: boolean;
+  paidThisMonth?: boolean; folderId?: string;
 }
 export interface BudgetCategory {
   id: string; name: string; plannedAmount: number; actualAmount: number; month: string; color: string;
@@ -277,6 +281,7 @@ export interface Goal {
   category: string; priority?: Priority; deadline?: string;
   progress: number; streak?: number; tasks: GoalTask[];
   milestones: Milestone[]; archived: boolean; emoji: string;
+  completedAt?: string;
 }
 
 // — ACTIVE SESSION —
@@ -323,6 +328,8 @@ interface LocalStore {
   vacations: VacationEntry[];
   vacationBalance: VacationBalance;
   jdgMonths: JdgMonth[];
+  jdgItems: JdgItem[];
+  jdgTabVisible: boolean;
 
   // Travel
   trips: Trip[];
@@ -341,12 +348,14 @@ interface LocalStore {
   // Finance
   accounts: Account[];
   recurringExpenses: RecurringExpense[];
+  recurringFolders: RecurringFolder[];
   budgetCategories: BudgetCategory[];
   savingsGoals: SavingsGoal[];
   financialReminders: FinancialReminder[];
 
   // Goals
   goals: Goal[];
+  goalCategories: string[];
 
   // Diet
   mealEntries: MealEntry[];
@@ -392,6 +401,10 @@ interface LocalStore {
   deleteOfficeDocument: (id: string) => void;
   updateJdgMonth: (id: string, patch: Partial<JdgMonth>) => void;
   addJdgMonth: (month: string) => void;
+  addJdgItem: (item: Omit<JdgItem, 'id'>) => void;
+  updateJdgItem: (id: string, patch: Partial<JdgItem>) => void;
+  deleteJdgItem: (id: string) => void;
+  setJdgTabVisible: (visible: boolean) => void;
   addInsurance: (i: Omit<Insurance, 'id' | 'createdAt'>) => void;
   deleteInsurance: (id: string) => void;
   addVacation: (v: Omit<VacationEntry, 'id' | 'createdAt'>) => void;
@@ -433,6 +446,9 @@ interface LocalStore {
   addRecurringExpense: (e: Omit<RecurringExpense, 'id' | 'createdAt'>) => void;
   updateRecurringExpense: (id: string, patch: Partial<RecurringExpense>) => void;
   deleteRecurringExpense: (id: string) => void;
+  addRecurringFolder: (name: string) => void;
+  updateRecurringFolder: (id: string, patch: Partial<RecurringFolder>) => void;
+  deleteRecurringFolder: (id: string) => void;
   addFinancialReminder: (r: Omit<FinancialReminder, 'id'>) => void;
   updateFinancialReminder: (id: string, patch: Partial<FinancialReminder>) => void;
   deleteFinancialReminder: (id: string) => void;
@@ -451,12 +467,25 @@ interface LocalStore {
   deleteGoal: (id: string) => void;
   addGoalTask: (goalId: string, t: Omit<GoalTask, 'id' | 'goalId' | 'subtasks' | 'progress'>) => void;
   updateGoalTask: (goalId: string, taskId: string, patch: Partial<GoalTask>) => void;
+  deleteGoalTask: (goalId: string, taskId: string) => void;
+  addGoalCategory: (name: string) => void;
+  deleteGoalCategory: (name: string) => void;
 }
 
 function uid(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 function now(): string { return new Date().toISOString(); }
+
+function updateTaskRecursive(tasks: GoalTask[], taskId: string, patch: Partial<GoalTask>): GoalTask[] {
+  return tasks.map(t => t.id === taskId ? { ...t, ...patch } : { ...t, subtasks: updateTaskRecursive(t.subtasks, taskId, patch) });
+}
+function removeTaskRecursive(tasks: GoalTask[], taskId: string): GoalTask[] {
+  return tasks.filter(t => t.id !== taskId).map(t => ({ ...t, subtasks: removeTaskRecursive(t.subtasks, taskId) }));
+}
+function addSubtaskRecursive(tasks: GoalTask[], parentId: string, newTask: GoalTask): GoalTask[] {
+  return tasks.map(t => t.id === parentId ? { ...t, subtasks: [...t.subtasks, newTask] } : { ...t, subtasks: addSubtaskRecursive(t.subtasks, parentId, newTask) });
+}
 
 // ─── MOCK DATA ──────────────────────────────────────────────
 
@@ -671,10 +700,19 @@ const MOCK_OFFICE_DOCS: OfficeDocument[] = [
 const MOCK_CARS: Car[] = [
   { id: 'car1', createdAt: now(), name: 'BMW 320d', plateNumber: 'KR 12345', mileage: 138450, insuranceExpiry: '2026-12-15', inspectionDate: '2027-03-10', oilChangeDate: '2026-09-10', tireChangeDate: '2026-10-15' },
 ];
+const DEFAULT_JDG_ITEMS: JdgItem[] = [
+  { id: 'invoiceIssued', label: 'Faktury wystawione' },
+  { id: 'documentsSent', label: 'Dokumenty wysłane' },
+  { id: 'accountingPaid', label: 'Księgowość opłacona', dueDay: 10 },
+  { id: 'zusPaid', label: 'ZUS opłacony', dueDay: 20 },
+  { id: 'pitPaid', label: 'PIT opłacony', dueDay: 20 },
+  { id: 'vatPaid', label: 'VAT opłacony', dueDay: 25 },
+];
+
 const MOCK_JDG: JdgMonth[] = [
-  { id: 'jdg1', month: '2026-06', invoiceIssued: true, documentsSent: false, accountingPaid: false, zusPaid: false, pitPaid: false, vatPaid: false, notes: '' },
-  { id: 'jdg2', month: '2026-05', invoiceIssued: true, documentsSent: true, accountingPaid: true, zusPaid: true, pitPaid: true, vatPaid: true, notes: '' },
-  { id: 'jdg3', month: '2026-04', invoiceIssued: true, documentsSent: true, accountingPaid: true, zusPaid: true, pitPaid: true, vatPaid: true, notes: '' },
+  { id: 'jdg1', month: '2026-06', completed: ['invoiceIssued'], notes: '' },
+  { id: 'jdg2', month: '2026-05', completed: ['invoiceIssued', 'documentsSent', 'accountingPaid', 'zusPaid', 'pitPaid', 'vatPaid'], notes: '' },
+  { id: 'jdg3', month: '2026-04', completed: ['invoiceIssued', 'documentsSent', 'accountingPaid', 'zusPaid', 'pitPaid', 'vatPaid'], notes: '' },
 ];
 
 const MOCK_TRIPS: Trip[] = [
@@ -810,7 +848,30 @@ const MOCK_GOALS: Goal[] = [
       { id: 'm3', goalId: 'g4', title: 'Certyfikat AWS Solutions Architect', dueDate: '2026-09-30', progress: 15, completed: false },
     ],
   },
+  {
+    id: 'g5', createdAt: now(), updatedAt: now(),
+    title: 'Książka: Atomowe nawyki', description: '',
+    type: 'simple', category: 'Rozwój osobisty', priority: 'low',
+    progress: 100, emoji: '📖', archived: false,
+    tasks: [], milestones: [], completedAt: '2024-05-12',
+  },
+  {
+    id: 'g6', createdAt: now(), updatedAt: now(),
+    title: 'SQL Bootcamp', description: '',
+    type: 'project', category: 'Data Engineering Path', priority: 'mid',
+    progress: 100, emoji: '🚀', archived: false,
+    tasks: [], milestones: [], completedAt: '2024-02-28',
+  },
+  {
+    id: 'g7', createdAt: now(), updatedAt: now(),
+    title: 'Bieg 5 km bez przerwy', description: '',
+    type: 'simple', category: 'Zdrowie', priority: 'mid',
+    progress: 100, emoji: '🏃', archived: false,
+    tasks: [], milestones: [], completedAt: '2023-11-10',
+  },
 ];
+
+const MOCK_GOAL_CATEGORIES = ['Zdrowie', 'Finanse', 'Kariera', 'Edukacja', 'Relacje', 'Hobby', 'Rozwój osobisty', 'Inne'];
 
 // ─── STORE IMPLEMENTATION ────────────────────────────────────
 
@@ -886,6 +947,8 @@ export const useLocalStore = create<LocalStore>()(
       vacations: [],
       vacationBalance: { yearlyLimit: 26, usedDays: 8, plannedDays: 18 },
       jdgMonths: MOCK_JDG,
+      jdgItems: DEFAULT_JDG_ITEMS,
+      jdgTabVisible: false,
       trips: MOCK_TRIPS,
       packingTemplates: [],
       wishlist: MOCK_WISHLIST,
@@ -896,10 +959,12 @@ export const useLocalStore = create<LocalStore>()(
       notes: MOCK_NOTES,
       accounts: MOCK_ACCOUNTS,
       recurringExpenses: MOCK_RECURRING,
+      recurringFolders: [],
       budgetCategories: MOCK_BUDGET,
       savingsGoals: MOCK_SAVINGS,
       financialReminders: MOCK_FIN_REMINDERS,
       goals: MOCK_GOALS,
+      goalCategories: MOCK_GOAL_CATEGORIES,
       mealEntries: MOCK_MEAL_ENTRIES,
       waterLogs: MOCK_WATER_LOGS,
       dietGoals: MOCK_DIET_GOALS,
@@ -1063,7 +1128,14 @@ export const useLocalStore = create<LocalStore>()(
       updateJdgMonth: (id, patch) => set(s => ({ jdgMonths: s.jdgMonths.map(j => j.id === id ? { ...j, ...patch } : j) })),
       addJdgMonth: (month) => set(s => s.jdgMonths.some(j => j.month === month)
         ? {}
-        : { jdgMonths: [{ id: uid(), month, invoiceIssued: false, documentsSent: false, accountingPaid: false, zusPaid: false, pitPaid: false, vatPaid: false, notes: '' }, ...s.jdgMonths] }),
+        : { jdgMonths: [{ id: uid(), month, completed: [], notes: '' }, ...s.jdgMonths] }),
+      addJdgItem: (item) => set(s => ({ jdgItems: [...s.jdgItems, { ...item, id: uid() }] })),
+      updateJdgItem: (id, patch) => set(s => ({ jdgItems: s.jdgItems.map(i => i.id === id ? { ...i, ...patch } : i) })),
+      deleteJdgItem: (id) => set(s => ({
+        jdgItems: s.jdgItems.filter(i => i.id !== id),
+        jdgMonths: s.jdgMonths.map(j => ({ ...j, completed: j.completed.filter(cid => cid !== id) })),
+      })),
+      setJdgTabVisible: (visible) => set({ jdgTabVisible: visible }),
       addInsurance: (i) => set(s => ({ insurances: [...s.insurances, { ...i, id: uid(), createdAt: now() }] })),
       deleteInsurance: (id) => set(s => ({ insurances: s.insurances.filter(i => i.id !== id) })),
       addVacation: (v) => set(s => ({ vacations: [...s.vacations, { ...v, id: uid(), createdAt: now() }] })),
@@ -1115,6 +1187,12 @@ export const useLocalStore = create<LocalStore>()(
       addRecurringExpense: (e) => set(s => ({ recurringExpenses: [...s.recurringExpenses, { ...e, id: uid(), createdAt: now() }] })),
       updateRecurringExpense: (id, patch) => set(s => ({ recurringExpenses: s.recurringExpenses.map(e => e.id === id ? { ...e, ...patch } : e) })),
       deleteRecurringExpense: (id) => set(s => ({ recurringExpenses: s.recurringExpenses.filter(e => e.id !== id) })),
+      addRecurringFolder: (name) => set(s => ({ recurringFolders: [...s.recurringFolders, { id: uid(), name }] })),
+      updateRecurringFolder: (id, patch) => set(s => ({ recurringFolders: s.recurringFolders.map(f => f.id === id ? { ...f, ...patch } : f) })),
+      deleteRecurringFolder: (id) => set(s => ({
+        recurringFolders: s.recurringFolders.filter(f => f.id !== id),
+        recurringExpenses: s.recurringExpenses.map(e => e.folderId === id ? { ...e, folderId: undefined } : e),
+      })),
       addFinancialReminder: (r) => set(s => ({ financialReminders: [...s.financialReminders, { ...r, id: uid() }] })),
       updateFinancialReminder: (id, patch) => set(s => ({ financialReminders: s.financialReminders.map(r => r.id === id ? { ...r, ...patch } : r) })),
       deleteFinancialReminder: (id) => set(s => ({ financialReminders: s.financialReminders.filter(r => r.id !== id) })),
@@ -1123,17 +1201,23 @@ export const useLocalStore = create<LocalStore>()(
       // Goals actions
       addGoal: (g) => set(s => ({ goals: [{ ...g, id: uid(), createdAt: now(), updatedAt: now(), tasks: [], milestones: [] }, ...s.goals] })),
       updateGoal: (id, patch) => set(s => ({ goals: s.goals.map(g => g.id === id ? { ...g, ...patch, updatedAt: now() } : g) })),
-      deleteGoal: (id) => set(s => ({ goals: s.goals.map(g => g.id === id ? { ...g, archived: true } : g) })),
+      deleteGoal: (id) => set(s => ({ goals: s.goals.filter(g => g.id !== id) })),
       addGoalTask: (goalId, t) => set(s => ({
-        goals: s.goals.map(g => g.id === goalId
-          ? { ...g, tasks: [...g.tasks, { ...t, id: uid(), goalId, subtasks: [], progress: 0 }] }
-          : g)
+        goals: s.goals.map(g => {
+          if (g.id !== goalId) return g;
+          const newTask: GoalTask = { ...t, id: uid(), goalId, subtasks: [], progress: 0 };
+          if (t.parentTaskId) return { ...g, tasks: addSubtaskRecursive(g.tasks, t.parentTaskId, newTask) };
+          return { ...g, tasks: [...g.tasks, newTask] };
+        })
       })),
       updateGoalTask: (goalId, taskId, patch) => set(s => ({
-        goals: s.goals.map(g => g.id === goalId
-          ? { ...g, tasks: g.tasks.map(t => t.id === taskId ? { ...t, ...patch } : t) }
-          : g)
+        goals: s.goals.map(g => g.id === goalId ? { ...g, tasks: updateTaskRecursive(g.tasks, taskId, patch) } : g)
       })),
+      deleteGoalTask: (goalId, taskId) => set(s => ({
+        goals: s.goals.map(g => g.id === goalId ? { ...g, tasks: removeTaskRecursive(g.tasks, taskId) } : g)
+      })),
+      addGoalCategory: (name) => set(s => (s.goalCategories.includes(name) ? {} : { goalCategories: [...s.goalCategories, name] })),
+      deleteGoalCategory: (name) => set(s => ({ goalCategories: s.goalCategories.filter(c => c !== name) })),
     }),
     {
       name: 'rootine-local-store',
@@ -1159,6 +1243,25 @@ export const useLocalStore = create<LocalStore>()(
 
         // Best-effort upgrade of pre-redesign FeelingEntry rows.
         state.feelings = (state.feelings ?? []).map(migrateLegacyFeeling);
+
+        // Migrate pre-redesign JDG checklist (fixed boolean fields) to the
+        // configurable jdgItems + completed[] model.
+        if (!state.jdgItems || state.jdgItems.length === 0) {
+          state.jdgItems = DEFAULT_JDG_ITEMS.map(i => ({ ...i }));
+        }
+        if (state.jdgTabVisible === undefined) {
+          state.jdgTabVisible = false;
+        }
+        if (!state.recurringFolders) {
+          state.recurringFolders = [];
+        }
+        const legacyJdgKeys = ['invoiceIssued', 'documentsSent', 'accountingPaid', 'zusPaid', 'pitPaid', 'vatPaid'];
+        state.jdgMonths = (state.jdgMonths ?? []).map((raw) => {
+          const m = raw as JdgMonth & Record<string, unknown>;
+          if (Array.isArray(m.completed)) return m as JdgMonth;
+          const completed = legacyJdgKeys.filter(key => m[key] === true);
+          return { id: m.id, month: m.month, completed, notes: (m.notes as string) ?? '' };
+        });
       },
     }
   )

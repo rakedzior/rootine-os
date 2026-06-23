@@ -5,8 +5,9 @@ import {
   type Account,
   type BudgetCategory,
   type FinancialReminder,
-  type JdgMonth,
+  type JdgItem,
   type RecurringExpense,
+  type RecurringFolder,
   type SavingsGoal,
 } from '@/store/localStore';
 
@@ -18,7 +19,7 @@ const TABS = [
 type FinanceTab = 'przeglad' | 'miesieczne';
 type FinanceTone = 'blue' | 'violet' | 'teal' | 'pink';
 type IconName =
-  | 'overview' | 'calendar' | 'accounts' | 'budget' | 'savings' | 'payments' | 'business'
+  | 'overview' | 'calendar' | 'accounts' | 'budget' | 'savings' | 'payments' | 'business' | 'settings'
   | 'due' | 'paid' | 'edit' | 'plus' | 'reset' | 'check'
   | 'home' | 'transport' | 'food' | 'entertainment' | 'health' | 'utilities' | 'phone'
   | 'shield' | 'car' | 'travel' | 'cash' | 'bank' | 'wallet' | 'other';
@@ -27,15 +28,6 @@ const CATEGORY_OPTIONS = ['Mieszkanie', 'Transport', 'Jedzenie', 'Rozrywka', 'Zd
 const ACCOUNT_TYPES = ['główne', 'oszczędnościowe', 'gotówka', 'karta', 'walutowe', 'inwestycje'];
 const CURRENCIES = ['PLN', 'EUR', 'USD', 'GBP'];
 const BUDGET_COLORS = ['#3B82F6', '#F59E0B', '#22C55E', '#8B5CF6', '#EF4444', '#14B8A6', '#6B7280'];
-
-const JDG_CHECKS: { key: keyof JdgMonth; label: string }[] = [
-  { key: 'invoiceIssued', label: 'Faktury wystawione' },
-  { key: 'documentsSent', label: 'Dokumenty wysłane' },
-  { key: 'accountingPaid', label: 'Księgowość opłacona' },
-  { key: 'zusPaid', label: 'ZUS opłacony' },
-  { key: 'pitPaid', label: 'PIT opłacony' },
-  { key: 'vatPaid', label: 'VAT opłacony' },
-];
 
 function currentYearMonth() {
   const d = new Date();
@@ -132,12 +124,6 @@ function toneForSavings(goal: SavingsGoal): FinanceTone {
   return 'teal';
 }
 
-function iconForJdg(key: keyof JdgMonth): IconName {
-  if (key === 'invoiceIssued' || key === 'documentsSent') return 'payments';
-  if (key === 'accountingPaid') return 'business';
-  return 'budget';
-}
-
 export function FinanceScreen() {
   const [tab, setTab] = useState<FinanceTab>('przeglad');
   const [month, setMonth] = useState(currentYearMonth());
@@ -146,10 +132,31 @@ export function FinanceScreen() {
     <div className="module-page">
       <div className="module-header no-title">
         <SubTabs tabs={TABS} active={tab} onChange={(id) => setTab(id as FinanceTab)} />
+        <FinanceMonthSwitcher month={month} onMonthChange={setMonth} />
       </div>
 
       {tab === 'przeglad' && <FinanceOverview month={month} onNavigate={setTab} />}
-      {tab === 'miesieczne' && <FinanceMonthly month={month} onMonthChange={setMonth} />}
+      {tab === 'miesieczne' && <FinanceMonthly month={month} />}
+    </div>
+  );
+}
+
+function shiftMonth(month: string, delta: number) {
+  const [year, m] = month.split('-').map(Number);
+  const date = new Date(year, m - 1 + delta, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function FinanceMonthSwitcher({ month, onMonthChange }: { month: string; onMonthChange: (month: string) => void }) {
+  return (
+    <div className="finance-nav-month">
+      <button className="icon-btn" type="button" onClick={() => onMonthChange(shiftMonth(month, -1))} aria-label="Poprzedni miesiąc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M15 18 9 12l6-6" /></svg>
+      </button>
+      <input className="input" type="month" value={month} onChange={(e) => onMonthChange(e.target.value || currentYearMonth())} />
+      <button className="icon-btn" type="button" onClick={() => onMonthChange(shiftMonth(month, 1))} aria-label="Następny miesiąc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+      </button>
     </div>
   );
 }
@@ -168,7 +175,7 @@ function FinanceOverview({ month, onNavigate }: { month: string; onNavigate: (ta
           icon="accounts"
           label="Łączne środki"
           value={fmtPLN(totalBalance)}
-          note={`${activeAccounts.length} aktywne konta`}
+          note={`${activeAccounts.length} aktywnych źródeł`}
           tone="blue"
           onEdit={() => onNavigate('przeglad')}
         />
@@ -207,7 +214,7 @@ function FinanceOverview({ month, onNavigate }: { month: string; onNavigate: (ta
   );
 }
 
-function FinanceMonthly({ month, onMonthChange }: { month: string; onMonthChange: (month: string) => void }) {
+function FinanceMonthly({ month }: { month: string }) {
   const { budgetCategories, recurringExpenses, financialReminders } = useLocalStore();
   const categories = budgetCategories.filter((cat) => cat.month === month);
   const planned = categories.reduce((sum, cat) => sum + cat.plannedAmount, 0);
@@ -224,8 +231,6 @@ function FinanceMonthly({ month, onMonthChange }: { month: string; onMonthChange
 
   return (
     <div className="finance-shell">
-      <FinanceMonthBar month={month} onMonthChange={onMonthChange} />
-
       <div className="finance-kpi-grid">
         <MetricCard icon="due" label="Do zapłaty" value={fmtPLN(due)} note={`Pozostało w ${fmtMonth(month)}`} tone="pink" />
         <MetricCard icon="paid" label="Opłacone" value={fmtPLN(paid)} note={`Opłacone w ${fmtMonth(month)}`} tone="teal" />
@@ -235,22 +240,6 @@ function FinanceMonthly({ month, onMonthChange }: { month: string; onMonthChange
       <div className="finance-monthly-grid">
         <BudgetPanel month={month} detailed />
         <RecurringPanel month={month} detailed />
-        <JdgPanel month={month} detailed />
-      </div>
-    </div>
-  );
-}
-
-function FinanceMonthBar({ month, onMonthChange }: { month: string; onMonthChange: (month: string) => void }) {
-  return (
-    <div className="finance-toolbar">
-      <div>
-        <div className="finance-eyebrow">Plan finansowy</div>
-        <div className="finance-toolbar-title">{fmtMonth(month)}</div>
-      </div>
-      <div className="finance-month-control">
-        <input className="input" type="month" value={month} onChange={(e) => onMonthChange(e.target.value || currentYearMonth())} />
-        <button className="btn btn-ghost btn-sm" type="button" onClick={() => onMonthChange(currentYearMonth())}>Bieżący miesiąc</button>
       </div>
     </div>
   );
@@ -323,12 +312,12 @@ function AccountsPanel({ detailed = false }: { detailed?: boolean }) {
   return (
     <>
       <SectionCard
-        title={`Konta (${active.length})`}
+        title={`Środki (${active.length})`}
         className={detailed ? 'finance-card-full' : ''}
-        action={<button className="btn btn-primary btn-sm" type="button" onClick={() => setAdding(true)}><FinanceIcon name="plus" /> Nowe konto</button>}
+        action={<button className="btn btn-primary btn-sm" type="button" onClick={() => setAdding(true)}><FinanceIcon name="plus" /> Nowe źródło</button>}
       >
         {active.length === 0 ? (
-          <EmptyState title="Brak kont" cta="Dodaj konto" onCta={() => setAdding(true)} />
+          <EmptyState title="Brak źródeł" cta="Dodaj źródło" onCta={() => setAdding(true)} />
         ) : (
           <div className="finance-table-wrap">
             <table className="table finance-table">
@@ -354,8 +343,10 @@ function AccountsPanel({ detailed = false }: { detailed?: boolean }) {
                     <td>{account.currency}</td>
                     <td className="finance-money-cell">{fmtPLN(account.balance, account.currency)}</td>
                     <td className="finance-actions-cell">
-                      <button className="icon-btn" type="button" onClick={() => setEditing(account)} aria-label={`Edytuj konto ${account.name}`}><FinanceIcon name="edit" /></button>
-                      <button className="icon-btn" type="button" onClick={() => setDeleteTarget(account)} aria-label={`Archiwizuj konto ${account.name}`}><IcoTrash /></button>
+                      <div className="finance-row-actions">
+                        <button className="icon-btn" type="button" onClick={() => setEditing(account)} aria-label={`Edytuj źródło ${account.name}`}><FinanceIcon name="edit" /></button>
+                        <button className="icon-btn" type="button" onClick={() => setDeleteTarget(account)} aria-label={`Archiwizuj źródło ${account.name}`}><IcoTrash /></button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -385,7 +376,7 @@ function AccountsPanel({ detailed = false }: { detailed?: boolean }) {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => { if (deleteTarget) deleteAccount(deleteTarget.id); setDeleteTarget(null); }}
-        label={deleteTarget?.name ?? 'to konto'}
+        label={deleteTarget?.name ?? 'to źródło'}
       />
     </>
   );
@@ -423,6 +414,18 @@ function BudgetPanel({ month, detailed = false }: { month: string; detailed?: bo
           <EmptyState title="Brak budżetu" desc="Dodaj kategorie dla wybranego miesiąca." cta="Dodaj kategorię" onCta={() => setAdding(true)} />
         ) : (
           <div className="finance-budget-list">
+            <div className="finance-budget-row finance-budget-row-head" aria-hidden="true">
+              <span />
+              <div className="finance-budget-values">
+                <span>Zaplanowane</span>
+                <span>Wydane</span>
+                <span>Pozostało</span>
+              </div>
+            </div>
+            <div className="finance-budget-legend">
+              <span className="finance-legend-dot finance-legend-dot-danger" />
+              Wydane / Pozostało na czerwono = kategoria przekroczona
+            </div>
             {categories.map((cat) => {
               const pct = clampPct((cat.actualAmount / Math.max(cat.plannedAmount, 1)) * 100);
               const over = cat.actualAmount > cat.plannedAmount;
@@ -586,64 +589,113 @@ function FixedExpensesPanel({ onConfigure }: { onConfigure: () => void }) {
 }
 
 function RecurringPanel({ month, detailed = false }: { month: string; detailed?: boolean }) {
-  const { recurringExpenses, addRecurringExpense, updateRecurringExpense, deleteRecurringExpense } = useLocalStore();
+  const {
+    recurringExpenses, addRecurringExpense, updateRecurringExpense, deleteRecurringExpense,
+    recurringFolders, addRecurringFolder, updateRecurringFolder, deleteRecurringFolder,
+    jdgTabVisible, setJdgTabVisible, jdgItems, addJdgItem, updateJdgItem, deleteJdgItem,
+  } = useLocalStore();
+  const [activeFolder, setActiveFolder] = useState('all');
   const [editing, setEditing] = useState<RecurringExpense | null>(null);
   const [adding, setAdding] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<RecurringExpense | null>(null);
-  const sorted = [...recurringExpenses].sort((a, b) => a.dueDay - b.dueDay || a.name.localeCompare(b.name));
+  const [managingFolders, setManagingFolders] = useState(false);
+  const [reminderAddSignal, setReminderAddSignal] = useState(0);
+
+  const isJdgTab = activeFolder === 'jdg';
+  const isOnetimeTab = activeFolder === 'onetime';
+
+  useEffect(() => {
+    const valid = activeFolder === 'all' || activeFolder === 'onetime' || (activeFolder === 'jdg' && jdgTabVisible) || recurringFolders.some((f) => f.id === activeFolder);
+    if (!valid) setActiveFolder('all');
+  }, [activeFolder, jdgTabVisible, recurringFolders]);
+
+  const visibleExpenses = recurringExpenses.filter((e) => activeFolder === 'all' || e.folderId === activeFolder);
+  const sorted = [...visibleExpenses].sort((a, b) => a.dueDay - b.dueDay || a.name.localeCompare(b.name));
   const total = sorted.reduce((sum, item) => sum + item.amount, 0);
   const paid = sorted.filter((item) => item.paidThisMonth).reduce((sum, item) => sum + item.amount, 0);
+
+  const folderTabs = [
+    { id: 'all', label: 'Wszystkie' },
+    ...recurringFolders.map((f) => ({ id: f.id, label: f.name })),
+    { id: 'onetime', label: 'Jednorazowe' },
+    ...(jdgTabVisible ? [{ id: 'jdg', label: 'JDG' }] : []),
+  ];
 
   return (
     <>
       <SectionCard
         title="Cykliczne płatności"
         className={detailed ? 'finance-card-full' : 'finance-card-wide'}
-        action={<button className="btn btn-primary btn-sm" type="button" onClick={() => setAdding(true)}><FinanceIcon name="plus" /> Płatność</button>}
+        action={
+          <div className="finance-card-actions">
+            <button className="icon-btn" type="button" onClick={() => setManagingFolders(true)} aria-label="Zarządzaj zakładkami płatności"><FinanceIcon name="settings" /></button>
+            {!isJdgTab && (
+              <button
+                className="btn btn-primary btn-sm"
+                type="button"
+                onClick={() => (isOnetimeTab ? setReminderAddSignal((n) => n + 1) : setAdding(true))}
+              >
+                <FinanceIcon name="plus" /> Płatność
+              </button>
+            )}
+          </div>
+        }
       >
-        <div className="finance-payment-summary">
-          <Stat label="Suma miesięczna" value={fmtPLN(total)} />
-          <Stat label="Opłacone" value={fmtPLN(paid)} />
-          <Stat label="Do opłacenia" value={fmtPLN(total - paid)} danger={total - paid > 0} />
+        <div className="finance-folder-tabs">
+          <SubTabs tabs={folderTabs} active={activeFolder} onChange={setActiveFolder} />
         </div>
 
-        {sorted.length === 0 ? (
-          <EmptyState title="Brak płatności" cta="Dodaj płatność" onCta={() => setAdding(true)} />
+        {isJdgTab ? (
+          <JdgTabContent month={month} />
+        ) : isOnetimeTab ? (
+          <PaymentPlanner month={month} addSignal={reminderAddSignal} />
         ) : (
-          <div className="finance-payment-list">
-            {sorted.map((expense) => (
-              <div key={expense.id} className={`finance-payment-row ${expense.paidThisMonth ? 'is-paid' : ''}`}>
-                <button
-                  className="finance-check"
-                  type="button"
-                  onClick={() => updateRecurringExpense(expense.id, { paidThisMonth: !expense.paidThisMonth })}
-                  aria-label={expense.paidThisMonth ? 'Oznacz jako nieopłacone' : 'Oznacz jako opłacone'}
-                >
-                  {expense.paidThisMonth && <FinanceIcon name="check" />}
-                </button>
-                <span className={`finance-icon-tile finance-tone-${toneForCategory(expense.category)}`}><FinanceIcon name={iconForCategory(expense.category, expense.name)} /></span>
-                <button className="finance-payment-name" type="button" onClick={() => setEditing(expense)}>
-                  <strong>{expense.name}</strong>
-                  <small>{expense.category} - termin {dueDateFor(month, expense.dueDay)}</small>
-                </button>
-                <span className="badge badge-gray">{expense.frequency}</span>
-                <span className="finance-payment-amount">{fmtPLN(expense.amount)}</span>
-                <span className={`badge ${expense.paidThisMonth ? 'badge-green' : 'badge-gray'}`}>{expense.paidThisMonth ? 'Opłacone' : 'Do zapłaty'}</span>
-                <div className="finance-row-actions">
-                  <button className="icon-btn" type="button" onClick={() => setEditing(expense)} aria-label={`Edytuj płatność ${expense.name}`}><FinanceIcon name="edit" /></button>
-                  <button className="icon-btn" type="button" onClick={() => setDeleteTarget(expense)} aria-label={`Usuń płatność ${expense.name}`}><IcoTrash /></button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+          <>
+            <div className="finance-payment-summary">
+              <Stat label="Suma miesięczna" value={fmtPLN(total)} />
+              <Stat label="Opłacone" value={fmtPLN(paid)} />
+              <Stat label="Do opłacenia" value={fmtPLN(total - paid)} danger={total - paid > 0} />
+            </div>
 
-        <PaymentPlanner month={month} />
+            {sorted.length === 0 ? (
+              <EmptyState title="Brak płatności" cta="Dodaj płatność" onCta={() => setAdding(true)} />
+            ) : (
+              <div className="finance-payment-list">
+                {sorted.map((expense) => (
+                  <div key={expense.id} className={`finance-payment-row ${expense.paidThisMonth ? 'is-paid' : ''}`}>
+                    <button
+                      className="finance-check"
+                      type="button"
+                      onClick={() => updateRecurringExpense(expense.id, { paidThisMonth: !expense.paidThisMonth })}
+                      aria-label={expense.paidThisMonth ? 'Oznacz jako nieopłacone' : 'Oznacz jako opłacone'}
+                    >
+                      {expense.paidThisMonth && <FinanceIcon name="check" />}
+                    </button>
+                    <span className={`finance-icon-tile finance-tone-${toneForCategory(expense.category)}`}><FinanceIcon name={iconForCategory(expense.category, expense.name)} /></span>
+                    <button className="finance-payment-name" type="button" onClick={() => setEditing(expense)}>
+                      <strong>{expense.name}</strong>
+                      <small>{expense.category} - termin {dueDateFor(month, expense.dueDay)}</small>
+                    </button>
+                    <span className="badge badge-gray">{expense.frequency}</span>
+                    <span className="finance-payment-amount">{fmtPLN(expense.amount)}</span>
+                    <span className={`badge ${expense.paidThisMonth ? 'badge-green' : 'badge-gray'}`}>{expense.paidThisMonth ? 'Opłacone' : 'Do zapłaty'}</span>
+                    <div className="finance-row-actions">
+                      <button className="icon-btn" type="button" onClick={() => setEditing(expense)} aria-label={`Edytuj płatność ${expense.name}`}><FinanceIcon name="edit" /></button>
+                      <button className="icon-btn" type="button" onClick={() => setDeleteTarget(expense)} aria-label={`Usuń płatność ${expense.name}`}><IcoTrash /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </SectionCard>
 
       <RecurringModal
         open={adding || !!editing}
         expense={editing}
+        folders={recurringFolders}
+        defaultFolderId={activeFolder !== 'all' && activeFolder !== 'jdg' ? activeFolder : undefined}
         onClose={() => { setAdding(false); setEditing(null); }}
         onSave={(payload) => {
           if (editing) updateRecurringExpense(editing.id, payload);
@@ -658,11 +710,25 @@ function RecurringPanel({ month, detailed = false }: { month: string; detailed?:
         onConfirm={() => { if (deleteTarget) deleteRecurringExpense(deleteTarget.id); setDeleteTarget(null); }}
         label={deleteTarget?.name ?? 'tę płatność'}
       />
+      <FolderManagerModal
+        open={managingFolders}
+        onClose={() => setManagingFolders(false)}
+        folders={recurringFolders}
+        onAddFolder={addRecurringFolder}
+        onRenameFolder={(id, name) => updateRecurringFolder(id, { name })}
+        onDeleteFolder={deleteRecurringFolder}
+        jdgVisible={jdgTabVisible}
+        onToggleJdgVisible={setJdgTabVisible}
+        jdgItems={jdgItems}
+        onAddJdgItem={addJdgItem}
+        onUpdateJdgItem={updateJdgItem}
+        onDeleteJdgItem={deleteJdgItem}
+      />
     </>
   );
 }
 
-function PaymentPlanner({ month }: { month: string }) {
+function PaymentPlanner({ month, addSignal }: { month: string; addSignal?: number }) {
   const { financialReminders, addFinancialReminder, updateFinancialReminder, deleteFinancialReminder, toggleFinancialReminder } = useLocalStore();
   const [editing, setEditing] = useState<FinancialReminder | null>(null);
   const [adding, setAdding] = useState(false);
@@ -670,13 +736,24 @@ function PaymentPlanner({ month }: { month: string }) {
   const reminders = financialReminders
     .filter((reminder) => reminder.dueDate.startsWith(month))
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const total = reminders.reduce((sum, reminder) => sum + (reminder.amount ?? 0), 0);
+  const paid = reminders.filter((reminder) => reminder.completed).reduce((sum, reminder) => sum + (reminder.amount ?? 0), 0);
+
+  useEffect(() => {
+    if (addSignal) setAdding(true);
+  }, [addSignal]);
 
   return (
     <>
+      <div className="finance-payment-summary">
+        <Stat label="Suma miesięczna" value={fmtPLN(total)} />
+        <Stat label="Opłacone" value={fmtPLN(paid)} />
+        <Stat label="Do opłacenia" value={fmtPLN(total - paid)} danger={total - paid > 0} />
+      </div>
+
       <div className="finance-planner">
         <div className="finance-subhead">
           <span>Terminy jednorazowe</span>
-          <button className="btn btn-ghost btn-sm" type="button" onClick={() => setAdding(true)}><FinanceIcon name="plus" /> Termin</button>
         </div>
         {reminders.length === 0 ? (
           <div className="finance-muted-box">Brak dodatkowych terminów w tym miesiącu.</div>
@@ -722,48 +799,145 @@ function PaymentPlanner({ month }: { month: string }) {
   );
 }
 
-function JdgPanel({ month, detailed = false }: { month: string; detailed?: boolean }) {
-  const { jdgMonths, updateJdgMonth, addJdgMonth } = useLocalStore();
+function JdgTabContent({ month }: { month: string }) {
+  const { jdgMonths, updateJdgMonth, addJdgMonth, jdgItems } = useLocalStore();
   const entry = jdgMonths.find((item) => item.month === month);
-  const completed = entry ? JDG_CHECKS.filter((check) => entry[check.key] === true).length : 0;
+  const completed = entry ? entry.completed.filter((id) => jdgItems.some((item) => item.id === id)).length : 0;
+
+  if (jdgItems.length === 0) {
+    return <EmptyState title="Brak pozycji JDG" desc="Dodaj pozycje checklisty w zarządzaniu zakładkami." />;
+  }
+
+  if (!entry) {
+    return <EmptyState title="Brak miesiąca JDG" desc="Utwórz checklistę dla wybranego miesiąca." cta="Utwórz miesiąc" onCta={() => addJdgMonth(month)} />;
+  }
+
+  const toggle = (itemId: string) => {
+    const has = entry.completed.includes(itemId);
+    updateJdgMonth(entry.id, { completed: has ? entry.completed.filter((id) => id !== itemId) : [...entry.completed, itemId] });
+  };
 
   return (
-    <SectionCard title="JDG - opłaty cykliczne" className={detailed ? 'finance-card-full' : 'finance-card-wide'}>
-      {!entry ? (
-        <EmptyState title="Brak miesiąca JDG" desc="Utwórz checklistę dla wybranego miesiąca." cta="Utwórz miesiąc" onCta={() => addJdgMonth(month)} />
-      ) : (
-        <div className="finance-jdg-grid">
-          <div className="finance-jdg-list">
-            <div className="finance-jdg-progress">{completed}/{JDG_CHECKS.length} ukończonych</div>
-            {JDG_CHECKS.map((check) => {
-              const checked = entry[check.key] === true;
-              return (
-                <button
-                  key={String(check.key)}
-                  className={`finance-jdg-check ${checked ? 'is-paid' : ''}`}
-                  type="button"
-                  onClick={() => updateJdgMonth(entry.id, { [check.key]: !checked } as Partial<JdgMonth>)}
-                >
-                  <span className="finance-check">{checked && <FinanceIcon name="check" />}</span>
-                  <span className={`finance-icon-tile finance-tone-${checked ? 'teal' : 'pink'}`}><FinanceIcon name={iconForJdg(check.key)} /></span>
-                  <span>{check.label}</span>
-                </button>
-              );
-            })}
+    <div className="finance-jdg-grid">
+      <div className="finance-jdg-list">
+        <div className="finance-jdg-progress">{completed}/{jdgItems.length} ukończonych</div>
+        {jdgItems.map((item) => {
+          const checked = entry.completed.includes(item.id);
+          return (
+            <button key={item.id} className={`finance-jdg-check ${checked ? 'is-paid' : ''}`} type="button" onClick={() => toggle(item.id)}>
+              <span className="finance-check">{checked && <FinanceIcon name="check" />}</span>
+              <span className={`finance-icon-tile finance-tone-${checked ? 'teal' : 'pink'}`}><FinanceIcon name="business" /></span>
+              <span>
+                <strong>{item.label}</strong>
+                {item.dueDay ? <small>do {item.dueDay}. dnia miesiąca</small> : null}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="finance-jdg-notes">
+        <textarea
+          className="textarea"
+          value={entry.notes}
+          onChange={(event) => updateJdgMonth(entry.id, { notes: event.target.value })}
+          placeholder="Notatki do miesiąca..."
+          maxLength={500}
+        />
+        <div>{entry.notes.length}/500</div>
+      </div>
+    </div>
+  );
+}
+
+function FolderManagerModal({
+  open, onClose, folders, onAddFolder, onRenameFolder, onDeleteFolder,
+  jdgVisible, onToggleJdgVisible, jdgItems, onAddJdgItem, onUpdateJdgItem, onDeleteJdgItem,
+}: {
+  open: boolean; onClose: () => void;
+  folders: RecurringFolder[]; onAddFolder: (name: string) => void; onRenameFolder: (id: string, name: string) => void; onDeleteFolder: (id: string) => void;
+  jdgVisible: boolean; onToggleJdgVisible: (visible: boolean) => void;
+  jdgItems: JdgItem[]; onAddJdgItem: (payload: Omit<JdgItem, 'id'>) => void; onUpdateJdgItem: (id: string, patch: Partial<JdgItem>) => void; onDeleteJdgItem: (id: string) => void;
+}) {
+  const [newFolderName, setNewFolderName] = useState('');
+  const [newItemLabel, setNewItemLabel] = useState('');
+  const [newItemDay, setNewItemDay] = useState('');
+
+  return (
+    <Modal open={open} onClose={onClose} title="Zarządzaj zakładkami płatności" footer={
+      <button className="btn btn-primary" type="button" onClick={onClose}>Gotowe</button>
+    }>
+      <div className="finance-folder-manager-section">
+        <div className="finance-subhead"><span>Zakładki</span></div>
+        {folders.length === 0 && <p className="finance-muted-box">Brak własnych zakładek. Dodaj pierwszą poniżej.</p>}
+        {folders.map((folder) => (
+          <div key={folder.id} className="finance-folder-edit-row">
+            <input className="input" value={folder.name} onChange={(e) => onRenameFolder(folder.id, e.target.value)} />
+            <button className="icon-btn" type="button" onClick={() => onDeleteFolder(folder.id)} aria-label={`Usuń zakładkę ${folder.name}`}><IcoTrash /></button>
           </div>
-          <div className="finance-jdg-notes">
-            <textarea
-              className="textarea"
-              value={entry.notes}
-              onChange={(event) => updateJdgMonth(entry.id, { notes: event.target.value })}
-              placeholder="Notatki do miesiąca..."
-              maxLength={500}
-            />
-            <div>{entry.notes.length}/500</div>
-          </div>
+        ))}
+        <div className="finance-folder-add-row">
+          <input className="input" placeholder="Nazwa nowej zakładki" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} />
+          <button
+            className="btn btn-ghost btn-sm"
+            type="button"
+            onClick={() => { if (!newFolderName.trim()) return; onAddFolder(newFolderName.trim()); setNewFolderName(''); }}
+          >
+            <FinanceIcon name="plus" /> Dodaj
+          </button>
         </div>
-      )}
-    </SectionCard>
+      </div>
+
+      <div className="finance-folder-manager-section">
+        <label className="finance-toggle">
+          <input type="checkbox" checked={jdgVisible} onChange={(e) => onToggleJdgVisible(e.target.checked)} /> Pokaż zakładkę JDG (rozliczenia działalności)
+        </label>
+
+        {jdgVisible && (
+          <>
+            <div className="finance-subhead" style={{ marginTop: 14 }}><span>Pozycje checklisty JDG</span></div>
+            {jdgItems.map((item) => (
+              <div key={item.id} className="finance-folder-edit-row">
+                <input className="input" value={item.label} onChange={(e) => onUpdateJdgItem(item.id, { label: e.target.value })} />
+                <input
+                  className="input finance-folder-day-input"
+                  type="number"
+                  min={1}
+                  max={31}
+                  placeholder="Dzień"
+                  value={item.dueDay ?? ''}
+                  onChange={(e) => onUpdateJdgItem(item.id, { dueDay: e.target.value ? Number(e.target.value) : undefined })}
+                />
+                <button className="icon-btn" type="button" onClick={() => onDeleteJdgItem(item.id)} aria-label={`Usuń pozycję ${item.label}`}><IcoTrash /></button>
+              </div>
+            ))}
+            <div className="finance-folder-add-row">
+              <input className="input" placeholder="Nazwa pozycji" value={newItemLabel} onChange={(e) => setNewItemLabel(e.target.value)} />
+              <input
+                className="input finance-folder-day-input"
+                type="number"
+                min={1}
+                max={31}
+                placeholder="Dzień"
+                value={newItemDay}
+                onChange={(e) => setNewItemDay(e.target.value)}
+              />
+              <button
+                className="btn btn-ghost btn-sm"
+                type="button"
+                onClick={() => {
+                  if (!newItemLabel.trim()) return;
+                  onAddJdgItem({ label: newItemLabel.trim(), dueDay: newItemDay ? Number(newItemDay) : undefined });
+                  setNewItemLabel('');
+                  setNewItemDay('');
+                }}
+              >
+                <FinanceIcon name="plus" /> Dodaj
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
   );
 }
 
@@ -794,7 +968,7 @@ function AccountModal({ open, account, onClose, onSave }: { open: boolean; accou
   }, [account, open]);
 
   return (
-    <Modal open={open} onClose={onClose} title={account ? 'Edytuj konto' : 'Nowe konto'} footer={
+    <Modal open={open} onClose={onClose} title={account ? 'Edytuj źródło' : 'Nowe źródło'} footer={
       <>
         <button className="btn btn-ghost" type="button" onClick={onClose}>Anuluj</button>
         <button className="btn btn-primary" type="button" onClick={() => {
@@ -892,7 +1066,10 @@ function SavingsModal({ open, goal, onClose, onSave }: { open: boolean; goal: Sa
   );
 }
 
-function RecurringModal({ open, expense, onClose, onSave }: { open: boolean; expense: RecurringExpense | null; onClose: () => void; onSave: (payload: Omit<RecurringExpense, 'id' | 'createdAt'>) => void }) {
+function RecurringModal({ open, expense, folders, defaultFolderId, onClose, onSave }: {
+  open: boolean; expense: RecurringExpense | null; folders: RecurringFolder[]; defaultFolderId?: string;
+  onClose: () => void; onSave: (payload: Omit<RecurringExpense, 'id' | 'createdAt'>) => void;
+}) {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('0');
   const [category, setCategory] = useState(CATEGORY_OPTIONS[0]);
@@ -900,6 +1077,7 @@ function RecurringModal({ open, expense, onClose, onSave }: { open: boolean; exp
   const [frequency, setFrequency] = useState('monthly');
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [paidThisMonth, setPaidThisMonth] = useState(false);
+  const [folderId, setFolderId] = useState('');
 
   useEffect(() => {
     setName(expense?.name ?? '');
@@ -909,7 +1087,8 @@ function RecurringModal({ open, expense, onClose, onSave }: { open: boolean; exp
     setFrequency(expense?.frequency ?? 'monthly');
     setReminderEnabled(expense?.reminderEnabled ?? true);
     setPaidThisMonth(expense?.paidThisMonth ?? false);
-  }, [expense, open]);
+    setFolderId(expense?.folderId ?? defaultFolderId ?? '');
+  }, [expense, defaultFolderId, open]);
 
   return (
     <Modal open={open} onClose={onClose} title={expense ? 'Edytuj płatność' : 'Nowa płatność cykliczna'} footer={
@@ -917,7 +1096,7 @@ function RecurringModal({ open, expense, onClose, onSave }: { open: boolean; exp
         <button className="btn btn-ghost" type="button" onClick={onClose}>Anuluj</button>
         <button className="btn btn-primary" type="button" onClick={() => {
           if (!name.trim()) return;
-          onSave({ name: name.trim(), amount: num(amount), category, dueDay: Math.max(1, Math.min(31, Math.round(num(dueDay, 1)))), frequency, reminderEnabled, paidThisMonth });
+          onSave({ name: name.trim(), amount: num(amount), category, dueDay: Math.max(1, Math.min(31, Math.round(num(dueDay, 1)))), frequency, reminderEnabled, paidThisMonth, folderId: folderId || undefined });
         }}>Zapisz</button>
       </>
     }>
@@ -928,6 +1107,12 @@ function RecurringModal({ open, expense, onClose, onSave }: { open: boolean; exp
         <Field label="Kategoria"><select className="select" value={category} onChange={(e) => setCategory(e.target.value)}>{CATEGORY_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></Field>
         <Field label="Częstotliwość"><select className="select" value={frequency} onChange={(e) => setFrequency(e.target.value)}><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select></Field>
       </div>
+      <Field label="Zakładka">
+        <select className="select" value={folderId} onChange={(e) => setFolderId(e.target.value)}>
+          <option value="">Wszystkie (bez zakładki)</option>
+          {folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
+        </select>
+      </Field>
       <label className="finance-toggle"><input type="checkbox" checked={paidThisMonth} onChange={(e) => setPaidThisMonth(e.target.checked)} /> Opłacone w wybranym miesiącu</label>
       <label className="finance-toggle"><input type="checkbox" checked={reminderEnabled} onChange={(e) => setReminderEnabled(e.target.checked)} /> Przypominaj o terminie</label>
     </Modal>
@@ -998,6 +1183,7 @@ function FinanceIcon({ name }: { name: IconName }) {
       {name === 'savings' && <><path d="M12 21s7-4 7-10V5l-7-3-7 3v6c0 6 7 10 7 10z" {...common} /></>}
       {name === 'payments' && <><path d="M7 7h10M7 12h7M7 17h5" {...common} /><rect x="4" y="3" width="16" height="18" rx="2" {...common} /></>}
       {name === 'business' && <><path d="M3 21h18M5 21V8l7-5 7 5v13" {...common} /><path d="M9 21v-7h6v7" {...common} /></>}
+      {name === 'settings' && <><circle cx="12" cy="12" r="3" {...common} /><path d="M19.4 13a7.97 7.97 0 0 0 0-2l2-1.2-2-3.4-2.3.7a8 8 0 0 0-1.7-1l-.3-2.4H9.9l-.3 2.4a8 8 0 0 0-1.7 1l-2.3-.7-2 3.4L5.6 11a7.97 7.97 0 0 0 0 2l-2 1.2 2 3.4 2.3-.7c.5.4 1.1.8 1.7 1l.3 2.4h4.2l.3-2.4c.6-.2 1.2-.6 1.7-1l2.3.7 2-3.4-2-1.2z" {...common} /></>}
       {name === 'edit' && <><path d="M12 20h9" {...common} /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" {...common} /></>}
       {name === 'plus' && <><path d="M12 5v14M5 12h14" {...common} /></>}
       {name === 'reset' && <><path d="M3 12a9 9 0 1 0 3-6.7" {...common} /><path d="M3 4v6h6" {...common} /></>}
