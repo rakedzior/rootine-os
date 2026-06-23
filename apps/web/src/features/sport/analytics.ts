@@ -2,9 +2,14 @@
  * Pure helpers over Sport local-store data (sessions/templates/feelings).
  * Kept separate from SportScreen.tsx so the views stay focused on rendering.
  */
-import type { WorkoutSession, WorkoutSet, WorkoutTemplate, WorkoutExercise, FeelingEntry } from '@/store/localStore';
+import type { WorkoutSession, WorkoutSet, WorkoutTemplate, WorkoutExercise, FeelingEntry, SportExercise } from '@/store/localStore';
 import { findExercise, type SportKey, type MuscleKey } from './catalog';
 import { muscleSetFromExercises, type HighlightLevel } from './BodyMap';
+
+/** Looks up by id in the live (store) exercise list first — covers user-added exercises — then falls back to the static catalog. */
+function findExerciseAny(id: string, liveExercises: SportExercise[]) {
+  return liveExercises.find((e) => e.id === id) ?? findExercise(id);
+}
 
 export function volFromSets(sets: WorkoutSet[]): number {
   return sets.filter((s) => s.completed).reduce((a, s) => a + s.weight * s.reps, 0);
@@ -93,10 +98,31 @@ export function weekSummary(sessions: WorkoutSession[], sports: SportKey[]): Wee
   };
 }
 
-export function templateMuscles(template: WorkoutTemplate | undefined | null): Partial<Record<MuscleKey, HighlightLevel>> {
+export function templateMuscles(template: WorkoutTemplate | undefined | null, liveExercises: SportExercise[] = []): Partial<Record<MuscleKey, HighlightLevel>> {
   if (!template) return {};
-  const defs = template.exercises.map((e) => findExercise(e.exerciseId)).filter((e): e is NonNullable<typeof e> => !!e);
+  const defs = template.exercises.map((e) => findExerciseAny(e.exerciseId, liveExercises)).filter((e): e is NonNullable<typeof e> => !!e);
   return muscleSetFromExercises(defs);
+}
+
+/** Union of several muscle-highlight maps, keeping the strongest level per key (primary > secondary > stabilizer). Used to aggregate "what's working today" across multiple scheduled workouts. */
+export function mergeMuscleHighlights(maps: Partial<Record<MuscleKey, HighlightLevel>>[]): Partial<Record<MuscleKey, HighlightLevel>> {
+  const rank: Record<HighlightLevel, number> = { primary: 3, secondary: 2, stabilizer: 1 };
+  const out: Partial<Record<MuscleKey, HighlightLevel>> = {};
+  for (const map of maps) {
+    for (const [key, level] of Object.entries(map) as [MuscleKey, HighlightLevel][]) {
+      const current = out[key];
+      if (!current || rank[level] > rank[current]) out[key] = level;
+    }
+  }
+  return out;
+}
+
+/** Deduped union of string lists (e.g. template focus areas) preserving first-seen order. */
+export function mergeUniqueStrings(lists: string[][]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const list of lists) for (const v of list) if (!seen.has(v)) { seen.add(v); out.push(v); }
+  return out;
 }
 
 export interface PersonalRecord { exerciseName: string; weight: number; reps: number; date: string; }
@@ -238,7 +264,8 @@ export function generateInsights(
     insights.push('Sporo biegania bez sesji prehabilitacyjnej — warto dodać wzmacnianie stawu skokowego/kolana.');
   }
 
-  const recentPain = feelings.filter((f) => f.pain != null).slice(0, 3).map((f) => f.pain);
+  const recentPain = [...feelings].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3)
+    .map((f) => f.painPoints.length ? f.painPoints.reduce((a, p) => a + p.intensity, 0) / f.painPoints.length : 0);
   if (recentPain.length >= 2 && recentPain[0] > recentPain[recentPain.length - 1] + 1) {
     insights.push('Poziom bólu w ostatnich wpisach odczuć rośnie — rozważ dzień regeneracji lub konsultację.');
   }
@@ -251,13 +278,13 @@ export function generateInsights(
 
 // ─── ZAANGAŻOWANE MIĘŚNIE (sesje, nie tylko szablony) ───────────
 
-export function exercisesMuscles(exercises: WorkoutExercise[]): Partial<Record<MuscleKey, HighlightLevel>> {
-  const defs = exercises.map((e) => findExercise(e.exerciseId)).filter((e): e is NonNullable<typeof e> => !!e);
+export function exercisesMuscles(exercises: WorkoutExercise[], liveExercises: SportExercise[] = []): Partial<Record<MuscleKey, HighlightLevel>> {
+  const defs = exercises.map((e) => findExerciseAny(e.exerciseId, liveExercises)).filter((e): e is NonNullable<typeof e> => !!e);
   return muscleSetFromExercises(defs);
 }
 
-export function sessionsMuscles(sessions: WorkoutSession[]): Partial<Record<MuscleKey, HighlightLevel>> {
-  return exercisesMuscles(sessions.flatMap((s) => s.exercises));
+export function sessionsMuscles(sessions: WorkoutSession[], liveExercises: SportExercise[] = []): Partial<Record<MuscleKey, HighlightLevel>> {
+  return exercisesMuscles(sessions.flatMap((s) => s.exercises), liveExercises);
 }
 
 export function muscleCountsToHighlight(counts: Partial<Record<MuscleKey, number>>): Partial<Record<MuscleKey, HighlightLevel>> {
@@ -370,16 +397,25 @@ export function weeklyTrend(sessions: WorkoutSession[], weeks: number, metric: (
 
 // ─── ODCZUCIA: TRENDY I WSKAZÓWKI ───────────────────────────────
 
-export function feelingTrend(feelings: FeelingEntry[], field: 'energy' | 'pain' | 'recovery' | 'stress', limit = 10): TrendPoint[] {
+type FeelingNumericField = 'energyBefore' | 'energyDuring' | 'motivation' | 'soreness' | 'sleepHours' | 'wellbeing';
+
+export function feelingTrend(feelings: FeelingEntry[], field: FeelingNumericField, limit = 10): TrendPoint[] {
   return [...feelings]
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(-limit)
     .map((f) => ({ label: new Date(f.date).toLocaleDateString('pl-PL', { day: 'numeric', month: 'numeric' }), value: f[field] }));
 }
 
-export function avgFeeling(feelings: FeelingEntry[], field: 'energy' | 'pain' | 'recovery' | 'stress' | 'readiness'): number | null {
+export function avgFeeling(feelings: FeelingEntry[], field: FeelingNumericField): number | null {
   if (feelings.length === 0) return null;
   return feelings.reduce((a, f) => a + f[field], 0) / feelings.length;
+}
+
+/** Most frequently reported pain/overload points across a set of feelings entries. */
+export function mostFrequentPainPoints(feelings: FeelingEntry[], limit = 5): { muscle: MuscleKey; count: number }[] {
+  const counts = new Map<MuscleKey, number>();
+  for (const f of feelings) for (const p of f.painPoints) counts.set(p.muscle, (counts.get(p.muscle) ?? 0) + 1);
+  return [...counts.entries()].map(([muscle, count]) => ({ muscle, count })).sort((a, b) => b.count - a.count).slice(0, limit);
 }
 
 export function feelingTips(feelings: FeelingEntry[]): string[] {
@@ -387,17 +423,17 @@ export function feelingTips(feelings: FeelingEntry[]): string[] {
   const recent = [...feelings].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
   if (recent.length < 2) return ['Dodaj kilka wpisów odczuć, aby zobaczyć spersonalizowane wskazówki.'];
 
-  const recoveryTrend = recent[0].recovery - recent[recent.length - 1].recovery;
-  if (recoveryTrend > 1) tips.push('Twoja regeneracja rośnie — świetna praca!');
-  else if (recoveryTrend < -1) tips.push('Regeneracja spada w ostatnich wpisach — rozważ dzień wolny.');
+  const wellbeingTrend = recent[0].wellbeing - recent[recent.length - 1].wellbeing;
+  if (wellbeingTrend > 1) tips.push('Twoje samopoczucie rośnie — świetna praca!');
+  else if (wellbeingTrend < -1) tips.push('Samopoczucie spada w ostatnich wpisach — rozważ dzień wolny.');
 
-  const avgStiffness = recent.reduce((a, f) => a + f.stiffness, 0) / recent.length;
-  if (avgStiffness >= 5) tips.push('Zwróć uwagę na sztywność — rozważ dodatkową mobilność.');
+  const avgSoreness = recent.reduce((a, f) => a + f.soreness, 0) / recent.length;
+  if (avgSoreness >= 4) tips.push('Zakwasy są wysokie ostatnio — rozważ dodatkową mobilność lub regenerację.');
 
-  const avgStress = recent.reduce((a, f) => a + f.stress, 0) / recent.length;
-  if (avgStress >= 6) tips.push('Stres jest podwyższony — spróbuj technik oddechowych przed snem.');
+  const avgMotivation = recent.reduce((a, f) => a + f.motivation, 0) / recent.length;
+  if (avgMotivation <= 2) tips.push('Motywacja jest niska — rozważ krótszą sesję albo zmianę planu treningowego.');
 
-  const avgSleep = recent.reduce((a, f) => a + f.sleep, 0) / recent.length;
+  const avgSleep = recent.reduce((a, f) => a + f.sleepHours, 0) / recent.length;
   if (avgSleep < 6) tips.push('Sen poniżej 6h średnio — to często główny czynnik gorszej regeneracji.');
 
   if (tips.length === 0) tips.push('Wszystko wygląda stabilnie — utrzymuj obecne nawyki.');

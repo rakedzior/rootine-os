@@ -45,9 +45,6 @@ function toDateStr(d: Date) {
 }
 function todayStr() { return toDateStr(new Date()); }
 function addDays(date: string, delta: number) { const d = new Date(`${date}T12:00:00`); d.setDate(d.getDate() + delta); return toDateStr(d); }
-function startOfWeek(date: string) { const d = new Date(`${date}T12:00:00`); const day = d.getDay(); d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day)); return toDateStr(d); }
-function startOfMonth(date: string) { const d = new Date(`${date}T12:00:00`); d.setDate(1); return toDateStr(d); }
-function monthDays(date: string) { const d = new Date(`${date}T12:00:00`); return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); }
 function fmtDate(date: string, long = false) {
   return new Date(`${date}T12:00:00`).toLocaleDateString('pl-PL', long ? { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' } : { day: 'numeric', month: 'long', year: 'numeric' });
 }
@@ -144,7 +141,7 @@ function DietHub() {
   const targets = { kcal: nutrition?.kcal_target ?? config.kcal, protein: nutrition?.protein_target ?? config.protein, carb: nutrition?.carb_target ?? config.carb, fat: nutrition?.fat_target ?? config.fat, water: config.water };
   const waterMl = nutrition?.water_ml ?? 0;
   const totals = computeTotals(items);
-  function shiftDate(delta: number) { setSelectedDate(addDays(selectedDate, viewMode === 'day' ? delta : viewMode === 'week' ? delta * 7 : delta * monthDays(selectedDate))); }
+  function shiftDate(delta: number) { setSelectedDate(addDays(selectedDate, delta * (viewMode === 'day' ? 1 : viewMode === 'week' ? 7 : 30))); }
   function saveTemplateFromMeal(mealName: string) {
     const mealRecord = meals.find(m => m.name === mealName);
     const entries = mealRecord ? items.filter(e => e.meal_id === mealRecord.id) : [];
@@ -178,19 +175,19 @@ function DietHub() {
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <DateToolbar selectedDate={selectedDate} viewMode={viewMode} onPrev={() => shiftDate(-1)} onNext={() => shiftDate(1)} onToday={() => setSelectedDate(todayStr())} onMode={setViewMode} />
+      <DateToolbar selectedDate={selectedDate} viewMode={viewMode} onPrev={() => shiftDate(-1)} onNext={() => shiftDate(1)} onToday={() => setSelectedDate(todayStr())} onMode={setViewMode} onPick={setSelectedDate} />
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button className="btn btn-primary btn-sm" onClick={() => { setDefaultMeal(config.meals[0] ?? DEFAULT_MEALS[0]); setShowAdd(true); }}>+ Dodaj produkt</button>
         <button className="btn btn-secondary btn-sm" onClick={() => setShowProductModal(true)}>+ Produkt własny</button>
         <button className="btn btn-secondary btn-sm" onClick={() => setShowTemplateModal(true)}>+ Własny posiłek</button>
       </div>
       {viewMode === 'day' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 16, alignItems: 'start' }}>
-          <div className="col">
+        <div className="diet-day-grid">
+          <div className="col" style={{ minWidth: 0 }}>
             {loadingItems ? [1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 90, borderRadius: 12, marginBottom: 12 }} />) : config.meals.map(mealName => {
               const mealRecord = meals.find(m => m.name === mealName);
               const entries = mealRecord ? items.filter(e => e.meal_id === mealRecord.id) : [];
-              return <MealCard key={mealName} mealName={mealName} entries={entries} kcal={computeTotals(entries).kcal} onAdd={() => { setDefaultMeal(mealName); setShowAdd(true); }} onCopy={() => copyMeal(mealName)} onSaveTemplate={() => saveTemplateFromMeal(mealName)} onDelete={setDeleteId} onAmount={(entry, amount) => {
+              return <MealCard key={mealName} mealName={mealName} entries={entries} totals={computeTotals(entries)} onAdd={() => { setDefaultMeal(mealName); setShowAdd(true); }} onCopy={() => copyMeal(mealName)} onSaveTemplate={() => saveTemplateFromMeal(mealName)} onDelete={setDeleteId} onAmount={(entry, amount) => {
                 if (amount <= 0 || amount === entry.amount) return;
                 const ratio = amount / entry.amount;
                 updateMealItem.mutate({ id: entry.id, patch: { amount, kcal: entry.kcal * ratio, protein: entry.protein * ratio, carb: entry.carb * ratio, fat: entry.fat * ratio } });
@@ -215,12 +212,12 @@ function DietHub() {
   );
 }
 
-function DateToolbar({ selectedDate, viewMode, onPrev, onNext, onToday, onMode }: { selectedDate: string; viewMode: DietViewMode; onPrev: () => void; onNext: () => void; onToday: () => void; onMode: (m: DietViewMode) => void }) {
-  return <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '12px 14px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button className="icon-btn" onClick={onPrev}>‹</button><div style={{ minWidth: 240 }}><div style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Wybrana data</div><div style={{ fontSize: 18, fontWeight: 800 }}>{fmtDate(selectedDate, true)}</div></div><button className="icon-btn" onClick={onNext}>›</button><button className="btn btn-secondary btn-sm" onClick={onToday}>Dzisiaj</button></div><div style={{ display: 'flex', gap: 6, background: 'var(--surface-inset)', border: '1px solid var(--border-soft)', padding: 4, borderRadius: 12 }}>{(['day', 'week', 'month'] as const).map(m => <button key={m} className={`btn btn-sm ${viewMode === m ? 'btn-primary' : 'btn-ghost'}`} onClick={() => onMode(m)}>{m === 'day' ? 'Dzień' : m === 'week' ? 'Tydzień' : 'Miesiąc'}</button>)}</div></div>;
+function DateToolbar({ selectedDate, viewMode, onPrev, onNext, onToday, onMode, onPick }: { selectedDate: string; viewMode: DietViewMode; onPrev: () => void; onNext: () => void; onToday: () => void; onMode: (m: DietViewMode) => void; onPick: (date: string) => void }) {
+  return <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '12px 14px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button className="icon-btn" onClick={onPrev}>‹</button><div style={{ minWidth: 240 }}><div style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Wybrana data</div><div style={{ fontSize: 18, fontWeight: 800 }}>{fmtDate(selectedDate, true)}</div></div><button className="icon-btn" onClick={onNext}>›</button><button className="btn btn-secondary btn-sm" onClick={onToday}>Dzisiaj</button><div className="icon-btn" style={{ position: 'relative' }} title="Wybierz datę"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg><input type="date" value={selectedDate} onChange={e => { if (e.target.value) onPick(e.target.value); }} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} /></div></div><div style={{ display: 'flex', gap: 6, background: 'var(--surface-inset)', border: '1px solid var(--border-soft)', padding: 4, borderRadius: 12 }}>{(['day', 'week', 'month'] as const).map(m => <button key={m} className={`btn btn-sm ${viewMode === m ? 'btn-primary' : 'btn-ghost'}`} onClick={() => onMode(m)}>{m === 'day' ? 'Dzień' : m === 'week' ? 'Tydzień' : 'Miesiąc'}</button>)}</div></div>;
 }
 
-function MealCard({ mealName, entries, kcal, onAdd, onCopy, onSaveTemplate, onDelete, onAmount }: { mealName: string; entries: MealItem[]; kcal: number; onAdd: () => void; onCopy: () => void; onSaveTemplate: () => void; onDelete: (id: string) => void; onAmount: (entry: MealItem, amount: number) => void }) {
-  return <div className="card"><div className="card-head"><span className="card-title">{mealName}</span><div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-3)' }}>{Math.round(kcal)} kcal</span><button className="btn btn-secondary btn-sm" onClick={onCopy} disabled={!entries.length}>Kopiuj</button><button className="btn btn-secondary btn-sm" onClick={onSaveTemplate} disabled={!entries.length}>Zapisz szablon</button><button className="btn btn-primary btn-sm" onClick={onAdd}>+ Dodaj</button></div></div>{!entries.length ? <div style={{ fontSize: 13, color: 'var(--ink-3)', padding: '10px 0', textAlign: 'center' }}>Brak wpisów</div> : <table className="table"><thead><tr><th>PRODUKT</th><th style={{ textAlign: 'right' }}>ILOŚĆ</th><th style={{ textAlign: 'right' }}>KCAL</th><th style={{ textAlign: 'right' }}>B</th><th style={{ textAlign: 'right' }}>W</th><th style={{ textAlign: 'right' }}>T</th><th></th></tr></thead><tbody>{entries.map(e => <tr key={e.id}><td style={{ fontWeight: 600 }}>{e.name}</td><td style={{ textAlign: 'right' }}><input className="input" type="number" defaultValue={Math.round(e.amount)} onBlur={(ev) => onAmount(e, +ev.currentTarget.value)} style={{ width: 76, height: 30, textAlign: 'right', padding: '4px 8px' }} /></td><td style={{ textAlign: 'right', fontWeight: 700 }}>{Math.round(e.kcal)}</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12 }}>{e.protein.toFixed(1)}g</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12 }}>{e.carb.toFixed(1)}g</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12 }}>{e.fat.toFixed(1)}g</td><td><button className="icon-btn" style={{ fontSize: 12 }} onClick={() => onDelete(e.id)}>x</button></td></tr>)}</tbody></table>}</div>;
+function MealCard({ mealName, entries, totals, onAdd, onCopy, onSaveTemplate, onDelete, onAmount }: { mealName: string; entries: MealItem[]; totals: ReturnType<typeof computeTotals>; onAdd: () => void; onCopy: () => void; onSaveTemplate: () => void; onDelete: (id: string) => void; onAmount: (entry: MealItem, amount: number) => void }) {
+  return <div className="card"><div className="card-head" style={{ flexWrap: 'wrap', gap: 10 }}><span className="card-title">{mealName}</span><div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}><div style={{ display: 'flex', gap: 9, fontSize: 12, fontFamily: 'var(--mono)' }}><span style={{ fontWeight: 800, color: 'var(--ink)' }}>{Math.round(totals.kcal)} kcal</span><span style={{ color: '#61A5FF' }}>B {totals.protein.toFixed(0)}g</span><span style={{ color: '#F5B642' }}>W {totals.carb.toFixed(0)}g</span><span style={{ color: '#FF6B8A' }}>T {totals.fat.toFixed(0)}g</span></div><div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><button className="btn btn-secondary btn-sm" onClick={onCopy} disabled={!entries.length}>Kopiuj</button><button className="btn btn-secondary btn-sm" onClick={onSaveTemplate} disabled={!entries.length}>Zapisz szablon</button><button className="btn btn-primary btn-sm" onClick={onAdd}>+ Dodaj</button></div></div></div>{!entries.length ? <div style={{ fontSize: 13, color: 'var(--ink-3)', padding: '10px 0', textAlign: 'center' }}>Brak wpisów</div> : <table className="table"><thead><tr><th></th><th>PRODUKT</th><th style={{ textAlign: 'right' }}>ILOŚĆ</th><th style={{ textAlign: 'right' }}>KCAL</th><th style={{ textAlign: 'right' }}>B</th><th style={{ textAlign: 'right' }}>W</th><th style={{ textAlign: 'right', paddingRight: 0 }}>T</th></tr></thead><tbody>{entries.map(e => <tr key={e.id}><td style={{ width: 30 }}><button className="icon-btn" style={{ fontSize: 12 }} onClick={() => onDelete(e.id)}>x</button></td><td style={{ fontWeight: 600 }}>{e.name}</td><td style={{ textAlign: 'right' }}><input className="input" type="number" defaultValue={Math.round(e.amount)} onBlur={(ev) => onAmount(e, +ev.currentTarget.value)} style={{ width: 76, height: 30, textAlign: 'right', padding: '4px 8px' }} /></td><td style={{ textAlign: 'right', fontWeight: 700 }}>{Math.round(e.kcal)}</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12 }}>{e.protein.toFixed(1)}g</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12 }}>{e.carb.toFixed(1)}g</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12, paddingRight: 0 }}>{e.fat.toFixed(1)}g</td></tr>)}</tbody></table>}</div>;
 }
 
 function SummaryCard({ totals, targets, waterMl, onSettings }: { totals: ReturnType<typeof computeTotals>; targets: typeof DEFAULTS; waterMl: number; onSettings: () => void }) {
@@ -237,7 +234,7 @@ function MealTemplatesCard({ templates, onUse, onDelete }: { templates: MealTemp
 }
 
 function PeriodSummary({ selectedDate, viewMode, items, nutrition, targets, currentDayItems }: { selectedDate: string; viewMode: DietViewMode; items: MealItem[]; nutrition: { date: string; water_ml: number; weight_kg: number | null }[]; targets: typeof DEFAULTS; currentDayItems: MealItem[] }) {
-  const dates = useMemo(() => { const start = viewMode === 'week' ? startOfWeek(selectedDate) : startOfMonth(selectedDate); const len = viewMode === 'week' ? 7 : monthDays(selectedDate); return Array.from({ length: len }, (_, i) => addDays(start, i)); }, [selectedDate, viewMode]);
+  const dates = useMemo(() => { const len = viewMode === 'week' ? 7 : 30; const start = addDays(selectedDate, -(len - 1)); return Array.from({ length: len }, (_, i) => addDays(start, i)); }, [selectedDate, viewMode]);
   const byDate = useMemo(() => { const map: Record<string, MealItem[]> = {}; items.forEach(e => { const d = e.created_at.split('T')[0]; (map[d] ??= []).push(e); }); map[selectedDate] = currentDayItems; return map; }, [items, currentDayItems, selectedDate]);
   const nutritionByDate = Object.fromEntries(nutrition.map(n => [n.date, n]));
   const daily = dates.map(date => ({ date, totals: computeTotals(byDate[date] ?? []), water: nutritionByDate[date]?.water_ml ?? 0, weight: nutritionByDate[date]?.weight_kg ?? null }));
@@ -383,7 +380,7 @@ function AddMealModal({ open, date, defaultMeal, mealNames, templates, onClose }
           <div style={{ display: 'grid', gap: 8 }}>
             {([
               ['search', 'Produkt'],
-              ['template', 'Szablon'],
+              ['template', 'Własny posiłek'],
               ['scan', 'Skaner'],
               ['manual', 'Ręcznie'],
             ] as const).map(([id, label]) => (
@@ -395,7 +392,9 @@ function AddMealModal({ open, date, defaultMeal, mealNames, templates, onClose }
         <div style={{ minWidth: 0 }}>
           {mode === 'search' && (
             <div className="col">
-              <FoodSearchDropdown query={query} onQueryChange={setQuery} onSelect={selectFood} />
+              <Field label="Produkt">
+                <FoodSearchDropdown query={query} onQueryChange={setQuery} onSelect={selectFood} />
+              </Field>
               {selected ? (
                 <div className="card" style={{ margin: 0 }}>
                   <div className="card-head"><span className="card-title">{selected.name}</span></div>

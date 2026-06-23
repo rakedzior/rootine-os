@@ -5,7 +5,8 @@
  */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { EXERCISE_CATALOG, MUSCLE_LABEL, type ExerciseDef, type MuscleKey, type Difficulty } from '@/features/sport/catalog';
+import { EXERCISE_CATALOG, MUSCLE_LABEL, SPORTS, type ExerciseDef, type MuscleKey, type Difficulty } from '@/features/sport/catalog';
+import { addDaysStr, materializeRule, todayStr } from '@/features/sport/schedule';
 
 // ─── TYPES ──────────────────────────────────────────────────
 
@@ -13,6 +14,22 @@ export type Priority = 'low' | 'mid' | 'high';
 export type TaskStatus = 'todo' | 'active' | 'waiting' | 'done' | 'blocked';
 
 // — SPORT —
+
+/**
+ * Single source of truth for "sport category" across Planowanie/Ćwiczenia/
+ * Szablony/Historia/Analiza/Odczucia. Referenced by name (not id) from
+ * templates/exercises/sessions/feelings, matching the convention already used
+ * by `sportType` — renames/deletes cascade that name across those records via
+ * the renameSportCategory/deleteSportCategory actions below.
+ */
+export interface SportCategory {
+  id: string;
+  name: string;
+  builtIn: boolean;
+  showFeelingsPrompt: boolean;
+  order: number;
+}
+
 export interface SportExercise {
   id: string; createdAt: string;
   name: string; sportType: string; muscleGroup: string;
@@ -31,13 +48,19 @@ export interface SportExercise {
   contraindications?: string;
   rehabSafe?: boolean;
   tags?: string[];
+  /** Extra categories this exercise also fits, beyond `sportType` (e.g. a core exercise used in both Siłownia and Rehabilitacja). */
+  sportCategories?: string[];
 }
 export interface WorkoutSet {
   setNumber: number; reps: number; weight: number;
   restTime: number; rir: number; completed: boolean; notes: string;
+  /** Used when the parent exercise's mode is 'time' instead of 'reps'. */
+  durationSec?: number;
 }
 export interface WorkoutExercise {
   exerciseId: string; exerciseName: string; sets: WorkoutSet[];
+  /** Whether sets are tracked by rep count (default) or by duration — e.g. planks, holds, easy runs. */
+  mode?: 'reps' | 'time';
 }
 export interface WorkoutTemplate {
   id: string; createdAt: string; updatedAt: string;
@@ -47,6 +70,42 @@ export interface WorkoutTemplate {
   level?: Difficulty;
   equipmentTags?: string[];
   goal?: string;
+  /** Optional user-provided cover photo URL — falls back to a generated placeholder when missing/broken. */
+  image?: string;
+  /** Free-form work areas shown in "Co dziś pracuje" for non-strength sports (e.g. running, rehab, mobility). */
+  focusAreas?: string[];
+}
+
+/**
+ * A concrete, dated occurrence of a workout — what actually shows up on a given
+ * day. Either references a WorkoutTemplate (templateId) or stands alone with a
+ * customName. Created either ad-hoc (recurrenceRuleId = null) or materialized
+ * from a WorkoutRecurrenceRule.
+ */
+export interface ScheduledWorkout {
+  id: string; createdAt: string; updatedAt: string;
+  templateId: string | null;
+  date: string; // YYYY-MM-DD
+  order: number;
+  startTime?: string;
+  customName?: string;
+  type?: string;
+  status: 'planned' | 'done' | 'skipped';
+  notes?: string;
+  completedAt?: string;
+  recurrenceRuleId?: string | null;
+}
+
+/** A rule that materializes ScheduledWorkout rows on specific weekdays. */
+export interface WorkoutRecurrenceRule {
+  id: string; createdAt: string; updatedAt: string;
+  templateId: string;
+  startDate: string;
+  endDate: string | null;
+  isIndefinite: boolean;
+  weekdays: number[]; // 0 = Sunday .. 6 = Saturday (JS Date convention)
+  frequency: 'weekly';
+  interval: number; // every N weeks
 }
 export interface WorkoutSession {
   id: string; createdAt: string; updatedAt: string;
@@ -60,17 +119,37 @@ export interface WorkoutSession {
   /** Bieganie — opcjonalne metryki dystansowe. */
   distanceKm?: number;
   avgPaceMinPerKm?: number;
+  scheduledWorkoutId?: string;
 }
 
-// — SPORT: ODCZUCIA (check-ins) —
-export type FeelingMode = 'pre' | 'post';
+// — SPORT: ODCZUCIA (post-session check-ins) —
+export type FeelingStatus = 'completed' | 'pending' | 'skipped';
+
+/** A specific point of pain/overload picked on the body map. */
+export interface PainPoint {
+  muscle: MuscleKey;
+  side: 'left' | 'right' | 'both';
+  intensity: number; // 0-10
+  note?: string;
+}
+
 export interface FeelingEntry {
-  id: string; createdAt: string; date: string; mode: FeelingMode;
-  mood: number; energy: number; motivation: number;
-  pain: number; stiffness: number; recovery: number;
-  sleep: number; stress: number; readiness: number;
-  note: string;
-  painMap: Partial<Record<MuscleKey, number>>;
+  id: string; createdAt: string;
+  /** Links this check-in to the specific session it's about. */
+  sessionId?: string;
+  scheduledWorkoutId?: string;
+  date: string;
+  sportCategory: string;
+  templateName?: string;
+  energyBefore: number; // 1-5
+  energyDuring: number; // 1-5
+  motivation: number; // 1-5
+  soreness: number; // 1-5 ("zakwasy")
+  sleepHours: number; // 0-12
+  wellbeing: number; // 1-5 ("samopoczucie")
+  note?: string;
+  painPoints: PainPoint[];
+  status: FeelingStatus;
 }
 
 // — OFFICE —
@@ -219,6 +298,7 @@ export interface ActiveSession {
   startTime: string; currentExerciseIndex: number;
   exercises: WorkoutExercise[];
   timerSeconds: number; timerRunning: boolean;
+  scheduledWorkoutId?: string;
 }
 
 // ─── STORE ──────────────────────────────────────────────────
@@ -228,8 +308,11 @@ interface LocalStore {
   exercises: SportExercise[];
   templates: WorkoutTemplate[];
   sessions: WorkoutSession[];
+  scheduledWorkouts: ScheduledWorkout[];
+  recurrenceRules: WorkoutRecurrenceRule[];
   activeSession: ActiveSession | null;
   feelings: FeelingEntry[];
+  sportCategories: SportCategory[];
 
   // Office
   officeTasks: OfficeTask[];
@@ -272,16 +355,32 @@ interface LocalStore {
 
 
   // ACTIONS — Sport
-  addExercise: (e: Omit<SportExercise, 'id' | 'createdAt'>) => void;
+  addExercise: (e: Omit<SportExercise, 'id' | 'createdAt'>) => SportExercise;
   addTemplate: (t: Omit<WorkoutTemplate, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateTemplate: (id: string, patch: Partial<WorkoutTemplate>) => void;
   deleteTemplate: (id: string) => void;
   startSession: (s: Omit<ActiveSession, 'startTime' | 'timerSeconds' | 'timerRunning'>) => void;
   updateActiveSession: (patch: Partial<ActiveSession>) => void;
-  completeSession: (notes?: string, pain?: number) => void;
+  completeSession: (notes?: string, pain?: number) => WorkoutSession | null;
   cancelSession: () => void;
   repeatSession: (sessionId: string) => void;
   addFeeling: (f: Omit<FeelingEntry, 'id' | 'createdAt'>) => void;
+  updateFeeling: (id: string, patch: Partial<FeelingEntry>) => void;
+  deleteFeeling: (id: string) => void;
+  addSportCategory: (name: string) => SportCategory | null;
+  renameSportCategory: (id: string, newName: string) => void;
+  deleteSportCategory: (id: string, fallbackId: string) => void;
+  setSportCategorySettings: (id: string, patch: Partial<Pick<SportCategory, 'showFeelingsPrompt'>>) => void;
+  addScheduledWorkout: (w: Omit<ScheduledWorkout, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  updateScheduledWorkout: (id: string, patch: Partial<ScheduledWorkout>) => void;
+  deleteScheduledWorkout: (id: string) => void;
+  moveScheduledWorkout: (id: string, date: string) => void;
+  addRecurrenceRule: (r: Omit<WorkoutRecurrenceRule, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  updateRecurrenceRule: (id: string, patch: Partial<Omit<WorkoutRecurrenceRule, 'id' | 'createdAt' | 'updatedAt'>>) => void;
+  deleteRecurrenceRule: (id: string, scope: 'futureOnly' | 'all') => void;
+  ensureScheduleMaterialized: (throughDate: string) => void;
+  /** Wipes all planned/scheduled workouts and recurrence rules — keeps completed session history intact. */
+  clearSchedule: () => void;
 
   // ACTIONS — Office
   addOfficeTask: (t: Omit<OfficeTask, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -375,7 +474,7 @@ const MOCK_TEMPLATES: WorkoutTemplate[] = [
     name: 'Push A — Klatka i barki', sportType: 'Siłownia',
     description: 'Trening pchający skupiony na klatce piersiowej i barkach.',
     estimatedDuration: 70, isActive: true,
-    category: 'Push', level: 'intermediate', goal: 'Hipertrofia klatki i barków',
+    level: 'intermediate', goal: 'Hipertrofia klatki i barków',
     equipmentTags: ['Sztanga', 'Hantle', 'Maszyna'],
     exercises: [
       { exerciseId: 'gym-bench-press', exerciseName: 'Wyciskanie sztangi na ławce płaskiej', sets: [
@@ -407,7 +506,7 @@ const MOCK_TEMPLATES: WorkoutTemplate[] = [
     name: 'Pull B — Plecy i biceps', sportType: 'Siłownia',
     description: 'Trening ciągnący: plecy, biceps.',
     estimatedDuration: 65, isActive: true,
-    category: 'Pull', level: 'intermediate', goal: 'Siła i masa grzbietu',
+    level: 'intermediate', goal: 'Siła i masa grzbietu',
     equipmentTags: ['Drążek', 'Sztanga'],
     exercises: [
       { exerciseId: 'gym-pullup', exerciseName: 'Podciąganie nachwytem', sets: [
@@ -432,7 +531,7 @@ const MOCK_TEMPLATES: WorkoutTemplate[] = [
     id: 'tpl3', createdAt: now(), updatedAt: now(),
     name: 'Nogi A — Uda i pośladki', sportType: 'Siłownia',
     description: '', estimatedDuration: 80, isActive: true,
-    category: 'Legs', level: 'advanced', goal: 'Siła nóg i pośladków',
+    level: 'advanced', goal: 'Siła nóg i pośladków',
     equipmentTags: ['Sztanga'],
     exercises: [
       { exerciseId: 'gym-back-squat', exerciseName: 'Przysiad ze sztangą na plecach', sets: [
@@ -447,7 +546,7 @@ const MOCK_TEMPLATES: WorkoutTemplate[] = [
     id: 'tpl4', createdAt: now(), updatedAt: now(),
     name: 'Easy Run 8 km', sportType: 'Bieganie',
     description: 'Spokojny bieg bazowy w strefie 2.', estimatedDuration: 45, isActive: true,
-    category: 'Easy Run', level: 'beginner', goal: 'Baza wytrzymałościowa',
+    level: 'beginner', goal: 'Baza wytrzymałościowa',
     equipmentTags: ['Brak / teren'],
     exercises: [{ exerciseId: 'run-easy', exerciseName: 'Bieg spokojny (easy run)', sets: [
       { setNumber: 1, reps: 1, weight: 0, restTime: 0, rir: 0, completed: false, notes: '8 km, tętno strefa 2' },
@@ -457,7 +556,7 @@ const MOCK_TEMPLATES: WorkoutTemplate[] = [
     id: 'tpl5', createdAt: now(), updatedAt: now(),
     name: 'Boulder — siła i moc', sportType: 'Wspinaczka',
     description: 'Sesja bulderowa z naciskiem na limit.', estimatedDuration: 90, isActive: true,
-    category: 'Boulder', level: 'intermediate', goal: 'Siła i moc na chwytach',
+    level: 'intermediate', goal: 'Siła i moc na chwytach',
     equipmentTags: ['Chwyty / boulder wall'],
     exercises: [{ exerciseId: 'climb-boulder', exerciseName: 'Sesja bulderowa', sets: [
       { setNumber: 1, reps: 1, weight: 0, restTime: 0, rir: 0, completed: false, notes: '' },
@@ -487,6 +586,25 @@ const MOCK_TEMPLATES: WorkoutTemplate[] = [
     ]}],
   },
 ];
+
+/** Seeds a plausible rotating week of scheduled workouts so a fresh install isn't an empty calendar. */
+function seedScheduledWorkouts(): ScheduledWorkout[] {
+  const strengthIds = ['tpl1', 'tpl2', 'tpl3'];
+  const recoveryIds = ['tpl6'];
+  const out: ScheduledWorkout[] = [];
+  for (let offset = -10; offset <= 20; offset++) {
+    const date = addDaysStr(todayStr(), offset);
+    const dow = new Date(`${date}T12:00:00`).getDay();
+    const normalized = (dow + 6) % 7; // Monday = 0
+    if (normalized === 6) {
+      out.push({ id: uid(), createdAt: now(), updatedAt: now(), templateId: recoveryIds[0], date, order: 0, status: offset < 0 ? 'done' : 'planned', recurrenceRuleId: null });
+      continue;
+    }
+    const templateId = strengthIds[normalized % strengthIds.length];
+    out.push({ id: uid(), createdAt: now(), updatedAt: now(), templateId, date, order: 0, status: offset <= 0 ? 'done' : 'planned', recurrenceRuleId: null });
+  }
+  return out;
+}
 
 function daysAgoStr(n: number): string {
   const d = new Date();
@@ -705,6 +823,40 @@ const MOCK_MEAL_ENTRIES: MealEntry[] = [
 const MOCK_WATER_LOGS: WaterLog[] = [{ date: today, ml: 1200 }];
 const MOCK_DIET_GOALS: DietGoals = { kcal: 2400, protein: 150, carbs: 270, fat: 70, water: 3000 };
 
+const MOCK_SPORT_CATEGORIES: SportCategory[] = SPORTS.map((s, i) => ({
+  id: `cat-${s.key}`, name: s.key, builtIn: true, showFeelingsPrompt: true, order: i,
+}));
+
+/** Legacy raw-localStorage keys from the old, per-tab "custom sport" mechanism — folded into `sportCategories` once, then left untouched. */
+const LEGACY_CUSTOM_SPORTS_KEY = 'rootine.customSports';
+const LEGACY_HIDDEN_SPORTS_KEY = 'rootine.hiddenTemplateSports';
+
+function readLegacyJsonArray(key: string): string[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(key) ?? '[]');
+    return Array.isArray(raw) ? raw.filter((v): v is string => typeof v === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Best-effort upgrade of pre-redesign FeelingEntry rows (mode/mood/pain/...) to the new post-session shape. */
+function migrateLegacyFeeling(raw: unknown): FeelingEntry {
+  const f = raw as Record<string, unknown>;
+  if (typeof f.mode !== 'string') return f as unknown as FeelingEntry;
+  const clamp15 = (v: unknown) => Math.max(1, Math.min(5, Math.round(((v as number) ?? 3) / 2) || 3));
+  const oldPainMap = (f.painMap as Record<string, number>) ?? {};
+  return {
+    id: f.id as string, createdAt: f.createdAt as string,
+    date: f.date as string, sportCategory: 'Siłownia', templateName: undefined,
+    energyBefore: clamp15(f.energy), energyDuring: clamp15(f.energy), motivation: clamp15(f.motivation),
+    soreness: clamp15(f.pain), sleepHours: (f.sleep as number) ?? 7, wellbeing: Math.max(1, Math.min(5, ((f.mood as number) ?? 2) + 1)),
+    note: (f.note as string) || undefined,
+    painPoints: Object.entries(oldPainMap).map(([muscle, intensity]) => ({ muscle: muscle as MuscleKey, side: 'both' as const, intensity: Math.min(10, intensity * 2) })),
+    status: 'completed' as const,
+  };
+}
+
 export const useLocalStore = create<LocalStore>()(
   persist(
     (set, get) => ({
@@ -712,8 +864,11 @@ export const useLocalStore = create<LocalStore>()(
       exercises: MOCK_EXERCISES,
       templates: MOCK_TEMPLATES,
       sessions: MOCK_SESSIONS,
+      scheduledWorkouts: seedScheduledWorkouts(),
+      recurrenceRules: [],
       activeSession: null,
       feelings: [],
+      sportCategories: MOCK_SPORT_CATEGORIES,
       officeTasks: MOCK_OFFICE_TASKS,
       officeDocuments: MOCK_OFFICE_DOCS,
       cars: MOCK_CARS,
@@ -741,7 +896,11 @@ export const useLocalStore = create<LocalStore>()(
       foodItems: MOCK_FOOD_ITEMS,
 
       // Sport actions
-      addExercise: (e) => set(s => ({ exercises: [...s.exercises, { ...e, id: uid(), createdAt: now() }] })),
+      addExercise: (e) => {
+        const created: SportExercise = { ...e, id: uid(), createdAt: now() };
+        set(s => ({ exercises: [...s.exercises, created] }));
+        return created;
+      },
       addTemplate: (t) => set(s => ({ templates: [...s.templates, { ...t, id: uid(), createdAt: now(), updatedAt: now() }] })),
       updateTemplate: (id, patch) => set(s => ({ templates: s.templates.map(t => t.id === id ? { ...t, ...patch, updatedAt: now() } : t) })),
       deleteTemplate: (id) => set(s => ({ templates: s.templates.filter(t => t.id !== id) })),
@@ -749,7 +908,7 @@ export const useLocalStore = create<LocalStore>()(
       updateActiveSession: (patch) => set(s => ({ activeSession: s.activeSession ? { ...s.activeSession, ...patch } : null })),
       completeSession: (notes, pain) => {
         const s = get().activeSession;
-        if (!s) return;
+        if (!s) return null;
         const session: WorkoutSession = {
           id: uid(), createdAt: now(), updatedAt: now(),
           templateId: s.templateId, templateName: s.templateName,
@@ -759,8 +918,16 @@ export const useLocalStore = create<LocalStore>()(
           exercises: s.exercises,
           notesAfterTraining: notes, painAfterTraining: pain,
           status: 'completed',
+          scheduledWorkoutId: s.scheduledWorkoutId,
         };
-        set(st => ({ sessions: [session, ...st.sessions], activeSession: null }));
+        set(st => ({
+          sessions: [session, ...st.sessions],
+          activeSession: null,
+          scheduledWorkouts: s.scheduledWorkoutId
+            ? st.scheduledWorkouts.map(w => w.id === s.scheduledWorkoutId ? { ...w, status: 'done', completedAt: now(), updatedAt: now() } : w)
+            : st.scheduledWorkouts,
+        }));
+        return session;
       },
       cancelSession: () => set({ activeSession: null }),
       repeatSession: (sessionId) => {
@@ -776,6 +943,105 @@ export const useLocalStore = create<LocalStore>()(
         });
       },
       addFeeling: (f) => set(s => ({ feelings: [{ ...f, id: uid(), createdAt: now() }, ...s.feelings] })),
+      updateFeeling: (id, patch) => set(s => ({ feelings: s.feelings.map(f => f.id === id ? { ...f, ...patch } : f) })),
+      deleteFeeling: (id) => set(s => ({ feelings: s.feelings.filter(f => f.id !== id) })),
+
+      addSportCategory: (name) => {
+        const clean = name.trim();
+        if (!clean) return null;
+        const exists = get().sportCategories.some(c => c.name.toLowerCase() === clean.toLowerCase());
+        if (exists) return null;
+        const created: SportCategory = { id: uid(), name: clean, builtIn: false, showFeelingsPrompt: true, order: get().sportCategories.length };
+        set(s => ({ sportCategories: [...s.sportCategories, created] }));
+        return created;
+      },
+      renameSportCategory: (id, newName) => {
+        const clean = newName.trim();
+        if (!clean) return;
+        const current = get().sportCategories.find(c => c.id === id);
+        if (!current || current.name === clean) return;
+        const oldName = current.name;
+        set(s => ({
+          sportCategories: s.sportCategories.map(c => c.id === id ? { ...c, name: clean } : c),
+          templates: s.templates.map(t => t.sportType === oldName ? { ...t, sportType: clean, updatedAt: now() } : t),
+          exercises: s.exercises.map(e => e.sportType === oldName
+            ? { ...e, sportType: clean, sportCategories: e.sportCategories?.map(c => c === oldName ? clean : c) }
+            : e),
+          scheduledWorkouts: s.scheduledWorkouts.map(w => w.type === oldName ? { ...w, type: clean, updatedAt: now() } : w),
+          sessions: s.sessions.map(ses => ses.sportType === oldName ? { ...ses, sportType: clean, updatedAt: now() } : ses),
+          feelings: s.feelings.map(f => f.sportCategory === oldName ? { ...f, sportCategory: clean } : f),
+        }));
+      },
+      deleteSportCategory: (id, fallbackId) => {
+        const categories = get().sportCategories;
+        if (categories.length <= 1) return;
+        const current = categories.find(c => c.id === id);
+        const fallback = categories.find(c => c.id === fallbackId) ?? categories.find(c => c.id !== id);
+        if (!current || !fallback) return;
+        const oldName = current.name; const fallbackName = fallback.name;
+        set(s => ({
+          sportCategories: s.sportCategories.filter(c => c.id !== id),
+          templates: s.templates.map(t => t.sportType === oldName ? { ...t, sportType: fallbackName, updatedAt: now() } : t),
+          exercises: s.exercises.map(e => e.sportType === oldName
+            ? { ...e, sportType: fallbackName, sportCategories: e.sportCategories?.map(c => c === oldName ? fallbackName : c) }
+            : e),
+          scheduledWorkouts: s.scheduledWorkouts.map(w => w.type === oldName ? { ...w, type: fallbackName, updatedAt: now() } : w),
+          sessions: s.sessions.map(ses => ses.sportType === oldName ? { ...ses, sportType: fallbackName, updatedAt: now() } : ses),
+          feelings: s.feelings.map(f => f.sportCategory === oldName ? { ...f, sportCategory: fallbackName } : f),
+        }));
+      },
+      setSportCategorySettings: (id, patch) => set(s => ({ sportCategories: s.sportCategories.map(c => c.id === id ? { ...c, ...patch } : c) })),
+
+      addScheduledWorkout: (w) => set(s => ({ scheduledWorkouts: [...s.scheduledWorkouts, { ...w, id: uid(), createdAt: now(), updatedAt: now() }] })),
+      updateScheduledWorkout: (id, patch) => set(s => ({ scheduledWorkouts: s.scheduledWorkouts.map(w => w.id === id ? { ...w, ...patch, updatedAt: now() } : w) })),
+      deleteScheduledWorkout: (id) => set(s => ({ scheduledWorkouts: s.scheduledWorkouts.filter(w => w.id !== id) })),
+      moveScheduledWorkout: (id, date) => set(s => ({ scheduledWorkouts: s.scheduledWorkouts.map(w => w.id === id ? { ...w, date, updatedAt: now() } : w) })),
+
+      addRecurrenceRule: (r) => {
+        const rule: WorkoutRecurrenceRule = { ...r, id: uid(), createdAt: now(), updatedAt: now() };
+        const horizon = addDaysStr(todayStr(), 120);
+        const generated = materializeRule(rule, horizon, new Set());
+        set(s => ({
+          recurrenceRules: [...s.recurrenceRules, rule],
+          scheduledWorkouts: [...s.scheduledWorkouts, ...generated.map(g => ({ ...g, id: uid(), createdAt: now(), updatedAt: now() }))],
+        }));
+      },
+      updateRecurrenceRule: (id, patch) => {
+        set(s => {
+          const rule = s.recurrenceRules.find(r => r.id === id);
+          if (!rule) return s;
+          const updated: WorkoutRecurrenceRule = { ...rule, ...patch, updatedAt: now() };
+          const todayD = todayStr();
+          // drop not-yet-started future auto-generated occurrences for this rule, then re-materialize with the new params
+          const kept = s.scheduledWorkouts.filter(w => !(w.recurrenceRuleId === id && w.date >= todayD && w.status === 'planned'));
+          const already = new Set(kept.filter(w => w.recurrenceRuleId === id).map(w => `${id}|${w.date}`));
+          const horizon = addDaysStr(todayD, 120);
+          const generated = materializeRule(updated, horizon, already)
+            .filter(g => g.date >= todayD)
+            .map(g => ({ ...g, id: uid(), createdAt: now(), updatedAt: now() }));
+          return {
+            recurrenceRules: s.recurrenceRules.map(r => r.id === id ? updated : r),
+            scheduledWorkouts: [...kept, ...generated],
+          };
+        });
+      },
+      deleteRecurrenceRule: (id, scope) => set(s => ({
+        recurrenceRules: s.recurrenceRules.filter(r => r.id !== id),
+        scheduledWorkouts: scope === 'all'
+          ? s.scheduledWorkouts.filter(w => w.recurrenceRuleId !== id)
+          : s.scheduledWorkouts.filter(w => !(w.recurrenceRuleId === id && w.date >= todayStr() && w.status === 'planned')),
+      })),
+      ensureScheduleMaterialized: (throughDate) => set(s => {
+        const already = new Set(s.scheduledWorkouts.filter(w => w.recurrenceRuleId).map(w => `${w.recurrenceRuleId}|${w.date}`));
+        const additions: ScheduledWorkout[] = [];
+        for (const rule of s.recurrenceRules) {
+          for (const g of materializeRule(rule, throughDate, already)) {
+            additions.push({ ...g, id: uid(), createdAt: now(), updatedAt: now() });
+          }
+        }
+        return additions.length ? { scheduledWorkouts: [...s.scheduledWorkouts, ...additions] } : s;
+      }),
+      clearSchedule: () => set({ scheduledWorkouts: [], recurrenceRules: [] }),
 
       // Office actions
       addOfficeTask: (t) => set(s => ({ officeTasks: [{ ...t, id: uid(), createdAt: now(), updatedAt: now() }, ...s.officeTasks] })),
@@ -848,6 +1114,31 @@ export const useLocalStore = create<LocalStore>()(
           : g)
       })),
     }),
-    { name: 'rootine-local-store' }
+    {
+      name: 'rootine-local-store',
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+
+        // Fold the old per-tab "custom sport" localStorage mechanism + any stray
+        // sportType strings on persisted data into the centralized category list.
+        if (!state.sportCategories || state.sportCategories.length === 0) {
+          state.sportCategories = MOCK_SPORT_CATEGORIES.map(c => ({ ...c }));
+        }
+        const known = new Set(state.sportCategories.map(c => c.name));
+        const extraNames = [
+          ...readLegacyJsonArray(LEGACY_CUSTOM_SPORTS_KEY),
+          ...state.templates.map(t => t.sportType),
+          ...state.exercises.map(e => e.sportType),
+        ].filter(n => n && !known.has(n) && !readLegacyJsonArray(LEGACY_HIDDEN_SPORTS_KEY).includes(n));
+        for (const name of extraNames) {
+          if (known.has(name)) continue;
+          known.add(name);
+          state.sportCategories.push({ id: uid(), name, builtIn: false, showFeelingsPrompt: true, order: state.sportCategories.length });
+        }
+
+        // Best-effort upgrade of pre-redesign FeelingEntry rows.
+        state.feelings = (state.feelings ?? []).map(migrateLegacyFeeling);
+      },
+    }
   )
 );

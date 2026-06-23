@@ -21,6 +21,8 @@ const SHAPES: Shape[] = [
   { key: 'front_delts', view: 'front', rect: [24, 26, 13, 11], mirror: true },
   { key: 'side_delts', view: 'front', rect: [24, 26, 13, 11], mirror: true },
   { key: 'rear_delts', view: 'back', rect: [24, 26, 13, 11], mirror: true },
+  { key: 'shoulder', view: 'front', circle: [25, 25, 3], mirror: true },
+  { key: 'shoulder', view: 'back', circle: [25, 25, 3], mirror: true },
 
   { key: 'chest', view: 'front', rect: [35, 28, 30, 20] },
   { key: 'upper_back', view: 'back', rect: [33, 28, 34, 13] },

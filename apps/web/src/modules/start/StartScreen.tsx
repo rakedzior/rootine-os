@@ -1275,7 +1275,7 @@ export function StartScreen() {
         maxWidth: 1640, margin: '0 auto', width: '100%', boxSizing: 'border-box',
       }}>
         {/* TOP ROW: Today + Calendar — fixed min-height, not flex-grow */}
-        <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: 'var(--gap)', minHeight: 480 }}>
+        <div className="planer-top-grid">
           <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <TodayPanel
               tasks={tasks}
@@ -1292,7 +1292,7 @@ export function StartScreen() {
         </div>
 
         {/* BOTTOM ROW: Habits · Training · Calories — always visible */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--gap)' }}>
+        <div className="planer-strip-grid">
           <div className="card"><HabitsStrip /></div>
           <div className="card"><TrainingStrip /></div>
           <div className="card"><CaloriesStrip /></div>

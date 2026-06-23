@@ -1,28 +1,38 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, SectionHead, IcoTrash } from '@/components/common';
-import { useLocalStore, type WorkoutTemplate, type WorkoutSet, type WorkoutSession, type SportExercise, type FeelingMode } from '@/store/localStore';
-import { BodyMap, muscleSetFromExercises } from '@/features/sport/BodyMap';
 import {
-  SPORTS, SPORT_KEYS, TEMPLATE_CATEGORIES, EQUIPMENT_OPTIONS, MUSCLES, MUSCLE_LABEL, DIFFICULTY_LABEL,
-  EXERCISE_CATALOG, findExercise, type SportKey, type MuscleKey, type Difficulty,
+  useLocalStore,
+  type WorkoutTemplate, type WorkoutSet, type WorkoutExercise, type WorkoutSession, type SportExercise,
+  type ScheduledWorkout, type WorkoutRecurrenceRule, type FeelingEntry, type FeelingStatus, type PainPoint,
+} from '@/store/localStore';
+import { BodyMap, muscleSetFromExercises, type HighlightLevel } from '@/features/sport/BodyMap';
+import {
+  TEMPLATE_CATEGORIES, EQUIPMENT_OPTIONS, MUSCLES, MUSCLE_LABEL, DIFFICULTY_LABEL,
+  type SportKey, type MuscleKey, type Difficulty,
 } from '@/features/sport/catalog';
 import {
   volFromSets, sessionVolume, sessionSetCount, filterBySport, templateMuscles, templateStats,
-  computePRs, topExercisesByVolume, muscleSetCounts, streakDays, dailyBuckets, runningStats, weekOverWeek,
+  computePRs, topExercisesByVolume, muscleSetCounts, streakDays, dailyBuckets, runningStats,
   byCategoryCount, mostFrequentExercises, generateInsights, exercisesMuscles, sessionsMuscles, muscleCountsToHighlight,
   monthSummary, monthHeatmapData, compareRanges, sportDistribution, weeklyTrend, sessionsInLastNDays, avgRir,
-  feelingTrend, avgFeeling, feelingTips,
+  feelingTrend, avgFeeling, feelingTips, mergeMuscleHighlights, mergeUniqueStrings, mostFrequentPainPoints,
 } from '@/features/sport/analytics';
 import { LineChart, DonutChart, MonthHeatmap } from '@/features/sport/charts';
+import {
+  todayStr, addDaysStr, startOfWeekStr, weekdayOf,
+  WEEKDAY_LABELS, WEEKDAY_LABELS_LONG, describeRecurrence,
+} from '@/features/sport/schedule';
+import { useWorkoutImage } from '@/features/sport/workoutImage';
 
 const SPORT_TABS = [
   { id: 'dzisiaj',   label: 'Dzisiaj',       icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
+  { id: 'planowanie', label: 'Planowanie',   icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><path d="M8 14h2M14 14h2M8 17h2M14 17h2"/></svg> },
+  { id: 'cwiczenia', label: 'Ćwiczenia',    icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5m-2 0a2 2 0 1 0 4 0 2 2 0 1 0-4 0"/><path d="M3 12h4l2 6 4-12 2 6h4"/></svg> },
   { id: 'szablony',  label: 'Szablony',      icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> },
-  { id: 'sesja',     label: 'Aktywna sesja', icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
   { id: 'historia',  label: 'Historia',      icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg> },
   { id: 'analiza',   label: 'Analiza',       icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> },
-  { id: 'cwiczenia', label: 'Ćwiczenia',    icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5m-2 0a2 2 0 1 0 4 0 2 2 0 1 0-4 0"/><path d="M3 12h4l2 6 4-12 2 6h4"/></svg> },
   { id: 'odczucia',  label: 'Odczucia',     icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> },
+  { id: 'sesja',     label: 'Aktywna sesja', icon: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
 ];
 
 function fmtTime(sec: number) {
@@ -46,20 +56,6 @@ function plCount(n: number, one: string, few: string, many: string): string {
   return `${n} ${many}`;
 }
 
-function toDateStr(d: Date): string {
-  return d.toISOString().split('T')[0];
-}
-function addDays(d: Date, n: number): Date {
-  const copy = new Date(d);
-  copy.setDate(copy.getDate() + n);
-  return copy;
-}
-function startOfWeek(d: Date): Date {
-  const copy = new Date(d);
-  const dow = copy.getDay();
-  copy.setDate(copy.getDate() + (dow === 0 ? -6 : 1 - dow));
-  return copy;
-}
 
 type TileIconKind = 'all' | 'sport' | 'category';
 type TileIconVariant = 'all' | 'gym' | 'pull' | 'legs' | 'run' | 'climb' | 'mobility' | 'rehab' | 'category';
@@ -190,9 +186,10 @@ interface SportSelectorRowProps {
 }
 
 function SportSelectorRow({ active, onSelect, countLabel, includeAll = true }: SportSelectorRowProps) {
+  const { sportCategories } = useLocalStore();
   const items: { key: string | 'Wszystko'; label: string }[] = [
     ...(includeAll ? [{ key: 'Wszystko' as const, label: 'Wszystko' }] : []),
-    ...SPORTS.map((s) => ({ key: s.key, label: s.key })),
+    ...[...sportCategories].sort((a, b) => a.order - b.order).map((c) => ({ key: c.name, label: c.name })),
   ];
   return (
     <div className="card" style={{ display: 'grid', gridTemplateColumns: `repeat(${items.length}, 1fr)`, gap: 10 }}>
@@ -224,6 +221,7 @@ function SportSelectorRow({ active, onSelect, countLabel, includeAll = true }: S
 export function SportScreen() {
   const [tab, setTab] = useState('dzisiaj');
   const [templatesSportFilter, setTemplatesSportFilter] = useState<string | 'Wszystko'>('Wszystko');
+  const [feelingsSessionTarget, setFeelingsSessionTarget] = useState<string | null>(null);
   const { activeSession, startSession } = useLocalStore();
 
   useEffect(() => {
@@ -248,18 +246,18 @@ export function SportScreen() {
 
   return (
     <div className="module-page">
-      <div className="module-header">
-        <span className="module-title">Sport</span>
+      <div className="module-header no-title">
         <SubTabs tabs={SPORT_TABS} active={tab} onChange={setTab} />
       </div>
 
       {tab === 'dzisiaj'   && <SportToday onStartSession={() => setTab('sesja')} onQuickAction={quickAction} />}
       {tab === 'szablony'  && <SportTemplates sportFilter={templatesSportFilter} onSportFilterChange={setTemplatesSportFilter} onStartTemplate={startFromTemplate} />}
       {tab === 'sesja'     && <SportActiveSession onSessionEnd={() => setTab('historia')} />}
-      {tab === 'historia'  && <SportHistory onRepeat={() => setTab('sesja')} />}
+      {tab === 'historia'  && <SportHistory onRepeat={() => setTab('sesja')} onFillFeelings={(sessionId) => { setFeelingsSessionTarget(sessionId); setTab('odczucia'); }} />}
+      {tab === 'planowanie' && <SportPlanning />}
       {tab === 'analiza'   && <SportAnalysis />}
       {tab === 'cwiczenia' && <SportExercises />}
-      {tab === 'odczucia'  && <SportFeelings />}
+      {tab === 'odczucia'  && <SportFeelings initialSessionId={feelingsSessionTarget} onConsumeInitialSession={() => setFeelingsSessionTarget(null)} />}
     </div>
   );
 }
@@ -275,91 +273,43 @@ function StatBox({ label, value }: { label: string; value: string }) {
   );
 }
 
-type PlannedWorkout = {
-  key: string;
-  template: WorkoutTemplate;
-  done?: boolean;
+interface DayWorkout {
+  scheduled: ScheduledWorkout;
+  template: WorkoutTemplate | null;
   session?: WorkoutSession;
-};
-
-const TRAINING_PHOTOS = {
-  push: 'https://source.unsplash.com/1600x1000/?bench-press,gym',
-  pull: 'https://source.unsplash.com/1600x1000/?pull-up,gym',
-  legs: 'https://source.unsplash.com/1600x1000/?barbell-squat,gym',
-  run: 'https://source.unsplash.com/1600x1000/?running,runner',
-  climb: 'https://source.unsplash.com/1600x1000/?rock-climbing,climber',
-  mobility: 'https://source.unsplash.com/1600x1000/?stretching,mobility',
-  rehab: 'https://source.unsplash.com/1600x1000/?physical-therapy,rehab',
-  gym: 'https://source.unsplash.com/1600x1000/?gym,workout',
-};
-
-function templateKind(template: WorkoutTemplate): keyof typeof TRAINING_PHOTOS {
-  const haystack = `${template.name} ${template.category ?? ''} ${template.sportType}`.toLowerCase();
-  if (haystack.includes('push')) return 'push';
-  if (haystack.includes('pull')) return 'pull';
-  if (haystack.includes('legs') || haystack.includes('nogi') || haystack.includes('przysiad')) return 'legs';
-  if (template.sportType === 'Bieganie') return 'run';
-  if (template.sportType === 'Wspinaczka') return 'climb';
-  if (template.sportType === 'Mobilność') return 'mobility';
-  if (template.sportType === 'Rehabilitacja') return 'rehab';
-  return 'gym';
 }
 
-function templatePhoto(template: WorkoutTemplate): string {
-  return TRAINING_PHOTOS[templateKind(template)];
+function workoutsForDate(date: string, scheduledWorkouts: ScheduledWorkout[], templates: WorkoutTemplate[], sessions: WorkoutSession[]): DayWorkout[] {
+  return scheduledWorkouts
+    .filter((w) => w.date === date && w.status !== 'skipped')
+    .sort((a, b) => a.order - b.order || a.createdAt.localeCompare(b.createdAt))
+    .map((scheduled) => {
+      const template = scheduled.templateId ? templates.find((t) => t.id === scheduled.templateId) ?? null : null;
+      const session = sessions.find((s) => s.scheduledWorkoutId === scheduled.id)
+        ?? (scheduled.status === 'done' ? sessions.find((s) => s.date === date && s.templateId === scheduled.templateId) : undefined);
+      return { scheduled, template, session };
+    });
 }
 
-function plannedTemplatesForDate(date: Date, activeTemplates: WorkoutTemplate[]): WorkoutTemplate[] {
-  if (activeTemplates.length === 0) return [];
-  const weekStart = startOfWeek(new Date());
-  const dayOffset = Math.round((date.getTime() - weekStart.getTime()) / 86400000);
-  const strength = activeTemplates.filter((t) => t.sportType !== 'Mobilność' && t.sportType !== 'Rehabilitacja');
-  const recovery = activeTemplates.filter((t) => t.sportType === 'Mobilność' || t.sportType === 'Rehabilitacja');
-  const basePool = strength.length > 0 ? strength : activeTemplates;
-  const normalized = ((dayOffset % 7) + 7) % 7;
-
-  if (normalized === 6 && recovery.length > 0) return [recovery[0]];
-
-  const base = basePool[((normalized % basePool.length) + basePool.length) % basePool.length];
-  const items = base ? [base] : [];
-  const needsRecovery = recovery.length > 0 && (normalized === 0 || normalized === 2 || normalized === 4);
-  if (needsRecovery) {
-    const extra = recovery[normalized % recovery.length];
-    if (extra && !items.some((t) => t.id === extra.id)) items.push(extra);
-  }
-  return items;
+function workoutDisplayName(item: DayWorkout): string {
+  return item.scheduled.customName || item.template?.name || 'Trening';
+}
+function workoutDisplaySport(item: DayWorkout): string {
+  return item.scheduled.type || item.template?.sportType || 'Inne';
 }
 
-function plannedWorkoutsForDate(date: Date, activeTemplates: WorkoutTemplate[], sessions: WorkoutSession[]): PlannedWorkout[] {
-  const dateStr = toDateStr(date);
-  const completed = sessions
-    .filter((s) => s.date === dateStr)
-    .map((session) => {
-      const template = activeTemplates.find((t) => t.id === session.templateId)
-        ?? activeTemplates.find((t) => t.sportType === session.sportType);
-      return template ? { key: session.id, template, done: true, session } : null;
-    })
-    .filter(Boolean) as PlannedWorkout[];
-
-  const completedTemplateIds = new Set(completed.map((item) => item.template.id));
-  const planned = plannedTemplatesForDate(date, activeTemplates)
-    .filter((template) => !completedTemplateIds.has(template.id))
-    .map((template) => ({ key: `${dateStr}-${template.id}`, template }));
-
-  return [...completed, ...planned];
-}
-
-function workoutMetricStats(workout: PlannedWorkout | null) {
-  if (!workout) return null;
-  if (workout.session) {
+function dayWorkoutStats(item: DayWorkout | null) {
+  if (!item) return null;
+  if (item.session) {
     return {
-      duration: workout.session.duration ?? workout.template.estimatedDuration,
-      exerciseCount: workout.session.exercises.length,
-      setCount: sessionSetCount(workout.session),
-      volumeKg: sessionVolume(workout.session),
+      duration: item.session.duration ?? item.template?.estimatedDuration ?? 0,
+      exerciseCount: item.session.exercises.length,
+      setCount: sessionSetCount(item.session),
+      volumeKg: sessionVolume(item.session),
     };
   }
-  return templateStats(workout.template);
+  if (item.template) return templateStats(item.template);
+  return { duration: 0, exerciseCount: 0, setCount: 0, volumeKg: 0 };
 }
 
 function primaryMuscles(muscles: Partial<Record<MuscleKey, 'primary' | 'secondary' | 'stabilizer'>>) {
@@ -368,18 +318,143 @@ function primaryMuscles(muscles: Partial<Record<MuscleKey, 'primary' | 'secondar
     .map(([k]) => k as MuscleKey);
 }
 
-function WeekStrip({ sessions, activeTemplates }: { sessions: WorkoutSession[]; activeTemplates: WorkoutTemplate[] }) {
-  const today = new Date();
-  const todayStr = toDateStr(today);
-  const [weekStart, setWeekStart] = useState(() => startOfWeek(today));
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const weekEnd = weekDays[6];
-  const isCurrentWeek = toDateStr(weekStart) === toDateStr(startOfWeek(today));
+const SPORT_FOCUS_DEFAULTS: Record<string, string[]> = {
+  'Bieganie': ['Cardio', 'Wytrzymałość', 'Nogi'],
+  'Wspinaczka': ['Przedramiona', 'Chwyt', 'Wytrzymałość'],
+  'Mobilność': ['Zakres ruchu', 'Stawy'],
+  'Rehabilitacja': ['Rehabilitacja', 'Stabilizacja'],
+};
+/** Text "work areas" shown alongside (running/rehab/mobility) or instead of (no exercises yet) the muscle map. */
+function focusAreasFor(template: WorkoutTemplate | null): string[] {
+  if (!template) return [];
+  if (template.focusAreas?.length) return template.focusAreas;
+  const base = SPORT_FOCUS_DEFAULTS[template.sportType] ?? [];
+  if ((template.sportType === 'Rehabilitacja' || template.sportType === 'Mobilność') && template.category) {
+    return [template.category, ...base];
+  }
+  return base;
+}
 
-  const monthFmt = (d: Date) => d.toLocaleDateString('pl-PL', { month: 'long' });
-  const rangeLabel = weekStart.getMonth() === weekEnd.getMonth()
-    ? `${weekStart.getDate()}-${weekEnd.getDate()} ${monthFmt(weekStart)} ${weekEnd.getFullYear()}`
-    : `${weekStart.getDate()} ${monthFmt(weekStart)} - ${weekEnd.getDate()} ${monthFmt(weekEnd)} ${weekEnd.getFullYear()}`;
+const SPORT_COVER_GRADIENT: Record<string, string> = {
+  'Siłownia': 'linear-gradient(135deg, rgba(224,42,139,.55), rgba(15,44,54,.94))',
+  'Bieganie': 'linear-gradient(135deg, rgba(61,168,255,.5), rgba(15,44,54,.94))',
+  'Wspinaczka': 'linear-gradient(135deg, rgba(245,182,66,.5), rgba(15,44,54,.94))',
+  'Mobilność': 'linear-gradient(135deg, rgba(45,216,158,.45), rgba(15,44,54,.94))',
+  'Rehabilitacja': 'linear-gradient(135deg, rgba(120,140,255,.45), rgba(15,44,54,.94))',
+};
+
+/** Cover photo for the "Dzisiejszy trening" hero — manual image wins, then an auto-fetched Pexels photo, then a generated gradient + icon when none is available/broken, so the layout never shows a broken-image icon. */
+function WorkoutCover({ sportType, image, focusAreas, category }: { sportType: string; image?: string; focusAreas?: string[]; category?: string }) {
+  const [broken, setBroken] = useState(false);
+  const resolvedImage = useWorkoutImage(sportType, focusAreas, category, image);
+  useEffect(() => { setBroken(false); }, [resolvedImage]);
+  if (!resolvedImage || broken) {
+    return (
+      <div className="sport-cover-fallback" style={{ background: SPORT_COVER_GRADIENT[sportType] ?? SPORT_COVER_GRADIENT['Siłownia'] }}>
+        <SportTileIcon label={sportType} kind="sport" size={64} />
+      </div>
+    );
+  }
+  return <img className="sport-cover" src={resolvedImage} alt="" onError={() => setBroken(true)} />;
+}
+
+interface ScheduleModalTarget { date: string; scheduled?: ScheduledWorkout }
+
+/** Add/edit a single scheduled-workout occurrence. Editing a row from a recurring cycle only ever touches that row — the cycle itself is only changed/removed via the explicit "cały cykl" actions. */
+function ScheduledWorkoutModal({ target, templates, onClose }: { target: ScheduleModalTarget | null; templates: WorkoutTemplate[]; onClose: () => void }) {
+  const { addScheduledWorkout, updateScheduledWorkout, deleteScheduledWorkout, deleteRecurrenceRule, recurrenceRules, sportCategories } = useLocalStore();
+  const editing = target?.scheduled ?? null;
+  const [templateId, setTemplateId] = useState('');
+  const [customName, setCustomName] = useState('');
+  const [date, setDate] = useState('');
+  const [categoryOverride, setCategoryOverride] = useState('');
+  const [confirmOne, setConfirmOne] = useState(false);
+  const [confirmCycle, setConfirmCycle] = useState(false);
+
+  useEffect(() => {
+    if (!target) return;
+    setTemplateId(editing?.templateId ?? templates[0]?.id ?? '');
+    setCustomName(editing?.customName ?? '');
+    setDate(editing?.date ?? target.date);
+    setCategoryOverride(editing?.type ?? '');
+  }, [target, editing, templates]);
+
+  const rule = editing?.recurrenceRuleId ? recurrenceRules.find((r) => r.id === editing.recurrenceRuleId) ?? null : null;
+  const selectedTemplate = templates.find((t) => t.id === templateId) ?? null;
+  const defaultCategory = selectedTemplate?.sportType ?? '';
+  const categoryNames = [...sportCategories].sort((a, b) => a.order - b.order).map((c) => c.name);
+
+  function save() {
+    const type = categoryOverride && categoryOverride !== defaultCategory ? categoryOverride : undefined;
+    if (!editing) {
+      addScheduledWorkout({ templateId: templateId || null, customName: customName.trim() || undefined, date, order: 0, status: 'planned', recurrenceRuleId: null, type });
+    } else {
+      updateScheduledWorkout(editing.id, { templateId: templateId || null, customName: customName.trim() || undefined, date, type });
+    }
+    onClose();
+  }
+  function removeOne() {
+    if (editing) deleteScheduledWorkout(editing.id);
+    setConfirmOne(false);
+    onClose();
+  }
+  function removeCycle() {
+    if (rule) deleteRecurrenceRule(rule.id, 'all');
+    setConfirmCycle(false);
+    onClose();
+  }
+
+  return (
+    <>
+      <Modal open={!!target} onClose={onClose} title={editing ? 'Edytuj trening' : 'Dodaj trening'} size="sm"
+        footer={<>
+          {editing && <button className="btn btn-secondary btn-sm" onClick={() => setConfirmOne(true)}>Usuń to wystąpienie</button>}
+          {rule && <button className="btn btn-secondary btn-sm" onClick={() => setConfirmCycle(true)}>Usuń cały cykl</button>}
+          <button className="btn btn-primary btn-sm" onClick={save}>Zapisz</button>
+        </>}>
+        <Field label="Szablon">
+          <select className="select" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+            <option value="">— bez szablonu —</option>
+            {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+          </select>
+        </Field>
+        <Field label="Własna nazwa (opcjonalnie)"><input className="input" value={customName} onChange={(e) => setCustomName(e.target.value)} placeholder="np. Szybki bieg regeneracyjny" /></Field>
+        <Field label="Data (przenieś na inny dzień, jeśli trzeba)"><input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
+        <Field label={`Kategoria sportu${defaultCategory ? ` (domyślnie: ${defaultCategory})` : ''}`}>
+          <select className="select" value={categoryOverride || defaultCategory} onChange={(e) => setCategoryOverride(e.target.value)}>
+            {categoryNames.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </Field>
+        {rule && <p style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 4 }}>Część cyklu: {describeRecurrence(rule)}. Zapis dotyczy tylko tego dnia.</p>}
+      </Modal>
+      <ConfirmDelete open={confirmOne} onClose={() => setConfirmOne(false)} onConfirm={removeOne} label="ten trening" />
+      <ConfirmDelete open={confirmCycle} onClose={() => setConfirmCycle(false)} onConfirm={removeCycle} label={rule ? `cały cykl (${describeRecurrence(rule)})` : 'cały cykl'} />
+    </>
+  );
+}
+
+function WeekStrip({ scheduledWorkouts, templates, sessions, selectedDate, selectedId, onSelect }: {
+  scheduledWorkouts: ScheduledWorkout[]; templates: WorkoutTemplate[]; sessions: WorkoutSession[];
+  selectedDate: string; selectedId: string | null; onSelect: (date: string, id: string) => void;
+}) {
+  const { ensureScheduleMaterialized } = useLocalStore();
+  const today = todayStr();
+  const [weekStart, setWeekStart] = useState(() => startOfWeekStr(today));
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDaysStr(weekStart, i));
+  const weekEnd = weekDays[6];
+  const isCurrentWeek = weekStart === startOfWeekStr(today);
+  const [editTarget, setEditTarget] = useState<ScheduleModalTarget | null>(null);
+
+  function shiftWeek(deltaWeeks: number) {
+    const next = addDaysStr(weekStart, deltaWeeks * 7);
+    setWeekStart(next);
+    ensureScheduleMaterialized(addDaysStr(next, 13));
+  }
+
+  const monthFmt = (s: string) => new Date(`${s}T12:00:00`).toLocaleDateString('pl-PL', { month: 'long' });
+  const rangeLabel = monthFmt(weekStart) === monthFmt(weekEnd)
+    ? `${parseInt(weekStart.slice(8), 10)}-${parseInt(weekEnd.slice(8), 10)} ${monthFmt(weekStart)} ${weekEnd.slice(0, 4)}`
+    : `${parseInt(weekStart.slice(8), 10)} ${monthFmt(weekStart)} - ${parseInt(weekEnd.slice(8), 10)} ${monthFmt(weekEnd)} ${weekEnd.slice(0, 4)}`;
 
   return (
     <div className="card">
@@ -387,16 +462,15 @@ function WeekStrip({ sessions, activeTemplates }: { sessions: WorkoutSession[]; 
         <span className="card-title">Podsumowanie tygodnia</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>{rangeLabel}</span>
-          <button className="icon-btn" onClick={() => setWeekStart((w) => addDays(w, -7))} aria-label="Poprzedni tydzień">‹</button>
-          {!isCurrentWeek && <button className="btn btn-secondary btn-sm" onClick={() => setWeekStart(startOfWeek(today))}>Dziś</button>}
-          <button className="icon-btn" onClick={() => setWeekStart((w) => addDays(w, 7))} aria-label="Następny tydzień">›</button>
+          <button className="icon-btn" onClick={() => shiftWeek(-1)} aria-label="Poprzedni tydzień">‹</button>
+          {!isCurrentWeek && <button className="btn btn-secondary btn-sm" onClick={() => setWeekStart(startOfWeekStr(today))}>Dziś</button>}
+          <button className="icon-btn" onClick={() => shiftWeek(1)} aria-label="Następny tydzień">›</button>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(120px, 1fr))', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
-        {weekDays.map((date) => {
-          const dateStr = toDateStr(date);
-          const isToday = dateStr === todayStr;
-          const dayItems = plannedWorkoutsForDate(date, activeTemplates, sessions);
+      <div className="sport-week-grid">
+        {weekDays.map((dateStr) => {
+          const isToday = dateStr === today;
+          const dayItems = workoutsForDate(dateStr, scheduledWorkouts, templates, sessions);
           return (
             <div key={dateStr} style={{
               borderRadius: 'var(--r-mid)', padding: '10px 8px', minHeight: 136,
@@ -407,129 +481,137 @@ function WeekStrip({ sessions, activeTemplates }: { sessions: WorkoutSession[]; 
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 700 }}>
-                  {date.toLocaleDateString('pl-PL', { weekday: 'short' })} {date.getDate()}
+                  {WEEKDAY_LABELS[weekdayOf(dateStr)]} {parseInt(dateStr.slice(8), 10)}
                 </span>
-                {isToday && <span className="badge badge-green" style={{ fontSize: 8 }}>Dziś</span>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {isToday && <span className="badge badge-green" style={{ fontSize: 8 }}>Dziś</span>}
+                  <button className="icon-btn" style={{ width: 20, height: 20, fontSize: 11 }} onClick={() => setEditTarget({ date: dateStr })} aria-label="Dodaj trening tego dnia">+</button>
+                </div>
               </div>
               {dayItems.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minHeight: 0 }}>
-                  {dayItems.map((item) => (
-                    <div key={item.key} style={{
-                      borderRadius: 10, padding: '8px 9px',
-                      background: item.done ? 'rgba(45,216,158,.11)' : 'rgba(255,255,255,.045)',
-                      border: `1px solid ${item.done ? 'rgba(45,216,158,.25)' : 'var(--border-soft)'}`,
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                        <SportTileIcon label={item.template.sportType} kind="sport" active={item.done} size={18} />
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.template.name}</div>
-                          <div style={{ fontSize: 10.5, color: 'var(--ink-3)', marginTop: 2 }}>
-                            {item.template.sportType} · {item.session?.duration ?? item.template.estimatedDuration} min
+                  {dayItems.map((item) => {
+                    const isSelected = selectedDate === dateStr && selectedId === item.scheduled.id;
+                    const done = item.scheduled.status === 'done';
+                    return (
+                      <button key={item.scheduled.id} type="button" onClick={() => onSelect(dateStr, item.scheduled.id)} style={{
+                        position: 'relative', textAlign: 'left', cursor: 'pointer', font: 'inherit', color: 'inherit',
+                        borderRadius: 10, padding: '8px 26px 8px 9px',
+                        background: done ? 'rgba(45,216,158,.11)' : 'rgba(255,255,255,.045)',
+                        border: `1px solid ${isSelected ? 'var(--acc)' : done ? 'rgba(45,216,158,.25)' : 'var(--border-soft)'}`,
+                      }}>
+                        <span
+                          role="button" tabIndex={0} aria-label="Edytuj trening"
+                          onClick={(e) => { e.stopPropagation(); setEditTarget({ date: dateStr, scheduled: item.scheduled }); }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setEditTarget({ date: dateStr, scheduled: item.scheduled }); } }}
+                          style={{ position: 'absolute', top: 4, right: 4, width: 18, height: 18, display: 'grid', placeItems: 'center', borderRadius: 6, color: 'var(--ink-3)', cursor: 'pointer' }}
+                        >⋯</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <SportTileIcon label={workoutDisplaySport(item)} kind="sport" active={done} size={18} />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{workoutDisplayName(item)}</div>
+                            <div style={{ fontSize: 10.5, color: 'var(--ink-3)', marginTop: 2 }}>
+                              {workoutDisplaySport(item)} · {item.session?.duration ?? item.template?.estimatedDuration ?? 0} min
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      {item.done && <span className="badge badge-green" style={{ marginTop: 6, alignSelf: 'flex-start', fontSize: 8.5 }}>✓ Zrobione</span>}
-                    </div>
-                  ))}
+                        {done && <span className="badge badge-green" style={{ marginTop: 6, alignSelf: 'flex-start', fontSize: 8.5 }}>✓ Zrobione</span>}
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'var(--ink-4)' }}>
-                  Odpoczynek
-                </div>
+                <button type="button" onClick={() => setEditTarget({ date: dateStr })} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'var(--ink-4)', background: 'none', border: 'none', cursor: 'pointer', font: 'inherit' }}>
+                  Odpoczynek · + dodaj
+                </button>
               )}
             </div>
           );
         })}
       </div>
+      <ScheduledWorkoutModal target={editTarget} templates={templates} onClose={() => setEditTarget(null)} />
     </div>
   );
 }
 
-function WeekStatsRow({ sessions }: { sessions: WorkoutSession[] }) {
-  const { current, deltaPct } = weekOverWeek(sessions);
-  function deltaLabel(pct: number | null) {
-    if (pct == null) return null;
-    const up = pct >= 0;
-    return <div style={{ fontSize: 10.5, color: up ? 'var(--success-ink)' : 'var(--danger-ink)', fontWeight: 700, marginTop: 4 }}>{up ? '▲' : '▼'} {Math.abs(pct)}% vs poprzedni tydzień</div>;
-  }
-  const boxes = [
-    { label: 'Czas treningu', value: `${Math.floor(current.minutes / 60)} h ${current.minutes % 60} min`, delta: deltaPct.minutes },
-    { label: 'Objętość', value: `${(current.volumeKg / 1000).toFixed(1)} t`, delta: deltaPct.volumeKg },
-    { label: 'Treningi', value: `${current.count}`, delta: deltaPct.count },
-    { label: 'Serie robocze', value: `${current.sets}`, delta: deltaPct.sets },
-    { label: 'Kalorie', value: `${Math.round(current.minutes * 10.5).toLocaleString('pl-PL')} kcal`, delta: deltaPct.minutes },
-  ];
-  return (
-    <div className="card">
-      <div className="card-head"><span className="card-title">Statystyki tygodnia</span></div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(118px, 1fr))', gap: 10, overflowX: 'auto', paddingBottom: 2 }}>
-        {boxes.map((b) => (
-          <div key={b.label} style={{ background: 'var(--surface-3)', border: '1px solid var(--border-soft)', borderRadius: 10, padding: '12px 13px', minHeight: 88 }}>
-            <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{b.label}</div>
-            <div style={{ fontWeight: 900, fontSize: 21, marginTop: 4 }}>{b.value}</div>
-            {deltaLabel(b.delta)}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+function SportToday({ onStartSession, onQuickAction }: { onStartSession: () => void; onQuickAction: (tab: string, sport?: SportKey) => void }) {
+  const { templates, sessions, scheduledWorkouts, startSession, exercises } = useLocalStore();
+  const [selectedDate, setSelectedDate] = useState(todayStr());
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
-function SportToday({ onStartSession }: { onStartSession: () => void; onQuickAction: (tab: string, sport?: SportKey) => void }) {
-  const { templates, sessions, startSession } = useLocalStore();
-  const activeTemplates = templates.filter((t) => t.isActive);
-  const todayPlans = plannedWorkoutsForDate(new Date(), activeTemplates, sessions);
-  const [todayIdx, setTodayIdx] = useState(0);
+  const dayItems = useMemo(() => workoutsForDate(selectedDate, scheduledWorkouts, templates, sessions), [selectedDate, scheduledWorkouts, templates, sessions]);
+  const dayKeyList = dayItems.map((d) => d.scheduled.id).join('|');
   useEffect(() => {
-    setTodayIdx(0);
-  }, [todayPlans.map((p) => p.key).join('|')]);
+    if (!dayItems.some((d) => d.scheduled.id === selectedId)) setSelectedId(dayItems[0]?.scheduled.id ?? null);
+  }, [dayKeyList, selectedId, dayItems]);
 
-  const selectedPlan = todayPlans.length > 0 ? todayPlans[((todayIdx % todayPlans.length) + todayPlans.length) % todayPlans.length] : null;
-  const selectedTemplate = selectedPlan?.template ?? null;
-  const stats = workoutMetricStats(selectedPlan);
-  const muscles = useMemo(() => templateMuscles(selectedTemplate), [selectedTemplate]);
+  const idx = dayItems.findIndex((d) => d.scheduled.id === selectedId);
+  const selected = idx >= 0 ? dayItems[idx] : null;
+  const selectedTemplate = selected?.template ?? null;
+  const stats = dayWorkoutStats(selected);
+  const muscles = useMemo(() => templateMuscles(selectedTemplate, exercises), [selectedTemplate, exercises]);
   const primaryMuscleKeys = primaryMuscles(muscles);
-  const photo = selectedTemplate ? templatePhoto(selectedTemplate) : TRAINING_PHOTOS.gym;
-  const trendSport = (selectedTemplate?.sportType ?? 'Siłownia') as SportKey;
+  const focusAreas = focusAreasFor(selectedTemplate);
+  // "Co dziś pracuje?" aggregates ALL of the day's workouts, not just the one in the carousel above.
+  const dayMuscles = useMemo(
+    () => mergeMuscleHighlights(dayItems.map((d) => templateMuscles(d.template, exercises))),
+    [dayItems, exercises],
+  );
+  const dayFocusAreas = useMemo(
+    () => mergeUniqueStrings(dayItems.map((d) => focusAreasFor(d.template))),
+    [dayItems],
+  );
+  const isToday = selectedDate === todayStr();
+
+  function cycle(delta: number) {
+    if (dayItems.length === 0) return;
+    const next = ((idx + delta) % dayItems.length + dayItems.length) % dayItems.length;
+    setSelectedId(dayItems[next].scheduled.id);
+  }
+  function handleSelectFromWeek(date: string, id: string) { setSelectedDate(date); setSelectedId(id); }
 
   function handleStart() {
-    if (!selectedTemplate) return;
+    if (!selected) return;
     startSession({
-      templateId: selectedTemplate.id,
-      templateName: selectedTemplate.name,
-      sportType: selectedTemplate.sportType,
+      templateId: selectedTemplate?.id,
+      templateName: workoutDisplayName(selected),
+      sportType: workoutDisplaySport(selected),
       currentExerciseIndex: 0,
-      exercises: selectedTemplate.exercises.map(e => ({ ...e, sets: e.sets.map(s => ({ ...s, completed: false })) })),
+      exercises: (selectedTemplate?.exercises ?? []).map(e => ({ ...e, sets: e.sets.map(s => ({ ...s, completed: false })) })),
+      scheduledWorkoutId: selected.scheduled.id,
     });
     onStartSession();
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2.35fr) minmax(260px, .85fr)', gap: 16, alignItems: 'stretch' }}>
-        <div className="card" style={{
-          position: 'relative', overflow: 'hidden', minHeight: 430, padding: 0,
-          backgroundImage: `linear-gradient(90deg, rgba(8,24,30,.96) 0%, rgba(8,24,30,.78) 42%, rgba(8,24,30,.25) 72%, rgba(8,24,30,.72) 100%), url("${photo}")`,
-          backgroundSize: 'cover', backgroundPosition: 'center',
-        }}>
+      <div className="sport-hero-grid">
+        <div className="card" style={{ position: 'relative', overflow: 'hidden', minHeight: 430, padding: 0 }}>
+          <WorkoutCover sportType={selected ? workoutDisplaySport(selected) : 'Siłownia'} image={selectedTemplate?.image} focusAreas={focusAreas} category={selectedTemplate?.category} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(8,24,30,.96) 0%, rgba(8,24,30,.8) 45%, rgba(8,24,30,.32) 74%, rgba(8,24,30,.74) 100%)' }} />
           <div style={{ position: 'absolute', inset: 0, border: '1px solid rgba(224,42,139,.22)', borderRadius: 'inherit', pointerEvents: 'none' }} />
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: 430, padding: 28 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 800, marginBottom: 12 }}>Dzisiejszy trening</div>
-                <h2 style={{ margin: 0, fontSize: 30, lineHeight: 1.08, color: 'var(--ink)', letterSpacing: 0 }}>{selectedTemplate?.name ?? 'Brak treningu'}</h2>
-                {selectedTemplate && <div className="badge" style={{ marginTop: 12, background: 'rgba(255,255,255,.08)', borderColor: 'rgba(255,255,255,.12)', display: 'inline-flex', alignItems: 'center', gap: 6 }}><SportTileIcon label={selectedTemplate.sportType} kind="sport" size={15} /> {selectedTemplate.sportType}</div>}
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 800, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  Dzisiejszy trening
+                  {!isToday && <span style={{ color: 'var(--ink-2)', fontWeight: 700, textTransform: 'none', letterSpacing: 0 }}>· {new Date(`${selectedDate}T12:00:00`).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long' })}</span>}
+                  {!isToday && <button className="btn btn-secondary btn-sm" onClick={() => setSelectedDate(todayStr())}>Wróć do dziś</button>}
+                </div>
+                <h2 style={{ margin: 0, fontSize: 30, lineHeight: 1.08, color: 'var(--ink)', letterSpacing: 0 }}>{selected ? workoutDisplayName(selected) : 'Brak treningu'}</h2>
+                {selected && <div className="badge" style={{ marginTop: 12, background: 'rgba(255,255,255,.08)', borderColor: 'rgba(255,255,255,.12)', display: 'inline-flex', alignItems: 'center', gap: 6 }}><SportTileIcon label={workoutDisplaySport(selected)} kind="sport" size={15} /> {workoutDisplaySport(selected)}</div>}
               </div>
-              {todayPlans.length > 1 && (
+              {dayItems.length > 1 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(6,19,24,.72)', border: '1px solid var(--border-soft)', borderRadius: 12, padding: 6 }}>
-                  <button className="icon-btn" onClick={() => setTodayIdx((i) => i - 1)} aria-label="Poprzedni trening">‹</button>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)' }}>{((todayIdx % todayPlans.length) + todayPlans.length) % todayPlans.length + 1}/{todayPlans.length}</span>
-                  <button className="icon-btn" onClick={() => setTodayIdx((i) => i + 1)} aria-label="Następny trening">›</button>
+                  <button className="icon-btn" onClick={() => cycle(-1)} aria-label="Poprzedni trening">‹</button>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-3)' }}>{idx + 1}/{dayItems.length}</span>
+                  <button className="icon-btn" onClick={() => cycle(1)} aria-label="Następny trening">›</button>
                 </div>
               )}
             </div>
 
-            {selectedTemplate && stats ? (
+            {selected && stats ? (
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(92px, 1fr))', maxWidth: 560, gap: 1, marginTop: 28, borderTop: '1px solid rgba(255,255,255,.08)', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
                   {[
@@ -545,7 +627,7 @@ function SportToday({ onStartSession }: { onStartSession: () => void; onQuickAct
                   ))}
                 </div>
                 <p style={{ maxWidth: 560, fontSize: 14, lineHeight: 1.65, color: 'var(--ink-2)', margin: '20px 0 0' }}>
-                  {selectedTemplate.description || selectedTemplate.goal || 'Trening zaplanowany na dziś. Przejdź przez sesję i zapisz wyniki do historii.'}
+                  {selectedTemplate?.description || selectedTemplate?.goal || 'Trening zaplanowany na ten dzień. Przejdź przez sesję i zapisz wyniki do historii.'}
                 </p>
                 {primaryMuscleKeys.length > 0 && (
                   <div style={{ marginTop: 22 }}>
@@ -557,12 +639,16 @@ function SportToday({ onStartSession }: { onStartSession: () => void; onQuickAct
                 )}
                 <div style={{ marginTop: 'auto', display: 'flex', gap: 10, alignItems: 'center', maxWidth: 430 }}>
                   <button className="btn btn-primary" style={{ flex: 1, minHeight: 50, fontSize: 15 }} onClick={handleStart}>▶ Rozpocznij sesję</button>
-                  {selectedPlan?.done && <span className="badge badge-green">✓ Zrobione</span>}
+                  {selected.scheduled.status === 'done' && <span className="badge badge-green">✓ Zrobione</span>}
                 </div>
               </>
             ) : (
-              <div style={{ marginTop: 24, maxWidth: 420 }}>
-                <EmptyState title="Brak aktywnego szablonu" desc="Dodaj aktywny szablon, żeby ekran Dzisiaj miał co zaplanować." />
+              <div style={{ marginTop: 24, maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <EmptyState title={isToday ? 'Brak treningu na dziś' : 'Brak treningu tego dnia'} desc="Dodaj trening albo zaplanuj cały tydzień z poziomu zakładki Planowanie." />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn-primary btn-sm" onClick={() => setShowAddModal(true)}>+ Dodaj trening</button>
+                  <button className="btn btn-secondary btn-sm" onClick={() => onQuickAction('planowanie')}>Zaplanuj tydzień</button>
+                </div>
               </div>
             )}
           </div>
@@ -570,31 +656,222 @@ function SportToday({ onStartSession }: { onStartSession: () => void; onQuickAct
 
         <div className="card" style={{ minHeight: 430, display: 'flex', flexDirection: 'column' }}>
           <div className="card-head"><span className="card-title">Co dziś pracuje?</span></div>
-          {Object.keys(muscles).length > 0 ? (
+          {dayItems.length === 0 ? (
+            <EmptyState title="Brak treningu" desc="Wybierz albo dodaj trening, żeby zobaczyć zaangażowane partie." />
+          ) : Object.keys(dayMuscles).length > 0 || dayFocusAreas.length > 0 ? (
             <>
-              <div style={{ flex: 1, display: 'grid', placeItems: 'center' }}>
-                <BodyMap highlight={muscles} size={118} />
-              </div>
-              <div style={{ display: 'flex', gap: 14, justifyContent: 'center', marginTop: 10, fontSize: 11, color: 'var(--ink-3)', flexWrap: 'wrap' }}>
-                <span><i style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: 'var(--acc)', marginRight: 4 }} />Główne partie</span>
-                <span><i style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: 'var(--acc-b)', marginRight: 4 }} />Dodatkowe partie</span>
-              </div>
+              {dayFocusAreas.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: Object.keys(dayMuscles).length > 0 ? 14 : 0 }}>
+                  {dayFocusAreas.map((a) => <span key={a} className="badge" style={{ fontSize: 11 }}>{a}</span>)}
+                </div>
+              )}
+              {Object.keys(dayMuscles).length > 0 && (
+                <>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                    {(Object.keys(dayMuscles) as MuscleKey[]).map((m) => <span key={m} className="badge" style={{ fontSize: 11 }}>{MUSCLE_LABEL[m]}</span>)}
+                  </div>
+                  <div style={{ flex: 1, display: 'grid', placeItems: 'center' }}>
+                    <BodyMap highlight={dayMuscles} size={118} />
+                  </div>
+                  <div style={{ display: 'flex', gap: 14, justifyContent: 'center', marginTop: 10, fontSize: 11, color: 'var(--ink-3)', flexWrap: 'wrap' }}>
+                    <span><i style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: 'var(--acc)', marginRight: 4 }} />Główne partie</span>
+                    <span><i style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: 'var(--acc-b)', marginRight: 4 }} />Dodatkowe partie</span>
+                  </div>
+                </>
+              )}
             </>
           ) : (
-            <EmptyState title="Brak danych o partiach" desc="Ten szablon nie ma jeszcze ćwiczeń z bazy." />
+            <EmptyState title="Brak danych o partiach" desc="Dodaj partie mięśniowe w ćwiczeniach lub szablonie." />
           )}
         </div>
       </div>
 
-      <WeekStrip sessions={sessions} activeTemplates={activeTemplates} />
+      <WeekStrip scheduledWorkouts={scheduledWorkouts} templates={templates} sessions={sessions} selectedDate={selectedDate} selectedId={selectedId} onSelect={handleSelectFromWeek} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(280px, .9fr)', gap: 16 }}>
-        <WeekStatsRow sessions={sessions} />
-        <div className="card">
-          <div className="card-head"><span className="card-title">Trend objętości</span></div>
-          <VolumeChart sessions={filterBySport(sessions, trendSport)} />
+      <ScheduledWorkoutModal target={showAddModal ? { date: selectedDate } : null} templates={templates} onClose={() => setShowAddModal(false)} />
+    </div>
+  );
+}
+
+const RECURRENCE_DURATION_PRESETS = [
+  { id: 'week', label: '1 tydzień' },
+  { id: 'month', label: '1 miesiąc' },
+  { id: 'weeks', label: 'N tygodni' },
+  { id: '3months', label: '3 miesiące' },
+  { id: 'indefinite', label: 'Bezterminowo' },
+] as const;
+type RecurrencePreset = typeof RECURRENCE_DURATION_PRESETS[number]['id'];
+
+function RecurrenceRuleModal({ open, onClose, templates, editing, defaultSportType }: { open: boolean; onClose: () => void; templates: WorkoutTemplate[]; editing: WorkoutRecurrenceRule | null; defaultSportType?: string }) {
+  const { addRecurrenceRule, updateRecurrenceRule } = useLocalStore();
+  const [templateId, setTemplateId] = useState('');
+  const [weekdays, setWeekdays] = useState<number[]>([]);
+  const [startDate, setStartDate] = useState(todayStr());
+  const [preset, setPreset] = useState<RecurrencePreset>('week');
+  const [weeksCount, setWeeksCount] = useState(4);
+  const [interval, setIntervalValue] = useState(1);
+
+  useEffect(() => {
+    if (!open) return;
+    const preferred = defaultSportType && defaultSportType !== 'Wszystko' ? templates.find((t) => t.sportType === defaultSportType)?.id : undefined;
+    setTemplateId(editing?.templateId ?? preferred ?? templates[0]?.id ?? '');
+    setWeekdays(editing?.weekdays ?? []);
+    setStartDate(editing?.startDate ?? todayStr());
+    setIntervalValue(editing?.interval ?? 1);
+    setPreset(editing ? (editing.isIndefinite ? 'indefinite' : 'month') : 'week');
+  }, [open, editing, templates, defaultSportType]);
+
+  function toggleDay(d: number) {
+    setWeekdays((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort((a, b) => a - b));
+  }
+
+  function computeRange(): { endDate: string | null; isIndefinite: boolean } {
+    if (preset === 'indefinite') return { endDate: null, isIndefinite: true };
+    const days = preset === 'week' ? 6 : preset === 'month' ? 29 : preset === '3months' ? 89 : Math.max(weeksCount, 1) * 7 - 1;
+    return { endDate: addDaysStr(startDate, days), isIndefinite: false };
+  }
+
+  function save() {
+    if (!templateId || weekdays.length === 0) return;
+    const { endDate, isIndefinite } = computeRange();
+    const payload = { templateId, startDate, endDate, isIndefinite, weekdays, frequency: 'weekly' as const, interval: Math.max(interval, 1) };
+    if (editing) updateRecurrenceRule(editing.id, payload);
+    else addRecurrenceRule(payload);
+    onClose();
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title={editing ? 'Edytuj cykl' : 'Nowy cykl treningowy'} size="md"
+      footer={<>
+        <button className="btn btn-secondary btn-sm" onClick={onClose}>Anuluj</button>
+        <button className="btn btn-primary btn-sm" onClick={save} disabled={!templateId || weekdays.length === 0}>Zapisz</button>
+      </>}>
+      <Field label="Szablon">
+        <select className="select" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+          {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+      </Field>
+      <Field label="Dni tygodnia">
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {WEEKDAY_LABELS.map((label, dIdx) => (
+            <button key={dIdx} type="button" className={`pill ${weekdays.includes(dIdx) ? 'accent' : ''}`} onClick={() => toggleDay(dIdx)}>{label}</button>
+          ))}
         </div>
+      </Field>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <Field label="Data startu"><input className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></Field>
+        <Field label="Co ile tygodni"><input className="input" type="number" min={1} value={interval} onChange={(e) => setIntervalValue(Math.max(1, +e.target.value))} /></Field>
       </div>
+      <Field label="Zakres">
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {RECURRENCE_DURATION_PRESETS.map((p) => <button key={p.id} type="button" className={`pill ${preset === p.id ? 'accent' : ''}`} onClick={() => setPreset(p.id)}>{p.label}</button>)}
+        </div>
+      </Field>
+      {preset === 'weeks' && <Field label="Liczba tygodni"><input className="input" type="number" min={1} value={weeksCount} onChange={(e) => setWeeksCount(Math.max(1, +e.target.value))} /></Field>}
+    </Modal>
+  );
+}
+
+/** Monday-first day order for display, indexing into WEEKDAY_LABELS (which is Sunday-first / JS Date convention). */
+const WEEK_DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
+function ruleSportType(rule: WorkoutRecurrenceRule, templates: WorkoutTemplate[]): string {
+  return templates.find((t) => t.id === rule.templateId)?.sportType ?? 'Inne';
+}
+
+/** A 7-day-wide view of which template trains on which weekday, for the active sport filter. */
+function WeeklyPattern({ rules, templates }: { rules: WorkoutRecurrenceRule[]; templates: WorkoutTemplate[] }) {
+  const byDay = useMemo(() => {
+    const map: Record<number, { name: string; sportType: string }[]> = {};
+    WEEK_DISPLAY_ORDER.forEach((d) => { map[d] = []; });
+    rules.forEach((r) => {
+      const template = templates.find((t) => t.id === r.templateId);
+      r.weekdays.forEach((d) => { map[d]?.push({ name: template?.name ?? 'Trening', sportType: template?.sportType ?? 'Inne' }); });
+    });
+    return map;
+  }, [rules, templates]);
+
+  return (
+    <div className="sport-week-grid">
+      {WEEK_DISPLAY_ORDER.map((d) => (
+        <div key={d} style={{ borderRadius: 'var(--r-mid)', padding: '10px 8px', minHeight: 88, border: '1px solid var(--border-soft)', background: 'var(--surface-inset)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 700 }}>{WEEKDAY_LABELS_LONG[d]}</span>
+          {byDay[d].length === 0
+            ? <span style={{ fontSize: 11, color: 'var(--ink-4)' }}>Odpoczynek</span>
+            : byDay[d].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 700 }}>
+                <SportTileIcon label={item.sportType} kind="sport" size={14} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+              </div>
+            ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SportPlanning() {
+  const { recurrenceRules, templates, deleteRecurrenceRule, clearSchedule } = useLocalStore();
+  const [sportFilter, setSportFilter] = useState<string | 'Wszystko'>('Wszystko');
+  const [showModal, setShowModal] = useState(false);
+  const [editingRule, setEditingRule] = useState<WorkoutRecurrenceRule | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<WorkoutRecurrenceRule | null>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+
+  function templateName(id: string) { return templates.find((t) => t.id === id)?.name ?? 'Nieznany szablon'; }
+  const filteredRules = sportFilter === 'Wszystko' ? recurrenceRules : recurrenceRules.filter((r) => ruleSportType(r, templates) === sportFilter);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <SportSelectorRow
+        active={sportFilter}
+        onSelect={setSportFilter}
+        countLabel={(s) => plCount((s === 'Wszystko' ? recurrenceRules : recurrenceRules.filter((r) => ruleSportType(r, templates) === s)).length, 'cykl', 'cykle', 'cykli')}
+      />
+
+      <div className="card">
+        <div className="card-head" style={{ flexWrap: 'wrap', gap: 8 }}>
+          <span className="card-title">Tygodniowy wzorzec{sportFilter !== 'Wszystko' ? ` · ${sportFilter}` : ''}</span>
+        </div>
+        <WeeklyPattern rules={filteredRules} templates={templates} />
+      </div>
+
+      <div className="card">
+        <div className="card-head" style={{ flexWrap: 'wrap', gap: 8 }}>
+          <span className="card-title">Cykle treningowe{sportFilter !== 'Wszystko' ? ` · ${sportFilter}` : ''}</span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {recurrenceRules.length > 0 && <button className="btn btn-secondary btn-sm" onClick={() => setConfirmClear(true)}>Wyczyść kalendarz</button>}
+            <button className="btn btn-primary btn-sm" onClick={() => { setEditingRule(null); setShowModal(true); }}>+ Nowy cykl</button>
+          </div>
+        </div>
+        <p style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: -6, marginBottom: 14 }}>
+          Zaplanuj trening na tydzień, miesiąc, kilka tygodni, trzy miesiące albo bezterminowo — wybierz dni tygodnia i zakres, a kalendarz wypełni się automatycznie.
+        </p>
+        {filteredRules.length === 0 ? (
+          <EmptyState
+            title="Brak zaplanowanych cykli"
+            desc={sportFilter === 'Wszystko' ? 'Stwórz cykl, np. „Trening A w środy i piątki co tydzień".' : `Brak cykli dla: ${sportFilter}.`}
+            cta="+ Nowy cykl" onCta={() => setShowModal(true)}
+          />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {filteredRules.map((r) => (
+              <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: 'var(--surface-inset)', border: '1px solid var(--border-soft)' }}>
+                <SportTileIcon label={ruleSportType(r, templates)} kind="sport" size={22} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 800, fontSize: 13.5 }}>{templateName(r.templateId)}</div>
+                  <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginTop: 2 }}>{describeRecurrence(r)}</div>
+                </div>
+                <button className="btn btn-secondary btn-sm" onClick={() => { setEditingRule(r); setShowModal(true); }}>Edytuj</button>
+                <button className="icon-btn" onClick={() => setDeleteTarget(r)}><IcoTrash /></button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <RecurrenceRuleModal open={showModal} onClose={() => setShowModal(false)} templates={templates} editing={editingRule} defaultSportType={sportFilter} />
+      <ConfirmDelete open={!!deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={() => { if (deleteTarget) deleteRecurrenceRule(deleteTarget.id, 'all'); setDeleteTarget(null); }} label={`cykl "${deleteTarget ? templateName(deleteTarget.templateId) : ''}"`} />
+      <ConfirmDelete open={confirmClear} onClose={() => setConfirmClear(false)} onConfirm={() => { clearSchedule(); setConfirmClear(false); }} label="cały zaplanowany kalendarz i wszystkie cykle (historia treningów zostaje)" />
     </div>
   );
 }
@@ -615,106 +892,23 @@ function durationBucket(min: number): 'short' | 'mid' | 'long' {
 
 type TemplateSort = 'recent' | 'name' | 'duration';
 
-const CUSTOM_SPORTS_KEY = 'rootine.customSports';
-const CUSTOM_TEMPLATE_CATEGORIES_KEY = 'rootine.customTemplateCategories';
-const HIDDEN_TEMPLATE_SPORTS_KEY = 'rootine.hiddenTemplateSports';
 const SYSTEM_ALL_CATEGORY = 'Wszystko';
 
 type TemplateCategoryFilter =
   | { id: 'all'; label: 'Wszystko'; kind: 'all'; value: 'Wszystko'; editable: false }
-  | { id: string; label: string; kind: 'sport' | 'category'; value: string; editable: boolean };
-
-function categoryOptionsForSport(sport: string, customCategories: string[] = []): string[] {
-  const base = sport in TEMPLATE_CATEGORIES ? TEMPLATE_CATEGORIES[sport as SportKey] : [];
-  const merged = [...base, ...customCategories];
-  return merged.length > 0 ? [...new Set(merged)] : ['Ogólne'];
-}
-
-function useCustomSports() {
-  const [customSports, setCustomSports] = useState<string[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(CUSTOM_SPORTS_KEY) ?? '[]') as string[];
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem(CUSTOM_SPORTS_KEY, JSON.stringify(customSports));
-  }, [customSports]);
-
-  function addCustomSport(name: string) {
-    const clean = name.trim();
-    if (!clean) return;
-    setCustomSports((prev) => prev.some((s) => s.toLowerCase() === clean.toLowerCase()) ? prev : [...prev, clean]);
-  }
-
-  function removeCustomSport(name: string) {
-    setCustomSports((prev) => prev.filter((s) => s !== name));
-  }
-
-  function renameCustomSport(oldName: string, newName: string) {
-    const clean = newName.trim();
-    if (!clean) return;
-    setCustomSports((prev) => prev.map((s) => s === oldName ? clean : s));
-  }
-
-  return { customSports, addCustomSport, removeCustomSport, renameCustomSport };
-}
-
-function useCustomTemplateCategories() {
-  const [customTemplateCategories, setCustomTemplateCategories] = useState<string[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(CUSTOM_TEMPLATE_CATEGORIES_KEY) ?? '[]') as string[];
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem(CUSTOM_TEMPLATE_CATEGORIES_KEY, JSON.stringify(customTemplateCategories));
-  }, [customTemplateCategories]);
-
-  function addCustomTemplateCategory(name: string) {
-    const clean = name.trim();
-    if (!clean || clean.toLowerCase() === SYSTEM_ALL_CATEGORY.toLowerCase()) return;
-    setCustomTemplateCategories((prev) => prev.some((c) => c.toLowerCase() === clean.toLowerCase()) ? prev : [...prev, clean]);
-  }
-
-  function removeCustomTemplateCategory(name: string) {
-    setCustomTemplateCategories((prev) => prev.filter((c) => c !== name));
-  }
-
-  function renameCustomTemplateCategory(oldName: string, newName: string) {
-    const clean = newName.trim();
-    if (!clean || clean.toLowerCase() === SYSTEM_ALL_CATEGORY.toLowerCase()) return;
-    setCustomTemplateCategories((prev) => prev.map((c) => c === oldName ? clean : c));
-  }
-
-  return { customTemplateCategories, addCustomTemplateCategory, removeCustomTemplateCategory, renameCustomTemplateCategory };
-}
+  | { id: string; label: string; kind: 'sport'; value: string; editable: boolean; showFeelingsPrompt: boolean };
 
 function countForCategoryFilter(filter: TemplateCategoryFilter, templates: WorkoutTemplate[]) {
   if (filter.kind === 'all') return templates.length;
-  if (filter.kind === 'sport') return templates.filter((t) => t.sportType === filter.value).length;
-  return templates.filter((t) => t.category === filter.value).length;
+  return templates.filter((t) => t.sportType === filter.value).length;
 }
 
 function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: { sportFilter: string | 'Wszystko'; onSportFilterChange: (s: string | 'Wszystko') => void; onStartTemplate: (t: WorkoutTemplate) => void }) {
-  const { templates, addTemplate, updateTemplate, deleteTemplate, exercises } = useLocalStore();
-  const { customSports, addCustomSport, removeCustomSport, renameCustomSport } = useCustomSports();
-  const { customTemplateCategories, addCustomTemplateCategory, removeCustomTemplateCategory, renameCustomTemplateCategory } = useCustomTemplateCategories();
-  const [hiddenTemplateSports, setHiddenTemplateSports] = useState<string[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(HIDDEN_TEMPLATE_SPORTS_KEY) ?? '[]') as string[];
-    } catch {
-      return [];
-    }
-  });
+  const { templates, addTemplate, updateTemplate, deleteTemplate, exercises, sportCategories, addSportCategory, renameSportCategory, deleteSportCategory, setSportCategorySettings } = useLocalStore();
   const [showAdd, setShowAdd] = useState(false);
   const [categoryEditor, setCategoryEditor] = useState<{ mode: 'add' | 'edit'; filter?: TemplateCategoryFilter } | null>(null);
   const [categoryName, setCategoryName] = useState('');
-  const [categoryKind, setCategoryKind] = useState<'sport' | 'category'>('category');
+  const [categoryFeelingsPrompt, setCategoryFeelingsPrompt] = useState(true);
   const [deleteCategory, setDeleteCategory] = useState<TemplateCategoryFilter | null>(null);
   const [sportError, setSportError] = useState('');
   const [editId, setEditId] = useState<string | null>(null);
@@ -724,39 +918,26 @@ function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: {
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<TemplateSort>('recent');
 
-  useEffect(() => {
-    localStorage.setItem(HIDDEN_TEMPLATE_SPORTS_KEY, JSON.stringify(hiddenTemplateSports));
-  }, [hiddenTemplateSports]);
-
-  const sportNames = [
-    ...SPORTS.map((s) => s.key).filter((sport) => !hiddenTemplateSports.includes(sport)),
-    ...customSports,
-    ...templates.map((t) => t.sportType).filter((sport) => !hiddenTemplateSports.includes(sport) && !SPORTS.some((s) => s.key === sport)),
-  ];
-  const sportOptions = [...new Set(sportNames)];
-  const templateSportOptions = sportOptions.length > 0 ? sportOptions : ['Ogólne'];
-  const templateCategoryNames = [...new Set([
-    ...customTemplateCategories,
-    ...templates.map((t) => t.category).filter((c): c is string => !!c && c !== SYSTEM_ALL_CATEGORY),
-  ])];
+  const sortedCategories = [...sportCategories].sort((a, b) => a.order - b.order);
+  const templateSportOptions = sortedCategories.length > 0 ? sortedCategories.map((c) => c.name) : ['Ogólne'];
   const categoryFilters: TemplateCategoryFilter[] = [
     { id: 'all', label: SYSTEM_ALL_CATEGORY, kind: 'all', value: SYSTEM_ALL_CATEGORY, editable: false },
-    ...sportOptions.map((sport) => ({ id: `sport:${sport}`, label: sport, kind: 'sport' as const, value: sport, editable: true })),
-    ...templateCategoryNames.map((category) => ({ id: `category:${category}`, label: category, kind: 'category' as const, value: category, editable: true })),
+    ...sortedCategories.map((c) => ({ id: c.id, label: c.name, kind: 'sport' as const, value: c.name, editable: true, showFeelingsPrompt: c.showFeelingsPrompt })),
   ];
   const activeCategory = categoryFilters.find((f) => f.id === activeCategoryId) ?? categoryFilters[0];
   const editingTemplate = templates.find(t => t.id === editId) ?? null;
 
   useEffect(() => {
-    if (sportFilter !== 'Wszystko') setActiveCategoryId(`sport:${sportFilter}`);
+    if (sportFilter === 'Wszystko') return;
+    const match = categoryFilters.find((f) => f.kind === 'sport' && f.value === sportFilter);
+    if (match) setActiveCategoryId(match.id);
   }, [sportFilter]);
 
   useEffect(() => {
     if (!editId && templates.length > 0) {
       const first = templates.find((t) => {
         if (activeCategory.kind === 'all') return true;
-        if (activeCategory.kind === 'sport') return t.sportType === activeCategory.value;
-        return t.category === activeCategory.value;
+        return t.sportType === activeCategory.value;
       }) ?? templates[0];
       setEditId(first.id);
     }
@@ -764,13 +945,12 @@ function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: {
 
   const filtered = templates.filter((t) => {
     if (activeCategory.kind === 'sport' && t.sportType !== activeCategory.value) return false;
-    if (activeCategory.kind === 'category' && t.category !== activeCategory.value) return false;
     if (query.trim() && !t.name.toLowerCase().includes(query.trim().toLowerCase())) return false;
     if (filters.level !== 'any' && t.level !== filters.level) return false;
     if (filters.duration !== 'any' && durationBucket(t.estimatedDuration) !== filters.duration) return false;
     if (filters.equipment !== 'any' && !(t.equipmentTags ?? []).includes(filters.equipment)) return false;
     if (filters.muscle !== 'any') {
-      const tplMuscles = templateMuscles(t);
+      const tplMuscles = templateMuscles(t, exercises);
       if (!tplMuscles[filters.muscle]) return false;
     }
     return true;
@@ -786,19 +966,15 @@ function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: {
     setActiveCategoryId(filter.id);
     onSportFilterChange(filter.kind === 'sport' ? filter.value : SYSTEM_ALL_CATEGORY);
     setFilters(DEFAULT_FILTERS);
-    const first = templates.find((t) => {
-      if (filter.kind === 'all') return true;
-      if (filter.kind === 'sport') return t.sportType === filter.value;
-      return t.category === filter.value;
-    });
+    const first = templates.find((t) => filter.kind === 'all' || t.sportType === filter.value);
     setEditId(first?.id ?? null);
   }
 
-  function openCategoryEditor(mode: 'add' | 'edit', filter?: TemplateCategoryFilter, kind: 'sport' | 'category' = 'category') {
+  function openCategoryEditor(mode: 'add' | 'edit', filter?: TemplateCategoryFilter) {
     if (filter?.kind === 'all') return;
     setCategoryEditor({ mode, filter });
     setCategoryName(mode === 'edit' && filter ? filter.label : '');
-    setCategoryKind(filter?.kind === 'sport' || filter?.kind === 'category' ? filter.kind : kind);
+    setCategoryFeelingsPrompt(mode === 'edit' && filter ? filter.showFeelingsPrompt : true);
     setSportError('');
   }
 
@@ -806,41 +982,28 @@ function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: {
     const clean = categoryName.trim();
     if (!clean) return;
     if (clean.toLowerCase() === SYSTEM_ALL_CATEGORY.toLowerCase()) {
-      setSportError('Wszystko jest kategorią systemową i nie można jej nadpisać.');
+      setSportError('Wszystko jest wartością systemową i nie można jej nadpisać.');
       return;
     }
     const current = categoryEditor?.filter;
     const duplicate = categoryFilters.some((filter) => filter.id !== current?.id && filter.label.toLowerCase() === clean.toLowerCase());
     if (duplicate) {
-      setSportError('Taka kategoria już istnieje.');
+      setSportError('Taki sport już istnieje.');
       return;
     }
 
     if (categoryEditor?.mode === 'edit' && current) {
-      if (current.kind === 'sport') {
-        if (customSports.includes(current.value)) renameCustomSport(current.value, clean);
-        else {
-          addCustomSport(clean);
-          setHiddenTemplateSports((prev) => prev.includes(current.value) ? prev : [...prev, current.value]);
-        }
-        templates.filter((t) => t.sportType === current.value).forEach((template) => updateTemplate(template.id, { sportType: clean }));
-        setActiveCategoryId(`sport:${clean}`);
-        onSportFilterChange(clean);
-      } else if (current.kind === 'category') {
-        if (customTemplateCategories.includes(current.value)) renameCustomTemplateCategory(current.value, clean);
-        else addCustomTemplateCategory(clean);
-        templates.filter((t) => t.category === current.value).forEach((template) => updateTemplate(template.id, { category: clean }));
-        setActiveCategoryId(`category:${clean}`);
-        onSportFilterChange(SYSTEM_ALL_CATEGORY);
-      }
-    } else if (categoryKind === 'sport') {
-      addCustomSport(clean);
-      setActiveCategoryId(`sport:${clean}`);
+      renameSportCategory(current.id, clean);
+      setSportCategorySettings(current.id, { showFeelingsPrompt: categoryFeelingsPrompt });
+      setActiveCategoryId(current.id);
       onSportFilterChange(clean);
     } else {
-      addCustomTemplateCategory(clean);
-      setActiveCategoryId(`category:${clean}`);
-      onSportFilterChange(SYSTEM_ALL_CATEGORY);
+      const created = addSportCategory(clean);
+      if (created) {
+        setSportCategorySettings(created.id, { showFeelingsPrompt: categoryFeelingsPrompt });
+        setActiveCategoryId(created.id);
+        onSportFilterChange(clean);
+      }
     }
 
     setCategoryName('');
@@ -850,15 +1013,9 @@ function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: {
 
   function handleConfirmDeleteCategory() {
     if (!deleteCategory || deleteCategory.kind === 'all') return;
-    if (deleteCategory.kind === 'sport') {
-      const fallbackSport = templateSportOptions.find((sport) => sport !== deleteCategory.value) ?? 'Ogólne';
-      templates.filter((t) => t.sportType === deleteCategory.value).forEach((template) => updateTemplate(template.id, { sportType: fallbackSport }));
-      if (customSports.includes(deleteCategory.value)) removeCustomSport(deleteCategory.value);
-      else setHiddenTemplateSports((prev) => prev.includes(deleteCategory.value) ? prev : [...prev, deleteCategory.value]);
-    } else {
-      templates.filter((t) => t.category === deleteCategory.value).forEach((template) => updateTemplate(template.id, { category: 'Ogólne' }));
-      removeCustomTemplateCategory(deleteCategory.value);
-    }
+    const fallback = categoryFilters.find((f) => f.kind === 'sport' && f.id !== deleteCategory.id);
+    if (!fallback) return;
+    deleteSportCategory(deleteCategory.id, fallback.id);
     setActiveCategoryId('all');
     onSportFilterChange(SYSTEM_ALL_CATEGORY);
     setDeleteCategory(null);
@@ -868,14 +1025,14 @@ function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div className="card" style={{ padding: 12 }}>
         <div className="card-head" style={{ marginBottom: 10 }}>
-          <span className="card-title">Kategorie</span>
-          <button className="btn btn-secondary btn-sm" onClick={() => openCategoryEditor('add')}>+ Dodaj kategorię</button>
+          <span className="card-title">Sporty</span>
+          <button className="btn btn-secondary btn-sm" onClick={() => openCategoryEditor('add')}>+ Dodaj sport</button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(132px, 1fr))', gap: 10 }}>
           {categoryFilters.map((filter) => {
             const isActive = activeCategory.id === filter.id;
             const count = countForCategoryFilter(filter, templates);
-            const canEdit = filter.kind === 'category' || filter.editable;
+            const canEdit = filter.editable;
             return (
               <div key={filter.id} role="button" tabIndex={0} className="sport-select-card" onClick={() => selectCategory(filter)} onKeyDown={(e) => { if (e.key === 'Enter') selectCategory(filter); }} style={{
                 minHeight: 98, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 7,
@@ -887,8 +1044,8 @@ function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: {
               }}>
                 {canEdit && (
                   <div style={{ position: 'absolute', top: 7, right: 7, display: 'flex', gap: 4 }}>
-                    <button className="icon-btn" style={{ width: 24, height: 24, fontSize: 11 }} onClick={(e) => { e.stopPropagation(); openCategoryEditor('edit', filter); }} aria-label={`Zmień nazwę kategorii ${filter.label}`}>✎</button>
-                    <button className="icon-btn" style={{ width: 24, height: 24, fontSize: 13 }} onClick={(e) => { e.stopPropagation(); setDeleteCategory(filter); }} aria-label={`Usuń kategorię ${filter.label}`}>×</button>
+                    <button className="icon-btn" style={{ width: 24, height: 24, fontSize: 11 }} onClick={(e) => { e.stopPropagation(); openCategoryEditor('edit', filter); }} aria-label={`Zmień nazwę sportu ${filter.label}`}>✎</button>
+                    <button className="icon-btn" style={{ width: 24, height: 24, fontSize: 13 }} onClick={(e) => { e.stopPropagation(); setDeleteCategory(filter); }} aria-label={`Usuń sport ${filter.label}`}>×</button>
                   </div>
                 )}
                 <SportTileIcon label={filter.label} kind={filter.kind === 'all' ? 'all' : filter.kind} active={isActive} size={34} />
@@ -900,7 +1057,7 @@ function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: {
         </div>
         {sportError && <div style={{ marginTop: 10, fontSize: 12, color: 'var(--danger-ink)' }}>{sportError}</div>}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 380px) minmax(0, 1fr)', gap: 16, alignItems: 'start' }}>
+      <div className="sport-templates-grid" style={{ gap: 16, alignItems: 'start' }}>
         <div className="card" style={{ minHeight: 720 }}>
           <div className="card-head"><span className="card-title">Szablony</span></div>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
@@ -953,34 +1110,30 @@ function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: {
         </div>
 
         {selectedTemplate
-          ? <TemplateDetail template={selectedTemplate} catalogExercises={exercises} sportOptions={templateSportOptions} customTemplateCategories={customTemplateCategories} onUpdate={p => updateTemplate(selectedTemplate.id, p)} onStart={() => onStartTemplate(selectedTemplate)} />
+          ? <TemplateDetail template={selectedTemplate} catalogExercises={exercises} sportOptions={templateSportOptions} onUpdate={p => updateTemplate(selectedTemplate.id, p)} onStart={() => onStartTemplate(selectedTemplate)} />
           : <div className="card" style={{ display:'flex', alignItems:'center', justifyContent:'center', minHeight:420 }}>
               <EmptyState title="Wybierz szablon" desc="Kliknij szablon po lewej albo dodaj nowy." />
             </div>
         }
       </div>
 
-      <AddTemplateModal open={showAdd} onClose={() => setShowAdd(false)} defaultSport={activeCategory.kind === 'sport' ? activeCategory.value : templateSportOptions[0]} sportOptions={templateSportOptions} customTemplateCategories={customTemplateCategories}
+      <AddTemplateModal open={showAdd} onClose={() => setShowAdd(false)} defaultSport={activeCategory.kind === 'sport' ? activeCategory.value : templateSportOptions[0]} sportOptions={templateSportOptions}
         onSave={data => { addTemplate(data); setShowAdd(false); setEditId(null); }} />
       <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)}
         onConfirm={() => { deleteTemplate(deleteId!); setEditId(null); setDeleteId(null); }} label="ten szablon" />
       <ConfirmDelete open={!!deleteCategory} onClose={() => setDeleteCategory(null)}
-        onConfirm={handleConfirmDeleteCategory} label={`kategorię "${deleteCategory?.label ?? ''}"`} />
-      <Modal open={!!categoryEditor} onClose={() => { setCategoryEditor(null); setCategoryName(''); setSportError(''); }} title={categoryEditor?.mode === 'edit' ? 'Zmień nazwę kategorii' : 'Nowa kategoria'}
+        onConfirm={handleConfirmDeleteCategory} label={`sport "${deleteCategory?.label ?? ''}"`} />
+      <Modal open={!!categoryEditor} onClose={() => { setCategoryEditor(null); setCategoryName(''); setSportError(''); }} title={categoryEditor?.mode === 'edit' ? 'Zmień nazwę sportu' : 'Nowy sport'}
         footer={<>
           <button className="btn btn-secondary btn-sm" onClick={() => setCategoryEditor(null)}>Anuluj</button>
           <button className="btn btn-primary btn-sm" onClick={handleSaveCategory}>{categoryEditor?.mode === 'edit' ? 'Zapisz' : 'Dodaj'}</button>
         </>}
       >
-        {categoryEditor?.mode !== 'edit' && (
-          <Field label="Typ kategorii">
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" className={`pill ${categoryKind === 'category' ? 'accent' : ''}`} onClick={() => setCategoryKind('category')}>Typ treningu</button>
-              <button type="button" className={`pill ${categoryKind === 'sport' ? 'accent' : ''}`} onClick={() => setCategoryKind('sport')}>Sport</button>
-            </div>
-          </Field>
-        )}
-        <Field label="Nazwa" required><input className="input" value={categoryName} onChange={(e) => setCategoryName(e.target.value)} placeholder={categoryKind === 'sport' ? 'Np. Pływanie' : 'Np. Push siłowy'} autoFocus /></Field>
+        <Field label="Nazwa" required><input className="input" value={categoryName} onChange={(e) => setCategoryName(e.target.value)} placeholder="Np. Pływanie" autoFocus /></Field>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginTop: 8, cursor: 'pointer' }}>
+          <input type="checkbox" checked={categoryFeelingsPrompt} onChange={(e) => setCategoryFeelingsPrompt(e.target.checked)} />
+          Pokaż formularz odczuć po zakończeniu sesji
+        </label>
       </Modal>
     </div>
   );
@@ -995,20 +1148,145 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TemplateDetail({ template, catalogExercises, sportOptions, customTemplateCategories, onUpdate, onStart }: { template: WorkoutTemplate; catalogExercises: SportExercise[]; sportOptions: string[]; customTemplateCategories: string[]; onUpdate: (p: Partial<WorkoutTemplate>) => void; onStart: () => void }) {
-  const [pickerId, setPickerId] = useState('');
-  const muscles = templateMuscles(template);
-  const stats = templateStats(template);
-  const sportExercises = EXERCISE_CATALOG.filter((e) => e.sport === template.sportType);
-  const categoryOptions = categoryOptionsForSport(template.sportType, customTemplateCategories);
+function TemplateSettingsModal({ open, onClose, template, sportOptions, onUpdate }: { open: boolean; onClose: () => void; template: WorkoutTemplate; sportOptions: string[]; onUpdate: (p: Partial<WorkoutTemplate>) => void }) {
+  const [name, setName] = useState('');
+  const [sportType, setSportType] = useState('');
+  const [duration, setDuration] = useState(60);
+  const [goal, setGoal] = useState('');
+  const [desc, setDesc] = useState('');
+  const [equipment, setEquipment] = useState('');
+  const [image, setImage] = useState('');
 
-  function addExerciseToTemplate() {
-    const def = findExercise(pickerId) ?? catalogExercises.find((e) => e.id === pickerId);
-    if (!def) return;
-    const exerciseName = 'name' in def ? def.name : '';
+  useEffect(() => {
+    if (!open) return;
+    setName(template.name);
+    setSportType(template.sportType);
+    setDuration(template.estimatedDuration);
+    setGoal(template.goal ?? '');
+    setDesc(template.description ?? '');
+    setEquipment((template.equipmentTags ?? []).join(', '));
+    setImage(template.image ?? '');
+  }, [open, template]);
+
+  function save() {
+    if (!name.trim()) return;
+    onUpdate({
+      name: name.trim(), sportType, estimatedDuration: duration, goal, description: desc,
+      equipmentTags: equipment.split(',').map((x) => x.trim()).filter(Boolean),
+      image: image.trim() || undefined,
+    });
+    onClose();
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="Ustawienia szablonu" size="md"
+      footer={<>
+        <button className="btn btn-secondary btn-sm" onClick={onClose}>Anuluj</button>
+        <button className="btn btn-primary btn-sm" onClick={save} disabled={!name.trim()}>Zapisz</button>
+      </>}>
+      <Field label="Nazwa" required><input className="input" value={name} onChange={(e) => setName(e.target.value)} /></Field>
+      <div className="form-grid">
+        <Field label="Sport"><select className="select" value={sportType} onChange={(e) => setSportType(e.target.value)}>
+          {sportOptions.map((sport) => <option key={sport} value={sport}>{sport}</option>)}
+        </select></Field>
+        <Field label={`Czas: ${duration} min`}><input type="range" min={5} max={180} step={5} value={duration} onChange={(e) => setDuration(+e.target.value)} style={{ width: '100%' }} /></Field>
+      </div>
+      <Field label="Cel"><input className="input" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="Np. Hipertrofia klatki i barków" /></Field>
+      <Field label="Opis"><textarea className="textarea" value={desc} onChange={(e) => setDesc(e.target.value)} rows={2} /></Field>
+      <Field label="Zdjęcie treningu (URL, opcjonalnie)"><input className="input" value={image} onChange={(e) => setImage(e.target.value)} placeholder="Wklej link do zdjęcia — w innym wypadku dobierzemy je automatycznie" /></Field>
+      <Field label="Sprzęt (oddziel przecinkami)"><input className="input" value={equipment} onChange={(e) => setEquipment(e.target.value)} /></Field>
+    </Modal>
+  );
+}
+
+function ExercisePickerModal({ open, onClose, sportType, catalogExercises, onPick }: { open: boolean; onClose: () => void; sportType: string; catalogExercises: SportExercise[]; onPick: (ex: SportExercise) => void }) {
+  const { addExercise } = useLocalStore();
+  const [query, setQuery] = useState('');
+  const [showNew, setShowNew] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newMuscle, setNewMuscle] = useState('');
+  const [newEquipment, setNewEquipment] = useState('');
+
+  useEffect(() => {
+    if (!open) { setQuery(''); setShowNew(false); setNewName(''); setNewMuscle(''); setNewEquipment(''); }
+  }, [open]);
+
+  const results = catalogExercises.filter((e) => e.sportType === sportType && (!query.trim() || e.name.toLowerCase().includes(query.trim().toLowerCase())));
+
+  function saveNew() {
+    if (!newName.trim()) return;
+    const created = addExercise({ name: newName.trim(), sportType, muscleGroup: newMuscle.trim(), equipment: newEquipment.trim(), notes: '' });
+    onPick(created);
+    setNewName(''); setNewMuscle(''); setNewEquipment(''); setShowNew(false);
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="Wybierz ćwiczenie" size="md" footer={<button className="btn btn-secondary btn-sm" onClick={onClose}>Zamknij</button>}>
+      <input className="input" placeholder="Szukaj ćwiczenia..." value={query} onChange={(e) => setQuery(e.target.value)} autoFocus />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12, maxHeight: 300, overflowY: 'auto' }}>
+        {results.length === 0 && <EmptyState title="Brak wyników" desc={`Nie znaleziono ćwiczenia w bazie (${sportType}). Dodaj nowe poniżej.`} />}
+        {results.map((e) => (
+          <button key={e.id} type="button" className="template-row" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 9, border: '1px solid var(--border-soft)', background: 'var(--surface-inset)', textAlign: 'left', cursor: 'pointer', color: 'var(--ink)' }} onClick={() => onPick(e)}>
+            <span style={{ flex: 1, fontWeight: 700, fontSize: 13, color: 'var(--ink)' }}>{e.name}</span>
+            {e.muscleGroup && <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{e.muscleGroup}</span>}
+          </button>
+        ))}
+      </div>
+      <div style={{ marginTop: 14, borderTop: '1px solid var(--border-soft)', paddingTop: 14 }}>
+        {!showNew ? (
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowNew(true)}>+ Nowe ćwiczenie</button>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <Field label="Nazwa" required><input className="input" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Np. Przysiad bułgarski" autoFocus /></Field>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <Field label="Partia mięśniowa"><input className="input" value={newMuscle} onChange={(e) => setNewMuscle(e.target.value)} /></Field>
+              <Field label="Sprzęt"><input className="input" value={newEquipment} onChange={(e) => setNewEquipment(e.target.value)} /></Field>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className="btn btn-secondary btn-sm" onClick={() => setShowNew(false)}>Anuluj</button>
+              <button className="btn btn-primary btn-sm" onClick={saveNew} disabled={!newName.trim()}>Zapisz i dodaj</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+function num(value: string, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function TemplateDetail({ template, catalogExercises, sportOptions, onUpdate, onStart }: { template: WorkoutTemplate; catalogExercises: SportExercise[]; sportOptions: string[]; onUpdate: (p: Partial<WorkoutTemplate>) => void; onStart: () => void }) {
+  const [showPicker, setShowPicker] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const muscles = templateMuscles(template, catalogExercises);
+  const stats = templateStats(template);
+
+  function patchExercise(exerciseId: string, patch: (ex: WorkoutExercise) => WorkoutExercise) {
+    onUpdate({ exercises: template.exercises.map((ex) => ex.exerciseId === exerciseId ? patch(ex) : ex) });
+  }
+  function updateSet(exerciseId: string, setIdx: number, setPatch: Partial<WorkoutSet>) {
+    patchExercise(exerciseId, (ex) => ({ ...ex, sets: ex.sets.map((s, i) => i === setIdx ? { ...s, ...setPatch } : s) }));
+  }
+  function addSet(exerciseId: string) {
+    patchExercise(exerciseId, (ex) => {
+      const last = ex.sets[ex.sets.length - 1];
+      const next: WorkoutSet = last ? { ...last, setNumber: last.setNumber + 1 } : { setNumber: 1, reps: 10, weight: 0, restTime: 90, rir: 2, completed: false, notes: '' };
+      return { ...ex, sets: [...ex.sets, next] };
+    });
+  }
+  function removeSet(exerciseId: string, setIdx: number) {
+    patchExercise(exerciseId, (ex) => ({ ...ex, sets: ex.sets.filter((_, i) => i !== setIdx) }));
+  }
+  function setMode(exerciseId: string, mode: 'reps' | 'time') {
+    patchExercise(exerciseId, (ex) => ({ ...ex, mode }));
+  }
+  function addExerciseFromPicker(picked: SportExercise) {
     onUpdate({
       exercises: [...template.exercises, {
-        exerciseId: pickerId, exerciseName,
+        exerciseId: picked.id, exerciseName: picked.name, mode: 'reps',
         sets: [
           { setNumber: 1, reps: 10, weight: 0, restTime: 90, rir: 2, completed: false, notes: '' },
           { setNumber: 2, reps: 10, weight: 0, restTime: 90, rir: 2, completed: false, notes: '' },
@@ -1016,9 +1294,7 @@ function TemplateDetail({ template, catalogExercises, sportOptions, customTempla
         ],
       }],
     });
-    setPickerId('');
   }
-
   function removeExercise(exerciseId: string) {
     onUpdate({ exercises: template.exercises.filter((e) => e.exerciseId !== exerciseId) });
   }
@@ -1043,6 +1319,7 @@ function TemplateDetail({ template, catalogExercises, sportOptions, customTempla
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button className="btn btn-primary btn-sm" onClick={onStart}>▶ Użyj szablonu</button>
             <button className="btn btn-secondary btn-sm" onClick={() => onUpdate({ isActive: !template.isActive })}>{template.isActive ? 'Dezaktywuj' : 'Aktywuj'}</button>
+            <button className="icon-btn" onClick={() => setShowSettings(true)} aria-label="Ustawienia szablonu">⚙</button>
           </div>
         </div>
         {(template.goal || template.description) && (
@@ -1050,40 +1327,74 @@ function TemplateDetail({ template, catalogExercises, sportOptions, customTempla
             {template.description || template.goal}
           </p>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0, marginTop: 18, border: '1px solid var(--border-soft)', borderRadius: 10, overflow: 'hidden' }}>
-          <StatBox label="Czas" value={`~${stats.duration} min`} />
-          <StatBox label="Serii roboczych" value={`${stats.setCount}`} />
-          <StatBox label="Objętość" value={stats.volumeKg > 0 ? `${(stats.volumeKg / 1000).toFixed(1)} t` : '-'} />
-          <StatBox label="Poziom" value={template.level ? DIFFICULTY_LABEL[template.level] : '-'} />
+        <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 8 }}>Liczba ćwiczeń: <strong style={{ color: 'var(--ink-2)' }}>{template.exercises.length}</strong></div>
+        {(template.equipmentTags ?? []).length > 0 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
+            {(template.equipmentTags ?? []).map((eq) => <span key={eq} className="badge" style={{ fontSize: 10.5 }}>{eq}</span>)}
+          </div>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', marginTop: 18, border: '1px solid var(--border-soft)', borderRadius: 10, overflow: 'hidden' }}>
+          {[
+            ['Czas', `~${stats.duration} min`],
+            ['Serie robocze', `${stats.setCount}`],
+            ['Objętość', stats.volumeKg > 0 ? `${(stats.volumeKg / 1000).toFixed(1)} t` : '-'],
+          ].map(([label, value], i) => (
+            <div key={label} style={{ padding: '12px 14px', background: 'var(--surface-3)', borderRight: i < 2 ? '1px solid var(--border-soft)' : 'none' }}>
+              <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{label}</div>
+              <div style={{ fontWeight: 800, fontSize: 19, marginTop: 2 }}>{value}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.35fr) minmax(260px, .85fr)', minHeight: 430 }}>
+      <div className="sport-hero-grid" style={{ minHeight: 430 }}>
         <div style={{ padding: 22, borderRight: '1px solid var(--border-soft)' }}>
           <SectionHead title={`Ćwiczenia (${template.exercises.length})`} />
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            {template.exercises.map((ex, i) => (
-              <div key={ex.exerciseId} style={{ background:'var(--surface-3)', border: '1px solid var(--border-soft)', borderRadius:10, padding:'10px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 800, color: 'var(--ink-3)', flexShrink: 0 }}>{i + 1}</span>
-                <div style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--surface)', display: 'grid', placeItems: 'center', color: 'var(--ink-3)', flexShrink: 0 }}><SportTileIcon label={template.sportType} kind="sport" size={20} /></div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight:800, fontSize:13.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.exerciseName}</div>
-                  <div style={{ fontSize:11.5, color:'var(--ink-3)' }}>
-                    {ex.sets.length} serii · {ex.sets[0]?.reps} pow. · {ex.sets[0]?.weight > 0 ? `${ex.sets[0].weight} kg` : 'masa ciała'}
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {template.exercises.map((ex, i) => {
+              const mode = ex.mode ?? 'reps';
+              return (
+                <div key={ex.exerciseId} style={{ background:'var(--surface-3)', border: '1px solid var(--border-soft)', borderRadius:10, padding:'10px 12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--border)', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 800, color: 'var(--ink-3)', flexShrink: 0 }}>{i + 1}</span>
+                    <div style={{ flex: 1, minWidth: 0, fontWeight:800, fontSize:13.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.exerciseName}</div>
+                    <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                      <button type="button" className={`pill ${mode === 'reps' ? 'accent' : ''}`} style={{ padding: '4px 9px', fontSize: 10.5 }} onClick={() => setMode(ex.exerciseId, 'reps')}>Powtórzenia</button>
+                      <button type="button" className={`pill ${mode === 'time' ? 'accent' : ''}`} style={{ padding: '4px 9px', fontSize: 10.5 }} onClick={() => setMode(ex.exerciseId, 'time')}>Czas</button>
+                    </div>
+                    <button className="icon-btn" onClick={() => removeExercise(ex.exerciseId)}><IcoTrash /></button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '24px 72px 110px 52px 1fr 28px', gap: 6, padding: '0 0 2px' }}>
+                      <span />
+                      <span style={{ fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--ink-3)' }}>{mode === 'reps' ? 'Powt.' : 'Czas (s)'}</span>
+                      <span style={{ fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--ink-3)' }}>Ciężar</span>
+                      <span style={{ fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--ink-3)' }}>RIR</span>
+                      <span style={{ fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', color: 'var(--ink-3)' }}>Uwagi</span>
+                      <span />
+                    </div>
+                    {ex.sets.map((set, si) => (
+                      <div key={si} style={{ display: 'grid', gridTemplateColumns: '24px 72px 110px 52px 1fr 28px', gap: 6, alignItems: 'center' }}>
+                        <span style={{ fontSize: 11, color: 'var(--ink-3)', fontWeight: 700 }}>#{set.setNumber}</span>
+                        {mode === 'reps' ? (
+                          <input className="input" type="number" min={1} value={set.reps} onChange={(e) => updateSet(ex.exerciseId, si, { reps: num(e.target.value, 1) })} placeholder="Powt." style={{ height: 32, padding: '4px 8px', fontSize: 12.5 }} />
+                        ) : (
+                          <input className="input" type="number" min={0} value={set.durationSec ?? 0} onChange={(e) => updateSet(ex.exerciseId, si, { durationSec: num(e.target.value, 0) })} placeholder="Sek." style={{ height: 32, padding: '4px 8px', fontSize: 12.5 }} />
+                        )}
+                        <input className="input" type="number" min={0} step={2.5} value={set.weight || ''} onChange={(e) => updateSet(ex.exerciseId, si, { weight: num(e.target.value, 0) })} placeholder="kg (opcjonalnie)" style={{ height: 32, padding: '4px 8px', fontSize: 12.5 }} />
+                        <input className="input" type="number" min={0} max={10} value={set.rir || ''} onChange={(e) => updateSet(ex.exerciseId, si, { rir: num(e.target.value, 0) })} placeholder="RIR" style={{ height: 32, padding: '4px 8px', fontSize: 12.5 }} />
+                        <input className="input" type="text" value={set.notes} onChange={(e) => updateSet(ex.exerciseId, si, { notes: e.target.value })} placeholder="Uwagi (opcjonalnie)" style={{ height: 32, padding: '4px 8px', fontSize: 12.5 }} />
+                        <button className="icon-btn" style={{ width: 28, height: 28, fontSize: 12 }} onClick={() => removeSet(ex.exerciseId, si)} aria-label="Usuń serię">×</button>
+                      </div>
+                    ))}
+                    <button className="btn btn-secondary btn-sm" style={{ alignSelf: 'flex-start', marginTop: 2 }} onClick={() => addSet(ex.exerciseId)}>+ Seria</button>
                   </div>
                 </div>
-                <button className="icon-btn" onClick={() => removeExercise(ex.exerciseId)}><IcoTrash /></button>
-              </div>
-            ))}
+              );
+            })}
             {template.exercises.length === 0 && <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>Ten szablon nie ma jeszcze ćwiczeń.</div>}
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-            <select className="select" style={{ flex: 1 }} value={pickerId} onChange={(e) => setPickerId(e.target.value)}>
-              <option value="">Wybierz ćwiczenie z bazy...</option>
-              {sportExercises.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
-            </select>
-            <button className="btn btn-secondary btn-sm" disabled={!pickerId} onClick={addExerciseToTemplate}>+ Dodaj</button>
-          </div>
+          <button className="btn btn-secondary btn-sm" style={{ marginTop: 12 }} onClick={() => setShowPicker(true)}>+ Wybierz ćwiczenie z bazy</button>
         </div>
 
         <div style={{ padding: 22 }}>
@@ -1096,42 +1407,24 @@ function TemplateDetail({ template, catalogExercises, sportOptions, customTempla
         </div>
       </div>
 
-      <div style={{ padding: 22, borderTop: '1px solid var(--border-soft)' }}>
-        <SectionHead title="Informacje" />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10 }}>
-          <Field label="Sport"><select className="select" value={template.sportType} onChange={(e) => onUpdate({ sportType: e.target.value, category: categoryOptionsForSport(e.target.value, customTemplateCategories)[0] })}>
-            {sportOptions.map((sport) => <option key={sport} value={sport}>{sport}</option>)}
-          </select></Field>
-          <Field label="Kategoria"><select className="select" value={template.category ?? categoryOptions[0]} onChange={(e) => onUpdate({ category: e.target.value })}>
-            {categoryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select></Field>
-          <Field label="Czas"><input className="input" type="number" min={5} step={5} value={template.estimatedDuration} onChange={(e) => onUpdate({ estimatedDuration: +e.target.value })} /></Field>
-          <Field label="Poziom"><select className="select" value={template.level ?? 'intermediate'} onChange={(e) => onUpdate({ level: e.target.value as Difficulty })}>
-            {(['beginner', 'intermediate', 'advanced'] as const).map(l => <option key={l} value={l}>{DIFFICULTY_LABEL[l]}</option>)}
-          </select></Field>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
-          <Field label="Cel"><input className="input" value={template.goal ?? ''} onChange={(e) => onUpdate({ goal: e.target.value })} /></Field>
-          <Field label="Sprzęt"><input className="input" value={(template.equipmentTags ?? []).join(', ')} onChange={(e) => onUpdate({ equipmentTags: e.target.value.split(',').map((x) => x.trim()).filter(Boolean) })} /></Field>
-        </div>
-      </div>
+      <TemplateSettingsModal open={showSettings} onClose={() => setShowSettings(false)} template={template} sportOptions={sportOptions} onUpdate={onUpdate} />
+      <ExercisePickerModal open={showPicker} onClose={() => setShowPicker(false)} sportType={template.sportType} catalogExercises={catalogExercises} onPick={addExerciseFromPicker} />
     </div>
   );
 }
 
-function AddTemplateModal({ open, onClose, defaultSport, sportOptions, customTemplateCategories, onSave }: { open: boolean; onClose: () => void; defaultSport: string; sportOptions: string[]; customTemplateCategories: string[]; onSave: (t: Omit<WorkoutTemplate,'id'|'createdAt'|'updatedAt'>) => void }) {
+function AddTemplateModal({ open, onClose, defaultSport, sportOptions, onSave }: { open: boolean; onClose: () => void; defaultSport: string; sportOptions: string[]; onSave: (t: Omit<WorkoutTemplate,'id'|'createdAt'|'updatedAt'>) => void }) {
   const [name, setName] = useState('');
   const [sportType, setSportType] = useState(defaultSport);
-  const [category, setCategory] = useState(categoryOptionsForSport(defaultSport, customTemplateCategories)[0]);
-  const [level, setLevel] = useState<Difficulty>('intermediate');
   const [goal, setGoal] = useState('');
   const [desc, setDesc] = useState('');
   const [duration, setDuration] = useState(60);
   const [equipmentTags, setEquipmentTags] = useState<string[]>([]);
+  const [image, setImage] = useState('');
 
   useEffect(() => {
-    if (open) { setSportType(defaultSport); setCategory(categoryOptionsForSport(defaultSport, customTemplateCategories)[0]); }
-  }, [open, defaultSport, customTemplateCategories]);
+    if (open) setSportType(defaultSport);
+  }, [open, defaultSport]);
 
   function toggleEquipment(eq: string) {
     setEquipmentTags((prev) => prev.includes(eq) ? prev.filter((e) => e !== eq) : [...prev, eq]);
@@ -1143,27 +1436,20 @@ function AddTemplateModal({ open, onClose, defaultSport, sportOptions, customTem
         <button className="btn btn-secondary btn-sm" onClick={onClose}>Anuluj</button>
         <button className="btn btn-primary btn-sm" onClick={() => {
           if (!name.trim()) return;
-          onSave({ name, sportType, description: desc, estimatedDuration: duration, exercises: [], isActive: true, category, level, goal, equipmentTags });
-          setName(''); setDesc(''); setGoal(''); setEquipmentTags([]);
+          onSave({ name, sportType, description: desc, estimatedDuration: duration, exercises: [], isActive: true, goal, equipmentTags, image: image.trim() || undefined });
+          setName(''); setDesc(''); setGoal(''); setEquipmentTags([]); setImage('');
         }}>Zapisz</button>
       </>}>
       <Field label="Nazwa" required><input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Np. Push A — Klatka" /></Field>
       <div className="form-grid">
-        <Field label="Sport"><select className="select" value={sportType} onChange={e => { const s = e.target.value; setSportType(s); setCategory(categoryOptionsForSport(s, customTemplateCategories)[0]); }}>
+        <Field label="Sport"><select className="select" value={sportType} onChange={e => setSportType(e.target.value)}>
           {sportOptions.map(s => <option key={s} value={s}>{s}</option>)}
-        </select></Field>
-        <Field label="Kategoria"><select className="select" value={category} onChange={e => setCategory(e.target.value)}>
-          {categoryOptionsForSport(sportType, customTemplateCategories).map(c => <option key={c}>{c}</option>)}
-        </select></Field>
-      </div>
-      <div className="form-grid">
-        <Field label="Poziom"><select className="select" value={level} onChange={e => setLevel(e.target.value as Difficulty)}>
-          {(['beginner', 'intermediate', 'advanced'] as const).map(l => <option key={l} value={l}>{DIFFICULTY_LABEL[l]}</option>)}
         </select></Field>
         <Field label={`Czas: ${duration} min`}><input type="range" min={15} max={180} step={5} value={duration} onChange={e => setDuration(+e.target.value)} style={{ width:'100%' }} /></Field>
       </div>
       <Field label="Cel treningu"><input className="input" value={goal} onChange={e => setGoal(e.target.value)} placeholder="Np. Hipertrofia klatki i barków" /></Field>
       <Field label="Opis"><textarea className="textarea" value={desc} onChange={e => setDesc(e.target.value)} rows={2} /></Field>
+      <Field label="Zdjęcie treningu (URL, opcjonalnie)"><input className="input" value={image} onChange={e => setImage(e.target.value)} placeholder="Wklej link do zdjęcia — w innym wypadku dobierzemy je automatycznie" /></Field>
       <Field label="Sprzęt">
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {EQUIPMENT_OPTIONS.map((eq) => (
@@ -1178,7 +1464,9 @@ function AddTemplateModal({ open, onClose, defaultSport, sportOptions, customTem
 // ─── AKTYWNA SESJA ────────────────────────────────────────────
 
 function SportActiveSession({ onSessionEnd }: { onSessionEnd: () => void }) {
-  const { activeSession, updateActiveSession, completeSession, cancelSession } = useLocalStore();
+  const { activeSession, updateActiveSession, completeSession, cancelSession, exercises: storeExercises, sportCategories, addFeeling } = useLocalStore();
+  const [feelingsPrompt, setFeelingsPrompt] = useState<WorkoutSession | null>(null);
+  const [feelingsDraft, setFeelingsDraft] = useState<FeelingsDraft>(defaultFeelingsDraft());
   const [timerSec, setTimerSec] = useState(0);
   const [timerRunning, setTimerRunning] = useState(false);
   const [showComplete, setShowComplete] = useState(false);
@@ -1215,7 +1503,7 @@ function SportActiveSession({ onSessionEnd }: { onSessionEnd: () => void }) {
   const doneSets = exercises.reduce((a, e) => a + e.sets.filter(s => s.completed).length, 0);
   const doneRirs = exercises.flatMap(e => e.sets).filter(s => s.completed).map(s => s.rir);
   const avgRir = doneRirs.length ? (doneRirs.reduce((a, r) => a + r, 0) / doneRirs.length).toFixed(1) : '–';
-  const engagedMuscles = useMemo(() => exercisesMuscles(exercises), [exercises]);
+  const engagedMuscles = useMemo(() => exercisesMuscles(exercises, storeExercises), [exercises, storeExercises]);
 
   function updateSet(exIdx: number, setIdx: number, field: keyof WorkoutSet, value: number | boolean | string) {
     const newEx = exercises.map((ex, i) =>
@@ -1378,7 +1666,14 @@ function SportActiveSession({ onSessionEnd }: { onSessionEnd: () => void }) {
       <Modal open={showComplete} onClose={() => setShowComplete(false)} title="Zakończ trening"
         footer={<>
           <button className="btn btn-secondary btn-sm" onClick={() => setShowComplete(false)}>Anuluj</button>
-          <button className="btn btn-primary btn-sm" onClick={() => { completeSession(notes, completionPain); onSessionEnd(); }}>Zakończ i zapisz</button>
+          <button className="btn btn-primary btn-sm" onClick={() => {
+            const session = completeSession(notes, completionPain);
+            setShowComplete(false);
+            if (!session) { onSessionEnd(); return; }
+            const category = sportCategories.find((c) => c.name === session.sportType);
+            if (category?.showFeelingsPrompt ?? true) { setFeelingsDraft(defaultFeelingsDraft()); setFeelingsPrompt(session); }
+            else onSessionEnd();
+          }}>Zakończ i zapisz</button>
         </>}>
         <div style={{ background:'var(--surface-3)', borderRadius:10, padding:'12px 14px', marginBottom:12 }}>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, textAlign:'center' }}>
@@ -1393,6 +1688,22 @@ function SportActiveSession({ onSessionEnd }: { onSessionEnd: () => void }) {
           Porzuć bez zapisywania
         </button>
       </Modal>
+
+      {/* Post-session feelings prompt */}
+      <Modal open={!!feelingsPrompt} onClose={() => { setFeelingsPrompt(null); onSessionEnd(); }} title="Jak poszła sesja?" size="lg"
+        footer={<>
+          <button className="btn btn-ghost btn-sm" onClick={() => { setFeelingsPrompt(null); onSessionEnd(); }}>Pomiń</button>
+          <button className="btn btn-secondary btn-sm" onClick={() => {
+            if (feelingsPrompt) addFeeling(feelingEntryFromDraft(feelingsPrompt, feelingsDraft, 'pending'));
+            setFeelingsPrompt(null); onSessionEnd();
+          }}>Dodaj później</button>
+          <button className="btn btn-primary btn-sm" onClick={() => {
+            if (feelingsPrompt) addFeeling(feelingEntryFromDraft(feelingsPrompt, feelingsDraft, 'completed'));
+            setFeelingsPrompt(null); onSessionEnd();
+          }}>Zapisz</button>
+        </>}>
+        {feelingsPrompt && <FeelingsForm value={feelingsDraft} onChange={setFeelingsDraft} />}
+      </Modal>
     </div>
   );
 }
@@ -1402,8 +1713,8 @@ function SportActiveSession({ onSessionEnd }: { onSessionEnd: () => void }) {
 type HistoryRange = 'all' | '30d' | 'month' | '3m';
 type HistorySort = 'newest' | 'oldest' | 'longest' | 'volume';
 
-function SportHistory({ onRepeat }: { onRepeat: () => void }) {
-  const { sessions, repeatSession } = useLocalStore();
+function SportHistory({ onRepeat, onFillFeelings }: { onRepeat: () => void; onFillFeelings: (sessionId: string) => void }) {
+  const { sessions, repeatSession, feelings, exercises } = useLocalStore();
   const [sportFilter, setSportFilter] = useState<SportKey | 'Wszystko'>('Wszystko');
   const [range, setRange] = useState<HistoryRange>('all');
   const [sort, setSort] = useState<HistorySort>('newest');
@@ -1428,7 +1739,10 @@ function SportHistory({ onRepeat }: { onRepeat: () => void }) {
 
   const summary = monthSummary(filterBySport(sessions, sportFilter), calMonth);
   const heatmapData = monthHeatmapData(filterBySport(sessions, sportFilter), calMonth);
-  const engagedMuscles = sessionsMuscles(filtered);
+  const engagedMuscles = sessionsMuscles(filtered, exercises);
+  function feelingsStatusFor(sessionId: string) {
+    return feelings.find((f) => f.sessionId === sessionId)?.status ?? null;
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -1458,7 +1772,8 @@ function SportHistory({ onRepeat }: { onRepeat: () => void }) {
           {filtered.length === 0
             ? <EmptyState title="Brak historii treningów" desc="Ukończ pierwszą sesję, aby zobaczyć historię." />
             : filtered.map((s) => (
-              <SessionCard key={s.id} session={s} onRepeat={() => { repeatSession(s.id); onRepeat(); }} />
+              <SessionCard key={s.id} session={s} onRepeat={() => { repeatSession(s.id); onRepeat(); }}
+                feelingsStatus={feelingsStatusFor(s.id)} onFillFeelings={() => onFillFeelings(s.id)} />
             ))}
         </div>
 
@@ -1495,7 +1810,7 @@ function SportHistory({ onRepeat }: { onRepeat: () => void }) {
   );
 }
 
-function SessionCard({ session, onRepeat }: { session: WorkoutSession; onRepeat: () => void }) {
+function SessionCard({ session, onRepeat, feelingsStatus, onFillFeelings }: { session: WorkoutSession; onRepeat: () => void; feelingsStatus?: FeelingStatus | null; onFillFeelings?: () => void }) {
   const totalVol = sessionVolume(session);
   const totalSets = sessionSetCount(session);
   const completedRirs = session.exercises.flatMap((e) => e.sets).filter((s) => s.completed).map((s) => s.rir);
@@ -1525,6 +1840,9 @@ function SessionCard({ session, onRepeat }: { session: WorkoutSession; onRepeat:
         ))}
       </div>
       {session.notesAfterTraining && <div style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 8, fontStyle: 'italic' }}>"{session.notesAfterTraining}"</div>}
+      {feelingsStatus === 'pending' && onFillFeelings && (
+        <button className="btn btn-secondary btn-sm" style={{ marginTop: 10 }} onClick={onFillFeelings}>Uzupełnij odczucia</button>
+      )}
     </div>
   );
 }
@@ -1619,13 +1937,14 @@ function DeltaStat({ label, value, deltaPct }: { label: string; value: string; d
 }
 
 function SportAnalysis() {
-  const { sessions, feelings, templates } = useLocalStore();
+  const { sessions, feelings, templates, sportCategories } = useLocalStore();
   const [sport, setSport] = useState<SportKey | 'Wszystko'>('Wszystko');
   const [windowDays, setWindowDays] = useState<7 | 28 | 90>(28);
+  const categoryNames = [...sportCategories].sort((a, b) => a.order - b.order).map((c) => c.name);
 
   const scoped = filterBySport(sessions, sport);
   const windowed = scoped.filter((s) => (Date.now() - new Date(s.date).getTime()) / 86400000 <= windowDays);
-  const insights = generateInsights(sessions, feelings, SPORT_KEYS);
+  const insights = generateInsights(sessions, feelings, categoryNames);
   const comparison = compareRanges(scoped, windowDays);
   const distribution = sportDistribution(sessionsInLastNDays(sessions, windowDays));
   const muscleCounts = muscleSetCounts(windowed);
@@ -1662,7 +1981,7 @@ function SportAnalysis() {
         <div className="card">
           <div className="card-head"><span className="card-title">Dystrybucja aktywności</span></div>
           <div style={{ fontSize: 11, color: 'var(--ink-4)', marginBottom: 10 }}>Wszystkie sporty, niezależnie od wybranej karty powyżej</div>
-          <DonutChart slices={SPORT_KEYS.map((s) => ({ label: s, value: distribution[s] ?? 0, color: SPORT_DONUT_COLORS[s] }))} />
+          <DonutChart slices={categoryNames.map((s) => ({ label: s, value: distribution[s] ?? 0, color: SPORT_DONUT_COLORS[s] ?? 'var(--acc)' }))} />
         </div>
         <div className="card">
           <div className="card-head"><span className="card-title">Wnioski</span></div>
@@ -1899,7 +2218,8 @@ function ExerciseDetailPanel({ ex }: { ex: SportExercise }) {
 type ExerciseSort = 'name' | 'sport' | 'difficulty';
 
 function SportExercises() {
-  const { exercises, addExercise } = useLocalStore();
+  const { exercises, addExercise, sportCategories } = useLocalStore();
+  const categoryNames = [...sportCategories].sort((a, b) => a.order - b.order).map((c) => c.name);
   const [showAdd, setShowAdd] = useState(false);
   const [sportFilter, setSportFilter] = useState<SportKey | 'Wszystko'>('Wszystko');
   const [muscleFilter, setMuscleFilter] = useState<MuscleKey | 'any'>('any');
@@ -1920,7 +2240,7 @@ function SportExercises() {
   const restMuscles = MUSCLES.filter((m) => !topMuscles.includes(m.key));
 
   const filtered = exercises.filter((ex) => {
-    if (sportFilter !== 'Wszystko' && ex.sportType !== sportFilter) return false;
+    if (sportFilter !== 'Wszystko' && ex.sportType !== sportFilter && !ex.sportCategories?.includes(sportFilter)) return false;
     if (muscleFilter !== 'any' && !(ex.primaryMuscles ?? []).includes(muscleFilter) && !(ex.secondaryMuscles ?? []).includes(muscleFilter)) return false;
     if (query.trim() && !ex.name.toLowerCase().includes(query.trim().toLowerCase()) && !(ex.aliases ?? []).some((a) => a.toLowerCase().includes(query.trim().toLowerCase()))) return false;
     return true;
@@ -1953,7 +2273,7 @@ function SportExercises() {
         <input className="input" placeholder="Szukaj nazwy, partii, sprzętu…" value={query} onChange={(e) => setQuery(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
         <select className="select" value={sportFilter} onChange={(e) => setSportFilter(e.target.value as SportKey | 'Wszystko')}>
           <option value="Wszystko">Sport: wszystkie</option>
-          {SPORTS.map((s) => <option key={s.key} value={s.key}>{s.key}</option>)}
+          {categoryNames.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
 
@@ -1999,7 +2319,7 @@ function SportExercises() {
             if (!name.trim() || primary.length === 0) return;
             addExercise({
               name, sportType: sport, muscleGroup: MUSCLE_LABEL[primary[0]], equipment, notes: '',
-              category: TEMPLATE_CATEGORIES[sport][0], equipmentTags: [equipment], difficulty: 'intermediate',
+              category: TEMPLATE_CATEGORIES[sport]?.[0] ?? 'Ogólne', equipmentTags: [equipment], difficulty: 'intermediate',
               movementPattern: '', primaryMuscles: primary, secondaryMuscles: secondary, stabilizerMuscles: [],
               instructions: '', tips: '', contraindications: '', rehabSafe, tags: [],
             });
@@ -2008,7 +2328,7 @@ function SportExercises() {
         </>}>
         <Field label="Nazwa ćwiczenia" required><input className="input" value={name} onChange={e => setName(e.target.value)} placeholder="Np. Wyciskanie sztangi" /></Field>
         <div className="form-grid">
-          <Field label="Sport"><select className="select" value={sport} onChange={e => setSport(e.target.value as SportKey)}>{SPORTS.map(s => <option key={s.key} value={s.key}>{s.key}</option>)}</select></Field>
+          <Field label="Sport"><select className="select" value={sport} onChange={e => setSport(e.target.value as SportKey)}>{categoryNames.map(s => <option key={s} value={s}>{s}</option>)}</select></Field>
           <Field label="Sprzęt"><select className="select" value={equipment} onChange={e => setEquipment(e.target.value)}>{EQUIPMENT_OPTIONS.map(e => <option key={e}>{e}</option>)}</select></Field>
         </div>
         <Field label="Główne partie (wymagane, można kilka)" required>
@@ -2036,222 +2356,344 @@ function SportExercises() {
 
 // ─── ODCZUCIA ────────────────────────────────────────────────
 
-const MOODS = ['😴','😓','😐','🙂','💪','🔥'];
+interface FeelingsDraft {
+  energyBefore: number; energyDuring: number; motivation: number; soreness: number;
+  sleepHours: number; wellbeing: number; note: string; painPoints: PainPoint[];
+}
 
-function FeelingSlider({ label, value, onChange, max = 10 }: { label: string; value: number; onChange: (v: number) => void; max?: number }) {
+function defaultFeelingsDraft(): FeelingsDraft {
+  return { energyBefore: 3, energyDuring: 3, motivation: 3, soreness: 3, sleepHours: 7, wellbeing: 3, note: '', painPoints: [] };
+}
+
+function draftFromFeeling(f: FeelingEntry): FeelingsDraft {
+  return {
+    energyBefore: f.energyBefore, energyDuring: f.energyDuring, motivation: f.motivation, soreness: f.soreness,
+    sleepHours: f.sleepHours, wellbeing: f.wellbeing, note: f.note ?? '', painPoints: f.painPoints,
+  };
+}
+
+function feelingEntryFromDraft(session: WorkoutSession, draft: FeelingsDraft, status: FeelingStatus): Omit<FeelingEntry, 'id' | 'createdAt'> {
+  return {
+    sessionId: session.id, scheduledWorkoutId: session.scheduledWorkoutId,
+    date: session.date, sportCategory: session.sportType, templateName: session.templateName,
+    energyBefore: draft.energyBefore, energyDuring: draft.energyDuring, motivation: draft.motivation,
+    soreness: draft.soreness, sleepHours: draft.sleepHours, wellbeing: draft.wellbeing,
+    note: draft.note.trim() || undefined, painPoints: draft.painPoints, status,
+  };
+}
+
+function Rating5Row({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-        <span style={{ color: 'var(--ink-2)', fontWeight: 600 }}>{label}</span>
-        <span style={{ fontWeight: 700 }}>{value}/{max}</span>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '6px 0' }}>
+      <span style={{ fontSize: 13, color: 'var(--ink-2)', fontWeight: 600 }}>{label}</span>
+      <div style={{ display: 'flex', gap: 5 }}>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} type="button" onClick={() => onChange(n)}
+            style={{
+              width: 30, height: 30, borderRadius: 8, cursor: 'pointer',
+              border: `1.5px solid ${value === n ? 'var(--acc)' : 'var(--border)'}`,
+              background: value === n ? 'var(--acc-soft)' : 'transparent',
+              color: value === n ? 'var(--acc-ink)' : 'var(--ink-2)', fontWeight: 700, fontSize: 12.5,
+            }}>
+            {n}
+          </button>
+        ))}
       </div>
-      <input type="range" min={0} max={max} value={value} onChange={(e) => onChange(+e.target.value)} style={{ width: '100%', accentColor: 'var(--acc)' }} />
     </div>
   );
 }
 
-const FEELING_FIELDS: { key: 'energy' | 'pain' | 'stiffness' | 'recovery' | 'sleep' | 'stress' | 'readiness'; label: string; max: number }[] = [
-  { key: 'energy', label: 'Energia', max: 10 },
-  { key: 'pain', label: 'Ból mięśniowy', max: 10 },
-  { key: 'stiffness', label: 'Sztywność', max: 10 },
-  { key: 'recovery', label: 'Regeneracja', max: 10 },
-  { key: 'sleep', label: 'Sen', max: 12 },
-  { key: 'stress', label: 'Stres', max: 10 },
-  { key: 'readiness', label: 'Gotowość do treningu', max: 10 },
+/** Compact, single-row-per-field post-session form — no Przed/Po toggle, matches the "fast to fill" requirement. */
+function FeelingsForm({ value, onChange }: { value: FeelingsDraft; onChange: (v: FeelingsDraft) => void }) {
+  function set<K extends keyof FeelingsDraft>(key: K, v: FeelingsDraft[K]) {
+    onChange({ ...value, [key]: v });
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <Rating5Row label="Energia przed treningiem" value={value.energyBefore} onChange={(v) => set('energyBefore', v)} />
+      <Rating5Row label="Energia podczas treningu" value={value.energyDuring} onChange={(v) => set('energyDuring', v)} />
+      <Rating5Row label="Motywacja" value={value.motivation} onChange={(v) => set('motivation', v)} />
+      <Rating5Row label="Zakwasy" value={value.soreness} onChange={(v) => set('soreness', v)} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '6px 0' }}>
+        <span style={{ fontSize: 13, color: 'var(--ink-2)', fontWeight: 600 }}>Sen (h)</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input type="range" min={0} max={12} step={0.5} value={value.sleepHours} onChange={(e) => set('sleepHours', +e.target.value)} style={{ width: 130, accentColor: 'var(--acc)' }} />
+          <input type="number" min={0} max={12} step={0.5} value={value.sleepHours} onChange={(e) => set('sleepHours', +e.target.value)} className="input" style={{ width: 56, padding: '4px 6px', fontSize: 12.5 }} />
+        </div>
+      </div>
+      <Rating5Row label="Samopoczucie" value={value.wellbeing} onChange={(v) => set('wellbeing', v)} />
+      <div style={{ marginTop: 10 }}>
+        <Field label="Notatka (opcjonalnie)">
+          <textarea className="input" rows={2} value={value.note} onChange={(e) => set('note', e.target.value)} placeholder="Coś więcej o sesji…" style={{ resize: 'none' }} />
+        </Field>
+      </div>
+    </div>
+  );
+}
+
+const QUICK_BODY_TAGS: { label: string; muscle: MuscleKey }[] = [
+  { label: 'Łokieć', muscle: 'elbow' },
+  { label: 'Kolano', muscle: 'knee' },
+  { label: 'Bark', muscle: 'shoulder' },
+  { label: 'Nadgarstek', muscle: 'wrist' },
+  { label: 'Plecy', muscle: 'lower_back' },
+  { label: 'Biodro', muscle: 'hip_flexors' },
+  { label: 'Achilles', muscle: 'ankle' },
 ];
 
-function SportFeelings() {
-  const { sessions, feelings, addFeeling } = useLocalStore();
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayEntry = feelings.find((f) => f.date === todayStr) ?? null;
+/** Bigger, search/quick-tag driven body map + an editable list of pain points (side, 0-10 intensity, note). */
+function PainPointsEditor({ points, onChange }: { points: PainPoint[]; onChange: (p: PainPoint[]) => void }) {
+  const [query, setQuery] = useState('');
+  const matches = query.trim() ? MUSCLES.filter((m) => m.label.toLowerCase().includes(query.trim().toLowerCase())) : [];
 
-  const [editing, setEditing] = useState(!todayEntry);
-  const [mode, setMode] = useState<FeelingMode>('post');
-  const [mood, setMood] = useState(3);
-  const [energy, setEnergy] = useState(7);
-  const [motivation, setMotivation] = useState(7);
-  const [pain, setPain] = useState(0);
-  const [stiffness, setStiffness] = useState(0);
-  const [recovery, setRecovery] = useState(7);
-  const [sleep, setSleep] = useState(7.5);
-  const [stress, setStress] = useState(3);
-  const [readiness, setReadiness] = useState(7);
-  const [note, setNote] = useState('');
-  const [painMap, setPainMap] = useState<Partial<Record<MuscleKey, number>>>({});
-
-  const sorted = [...feelings].sort((a, b) => b.date.localeCompare(a.date));
-  const trainingDates = new Set(sessions.map((s) => s.date));
-  const avgEnergyTrainingDays = avgFeeling(feelings.filter((f) => trainingDates.has(f.date)), 'energy');
-  const avgEnergyRestDays = avgFeeling(feelings.filter((f) => !trainingDates.has(f.date)), 'energy');
-  const tips = feelingTips(feelings);
-  const energyAvg = avgFeeling(feelings, 'energy');
-  const painAvg = avgFeeling(feelings, 'pain');
-
-  function startEdit() {
-    if (todayEntry) {
-      setMode(todayEntry.mode); setMood(todayEntry.mood); setEnergy(todayEntry.energy); setMotivation(todayEntry.motivation);
-      setPain(todayEntry.pain); setStiffness(todayEntry.stiffness); setRecovery(todayEntry.recovery);
-      setSleep(todayEntry.sleep); setStress(todayEntry.stress); setReadiness(todayEntry.readiness);
-      setNote(todayEntry.note); setPainMap(todayEntry.painMap);
-    }
-    setEditing(true);
+  function addPoint(muscle: MuscleKey) {
+    if (points.some((p) => p.muscle === muscle)) return;
+    onChange([...points, { muscle, side: 'both', intensity: 5 }]);
+    setQuery('');
+  }
+  function updatePoint(i: number, patch: Partial<PainPoint>) {
+    onChange(points.map((p, idx) => idx === i ? { ...p, ...patch } : p));
+  }
+  function removePoint(i: number) {
+    onChange(points.filter((_, idx) => idx !== i));
+  }
+  function handleRegionClick(muscle: MuscleKey) {
+    const i = points.findIndex((p) => p.muscle === muscle);
+    if (i >= 0) removePoint(i); else addPoint(muscle);
   }
 
-  function cyclePain(key: MuscleKey) {
-    setPainMap((prev) => {
-      const current = prev[key] ?? 0;
-      const next = current >= 5 ? 0 : current + 1;
-      const copy = { ...prev };
-      if (next === 0) delete copy[key]; else copy[key] = next;
-      return copy;
-    });
-  }
-
-  function handleSave() {
-    addFeeling({ date: todayStr, mode, mood, energy, motivation, pain, stiffness, recovery, sleep, stress, readiness, note, painMap });
-    setEditing(false);
-  }
+  const highlight: Partial<Record<MuscleKey, HighlightLevel>> = {};
+  for (const p of points) highlight[p.muscle] = p.intensity >= 7 ? 'primary' : p.intensity >= 4 ? 'secondary' : 'stabilizer';
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr) 280px 320px', gap: 16, alignItems: 'start' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div>
+        <input className="input" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Wpisz miejsce: łokieć, kolano, bark…" style={{ marginBottom: 8 }} />
+        {matches.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+            {matches.map((m) => <button key={m.key} type="button" className="pill" onClick={() => addPoint(m.key)}>{m.label}</button>)}
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {QUICK_BODY_TAGS.map((t) => (
+            <button key={t.muscle} type="button" className={`pill ${points.some((p) => p.muscle === t.muscle) ? 'accent' : ''}`} onClick={() => addPoint(t.muscle)}>{t.label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', placeItems: 'center', padding: '8px 0' }}>
+        <BodyMap highlight={highlight} onRegionClick={handleRegionClick} size={240} />
+      </div>
+
+      <div>
+        <SectionHead title="Zaznaczone miejsca" />
+        {points.length === 0 ? (
+          <EmptyState title="Brak zaznaczonych miejsc" desc="Kliknij na mapie albo wyszukaj/wybierz część ciała powyżej." />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {points.map((p, i) => (
+              <div key={p.muscle} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'var(--surface-inset)', border: '1px solid var(--border-soft)', flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 700, fontSize: 13, minWidth: 110 }}>{MUSCLE_LABEL[p.muscle]}</span>
+                <select className="select" style={{ width: 100 }} value={p.side} onChange={(e) => updatePoint(i, { side: e.target.value as PainPoint['side'] })}>
+                  <option value="left">Lewa</option><option value="right">Prawa</option><option value="both">Obie</option>
+                </select>
+                <input type="range" min={0} max={10} value={p.intensity} onChange={(e) => updatePoint(i, { intensity: +e.target.value })} style={{ width: 100, accentColor: 'var(--danger)' }} />
+                <span style={{ fontSize: 12, fontWeight: 700, width: 30 }}>{p.intensity}/10</span>
+                <input className="input" style={{ flex: 1, minWidth: 120 }} placeholder="Notatka…" value={p.note ?? ''} onChange={(e) => updatePoint(i, { note: e.target.value })} />
+                <button className="icon-btn" onClick={() => removePoint(i)} aria-label={`Usuń ${MUSCLE_LABEL[p.muscle]}`}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function sessionFeelingsLabel(session: WorkoutSession, feelings: FeelingEntry[]): string {
+  const status = feelings.find((f) => f.sessionId === session.id)?.status;
+  const mark = status === 'completed' ? '✓' : status === 'pending' ? '○' : status === 'skipped' ? '–' : '○';
+  const date = new Date(session.date).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit' });
+  return `${mark} ${date} · ${session.templateName ?? session.sportType}`;
+}
+
+function SportFeelings({ initialSessionId, onConsumeInitialSession }: { initialSessionId?: string | null; onConsumeInitialSession?: () => void }) {
+  const { sessions, feelings, sportCategories, addFeeling, updateFeeling, deleteFeeling } = useLocalStore();
+  const recentSessions = [...sessions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 60);
+  const categoryNames = [...sportCategories].sort((a, b) => a.order - b.order).map((c) => c.name);
+
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(initialSessionId ?? recentSessions[0]?.id ?? null);
+  const [editingFeelingId, setEditingFeelingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<FeelingsDraft>(defaultFeelingsDraft());
+  const [historyCategory, setHistoryCategory] = useState<string | 'Wszystko'>('Wszystko');
+  const [historyFrom, setHistoryFrom] = useState('');
+  const [historyTo, setHistoryTo] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<FeelingEntry | null>(null);
+
+  function loadSession(sessionId: string | null) {
+    setSelectedSessionId(sessionId);
+    const existing = sessionId ? feelings.find((f) => f.sessionId === sessionId) ?? null : null;
+    setDraft(existing ? draftFromFeeling(existing) : defaultFeelingsDraft());
+    setEditingFeelingId(existing?.id ?? null);
+  }
+
+  useEffect(() => {
+    if (initialSessionId) {
+      loadSession(initialSessionId);
+      onConsumeInitialSession?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSessionId]);
+
+  const selectedSession = sessions.find((s) => s.id === selectedSessionId) ?? null;
+
+  function handleSave(status: FeelingStatus) {
+    if (!selectedSession) return;
+    const entry = feelingEntryFromDraft(selectedSession, draft, status);
+    if (editingFeelingId) updateFeeling(editingFeelingId, entry);
+    else addFeeling(entry);
+  }
+
+  function editEntry(f: FeelingEntry) {
+    setSelectedSessionId(f.sessionId ?? null);
+    setDraft(draftFromFeeling(f));
+    setEditingFeelingId(f.id);
+  }
+
+  const filteredHistory = [...feelings]
+    .filter((f) => historyCategory === 'Wszystko' || f.sportCategory === historyCategory)
+    .filter((f) => !historyFrom || f.date >= historyFrom)
+    .filter((f) => !historyTo || f.date <= historyTo)
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  const completed = feelings.filter((f) => f.status === 'completed');
+  const avgEnergyDuring = avgFeeling(completed, 'energyDuring');
+  const avgMotivation = avgFeeling(completed, 'motivation');
+  const avgWellbeing = avgFeeling(completed, 'wellbeing');
+  const avgSleep = avgFeeling(completed, 'sleepHours');
+  const sorenessTrend = feelingTrend(completed, 'soreness');
+  const topPainPoints = mostFrequentPainPoints(completed, 5);
+  const tips = feelingTips(completed);
+  const byCategory = new Map<string, number[]>();
+  for (const f of completed) byCategory.set(f.sportCategory, [...(byCategory.get(f.sportCategory) ?? []), f.wellbeing]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* 1. Form */}
       <div className="card">
         <div className="card-head" style={{ flexWrap: 'wrap', gap: 8 }}>
-          <span className="card-title">Dzienny check-in</span>
-          <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>{fmtDate(todayStr)}</span>
+          <span className="card-title">Odczucia po treningu</span>
+          <select className="select" style={{ minWidth: 220 }} value={selectedSessionId ?? ''} onChange={(e) => loadSession(e.target.value || null)}>
+            <option value="" disabled>Wybierz sesję…</option>
+            {recentSessions.map((s) => <option key={s.id} value={s.id}>{sessionFeelingsLabel(s, feelings)}</option>)}
+          </select>
         </div>
-
-        {!editing && todayEntry ? (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <span style={{ fontSize: 28 }}>{MOODS[todayEntry.mood]}</span>
-              <span className="badge badge-gray">{todayEntry.mode === 'pre' ? 'Przed treningiem' : 'Po treningu'}</span>
-              <button className="btn btn-secondary btn-sm" style={{ marginLeft: 'auto' }} onClick={startEdit}>✎ Edytuj</button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-              {FEELING_FIELDS.map((f) => (
-                <StatBox key={f.key} label={f.label} value={`${todayEntry[f.key]}/${f.max}`} />
-              ))}
-            </div>
-            {todayEntry.note && <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 14, fontStyle: 'italic' }}>"{todayEntry.note}"</p>}
-          </>
+        {!selectedSession ? (
+          <EmptyState title="Brak sesji" desc="Ukończ trening, aby dodać do niego odczucia." />
         ) : (
           <>
-            <div style={{ display: 'flex', gap: 4, background: 'var(--surface-3)', padding: 3, borderRadius: 10, marginBottom: 18, width: 'fit-content' }}>
-              {(['pre', 'post'] as const).map((m) => (
-                <button key={m} onClick={() => setMode(m)} className={m === mode ? 'pill accent' : 'pill'} style={{ border: 0 }}>
-                  {m === 'pre' ? 'Przed treningiem' : 'Po treningu'}
-                </button>
-              ))}
+            <div style={{ fontSize: 12, color: 'var(--ink-3)', marginBottom: 10 }}>
+              {fmtDate(selectedSession.date)} · {selectedSession.templateName ?? selectedSession.sportType} · <SportBadge sport={selectedSession.sportType} />
             </div>
-
-            <div style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink-3)', marginBottom: 10 }}>Samopoczucie</div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                {MOODS.map((m, i) => (
-                  <button key={i} onClick={() => setMood(i)}
-                    style={{ fontSize: 24, padding: '7px 11px', borderRadius: 12, border: `2px solid ${mood === i ? 'var(--acc)' : 'var(--border)'}`, background: mood === i ? 'var(--acc-soft)' : 'transparent', cursor: 'pointer', transition: '.14s' }}>
-                    {m}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-              <FeelingSlider label="Energia" value={energy} onChange={setEnergy} />
-              <FeelingSlider label="Motywacja" value={motivation} onChange={setMotivation} />
-              <FeelingSlider label="Ból mięśniowy" value={pain} onChange={setPain} />
-              <FeelingSlider label="Sztywność" value={stiffness} onChange={setStiffness} />
-              <FeelingSlider label="Regeneracja" value={recovery} onChange={setRecovery} />
-              <FeelingSlider label="Sen (h)" value={sleep} onChange={setSleep} max={12} />
-              <FeelingSlider label="Stres" value={stress} onChange={setStress} />
-              <FeelingSlider label="Gotowość do treningu" value={readiness} onChange={setReadiness} />
-            </div>
-
-            <Field label="Notatka">
-              <textarea className="input" rows={3} value={note} onChange={e => setNote(e.target.value)} placeholder="Jak się czujesz? Czy coś boli?" style={{ resize: 'none', lineHeight: 1.6 }} />
-            </Field>
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              {todayEntry && <button className="btn btn-secondary" onClick={() => setEditing(false)}>Anuluj</button>}
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSave}>Zapisz check-in</button>
+            <FeelingsForm value={draft} onChange={setDraft} />
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button className="btn btn-secondary btn-sm" onClick={() => loadSession(selectedSessionId)}>Anuluj</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => handleSave('completed')}>Zapisz</button>
             </div>
           </>
         )}
-
-        <div style={{ marginTop: 20 }}>
-          <SectionHead title="Historia odczuć" />
-          {sorted.length === 0 ? <EmptyState title="Brak wpisów" /> : (
-            <div style={{ overflowX: 'auto' }}>
-              <table className="table" style={{ minWidth: 640 }}>
-                <thead>
-                  <tr>
-                    <th>DATA</th><th>SAMOPOCZUCIE</th><th>ENERGIA</th><th>BÓL</th><th>SZTYWNOŚĆ</th><th>REGENERACJA</th><th>SEN</th><th>STRES</th><th>GOTOWOŚĆ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sorted.slice(0, 10).map((f) => (
-                    <tr key={f.id}>
-                      <td style={{ fontSize: 12.5 }}>{new Date(f.date).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-                      <td style={{ fontSize: 16 }}>{MOODS[f.mood]}</td>
-                      <td>{f.energy}/10</td>
-                      <td>{f.pain}/10</td>
-                      <td>{f.stiffness}/10</td>
-                      <td>{f.recovery}/10</td>
-                      <td>{f.sleep}h</td>
-                      <td>{f.stress}/10</td>
-                      <td>{f.readiness}/10</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
       </div>
 
+      {/* 2 + 3. Bigger body map + selected pain points list */}
       <div className="card">
-        <div className="card-head"><span className="card-title">Mapa ciała — zaznacz ból</span></div>
-        <div style={{ fontSize: 11, color: 'var(--ink-4)', marginBottom: 8 }}>Kliknij obszar, by zwiększyć natężenie (0–5)</div>
-        <BodyMap painMap={painMap} onRegionClick={cyclePain} size={64} />
+        <div className="card-head"><span className="card-title">Mapa ciała — zaznacz ból / przeciążenie</span></div>
+        <PainPointsEditor points={draft.painPoints} onChange={(p) => setDraft((d) => ({ ...d, painPoints: p }))} />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div className="card">
-          <div className="card-head"><span className="card-title">Twoje trendy</span></div>
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--ink-3)', marginBottom: 4 }}>
-              <span>Energia (średnia)</span><span style={{ fontWeight: 700, color: 'var(--ink)' }}>{energyAvg != null ? `${energyAvg.toFixed(1)}/10` : '–'}</span>
-            </div>
-            <LineChart points={feelingTrend(feelings, 'energy')} color="var(--acc)" height={70} />
+      {/* 4. Trends — secondary, below the map */}
+      <div className="card">
+        <div className="card-head"><span className="card-title">Trendy i analiza</span></div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 16 }}>
+          <StatBox label="Energia podczas (śr.)" value={avgEnergyDuring != null ? `${avgEnergyDuring.toFixed(1)}/5` : '–'} />
+          <StatBox label="Motywacja (śr.)" value={avgMotivation != null ? `${avgMotivation.toFixed(1)}/5` : '–'} />
+          <StatBox label="Samopoczucie (śr.)" value={avgWellbeing != null ? `${avgWellbeing.toFixed(1)}/5` : '–'} />
+          <StatBox label="Sen (śr.)" value={avgSleep != null ? `${avgSleep.toFixed(1)} h` : '–'} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginBottom: 4 }}>Trend zakwasów</div>
+            <LineChart points={sorenessTrend} color="var(--danger)" height={60} />
           </div>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, color: 'var(--ink-3)', marginBottom: 4 }}>
-              <span>Ból mięśniowy (średnia)</span><span style={{ fontWeight: 700, color: 'var(--ink)' }}>{painAvg != null ? `${painAvg.toFixed(1)}/10` : '–'}</span>
-            </div>
-            <LineChart points={feelingTrend(feelings, 'pain')} color="var(--danger)" height={70} />
+            <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginBottom: 6 }}>Najczęstsze miejsca bólu</div>
+            {topPainPoints.length === 0 ? <span style={{ fontSize: 12.5, color: 'var(--ink-3)' }}>Brak danych.</span> : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {topPainPoints.map((p) => (
+                  <div key={p.muscle} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}>
+                    <span>{MUSCLE_LABEL[p.muscle]}</span><span style={{ fontWeight: 700 }}>{p.count}×</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-
-        {avgEnergyTrainingDays != null && avgEnergyRestDays != null && (
-          <div className="card">
-            <div className="card-head"><span className="card-title">Korelacja z aktywnością</span></div>
-            <div style={{ fontSize: 13, color: 'var(--ink-2)' }}>
-              Średnia energia w dni treningowe: <strong>{avgEnergyTrainingDays.toFixed(1)}/10</strong><br />
-              Średnia energia w dni odpoczynku: <strong>{avgEnergyRestDays.toFixed(1)}/10</strong>
+        {byCategory.size > 1 && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: 11.5, color: 'var(--ink-3)', marginBottom: 6 }}>Samopoczucie wg kategorii sportu</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {[...byCategory.entries()].map(([cat, values]) => (
+                <div key={cat} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5 }}>
+                  <span>{cat}</span><span style={{ fontWeight: 700 }}>{(values.reduce((a, v) => a + v, 0) / values.length).toFixed(1)}/5</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
-
-        <div className="card">
-          <div className="card-head"><span className="card-title">Wskazówki</span></div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {tips.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 16 }}>
             {tips.map((tip, i) => (
-              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, color: 'var(--ink-2)', background: 'var(--surface-3)', borderRadius: 8, padding: '8px 10px' }}>
+              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12.5, color: 'var(--ink-2)', background: 'var(--surface-3)', borderRadius: 8, padding: '7px 10px' }}>
                 <span style={{ flexShrink: 0 }}>💡</span>{tip}
               </div>
             ))}
           </div>
-        </div>
+        )}
       </div>
+
+      {/* History — edit/delete/filter */}
+      <div className="card">
+        <div className="card-head" style={{ flexWrap: 'wrap', gap: 8 }}>
+          <span className="card-title">Historia odczuć</span>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <select className="select" value={historyCategory} onChange={(e) => setHistoryCategory(e.target.value)}>
+              <option value="Wszystko">Kategoria: wszystkie</option>
+              {categoryNames.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <input className="input" type="date" value={historyFrom} onChange={(e) => setHistoryFrom(e.target.value)} style={{ width: 140 }} />
+            <input className="input" type="date" value={historyTo} onChange={(e) => setHistoryTo(e.target.value)} style={{ width: 140 }} />
+          </div>
+        </div>
+        {filteredHistory.length === 0 ? <EmptyState title="Brak wpisów" /> : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {filteredHistory.slice(0, 30).map((f) => (
+              <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'var(--surface-inset)', border: '1px solid var(--border-soft)', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 12, color: 'var(--ink-3)', minWidth: 70 }}>{new Date(f.date).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+                <SportBadge sport={f.sportCategory} />
+                <span style={{ fontSize: 13, fontWeight: 600, flex: 1, minWidth: 100 }}>{f.templateName ?? f.sportCategory}</span>
+                <span className={`badge ${f.status === 'completed' ? 'badge-green' : f.status === 'pending' ? 'badge-gray' : ''}`}>
+                  {f.status === 'completed' ? 'Uzupełnione' : f.status === 'pending' ? 'Do uzupełnienia' : 'Pominięte'}
+                </span>
+                <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>Samopoczucie {f.wellbeing}/5</span>
+                <button className="btn btn-secondary btn-sm" onClick={() => editEntry(f)}>Edytuj</button>
+                <button className="icon-btn" onClick={() => setDeleteTarget(f)} aria-label="Usuń wpis"><IcoTrash /></button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <ConfirmDelete open={!!deleteTarget} onClose={() => setDeleteTarget(null)}
+        onConfirm={() => { if (deleteTarget) deleteFeeling(deleteTarget.id); setDeleteTarget(null); }} label="ten wpis odczuć" />
     </div>
   );
 }

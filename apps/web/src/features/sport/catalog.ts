@@ -7,7 +7,14 @@
  * file is a drop-in extension rather than a rename of existing data.
  */
 
-export type SportKey = 'Siłownia' | 'Bieganie' | 'Wspinaczka' | 'Mobilność' | 'Rehabilitacja';
+/**
+ * Sport categories used to be a fixed union of 5 disciplines. The live list of
+ * categories is now user-editable and lives in `useLocalStore().sportCategories`
+ * (see store/localStore.ts) — `SportKey` stays a plain string so every existing
+ * annotation keeps compiling, and `SPORTS`/`SPORT_KEYS` below are kept only as
+ * the one-time seed data for that store list, not as a live source for the UI.
+ */
+export type SportKey = string;
 
 export interface SportDef {
   key: SportKey;
@@ -35,7 +42,7 @@ export type MuscleKey =
   | 'neck' | 'front_delts' | 'side_delts' | 'rear_delts' | 'chest' | 'lats'
   | 'upper_back' | 'lower_back' | 'biceps' | 'triceps' | 'forearms'
   | 'abs' | 'obliques' | 'glutes' | 'quads' | 'hamstrings' | 'adductors'
-  | 'hip_flexors' | 'calves' | 'knee' | 'elbow' | 'wrist' | 'ankle';
+  | 'hip_flexors' | 'calves' | 'knee' | 'elbow' | 'wrist' | 'ankle' | 'shoulder';
 
 export interface MuscleDef {
   key: MuscleKey;
@@ -68,6 +75,7 @@ export const MUSCLES: MuscleDef[] = [
   { key: 'elbow',        label: 'Łokieć',                side: 'both',  visual: 'elbow' },
   { key: 'wrist',        label: 'Nadgarstek',            side: 'both',  visual: 'wrist' },
   { key: 'ankle',        label: 'Skokowy',               side: 'both',  visual: 'ankle' },
+  { key: 'shoulder',     label: 'Bark (staw)',           side: 'both',  visual: 'shoulder_joint' },
 ];
 
 export const MUSCLE_LABEL: Record<MuscleKey, string> = MUSCLES.reduce(
