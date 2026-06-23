@@ -1,5 +1,25 @@
-/* Auth screens — built on the shared design tokens (beige / cool / graphite). */
-.auth-wrap{ min-height:100vh; display:grid; place-items:center; padding:40px 20px; }
+/* Auth screens - fixed to the Magenta palette. */
+.auth-wrap{
+  --bg-0:#101c22; --bg-1:#15242b;
+  --surface:#1b2b33; --surface-2:#21333d; --surface-3:#14222a; --surface-inset:var(--surface-3);
+  --border:rgba(150,180,190,.13); --border-soft:rgba(150,180,190,.07); --border-strong:rgba(150,180,190,.24);
+  --ink:#e9eef0; --ink-2:#a6b6bc; --ink-3:#6d8088; --ink-4:#46565f;
+  --acc:#e24a9c; --acc-ink:#f178b5; --acc-soft:rgba(226,74,156,.16); --acc-line:rgba(226,74,156,.40);
+  --acc-solid:#cf2487; --on-acc:#ffffff;
+  --acc-b:#2fa093; --acc-b-ink:#5fc7ba; --acc-b-soft:rgba(47,160,147,.18);
+  --success:#46c08a; --success-ink:#6fd6a6; --success-soft:rgba(70,192,138,.16);
+  --warn:#e0a34a; --warn-ink:#f0bd6e; --warn-soft:rgba(224,163,74,.16);
+  --danger:#ef5d6a; --danger-ink:#ff8a93; --danger-soft:rgba(239,93,106,.16);
+  --ring:0 0 0 3px var(--acc-soft);
+  --sh-1:0 1px 2px rgba(0,0,0,.4);
+  --sh-2:0 1px 2px rgba(0,0,0,.4),0 12px 32px -16px rgba(0,0,0,.7);
+  min-height:100vh; display:grid; place-items:center; padding:40px 20px;
+  color:var(--ink);
+  background:
+    radial-gradient(900px 520px at 70% -20%, var(--acc-soft), transparent 60%),
+    radial-gradient(760px 480px at 8% 110%, var(--acc-b-soft), transparent 58%),
+    linear-gradient(168deg,var(--bg-1),var(--bg-0));
+}
 .auth-card{ width:100%; max-width:412px; }
 .auth-logo{ display:flex; align-items:center; gap:9px; justify-content:center; margin-bottom:8px; }
 .auth-logo .dot{ width:9px; height:9px; border-radius:3px; background:var(--acc); box-shadow:0 0 0 4px var(--acc-soft); transform:rotate(45deg); }

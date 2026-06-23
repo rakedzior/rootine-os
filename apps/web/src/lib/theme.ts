@@ -6,6 +6,7 @@ export type Theme = 'white-lotus' | 'dark' | 'green' | 'coastal' | 'aqua' | 'lav
 
 const ROOT = document.documentElement;
 const KEY = 'rootine-theme';
+const DEFAULT_THEME: Theme = 'magenta';
 
 export function applyTheme(theme: Theme, animate = false) {
   if (animate) {
@@ -18,12 +19,12 @@ export function applyTheme(theme: Theme, animate = false) {
 
 export function applyStoredTheme() {
   const stored = localStorage.getItem(KEY) as Theme | null;
-  applyTheme(stored ?? 'white-lotus');
+  applyTheme(stored ?? DEFAULT_THEME);
 }
 
 export function getCurrentTheme(): Theme {
   const stored = localStorage.getItem(KEY) as Theme | null;
-  return stored ?? 'white-lotus';
+  return stored ?? DEFAULT_THEME;
 }
 
 export function setTheme(theme: Theme) {
