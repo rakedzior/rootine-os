@@ -8,7 +8,7 @@ export type Theme = 'white-lotus' | 'dark' | 'green' | 'coastal' | 'aqua' | 'lav
 
 const ROOT = document.documentElement;
 const KEY = 'rootine-theme';
-const DEFAULT_THEME: Theme = 'magenta';
+const DEFAULT_THEME: Theme = 'dark';
 
 export function applyTheme(theme: Theme, animate = false) {
   if (animate) {
