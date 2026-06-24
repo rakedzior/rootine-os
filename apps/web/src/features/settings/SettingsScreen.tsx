@@ -3,10 +3,12 @@ import { SecuritySettings } from './SecuritySettings';
 import { ModulesSettings } from './ModulesSettings';
 import { AccountSettings } from './AccountSettings';
 import { IntegrationsSettings } from './IntegrationsSettings';
+import { ProfileSettings } from './ProfileSettings';
 
-type Tab = 'account' | 'integrations' | 'security' | 'modules';
+type Tab = 'profile' | 'account' | 'integrations' | 'security' | 'modules';
 
 const TABS: { tab: Tab; to: string; label: string }[] = [
+  { tab: 'profile', to: '/settings/profile', label: 'Profil' },
   { tab: 'account', to: '/settings', label: 'Konto' },
   { tab: 'security', to: '/settings/security', label: 'Bezpieczeństwo' },
   { tab: 'modules', to: '/settings/modules', label: 'Moduły' },
@@ -33,7 +35,9 @@ export function SettingsScreen({ tab = 'account' }: { tab?: Tab }) {
           </nav>
         </article>
 
-        {tab === 'security' ? (
+        {tab === 'profile' ? (
+          <ProfileSettings />
+        ) : tab === 'security' ? (
           <SecuritySettings />
         ) : tab === 'modules' ? (
           <ModulesSettings />

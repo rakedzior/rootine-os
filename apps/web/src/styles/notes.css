@@ -2,9 +2,6 @@
   gap: var(--gap);
 }
 
-.notes-hero,
-.notes-title-block,
-.notes-actions,
 .notes-card-head,
 .notes-editor-head,
 .notes-editor-meta,
@@ -14,73 +11,6 @@
   align-items: center;
 }
 
-.notes-hero {
-  justify-content: space-between;
-  gap: 18px;
-  padding: 4px 0 2px;
-}
-
-.notes-title-block {
-  gap: 16px;
-  min-width: 0;
-}
-
-.notes-hero-icon {
-  width: 58px;
-  height: 58px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  border-radius: 50%;
-  color: var(--acc);
-  background: var(--acc-soft);
-  border: 1px solid var(--acc-line);
-}
-
-.notes-hero-icon svg {
-  width: 30px;
-  height: 30px;
-}
-
-.notes-title-block h1 {
-  margin: 0;
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: 30px;
-  line-height: 1;
-  font-weight: 760;
-  letter-spacing: 0;
-}
-
-.notes-title-block p {
-  margin: 8px 0 0;
-  color: var(--ink-2);
-  font-size: 13px;
-}
-
-.notes-actions {
-  justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.notes-actions button:not(.btn) {
-  min-height: 38px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-mid);
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  color: var(--ink-2);
-  padding: 0 14px;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 650;
-}
-
-.notes-actions svg,
 .notes-card-head svg {
   width: 17px;
   height: 17px;
@@ -181,6 +111,33 @@
   gap: var(--gap);
   align-items: start;
 }
+
+/* Simplified 3-area layout: Kategorie | Lista | Edytor */
+.notes-layout-3 {
+  grid-template-columns: minmax(220px, 260px) minmax(300px, 360px) minmax(0, 1fr);
+}
+.notes-list-col { display: flex; flex-direction: column; gap: 12px; max-height: calc(100dvh - 180px); }
+.notes-list-col .notes-card-grid { overflow-y: auto; }
+.notes-list-rows { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+.notes-list-row {
+  display: flex; align-items: center; gap: 12px; text-align: left; width: 100%;
+  border: 1px solid transparent; background: transparent; border-radius: var(--r-sm);
+  padding: 10px 12px; cursor: pointer; transition: var(--t-fast);
+}
+.notes-list-row:hover { background: var(--surface-2); }
+.notes-list-row.is-active { background: var(--acc-soft); border-color: var(--acc-line); }
+.notes-list-row-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.notes-list-row-main strong { display: flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notes-list-row-main strong svg { width: 13px; height: 13px; color: var(--warn-ink); flex-shrink: 0; }
+.notes-list-row-main small { font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notes-list-row em { font-family: var(--font-mono); font-size: 10px; color: var(--ink-4); font-style: normal; flex-shrink: 0; }
+.notes-editor-col { min-width: 0; }
+
+.notes-view-toggle { display: inline-flex; gap: 2px; background: var(--surface-inset); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 2px; }
+.notes-view-toggle button { display: grid; place-items: center; width: 30px; height: 28px; border: 0; background: transparent; border-radius: var(--r-xs); color: var(--ink-3); cursor: pointer; }
+.notes-view-toggle button svg { width: 16px; height: 16px; }
+.notes-view-toggle button.is-active { background: var(--surface); color: var(--acc-ink); box-shadow: var(--sh-1); }
+@media (max-width: 1100px) { .notes-layout-3 { grid-template-columns: 1fr; } .notes-list-col { max-height: none; } }
 
 .notes-card {
   min-width: 0;
@@ -717,18 +674,6 @@
   height: 16px;
 }
 
-.notes-mini-toolbar button {
-  margin-left: auto;
-  border: 0;
-  border-radius: var(--r-sm);
-  background: var(--acc);
-  color: var(--on-acc);
-  padding: 9px 18px;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 760;
-}
-
 .notes-side-list {
   padding-bottom: 12px;
 }
@@ -943,15 +888,11 @@
 }
 
 @media (max-width: 720px) {
-  .notes-hero,
   .notes-editor-head {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .notes-actions,
-  .notes-actions .btn,
-  .notes-actions button,
   .notes-kpis,
   .notes-board-head {
     width: 100%;

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, IcoTrash } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash } from '@/components/common';
 import { useLocalStore, type Trip, type WishlistPlace } from '@/store/localStore';
 import '@/styles/travel.css';
 
@@ -147,6 +147,7 @@ export function TravelScreen() {
   const [showAdd, setShowAdd] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [packingState, setPackingState] = useState<Record<string, boolean>>({});
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const visibleTrips = useMemo(() => {
     const base = filter === 'all'
@@ -173,15 +174,11 @@ export function TravelScreen() {
 
   return (
     <div className="module-page travel-page">
-      <header className="travel-hero">
-        <div className="travel-title-block">
-          <span className="travel-hero-icon"><TravelIcon name="plane" /></span>
-          <div>
-            <h1>Podróże</h1>
-            <p>Wszystkie wyjazdy i szczegóły podróży w jednym miejscu.</p>
-          </div>
-        </div>
-        <div className="travel-actions">
+      <PageHeader
+        icon={<TravelIcon name="plane" />}
+        title="Podróże"
+        desc="Wszystkie wyjazdy i szczegóły podróży w jednym miejscu."
+        actions={<>
           <button className="btn btn-primary" type="button" onClick={() => setShowAdd(true)}>
             <TravelIcon name="plus" /> Nowa podróż
           </button>
@@ -193,39 +190,46 @@ export function TravelScreen() {
               ))}
             </select>
           </label>
-        </div>
-      </header>
+        </>}
+      />
 
-      <section className="travel-kpis">
-        <TravelKpi icon="suitcase" label="Planowane podróże" value={String(plannedTrips.length)} note="+ 50% względem poprzedniego miesiąca" tone="pink" />
-        <TravelKpi icon="plane" label="Najbliższy wyjazd" value={nextTrip ? locationLabel(nextTrip) : 'Brak planów'} note={nextTrip ? fmtDate(nextTrip.startDate) : 'Dodaj pierwszy termin'} tone="blue" badge={nextTrip ? `za ${Math.max(0, daysUntil(nextTrip.startDate))} dni` : undefined} />
-        <TravelKpi icon="globe" label="Kraje / miasta" value={String(countriesCount)} note={`${wishlist.filter((place) => !place.visited).length} na wishliście`} tone="violet" />
-        <TravelKpi icon="wallet" label="Łączny budżet podróży" value={fmtPLN(totalBudget || 0)} note="vs. poprzedni miesiąc" tone="teal" />
-      </section>
-
-      <section className="travel-layout">
-        <TripsRail
-          trips={visibleTrips}
-          selectedId={selected?.id ?? null}
-          onSelect={setSelectedId}
-          onAdd={() => setShowAdd(true)}
-        />
-
-        {selected ? (
-          <TripCentral
-            trip={selected}
-            packingState={packingState}
-            onTogglePacking={togglePacking}
-            onDelete={() => setDeleteId(selected.id)}
-          />
-        ) : (
-          <div className="travel-card travel-empty-detail">
-            <EmptyState title="Brak podróży" desc="Dodaj wyjazd, żeby zbudować plan." cta="Nowa podróż" onCta={() => setShowAdd(true)} />
+      {detailOpen && selected ? (
+        <>
+          <div>
+            <button className="btn btn-ghost btn-sm" type="button" onClick={() => setDetailOpen(false)}>
+              ← Powrót do przeglądu
+            </button>
           </div>
-        )}
+          <section className="travel-split">
+            <TripCentral
+              trip={selected}
+              packingState={packingState}
+              onTogglePacking={togglePacking}
+              onDelete={() => { setDeleteId(selected.id); }}
+            />
+            <TravelAside trip={selected} wishlist={wishlist} />
+          </section>
+        </>
+      ) : (
+        <>
+          <section className="travel-kpis">
+            <TravelKpi icon="suitcase" label="Planowane podróże" value={String(plannedTrips.length)} note="+ 50% względem poprzedniego miesiąca" tone="pink" />
+            <TravelKpi icon="plane" label="Najbliższy wyjazd" value={nextTrip ? locationLabel(nextTrip) : 'Brak planów'} note={nextTrip ? fmtDate(nextTrip.startDate) : 'Dodaj pierwszy termin'} tone="blue" badge={nextTrip ? `za ${Math.max(0, daysUntil(nextTrip.startDate))} dni` : undefined} />
+            <TravelKpi icon="globe" label="Kraje / miasta" value={String(countriesCount)} note={`${wishlist.filter((place) => !place.visited).length} na wishliście`} tone="violet" />
+            <TravelKpi icon="wallet" label="Łączny budżet podróży" value={fmtPLN(totalBudget || 0)} note="vs. poprzedni miesiąc" tone="teal" />
+          </section>
 
-        <TravelAside trip={selected ?? null} wishlist={wishlist} />
-      </section>
+          <section className="travel-split">
+            <TripsRail
+              trips={visibleTrips}
+              selectedId={selected?.id ?? null}
+              onSelect={(id) => { setSelectedId(id); setDetailOpen(true); }}
+              onAdd={() => setShowAdd(true)}
+            />
+            <TravelAside trip={selected ?? null} wishlist={wishlist} />
+          </section>
+        </>
+      )}
 
       <TripModal open={showAdd} onClose={() => setShowAdd(false)} onSave={(payload) => {
         addTrip(payload);

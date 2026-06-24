@@ -4,6 +4,19 @@ import { setTheme, getCurrentTheme, type Theme } from '@/lib/theme';
 import { logAudit } from '@/lib/audit';
 import { toast } from '@/lib/toast';
 
+const THEMES: { id: Theme; label: string; swatch: string }[] = [
+  { id: 'white-lotus', label: 'Beżowy', swatch: '#9a6a42' },
+  { id: 'green', label: 'Chłodny', swatch: '#4257d4' },
+  { id: 'dark', label: 'Grafit', swatch: '#161c26' },
+  { id: 'coastal', label: 'Nadmorski', swatch: '#335765' },
+  { id: 'aqua', label: 'Laguna', swatch: '#16a3b8' },
+  { id: 'lavender', label: 'Lawenda', swatch: '#8a737d' },
+  { id: 'coral', label: 'Koralowy', swatch: '#bc6266' },
+  { id: 'steel', label: 'Stalowy', swatch: '#405278' },
+  { id: 'magenta', label: 'Magenta', swatch: '#cf2487' },
+  { id: 'mono', label: 'Monochrom', swatch: '#4d4d4d' },
+];
+
 export function AccountSettings() {
   const [theme, setThemeState] = useState<Theme>(getCurrentTheme);
   const [email, setEmail] = useState('');
@@ -18,10 +31,9 @@ export function AccountSettings() {
     });
   }, []);
 
-  async function toggleTheme() {
-    const next: Theme = theme === 'dark' ? 'white-lotus' : 'dark';
+  function pickTheme(next: Theme) {
     setThemeState(next);
-    await setTheme(next);
+    setTheme(next);
   }
 
   async function handleExport() {
@@ -82,30 +94,29 @@ export function AccountSettings() {
 
   return (
     <>
-      {/* Theme */}
+      {/* Theme / accent */}
       <article className="card" style={{ marginBottom: 16 }}>
         <div className="card-head">
-          <div className="lhs"><span className="card-title">Wygląd</span></div>
+          <div className="lhs"><span className="card-title">Motyw i kolor akcentu</span></div>
         </div>
-        <div style={{ padding: '4px 0 8px', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span style={{ fontSize: 13, color: 'var(--ink-2)' }}>Motyw</span>
-          <button
-            type="button"
-            onClick={toggleTheme}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              background: 'var(--surface-inset)', border: '1px solid var(--border)',
-              borderRadius: 20, padding: '6px 14px', cursor: 'pointer',
-              fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-2)',
-              letterSpacing: '.05em', textTransform: 'uppercase',
-            }}
-          >
-            <span style={{ fontSize: 15 }}>{theme === 'dark' ? '☀️' : '🌙'}</span>
-            {theme === 'dark' ? 'Jasny' : 'Ciemny'}
-          </button>
-          <span style={{ fontSize: 12, color: 'var(--ink-3)' }}>
-            Aktualnie: {theme === 'dark' ? 'ciemny' : 'jasny'}
-          </span>
+        <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: '0 0 14px' }}>
+          Wybierz paletę aplikacji. Ustawienie jest zapisywane na koncie i synchronizowane między urządzeniami.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
+          {THEMES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => pickTheme(t.id)}
+              className={theme === t.id ? 'theme-card active' : 'theme-card'}
+            >
+              <span className="theme-swatch" style={{ background: t.swatch }} />
+              <span>{t.label}</span>
+              {theme === t.id && (
+                <svg style={{ marginLeft: 'auto', width: 13, height: 13 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+              )}
+            </button>
+          ))}
         </div>
       </article>
 

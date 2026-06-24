@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, IcoTrash } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash } from '@/components/common';
 import { useLocalStore, type ChecklistItem, type Note, type NoteType } from '@/store/localStore';
 import '@/styles/notes.css';
 
@@ -72,7 +72,7 @@ export function NotesScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(notes.find((note) => !note.archived)?.id ?? null);
   const [showAdd, setShowAdd] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [quickText, setQuickText] = useState('');
+  const [view, setView] = useState<'cards' | 'list'>('cards');
 
   const activeCategory = CATEGORIES.find((cat) => cat.id === categoryId) ?? CATEGORIES[0];
   const visibleNotes = useMemo(() => {
@@ -80,57 +80,28 @@ export function NotesScreen() {
     return base.filter(activeCategory.matcher).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   }, [activeCategory, categoryId, notes]);
   const selected = notes.find((note) => note.id === selectedId) ?? visibleNotes[0] ?? notes.find((note) => !note.archived);
-  const pinned = notes.filter((note) => note.pinned && !note.archived).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  const recent = notes.filter((note) => !note.archived).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 5);
-  const tags = buildTags(notes);
 
   useEffect(() => {
     if (!selectedId && selected) setSelectedId(selected.id);
     if (selectedId && !notes.some((note) => note.id === selectedId)) setSelectedId(visibleNotes[0]?.id ?? null);
   }, [notes, selected, selectedId, visibleNotes]);
 
-  function saveQuickNote() {
-    if (!quickText.trim()) return;
-    addNote({
-      title: quickText.trim().split('\n')[0].slice(0, 60),
-      content: quickText.trim(),
-      type: 'sticky',
-      color: NOTE_COLORS[0],
-      category: 'Pomysły',
-      tags: ['Pomysły'],
-      pinned: false,
-      archived: false,
-    });
-    setQuickText('');
-  }
-
   return (
     <div className="module-page notes-os">
-      <header className="notes-hero">
-        <div className="notes-title-block">
-          <span className="notes-hero-icon"><NoteIcon name="note" /></span>
-          <div>
-            <h1>Notatki</h1>
-            <p>Wszystkie notatki, pomysły i szybkie zapisy w jednym miejscu.</p>
-          </div>
-        </div>
-        <div className="notes-actions">
+      <PageHeader
+        icon={<NoteIcon name="note" />}
+        title="Notatki"
+        desc="Wszystkie notatki, pomysły i szybkie zapisy w jednym miejscu."
+        actions={<>
           <button className="btn btn-primary" type="button" onClick={() => setShowAdd(true)}><NoteIcon name="plus" /> Nowa notatka</button>
-          <button type="button"><NoteIcon name="filter" /> Filtry</button>
-          <button type="button" aria-label="Widok kafelków"><NoteIcon name="grid" /></button>
-          <button type="button" aria-label="Widok listy"><NoteIcon name="list" /></button>
-          <button type="button" aria-label="Ustawienia"><NoteIcon name="settings" /></button>
-        </div>
-      </header>
+          <div className="notes-view-toggle">
+            <button className={view === 'list' ? 'is-active' : ''} type="button" onClick={() => setView('list')} aria-label="Widok listy"><NoteIcon name="list" /></button>
+            <button className={view === 'cards' ? 'is-active' : ''} type="button" onClick={() => setView('cards')} aria-label="Widok kafelków"><NoteIcon name="grid" /></button>
+          </div>
+        </>}
+      />
 
-      <section className="notes-kpis">
-        <NoteKpi icon="document" label="Wszystkie notatki" value={notes.filter((n) => !n.archived).length} note="+ 12 od wczoraj" tone="violet" />
-        <NoteKpi icon="star" label="Przypięte" value={pinned.length} note="+ 3 od wczoraj" tone="amber" />
-        <NoteKpi icon="tag" label="Kategorie" value={CATEGORIES.length - 2} note="+ 1 nowa" tone="teal" />
-        <NoteKpi icon="clock" label="Ostatnio edytowane" value={recent.length + 9} note="w tym tygodniu" tone="orange" />
-      </section>
-
-      <section className="notes-layout">
+      <section className="notes-layout notes-layout-3">
         <aside className="notes-sidebar notes-card">
           <div className="notes-card-head">
             <h2>Kategorie</h2>
@@ -153,106 +124,46 @@ export function NotesScreen() {
           <button className="notes-add-category" type="button"><NoteIcon name="plus" /> Dodaj kategorię</button>
         </aside>
 
-        <main className="notes-center">
-          {selected ? (
-            <EditorPanel note={selected} onUpdate={(patch) => updateNote(selected.id, patch)} onDelete={() => setDeleteId(selected.id)} />
-          ) : (
-            <div className="notes-card notes-empty-center"><EmptyState title="Brak notatek" cta="Nowa notatka" onCta={() => setShowAdd(true)} /></div>
-          )}
-
-          <section className="notes-card notes-board">
-            <div className="notes-board-head">
-              <h2>Moje notatki</h2>
-              <div>
-                <button className="is-active" type="button">Wszystkie</button>
-                <button type="button">Przypięte <span>{pinned.length}</span></button>
-                <button type="button">Ostatnio edytowane</button>
-                <button type="button">Udostępnione <span>6</span></button>
-              </div>
-              <label>Sortuj: Ostatnia aktualizacja <select aria-label="Sortowanie"><option>Ostatnia aktualizacja</option></select></label>
-            </div>
-
+        <section className="notes-card notes-list-col">
+          <div className="notes-card-head">
+            <h2>{activeCategory.label}</h2>
+            <span className="badge badge-gray">{visibleNotes.length}</span>
+          </div>
+          {visibleNotes.length === 0 ? (
+            <EmptyState title="Brak notatek w tej kategorii" cta="Nowa notatka" onCta={() => setShowAdd(true)} />
+          ) : view === 'cards' ? (
             <div className="notes-card-grid">
-              {visibleNotes.length === 0 ? (
-                <EmptyState title="Brak notatek w tej kategorii" />
-              ) : visibleNotes.slice(0, 5).map((note) => (
+              {visibleNotes.map((note) => (
                 <NoteTile key={note.id} note={note} selected={selected?.id === note.id} onSelect={() => setSelectedId(note.id)} onPin={() => updateNote(note.id, { pinned: !note.pinned })} />
               ))}
             </div>
-            <button className="notes-all-link" type="button">Zobacz wszystkie notatki <span>→</span></button>
-          </section>
+          ) : (
+            <div className="notes-list-rows">
+              {visibleNotes.map((note) => (
+                <button key={note.id} type="button" className={`notes-list-row ${selected?.id === note.id ? 'is-active' : ''}`} onClick={() => setSelectedId(note.id)}>
+                  <div className="notes-list-row-main">
+                    <strong>{note.pinned && <NoteIcon name="star" />}{note.title}</strong>
+                    <small>{notePreview(note)}</small>
+                  </div>
+                  <em>{relativeTime(note.updatedAt)}</em>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <main className="notes-editor-col">
+          {selected ? (
+            <EditorPanel note={selected} onUpdate={(patch) => updateNote(selected.id, patch)} onDelete={() => setDeleteId(selected.id)} />
+          ) : (
+            <div className="notes-card notes-empty-center"><EmptyState title="Wybierz notatkę" desc="Kliknij notatkę z listy lub utwórz nową." cta="Nowa notatka" onCta={() => setShowAdd(true)} /></div>
+          )}
         </main>
-
-        <aside className="notes-side">
-          <section className="notes-card notes-quick">
-            <h2>Szybka notatka</h2>
-            <textarea value={quickText} onChange={(event) => setQuickText(event.target.value)} placeholder="Zapisz szybką myśl, zadanie lub pomysł..." />
-            <div className="notes-mini-toolbar">
-              <NoteIcon name="bold" /><NoteIcon name="italic" /><NoteIcon name="list" /><NoteIcon name="align" /><NoteIcon name="check" /><NoteIcon name="link" /><NoteIcon name="image" />
-              <button type="button" onClick={saveQuickNote}>Zapisz</button>
-            </div>
-          </section>
-
-          <SideList title="Przypięte" notes={pinned.slice(0, 5)} onSelect={setSelectedId} pin />
-          <SideList title="Ostatnio edytowane" notes={recent} onSelect={setSelectedId} />
-
-          <section className="notes-card notes-tags">
-            <div className="notes-card-head"><h2>Popularne tagi</h2><button type="button">Zobacz wszystkie →</button></div>
-            <div>
-              {tags.map((tag) => <span key={tag.name}>{tag.name} <em>{tag.count}</em></span>)}
-            </div>
-          </section>
-        </aside>
-      </section>
-
-      <section className="notes-card notes-activity">
-        <h2>Ostatnia aktywność</h2>
-        <div>
-          {recent.slice(0, 5).map((note, index) => (
-            <article className={`notes-activity-item notes-tone-${categoryFor(note).tone}`} key={note.id}>
-              <span><NoteIcon name={index % 3 === 0 ? 'note' : index % 3 === 1 ? 'document' : 'tag'} /></span>
-              <strong>{index % 2 === 0 ? 'Zaktualizowano notatkę' : 'Utworzono notatkę'}</strong>
-              <small>{note.title}</small>
-              <em>{relativeTime(note.updatedAt)}</em>
-            </article>
-          ))}
-        </div>
       </section>
 
       <NoteModal open={showAdd} onClose={() => setShowAdd(false)} onSave={(data) => { addNote(data); setShowAdd(false); }} />
       <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { if (deleteId) deleteNote(deleteId); setDeleteId(null); }} label="tę notatkę" />
     </div>
-  );
-}
-
-function buildTags(notes: Note[]) {
-  const map = new Map<string, number>();
-  notes.forEach((note) => note.tags.forEach((tag) => map.set(tag, (map.get(tag) ?? 0) + 1)));
-  return Array.from(map.entries())
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
-}
-
-function NoteKpi({ icon, label, value, note, tone }: { icon: NoteIconName; label: string; value: number; note: string; tone: string }) {
-  return (
-    <article className={`notes-kpi notes-tone-${tone}`}>
-      <span><NoteIcon name={icon} /></span>
-      <div>
-        <small>{label}</small>
-        <strong>{value}</strong>
-        <em>{note}</em>
-      </div>
-      <Spark />
-    </article>
-  );
-}
-
-function Spark() {
-  return (
-    <svg viewBox="0 0 120 42" preserveAspectRatio="none" aria-hidden="true">
-      <polyline points="2,23 18,26 32,18 45,23 58,14 72,20 86,25 101,17 118,9" />
-    </svg>
   );
 }
 
@@ -328,25 +239,6 @@ function NoteTile({ note, selected, onSelect, onPin }: { note: Note; selected: b
       </button>
       <button type="button" onClick={onPin} className={`notes-tile-pin ${note.pinned ? 'is-pinned' : ''}`} aria-label="Przypnij"><NoteIcon name="pin" /></button>
     </article>
-  );
-}
-
-function SideList({ title, notes, onSelect, pin = false }: { title: string; notes: Note[]; onSelect: (id: string) => void; pin?: boolean }) {
-  return (
-    <section className="notes-card notes-side-list">
-      <div className="notes-card-head"><h2>{title}</h2><button type="button">Zobacz wszystkie →</button></div>
-      {notes.map((note) => {
-        const cat = categoryFor(note);
-        return (
-          <button key={note.id} type="button" onClick={() => onSelect(note.id)} className={`notes-side-row notes-tone-${cat.tone}`}>
-            <i />
-            <strong>{note.title}</strong>
-            <span>{pin ? fmtDate(note.updatedAt).replace('2026', '') : relativeTime(note.updatedAt)}</span>
-            {pin && <NoteIcon name="pin" />}
-          </button>
-        );
-      })}
-    </section>
   );
 }
 

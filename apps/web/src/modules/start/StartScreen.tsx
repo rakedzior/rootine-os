@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useRef, type MouseEvent } from 'react';
+import { useState, useEffect, useMemo, useRef, type MouseEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ConfirmDelete, Field, Modal } from '@/components/common';
+import { ConfirmDelete, Field, Modal, PageHeader } from '@/components/common';
 import { useHabits, useHabitLogs, useToggleHabitLog } from '@/features/habits/hooks';
 import { habitOccursOn, habitScheduleLabel, habitStats, todayStr as habitsTodayStr } from '@/features/habits/dates';
 import type { HabitLog } from '@/features/habits/types';
@@ -14,6 +14,11 @@ const MONTH_SHORT = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź
 function pad(n: number) { return String(n).padStart(2, '0'); }
 function toDateStr(y: number, m: number, d: number) {
   return `${y}-${pad(m + 1)}-${pad(d)}`;
+}
+function fmtShortDate(iso: string) {
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d) return iso;
+  return `${d} ${MONTH_SHORT[m - 1] ?? ''}`;
 }
 
 // ─── ADD TASK MODAL ───────────────────────────────────────────
@@ -540,7 +545,7 @@ function AddTaskModal({
                     borderRadius: 10,
                     border: day ? `1px solid ${active ? 'var(--acc-a)' : 'var(--border-soft)'}` : '1px solid transparent',
                     background: active ? 'var(--acc-a)' : today ? 'var(--acc-a-soft)' : 'var(--surface)',
-                    color: active ? '#fff' : 'var(--ink-2)',
+                    color: active ? 'var(--on-acc)' : 'var(--ink-2)',
                     fontFamily: 'var(--mono)',
                     fontSize: 12,
                     fontWeight: active ? 800 : 600,
@@ -678,7 +683,7 @@ function Calendar({ tasks, onDayClick, onTaskClick }: CalendarProps) {
         <div style={{
           fontVariantNumeric:'tabular-nums',
           ...(isCellToday
-            ? { color:'#fff', background:'var(--acc-a)', width:22, height:22, borderRadius:'50%', display:'grid', placeItems:'center', fontSize:11, fontWeight:700 }
+            ? { color:'var(--on-acc)', background:'var(--acc-a)', width:22, height:22, borderRadius:'50%', display:'grid', placeItems:'center', fontSize:11, fontWeight:700 }
             : { fontSize:12, fontWeight:600, color:'var(--ink-2)' })
         }}>{date.getDate()}</div>
         {dayTasks.map(t => (
@@ -902,7 +907,7 @@ function HabitsStrip() {
                 background: stats.doneToday ? 'var(--acc-a)' : 'var(--surface)',
                 display:'grid',
                 placeItems:'center',
-                color:'#fff',
+                color:'var(--on-acc)',
                 flexShrink: 0,
               }}>
                 {stats.doneToday && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
@@ -1068,6 +1073,62 @@ interface TodayPanelProps {
   onDeleteCompleted: (tasks: SupabaseTask[]) => void;
 }
 
+function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
+  task: SupabaseTask; todayStr: string;
+  onTaskClick: (task: SupabaseTask) => void;
+  onToggleTask: (id: string, done: boolean) => void;
+}) {
+  const isDone = task.done;
+  const overdue = !isDone && !!task.due_date && task.due_date < todayStr;
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onTaskClick(task)}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onTaskClick(task)}
+      className="hover-row"
+      style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 6px', margin:'0 -6px', borderRadius:8, cursor:'pointer', opacity:isDone ? .72 : 1 }}
+    >
+      <div
+        role="checkbox"
+        aria-checked={isDone}
+        tabIndex={0}
+        onClick={(e) => { e.stopPropagation(); onToggleTask(task.id, !task.done); }}
+        onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.stopPropagation(); onToggleTask(task.id, !task.done); } }}
+        style={{ width:18, height:18, borderRadius:6, border:`1.5px solid ${isDone?'var(--acc-a)':'var(--border)'}`, background:isDone?'var(--acc-a)':'transparent', flexShrink:0, display:'grid', placeItems:'center', color:'var(--on-acc)', cursor:'pointer', transition:'.15s' }}
+      >
+        {isDone && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
+      </div>
+      <span style={{ flex:1, fontSize:13, color:isDone?'var(--ink-3)':'var(--ink)', fontWeight:500, textDecoration:isDone?'line-through':'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+        {task.title}
+      </span>
+      {overdue && <span className="badge status-overdue" style={{ flexShrink:0 }}>Po terminie</span>}
+      {!overdue && task.due_date && task.due_date !== todayStr && (
+        <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-3)', flexShrink:0 }}>{fmtShortDate(task.due_date)}</span>
+      )}
+      {task.category && (
+        <span style={{ display:'flex', alignItems:'center', gap:4, fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-3)', flexShrink:0 }}>
+          <i style={{ width:5, height:5, borderRadius:'50%', background:CAT_COLORS[task.category]??CAT_COLORS.default, display:'block' }}/>
+          {task.category}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function PlannerSection({ label, count, children }: { label: string; count: number; children: ReactNode }) {
+  if (count === 0) return null;
+  return (
+    <div style={{ marginBottom:14 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, padding:'0 2px' }}>
+        <span style={{ fontFamily:'var(--mono)', fontSize:10, letterSpacing:'.08em', textTransform:'uppercase', color:'var(--ink-3)', fontWeight:700 }}>{label}</span>
+        <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-4)' }}>{count}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 function TodayPanel({
   tasks,
   isLoading,
@@ -1077,79 +1138,51 @@ function TodayPanel({
   onDeleteCompleted,
 }: TodayPanelProps) {
   const now = useMemo(() => new Date(), []);
-
   const todayStr = toDateStr(now.getFullYear(), now.getMonth(), now.getDate());
-  const displayTasks = tasks
-    .filter((t) => (t.done ? (!t.due_date || t.due_date === todayStr) : (!t.due_date || t.due_date <= todayStr)))
-    .sort((a, b) => {
-      if (a.done !== b.done) return Number(a.done) - Number(b.done);
-      const aDate = a.due_date ?? todayStr;
-      const bDate = b.due_date ?? todayStr;
-      if (aDate !== bDate) return aDate.localeCompare(bDate);
-      return a.created_at.localeCompare(b.created_at);
-    });
-  const completedVisible = displayTasks.filter((task) => task.done);
+
+  const byDate = (a: SupabaseTask, b: SupabaseTask) => {
+    const aDate = a.due_date ?? '';
+    const bDate = b.due_date ?? '';
+    if (aDate !== bDate) return aDate.localeCompare(bDate);
+    return a.created_at.localeCompare(b.created_at);
+  };
+
+  // Sekcje: Dzisiaj (dziś + po terminie), Nadchodzące, Bez daty.
+  const todaySec = tasks.filter((t) => !t.done && (t.due_date === todayStr || (!!t.due_date && t.due_date < todayStr))).sort(byDate);
+  const upcomingSec = tasks.filter((t) => !t.done && !!t.due_date && t.due_date > todayStr).sort(byDate);
+  const undatedSec = tasks.filter((t) => !t.done && !t.due_date).sort(byDate);
+  const completedToday = tasks.filter((t) => t.done && (!t.due_date || t.due_date === todayStr)).sort(byDate);
+  const total = todaySec.length + upcomingSec.length + undatedSec.length + completedToday.length;
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
       {/* Header */}
-      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:16, flexShrink:0 }}>
-        <span style={{ fontFamily:'var(--display)', fontSize:32, fontWeight:600, letterSpacing:'-.02em', lineHeight:1 }}>Zadania</span>
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:14, flexShrink:0 }}>
+        <span style={{ fontFamily:'var(--display)', fontSize:28, fontWeight:600, letterSpacing:'-.02em', lineHeight:1 }}>Zadania</span>
       </div>
 
-      {/* Task list — scrollable */}
+      {/* Task list — scrollable, grouped */}
       <div style={{ flex:1, overflowY:'auto', minHeight:0, paddingRight:2 }}>
         {isLoading ? (
-          <div style={{ textAlign:'center', padding:'24px 0', color:'var(--ink-3)', fontSize:13 }}>
-            Ladowanie zadan...
-          </div>
-        ) : displayTasks.length === 0 ? (
-          <div style={{ textAlign:'center', padding:'24px 0', color:'var(--ink-3)', fontSize:13 }}>
-            Brak zadań na teraz.
-          </div>
-        ) : displayTasks.map(task => {
-          const isDone = task.done;
-          return (
-            <div
-              key={task.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => onTaskClick(task)}
-              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onTaskClick(task)}
-              className="hover-row"
-              style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 6px', margin:'0 -6px', borderTop:'1px solid var(--border-soft)', borderRadius:8, cursor:'pointer', opacity:isDone ? .72 : 1 }}
-            >
-              {/* Checkbox */}
-              <div
-                role="checkbox"
-                aria-checked={isDone}
-                tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleTask(task.id, !task.done);
-                }}
-                onKeyDown={e => {
-                  if (e.key === ' ' || e.key === 'Enter') {
-                    e.stopPropagation();
-                    onToggleTask(task.id, !task.done);
-                  }
-                }}
-                style={{ width:18, height:18, borderRadius:6, border:`1.5px solid ${isDone?'var(--acc-a)':'var(--border)'}`, background:isDone?'var(--acc-a)':'transparent', flexShrink:0, display:'grid', placeItems:'center', color:'#fff', cursor:'pointer', transition:'.15s' }}
-              >
-                {isDone && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
-              </div>
-              <span style={{ flex:1, fontSize:13, color:isDone?'var(--ink-3)':'var(--ink)', fontWeight:500, textDecoration:isDone?'line-through':'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                {task.title}
-              </span>
-              {task.category && (
-                <span style={{ display:'flex', alignItems:'center', gap:4, fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-3)', flexShrink:0 }}>
-                  <i style={{ width:5, height:5, borderRadius:'50%', background:CAT_COLORS[task.category]??CAT_COLORS.default, display:'block' }}/>
-                  {task.category}
-                </span>
-              )}
-            </div>
-          );
-        })}
+          <div style={{ textAlign:'center', padding:'24px 0', color:'var(--ink-3)', fontSize:13 }}>Ladowanie zadan...</div>
+        ) : total === 0 ? (
+          <div style={{ textAlign:'center', padding:'24px 0', color:'var(--ink-3)', fontSize:13 }}>Brak zadań. Dodaj pierwsze poniżej.</div>
+        ) : (
+          <>
+            <PlannerSection label="Dzisiaj" count={todaySec.length}>
+              {todaySec.map((task) => <PlannerTaskRow key={task.id} task={task} todayStr={todayStr} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />)}
+            </PlannerSection>
+            <PlannerSection label="Nadchodzące" count={upcomingSec.length}>
+              {upcomingSec.map((task) => <PlannerTaskRow key={task.id} task={task} todayStr={todayStr} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />)}
+            </PlannerSection>
+            <PlannerSection label="Bez daty" count={undatedSec.length}>
+              {undatedSec.map((task) => <PlannerTaskRow key={task.id} task={task} todayStr={todayStr} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />)}
+            </PlannerSection>
+            <PlannerSection label="Ukończone dziś" count={completedToday.length}>
+              {completedToday.map((task) => <PlannerTaskRow key={task.id} task={task} todayStr={todayStr} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />)}
+            </PlannerSection>
+          </>
+        )}
       </div>
 
       {/* Add task row */}
@@ -1161,10 +1194,10 @@ function TodayPanel({
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color:'var(--acc-a)', flexShrink:0 }}><path d="M12 5v14M5 12h14"/></svg>
           Dodaj zadanie
         </button>
-        {completedVisible.length > 0 && (
+        {completedToday.length > 0 && (
           <button
             type="button"
-            onClick={() => onDeleteCompleted(completedVisible)}
+            onClick={() => onDeleteCompleted(completedToday)}
             style={{ background:'transparent', border:0, color:'var(--ink-3)', cursor:'pointer', fontFamily:'var(--mono)', fontSize:10, letterSpacing:'.06em', textTransform:'uppercase', fontWeight:700, padding:0, whiteSpace:'nowrap' }}
           >
             Usuń wykonane
@@ -1176,6 +1209,14 @@ function TodayPanel({
 }
 
 // ─── ROOT ─────────────────────────────────────────────────────
+
+function PlannerHeaderIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18M8 14h2M14 14h2M8 18h2M14 18h2" />
+    </svg>
+  );
+}
 
 export function StartScreen() {
   const now = new Date();
@@ -1274,6 +1315,12 @@ export function StartScreen() {
         gap: 'var(--gap)',
         width: '100%', boxSizing: 'border-box',
       }}>
+        <PageHeader
+          icon={<PlannerHeaderIcon />}
+          title="Planer"
+          desc="Zaplanuj dzień, zadania, nawyki i cele w jednym miejscu."
+          actions={<button className="btn btn-primary btn-sm" type="button" onClick={openForToday}>+ Nowe zadanie</button>}
+        />
         {/* TOP ROW: Today + Calendar — fixed min-height, not flex-grow */}
         <div className="planer-top-grid">
           <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>

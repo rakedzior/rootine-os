@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode, type FC } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type FC } from 'react';
 
 // ─── MODAL ───────────────────────────────────────────────────
 
@@ -152,17 +152,139 @@ export function CircularProgress({ value, max = 100, size = 80, strokeWidth = 8,
 }
 
 // ─── STATUS BADGE ─────────────────────────────────────────────
+// Unified app-wide statuses (sekcja 16). Aliases map module-specific
+// names onto the canonical six so colours stay consistent everywhere.
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
-  todo:     { label: 'Do zrobienia', cls: 'status-todo' },
-  active:   { label: 'W trakcie',    cls: 'status-active' },
-  waiting:  { label: 'Oczekuje',     cls: 'status-waiting' },
-  done:     { label: 'Zrobione',     cls: 'status-done' },
-  blocked:  { label: 'Zablokowane',  cls: 'status-blocked' },
+  todo:      { label: 'Do zrobienia', cls: 'status-todo' },
+  active:    { label: 'W trakcie',    cls: 'status-active' },
+  waiting:   { label: 'Oczekuje',     cls: 'status-waiting' },
+  done:      { label: 'Zrobione',     cls: 'status-done' },
+  overdue:   { label: 'Opóźnione',    cls: 'status-overdue' },
+  cancelled: { label: 'Anulowane',    cls: 'status-cancelled' },
+  // aliases → canonical
+  'in-progress': { label: 'W trakcie',   cls: 'status-active' },
+  inprogress:    { label: 'W trakcie',   cls: 'status-active' },
+  pending:       { label: 'Oczekuje',    cls: 'status-waiting' },
+  blocked:       { label: 'Opóźnione',   cls: 'status-overdue' },
+  late:          { label: 'Opóźnione',   cls: 'status-overdue' },
+  canceled:      { label: 'Anulowane',   cls: 'status-cancelled' },
 };
-export function StatusBadge({ status }: { status: string }) {
-  const m = STATUS_MAP[status] ?? { label: status, cls: 'badge-gray' };
-  return <span className={`badge ${m.cls}`}>{m.label}</span>;
+export function StatusBadge({ status, label }: { status: string; label?: string }) {
+  const m = STATUS_MAP[status] ?? { label: label ?? status, cls: 'badge-gray' };
+  return <span className={`badge ${m.cls}`}>{label ?? m.label}</span>;
+}
+
+// ─── PAGE HEADER ──────────────────────────────────────────────
+// One module header for the whole app: icon + title + description + actions.
+
+interface PageHeaderProps {
+  icon?: ReactNode;
+  title: string;
+  desc?: string;
+  actions?: ReactNode;
+}
+export function PageHeader({ icon, title, desc, actions }: PageHeaderProps) {
+  return (
+    <header className="page-head">
+      <div className="page-head-main">
+        {icon && <span className="page-head-icon">{icon}</span>}
+        <div className="page-head-text">
+          <h1>{title}</h1>
+          {desc && <p>{desc}</p>}
+        </div>
+      </div>
+      {actions && <div className="page-head-actions">{actions}</div>}
+    </header>
+  );
+}
+
+// ─── KPI CARD ─────────────────────────────────────────────────
+
+type Tone = 'pink' | 'teal' | 'green' | 'amber' | 'red' | 'blue' | 'violet' | 'gray';
+interface KpiCardProps {
+  label: string;
+  value: ReactNode;
+  sub?: ReactNode;
+  tone?: Tone;
+  icon?: ReactNode;
+}
+export function KpiCard({ label, value, sub, tone = 'gray', icon }: KpiCardProps) {
+  return (
+    <div className="kpi-card" data-tone={tone}>
+      <div className="kpi-top">
+        <span className="kpi-label">{label}</span>
+        {icon && <span className="kpi-icon">{icon}</span>}
+      </div>
+      <div className="kpi-value">{value}</div>
+      {sub && <div className="kpi-sub">{sub}</div>}
+    </div>
+  );
+}
+
+// ─── FILTER BAR ───────────────────────────────────────────────
+
+export function FilterBar({ children }: { children: ReactNode }) {
+  return <div className="filter-bar">{children}</div>;
+}
+
+interface FilterSelectProps {
+  label?: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}
+export function FilterSelect({ label, value, options, onChange }: FilterSelectProps) {
+  return (
+    <label className="filter-select">
+      {label && <span>{label}</span>}
+      <select value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </label>
+  );
+}
+
+// ─── DETAIL PANEL ─────────────────────────────────────────────
+// Shared scaffold for task/training/goal/note/payment/case/trip/project
+// detail views. Only the props provided are rendered (sekcja 15).
+
+interface DetailField { label: string; value: ReactNode; }
+interface DetailPanelProps {
+  title: ReactNode;
+  subtitle?: ReactNode;
+  badges?: ReactNode;
+  fields?: DetailField[];
+  actions?: ReactNode;
+  onClose?: () => void;
+  children?: ReactNode;
+}
+export function DetailPanel({ title, subtitle, badges, fields, actions, onClose, children }: DetailPanelProps) {
+  return (
+    <div className="detail-panel">
+      <div className="detail-panel-head">
+        <div className="detail-panel-title">
+          <strong>{title}</strong>
+          {subtitle && <span>{subtitle}</span>}
+        </div>
+        {onClose && (
+          <button className="icon-btn" onClick={onClose} aria-label="Zamknij">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+          </button>
+        )}
+      </div>
+      {badges && <div className="detail-panel-badges">{badges}</div>}
+      {fields && fields.length > 0 && (
+        <dl className="detail-panel-fields">
+          {fields.map((f, i) => (
+            <div key={i}><dt>{f.label}</dt><dd>{f.value}</dd></div>
+          ))}
+        </dl>
+      )}
+      {children}
+      {actions && <div className="detail-panel-actions">{actions}</div>}
+    </div>
+  );
 }
 
 // ─── PRIORITY BADGE ───────────────────────────────────────────
@@ -225,6 +347,36 @@ export const IcoMore: FC = () => (
     <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
   </svg>
 );
+
+// ─── MORE MENU (•••) ──────────────────────────────────────────
+
+export interface MoreMenuItem { label: string; onClick: () => void; danger?: boolean; disabled?: boolean; }
+export function MoreMenu({ items, label = 'Więcej' }: { items: MoreMenuItem[]; label?: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function handler(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+  return (
+    <div className="more-menu-wrap" ref={ref}>
+      <button className="icon-btn" onClick={() => setOpen((v) => !v)} aria-label={label} aria-haspopup="menu" aria-expanded={open}>
+        <IcoMore />
+      </button>
+      {open && (
+        <div className="more-menu" role="menu">
+          {items.map((it, i) => (
+            <button key={i} role="menuitem" className={it.danger ? 'danger' : ''} disabled={it.disabled}
+              onClick={() => { setOpen(false); it.onClick(); }}>
+              {it.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── FIELD ────────────────────────────────────────────────────
 

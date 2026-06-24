@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Modal, EmptyState, ConfirmDelete, Field, ProgressBar, PriorityBadge, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, ProgressBar, PriorityBadge, PageHeader, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore } from '@/components/common';
 import { HabitList } from '@/features/habits/HabitList';
 import { useHabits, useHabitLogs } from '@/features/habits/hooks';
 import { todayStr, addDays, weekdayOf, habitOccursOn, habitStats, HABIT_WEEKDAYS } from '@/features/habits/dates';
@@ -22,6 +22,27 @@ function relativeDateLabel(dateStr: string) {
 }
 function fmtDate(dateStr: string) {
   return new Date(`${dateStr}T12:00:00`).toLocaleDateString('pl-PL');
+}
+
+/** Derived schedule status: na czas / ryzyko / opóźniony (na podstawie terminu i postępu). */
+function goalStatus(goal: Goal): { label: string; cls: string } {
+  if (goal.completedAt || goal.progress >= 100) return { label: 'Ukończony', cls: 'status-done' };
+  if (!goal.deadline) return { label: 'Na czas', cls: 'status-active' };
+  const today = new Date();
+  const dl = new Date(`${goal.deadline}T23:59:59`);
+  if (dl < today) return { label: 'Opóźniony', cls: 'status-overdue' };
+  const start = new Date(goal.createdAt);
+  const total = dl.getTime() - start.getTime();
+  const elapsed = today.getTime() - start.getTime();
+  const expected = total > 0 ? Math.min(100, Math.max(0, (elapsed / total) * 100)) : 0;
+  if (goal.progress + 15 < expected) return { label: 'Ryzyko', cls: 'status-warn' };
+  return { label: 'Na czas', cls: 'status-active' };
+}
+
+/** First not-done task — the practical "następny krok". */
+function goalNextStep(goal: Goal): string | null {
+  const open = collectTasks(goal.tasks).find((t) => t.status !== 'done');
+  return open?.title ?? null;
 }
 
 function useGoalPlannerBridge() {
@@ -139,20 +160,16 @@ export function GoalsScreen() {
   return (
     <div className="module-page">
       <div className="goals-shell">
-        <div className="goals-header">
-          <div className="goals-header-main">
-            <span className="goals-header-icon"><GoalsIcon name="target" /></span>
-            <div>
-              <h1>Cele</h1>
-              <p>Twoje cele, zadania i nawyki w jednym miejscu.</p>
-            </div>
-          </div>
-          <div className="goals-header-actions">
+        <PageHeader
+          icon={<GoalsIcon name="target" />}
+          title="Cele"
+          desc="Twoje cele, zadania i nawyki w jednym miejscu."
+          actions={<>
             <button className="btn btn-primary btn-sm" type="button" onClick={() => setGoalModal({ goal: null })}><IcoPlus /> Nowy cel</button>
             <button className="btn btn-secondary btn-sm" type="button" onClick={() => setShowFilters(true)}>Filtry{filterCount > 0 ? ` (${filterCount})` : ''}</button>
             <button className="icon-btn" type="button" onClick={() => setShowCategoryManager(true)} aria-label="Ustawienia kategorii"><GoalsIcon name="gear" /></button>
-          </div>
-        </div>
+          </>}
+        />
 
         <div className="goals-kpi-grid">
           <GoalsMetric icon="target" tone="pink" label="Aktywne cele" value={String(active.length)} note={`${filteredActive.length} po filtrach`} />
@@ -305,6 +322,7 @@ function GoalDetail({ goal, onAddToday, onAddPlanner, onEdit, onToggleComplete, 
           <div className="goals-detail-head-actions">
             <button className="btn btn-secondary btn-sm" type="button" onClick={onAddToday}><GoalsIcon name="clock" /> Dodaj do dzisiaj</button>
             <button className="btn btn-secondary btn-sm" type="button" onClick={onAddPlanner}><GoalsIcon name="calendar" /> Dodaj do Planera</button>
+            {(() => { const s = goalStatus(goal); return <span className={`badge ${s.cls}`}>{s.label}</span>; })()}
             {goal.priority && <PriorityBadge priority={goal.priority} />}
             <MoreMenu actions={[
               { label: 'Edytuj cel', onClick: onEdit },
@@ -325,6 +343,7 @@ function GoalDetail({ goal, onAddToday, onAddPlanner, onEdit, onToggleComplete, 
         <div className="goals-detail-footer">
           {goal.deadline && <span>Termin: <strong>{fmtDate(goal.deadline)}</strong></span>}
           {!!goal.streak && goal.streak > 0 && <span>🔥 Seria: <strong>{goal.streak} dni</strong></span>}
+          {goalNextStep(goal) && <span>Następny krok: <strong>{goalNextStep(goal)}</strong></span>}
         </div>
       </div>
 

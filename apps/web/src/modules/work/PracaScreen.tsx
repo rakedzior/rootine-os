@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PageHeader } from '@/components/common';
 import { useLocalStore, type Priority, type TaskStatus, type WorkContext, type WorkProject, type WorkTask } from '@/store/localStore';
 import '@/styles/work.css';
 
@@ -94,6 +94,7 @@ export function PracaScreen() {
   const [showContextModal, setShowContextModal] = useState(false);
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
   const [deleteProjectId, setDeleteProjectId] = useState<string | null>(null);
+  const [activityCollapsed, setActivityCollapsed] = useState(false);
 
   useEffect(() => {
     if (!contextId && activeContext) setContextId(activeContext.id);
@@ -131,15 +132,11 @@ export function PracaScreen() {
 
   return (
     <div className="module-page work-os">
-      <header className="work-hero">
-        <div className="work-title-block">
-          <span className="work-hero-icon"><WorkIcon name="briefcase" /></span>
-          <div>
-            <h1>Praca</h1>
-            <p>Wszystkie firmy, projekty, zadania i notatki w jednym miejscu.</p>
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        icon={<WorkIcon name="briefcase" />}
+        title="Praca"
+        desc="Wszystkie firmy, projekty, zadania i notatki w jednym miejscu."
+      />
 
       <section className="work-shell">
         <main className="work-main">
@@ -154,8 +151,8 @@ export function PracaScreen() {
                   {workContexts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </select>
               </label>
-              <button className="work-icon-btn" type="button" onClick={() => setShowContextModal(true)} aria-label="Dodaj firmę"><WorkIcon name="plus" /></button>
-              <button className="work-icon-btn" type="button" aria-label="Edytuj firmę"><WorkIcon name="edit" /></button>
+              <button className="icon-btn work-icon-btn" type="button" onClick={() => setShowContextModal(true)} aria-label="Dodaj firmę"><WorkIcon name="plus" /></button>
+              <button className="icon-btn work-icon-btn" type="button" aria-label="Edytuj firmę"><WorkIcon name="edit" /></button>
             </div>
 
             <div className="work-project-strip">
@@ -229,17 +226,22 @@ export function PracaScreen() {
           </section>
 
           <section className="work-activity">
-            <div className="work-activity-title">Ostatnie aktywności</div>
-            <div className="work-activity-list">
-              {activity.map((item) => (
-                <div className={`work-activity-item work-tone-${item.tone}`} key={item.title}>
-                  <span>{item.initial}</span>
-                  <strong>{item.title}</strong>
-                  <small>{item.subtitle}</small>
-                  <em>{item.time}</em>
-                </div>
-              ))}
-            </div>
+            <button type="button" className="collapse-toggle work-activity-title" onClick={() => setActivityCollapsed(v => !v)} aria-expanded={!activityCollapsed} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14, transform: activityCollapsed ? 'rotate(-90deg)' : 'none', transition: 'transform .15s' }}><path d="M6 9l6 6 6-6" /></svg>
+              Ostatnie aktywności
+            </button>
+            {!activityCollapsed && (
+              <div className="work-activity-list">
+                {activity.map((item) => (
+                  <div className={`work-activity-item work-tone-${item.tone}`} key={item.title}>
+                    <span>{item.initial}</span>
+                    <strong>{item.title}</strong>
+                    <small>{item.subtitle}</small>
+                    <em>{item.time}</em>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         </main>
 
@@ -391,6 +393,12 @@ function TaskDetails({ task, project, context }: { task?: WorkTask; project?: Wo
             <DetailLine icon="user" label="Przypisane" value={project?.name ? initials(project.name)[0] : 'R'} avatar />
             <DetailLine icon="tag" label="Etykiety" value={project?.name ?? 'Projekt'} tag />
           </div>
+          {task.notes && (
+            <div style={{ marginTop: 12, padding: 12, borderRadius: 'var(--r-mid)', border: '1px solid var(--border-soft)', background: 'var(--surface-inset)' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 600, marginBottom: 6 }}>Notatki</div>
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-2)', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{task.notes}</p>
+            </div>
+          )}
         </>
       )}
     </section>

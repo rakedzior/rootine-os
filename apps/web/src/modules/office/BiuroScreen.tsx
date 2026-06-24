@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PriorityBadge, StatusBadge, IcoTrash, IcoPlus, IcoCheck } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PriorityBadge, StatusBadge, PageHeader, IcoTrash, IcoPlus, IcoCheck } from '@/components/common';
 import { useLocalStore, type OfficeTask, type Priority, type VacationEntry } from '@/store/localStore';
 
 function fmtDate(d?: string) {
@@ -74,6 +74,7 @@ export function BiuroScreen() {
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showVacation, setShowVacation] = useState(false);
   const [showAllCompleted, setShowAllCompleted] = useState(false);
+  const [completedCollapsed, setCompletedCollapsed] = useState(false);
 
   const active = useMemo(() => officeTasks.filter(t => !t.isArchived), [officeTasks]);
   const monthKey = currentMonthKey();
@@ -114,18 +115,12 @@ export function BiuroScreen() {
   return (
     <div className="module-page">
       <div className="office-shell">
-        <div className="office-header">
-          <div className="office-header-main">
-            <span className="office-header-icon"><OfficeIcon name="briefcase" /></span>
-            <div>
-              <h1>Biuro</h1>
-              <p>Wszystkie sprawy, dokumenty i terminy w jednym miejscu.</p>
-            </div>
-          </div>
-          <div className="office-header-actions">
-            <button className="btn btn-primary btn-sm" type="button" onClick={() => setShowAdd(true)}><IcoPlus /> Nowe zadanie</button>
-          </div>
-        </div>
+        <PageHeader
+          icon={<OfficeIcon name="briefcase" />}
+          title="Biuro"
+          desc="Wszystkie sprawy, dokumenty i terminy w jednym miejscu."
+          actions={<button className="btn btn-primary btn-sm" type="button" onClick={() => setShowAdd(true)}><IcoPlus /> Nowe zadanie</button>}
+        />
 
         <div className="office-kpi-grid">
           <OfficeMetric icon="todo" tone="pink" label="Do zrobienia" value={String(active.filter(t => t.status === 'todo').length)} note="wszystkie sprawy" />
@@ -208,10 +203,14 @@ export function BiuroScreen() {
 
         <div className="card">
           <div className="card-head">
-            <span className="card-title">Ukończone ostatnio</span>
-            {completed.length > 4 && <button className="office-link-inline" type="button" onClick={() => setShowAllCompleted(true)}>Zobacz archiwum →</button>}
+            <button type="button" className="office-collapse-toggle" onClick={() => setCompletedCollapsed(v => !v)} aria-expanded={!completedCollapsed}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14, transform: completedCollapsed ? 'rotate(-90deg)' : 'none', transition: 'transform .15s' }}><path d="M6 9l6 6 6-6" /></svg>
+              <span className="card-title">Ukończone ostatnio</span>
+              <span className="badge badge-gray">{completed.length}</span>
+            </button>
+            {!completedCollapsed && completed.length > 4 && <button className="office-link-inline" type="button" onClick={() => setShowAllCompleted(true)}>Zobacz archiwum →</button>}
           </div>
-          {completed.length === 0
+          {!completedCollapsed && (completed.length === 0
             ? <EmptyState title="Brak ukończonych spraw" desc="Ukończone zadania pojawią się tutaj." />
             : (
               <div className="office-completed-grid">
@@ -225,7 +224,7 @@ export function BiuroScreen() {
                   </div>
                 ))}
               </div>
-            )
+            ))
           }
         </div>
       </div>

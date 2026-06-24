@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, IcoTrash } from '@/components/common';
+import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash } from '@/components/common';
 import {
   useLocalStore,
   type Account,
@@ -14,9 +14,12 @@ import {
 const TABS = [
   { id: 'przeglad', label: 'Przegląd', icon: () => <TabIcon name="overview" /> },
   { id: 'miesieczne', label: 'Miesięczne', icon: () => <TabIcon name="calendar" /> },
+  { id: 'budzet', label: 'Budżet', icon: () => <TabIcon name="budget" /> },
+  { id: 'cele', label: 'Cele', icon: () => <TabIcon name="savings" /> },
+  { id: 'historia', label: 'Historia', icon: () => <TabIcon name="overview" /> },
 ];
 
-type FinanceTab = 'przeglad' | 'miesieczne';
+type FinanceTab = 'przeglad' | 'miesieczne' | 'budzet' | 'cele' | 'historia';
 type FinanceTone = 'blue' | 'violet' | 'teal' | 'pink';
 type IconName =
   | 'overview' | 'calendar' | 'accounts' | 'budget' | 'savings' | 'payments' | 'business' | 'settings'
@@ -130,14 +133,65 @@ export function FinanceScreen() {
 
   return (
     <div className="module-page">
-      <div className="module-header no-title">
+      <div className="module-head-wrap">
+        <PageHeader
+          icon={<FinanceHeaderIcon />}
+          title="Finanse"
+          desc="Przegląd finansów, budżetu i płatności w jednym miejscu."
+          actions={<FinanceMonthSwitcher month={month} onMonthChange={setMonth} />}
+        />
         <SubTabs tabs={TABS} active={tab} onChange={(id) => setTab(id as FinanceTab)} />
-        <FinanceMonthSwitcher month={month} onMonthChange={setMonth} />
       </div>
 
       {tab === 'przeglad' && <FinanceOverview month={month} onNavigate={setTab} />}
       {tab === 'miesieczne' && <FinanceMonthly month={month} />}
+      {tab === 'budzet' && <div className="finance-shell"><BudgetPanel month={month} detailed /></div>}
+      {tab === 'cele' && <div className="finance-shell"><SavingsPanel detailed /></div>}
+      {tab === 'historia' && <FinanceHistory month={month} />}
     </div>
+  );
+}
+
+function FinanceHistory({ month }: { month: string }) {
+  const { recurringExpenses, financialReminders } = useLocalStore();
+  const paidRecurring = recurringExpenses.filter((item) => item.paidThisMonth);
+  const paidReminders = financialReminders.filter((r) => r.completed && r.dueDate.startsWith(month));
+  const rows = [
+    ...paidRecurring.map((item) => ({ id: `r-${item.id}`, name: item.name, amount: item.amount, date: month, kind: 'Płatność cykliczna' })),
+    ...paidReminders.map((r) => ({ id: `p-${r.id}`, name: r.title, amount: r.amount ?? 0, date: r.dueDate, kind: 'Przypomnienie' })),
+  ].sort((a, b) => b.date.localeCompare(a.date));
+  const total = rows.reduce((sum, r) => sum + r.amount, 0);
+
+  return (
+    <div className="finance-shell">
+      <SectionCard title={`Historia · ${fmtMonth(month)}`}>
+        {rows.length === 0 ? (
+          <EmptyState title="Brak historii" desc="Opłacone płatności i przypomnienia z tego miesiąca pojawią się tutaj." />
+        ) : (
+          <table className="table">
+            <thead><tr><th>POZYCJA</th><th>TYP</th><th style={{ textAlign: 'right' }}>KWOTA</th></tr></thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id}>
+                  <td style={{ fontWeight: 600 }}>{r.name}</td>
+                  <td style={{ color: 'var(--ink-3)', fontSize: 12.5 }}>{r.kind}</td>
+                  <td style={{ textAlign: 'right', fontWeight: 700 }}>{fmtPLN(r.amount)}</td>
+                </tr>
+              ))}
+              <tr className="finance-total-row"><td colSpan={2}>Razem opłacone</td><td style={{ textAlign: 'right' }}>{fmtPLN(total)}</td></tr>
+            </tbody>
+          </table>
+        )}
+      </SectionCard>
+    </div>
+  );
+}
+
+function FinanceHeaderIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20M6 15h4" />
+    </svg>
   );
 }
 
@@ -201,14 +255,6 @@ function FinanceOverview({ month, onNavigate }: { month: string; onNavigate: (ta
         <AccountsPanel />
         <SavingsPanel />
         <FixedExpensesPanel onConfigure={() => onNavigate('miesieczne')} />
-      </div>
-
-      <div className="finance-overview-cta">
-        <div className="finance-cta-copy">
-          <FinanceIcon name="calendar" />
-          <span>Budżet, płatności cykliczne oraz elementy JDG znajdziesz w zakładce Miesięczne.</span>
-        </div>
-        <button className="btn btn-ghost" type="button" onClick={() => onNavigate('miesieczne')}>Przejdź do Miesięczne</button>
       </div>
     </div>
   );
@@ -429,11 +475,13 @@ function BudgetPanel({ month, detailed = false }: { month: string; detailed?: bo
             {categories.map((cat) => {
               const pct = clampPct((cat.actualAmount / Math.max(cat.plannedAmount, 1)) * 100);
               const over = cat.actualAmount > cat.plannedAmount;
+              const status = over ? { label: 'Przekroczony', cls: 'status-overdue' } : pct >= 80 ? { label: 'Uwaga', cls: 'status-warn' } : { label: 'OK', cls: 'status-done' };
               return (
                 <div key={cat.id} className="finance-budget-row">
                   <button className="finance-budget-main" type="button" onClick={() => setEditing(cat)}>
                     <span className={`finance-icon-tile finance-tone-${toneForCategory(cat.name)}`}><FinanceIcon name={iconForCategory(cat.name)} /></span>
                     <span>{cat.name}</span>
+                    <span className={`badge ${status.cls}`} style={{ marginLeft: 6 }}>{status.label}</span>
                   </button>
                   <div className="finance-budget-values">
                     <span>{fmtPLN(cat.plannedAmount)}</span>

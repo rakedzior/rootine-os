@@ -2,53 +2,6 @@
   gap: var(--gap);
 }
 
-.work-hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 0 2px;
-}
-
-.work-title-block {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-width: 0;
-}
-
-.work-hero-icon {
-  width: 58px;
-  height: 58px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  border-radius: 50%;
-  color: var(--acc);
-  background: var(--acc-soft);
-  border: 1px solid var(--acc-line);
-}
-
-.work-hero-icon svg {
-  width: 30px;
-  height: 30px;
-}
-
-.work-title-block h1 {
-  margin: 0;
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: 30px;
-  line-height: 1;
-  font-weight: 760;
-  letter-spacing: 0;
-}
-
-.work-title-block p {
-  margin: 8px 0 0;
-  color: var(--ink-2);
-  font-size: 13px;
-}
-
 .work-shell {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(310px, 390px);
@@ -122,19 +75,14 @@
   outline: none;
 }
 
+/* .work-icon-btn composes the shared .icon-btn (border/background/color/hover);
+   here it only overrides size to match the 46px-tall company-bar select beside it. */
 .work-icon-btn {
   width: 42px;
   height: 42px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--border);
   border-radius: var(--r-mid);
-  background: transparent;
-  color: var(--ink-2);
-  cursor: pointer;
 }
 
-.work-icon-btn:hover,
 .work-view-actions button:hover,
 .work-view-tabs button:hover {
   color: var(--ink);
@@ -317,12 +265,14 @@
   cursor: pointer;
   font: inherit;
   font-size: 13px;
+  transition: var(--t);
 }
 
 .work-view-tabs button.is-active {
-  color: var(--acc);
+  color: var(--acc-ink);
   background: var(--acc-soft);
   border-color: var(--acc-line);
+  font-weight: 600;
 }
 
 .work-view-tabs svg,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, SectionHead, IcoTrash } from '@/components/common';
+import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, SectionHead, PageHeader, FilterSelect, IcoTrash } from '@/components/common';
 import {
   useLocalStore,
   type WorkoutTemplate, type WorkoutSet, type WorkoutExercise, type WorkoutSession, type SportExercise,
@@ -178,6 +178,14 @@ function SportTileIcon({ label, kind = 'sport', active = false, size = 32 }: { l
   );
 }
 
+/** Compact sport filter options (for History/Analysis/Exercises/Feelings). */
+function sportFilterOptions(sportCategories: { name: string; order: number }[]): { value: string; label: string }[] {
+  return [
+    { value: 'Wszystko', label: 'Wszystkie' },
+    ...[...sportCategories].sort((a, b) => a.order - b.order).map((c) => ({ value: c.name, label: c.name })),
+  ];
+}
+
 interface SportSelectorRowProps {
   active: string | 'Wszystko';
   onSelect: (s: string | 'Wszystko') => void;
@@ -246,19 +254,32 @@ export function SportScreen() {
 
   return (
     <div className="module-page">
-      <div className="module-header no-title">
+      <div className="module-head-wrap">
+        <PageHeader
+          icon={<SportHeaderIcon />}
+          title="Sport"
+          desc="Treningi, planowanie, historia i analiza aktywności w jednym miejscu."
+        />
         <SubTabs tabs={SPORT_TABS} active={tab} onChange={setTab} />
       </div>
 
       {tab === 'dzisiaj'   && <SportToday onStartSession={() => setTab('sesja')} onQuickAction={quickAction} />}
       {tab === 'szablony'  && <SportTemplates sportFilter={templatesSportFilter} onSportFilterChange={setTemplatesSportFilter} onStartTemplate={startFromTemplate} />}
-      {tab === 'sesja'     && <SportActiveSession onSessionEnd={() => setTab('historia')} />}
+      {tab === 'sesja'     && <SportActiveSession onSessionEnd={() => setTab('historia')} onExit={() => setTab('dzisiaj')} />}
       {tab === 'historia'  && <SportHistory onRepeat={() => setTab('sesja')} onFillFeelings={(sessionId) => { setFeelingsSessionTarget(sessionId); setTab('odczucia'); }} />}
       {tab === 'planowanie' && <SportPlanning />}
       {tab === 'analiza'   && <SportAnalysis />}
       {tab === 'cwiczenia' && <SportExercises />}
       {tab === 'odczucia'  && <SportFeelings initialSessionId={feelingsSessionTarget} onConsumeInitialSession={() => setFeelingsSessionTarget(null)} />}
     </div>
+  );
+}
+
+function SportHeaderIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6.5 6.5 17.5 17.5M3 9l1.5-1.5M9 3 7.5 4.5M21 15l-1.5 1.5M15 21l1.5-1.5M4 12 2 14l8 8 2-2M20 12l2-2-8-8-2 2" />
+    </svg>
   );
 }
 
@@ -336,11 +357,11 @@ function focusAreasFor(template: WorkoutTemplate | null): string[] {
 }
 
 const SPORT_COVER_GRADIENT: Record<string, string> = {
-  'Siłownia': 'linear-gradient(135deg, rgba(224,42,139,.55), rgba(15,44,54,.94))',
-  'Bieganie': 'linear-gradient(135deg, rgba(61,168,255,.5), rgba(15,44,54,.94))',
-  'Wspinaczka': 'linear-gradient(135deg, rgba(245,182,66,.5), rgba(15,44,54,.94))',
-  'Mobilność': 'linear-gradient(135deg, rgba(45,216,158,.45), rgba(15,44,54,.94))',
-  'Rehabilitacja': 'linear-gradient(135deg, rgba(120,140,255,.45), rgba(15,44,54,.94))',
+  'Siłownia': 'linear-gradient(135deg, color-mix(in srgb, var(--tone-pink) 55%, transparent), rgba(15,44,54,.94))',
+  'Bieganie': 'linear-gradient(135deg, color-mix(in srgb, var(--tone-blue) 50%, transparent), rgba(15,44,54,.94))',
+  'Wspinaczka': 'linear-gradient(135deg, color-mix(in srgb, var(--tone-amber) 50%, transparent), rgba(15,44,54,.94))',
+  'Mobilność': 'linear-gradient(135deg, color-mix(in srgb, var(--tone-teal) 45%, transparent), rgba(15,44,54,.94))',
+  'Rehabilitacja': 'linear-gradient(135deg, color-mix(in srgb, var(--tone-violet) 45%, transparent), rgba(15,44,54,.94))',
 };
 
 /** Cover photo for the "Dzisiejszy trening" hero — manual image wins, then an auto-fetched Pexels photo, then a generated gradient + icon when none is available/broken, so the layout never shows a broken-image icon. */
@@ -475,8 +496,8 @@ function WeekStrip({ scheduledWorkouts, templates, sessions, selectedDate, selec
             <div key={dateStr} style={{
               borderRadius: 'var(--r-mid)', padding: '10px 8px', minHeight: 136,
               border: `1.5px solid ${isToday ? 'var(--acc)' : 'var(--border-soft)'}`,
-              background: isToday ? 'linear-gradient(180deg, rgba(224,42,139,.16), rgba(10,31,38,.86))' : 'var(--surface-inset)',
-              boxShadow: isToday ? '0 0 0 1px rgba(224,42,139,.22), 0 10px 25px rgba(224,42,139,.12)' : undefined,
+              background: isToday ? 'var(--tone-pink-soft)' : 'var(--surface-inset)',
+              boxShadow: isToday ? '0 0 0 1px var(--tone-pink-line)' : undefined,
               display: 'flex', flexDirection: 'column', gap: 7,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -497,8 +518,8 @@ function WeekStrip({ scheduledWorkouts, templates, sessions, selectedDate, selec
                       <button key={item.scheduled.id} type="button" onClick={() => onSelect(dateStr, item.scheduled.id)} style={{
                         position: 'relative', textAlign: 'left', cursor: 'pointer', font: 'inherit', color: 'inherit',
                         borderRadius: 10, padding: '8px 26px 8px 9px',
-                        background: done ? 'rgba(45,216,158,.11)' : 'rgba(255,255,255,.045)',
-                        border: `1px solid ${isSelected ? 'var(--acc)' : done ? 'rgba(45,216,158,.25)' : 'var(--border-soft)'}`,
+                        background: done ? 'var(--tone-teal-soft)' : 'rgba(255,255,255,.045)',
+                        border: `1px solid ${isSelected ? 'var(--acc)' : done ? 'color-mix(in srgb, var(--tone-teal) 45%, transparent)' : 'var(--border-soft)'}`,
                       }}>
                         <span
                           role="button" tabIndex={0} aria-label="Edytuj trening"
@@ -590,7 +611,7 @@ function SportToday({ onStartSession, onQuickAction }: { onStartSession: () => v
         <div className="card" style={{ position: 'relative', overflow: 'hidden', minHeight: 430, padding: 0 }}>
           <WorkoutCover sportType={selected ? workoutDisplaySport(selected) : 'Siłownia'} image={selectedTemplate?.image} focusAreas={focusAreas} category={selectedTemplate?.category} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(8,24,30,.96) 0%, rgba(8,24,30,.8) 45%, rgba(8,24,30,.32) 74%, rgba(8,24,30,.74) 100%)' }} />
-          <div style={{ position: 'absolute', inset: 0, border: '1px solid rgba(224,42,139,.22)', borderRadius: 'inherit', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', inset: 0, border: '1px solid var(--tone-pink-line)', borderRadius: 'inherit', pointerEvents: 'none' }} />
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: 430, padding: 28 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
               <div>
@@ -633,7 +654,7 @@ function SportToday({ onStartSession, onQuickAction }: { onStartSession: () => v
                   <div style={{ marginTop: 22 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--ink-3)', marginBottom: 10 }}>Główne partie mięśniowe</div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {primaryMuscleKeys.slice(0, 4).map((m) => <span key={m} className="badge" style={{ background: 'rgba(224,42,139,.16)', borderColor: 'rgba(224,42,139,.35)' }}>✦ {MUSCLE_LABEL[m]}</span>)}
+                      {primaryMuscleKeys.slice(0, 4).map((m) => <span key={m} className="badge" style={{ background: 'var(--tone-pink-soft)', borderColor: 'var(--tone-pink-line)' }}>✦ {MUSCLE_LABEL[m]}</span>)}
                     </div>
                   </div>
                 )}
@@ -1038,8 +1059,8 @@ function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: {
                 minHeight: 98, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 7,
                 padding: '14px 10px', borderRadius: 'var(--r-mid)', position: 'relative', cursor: 'pointer',
                 border: `1.5px solid ${isActive ? 'var(--acc)' : 'var(--border)'}`,
-                background: isActive ? 'linear-gradient(180deg, rgba(224,42,139,.18), rgba(15,44,54,.88))' : 'var(--surface)',
-                boxShadow: isActive ? '0 0 0 1px rgba(224,42,139,.22), inset 0 0 30px rgba(224,42,139,.08)' : undefined,
+                background: isActive ? 'var(--tone-pink-soft)' : 'var(--surface)',
+                boxShadow: isActive ? '0 0 0 1px var(--tone-pink-line)' : undefined,
                 outline: 'none',
               }}>
                 {canEdit && (
@@ -1087,7 +1108,7 @@ function SportTemplates({ sportFilter, onSportFilterChange, onStartTemplate }: {
             : <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 610, overflowY: 'auto', paddingRight: 2 }}>{filtered.map(t => (
               <div key={t.id}
                 className="template-row"
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 12px', borderRadius: 10, cursor: 'pointer', border: `1px solid ${selectedTemplate?.id===t.id ? 'var(--acc-line)' : 'var(--border-soft)'}`, background: selectedTemplate?.id===t.id ? 'linear-gradient(90deg, rgba(224,42,139,.18), rgba(15,44,54,.72))' : 'var(--surface-inset)' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 12px', borderRadius: 10, cursor: 'pointer', border: `1px solid ${selectedTemplate?.id===t.id ? 'var(--acc-line)' : 'var(--border-soft)'}`, background: selectedTemplate?.id===t.id ? 'var(--tone-pink-soft)' : 'var(--surface-inset)' }}
                 onClick={() => setEditId(t.id)}
               >
                 <div style={{ width: 42, height: 42, borderRadius: 10, background: 'var(--acc-soft)', display: 'grid', placeItems: 'center', fontSize: 19, flexShrink: 0 }}>
@@ -1474,7 +1495,7 @@ function AddTemplateModal({ open, onClose, defaultSport, sportOptions, onSave }:
 
 // ─── AKTYWNA SESJA ────────────────────────────────────────────
 
-function SportActiveSession({ onSessionEnd }: { onSessionEnd: () => void }) {
+function SportActiveSession({ onSessionEnd, onExit }: { onSessionEnd: () => void; onExit: () => void }) {
   const { activeSession, updateActiveSession, completeSession, cancelSession, exercises: storeExercises, sportCategories, addFeeling } = useLocalStore();
   const [feelingsPrompt, setFeelingsPrompt] = useState<WorkoutSession | null>(null);
   const [feelingsDraft, setFeelingsDraft] = useState<FeelingsDraft>(defaultFeelingsDraft());
@@ -1582,14 +1603,19 @@ function SportActiveSession({ onSessionEnd }: { onSessionEnd: () => void }) {
 
       {/* Main column */}
       <div className="col">
-        <div className="card" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 20px' }}>
-          <div>
-            <div style={{ fontFamily:'var(--mono)', fontSize:11, letterSpacing:'.08em', textTransform:'uppercase', color:'var(--ink-3)' }}>Czas sesji</div>
-            <div style={{ fontFamily:'var(--mono)', fontWeight:800, fontSize:26, letterSpacing:-1 }}>{fmtTime(elapsed)}</div>
+        <div className="card sport-focus-bar" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap', padding:'14px 20px', borderLeft:'3px solid var(--acc)' }}>
+          <div style={{ minWidth:0 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:7, fontFamily:'var(--mono)', fontSize:10.5, letterSpacing:'.08em', textTransform:'uppercase', color:'var(--acc-ink)', fontWeight:700 }}>
+              <span style={{ width:7, height:7, borderRadius:'50%', background:sessionPaused ? 'var(--ink-3)' : 'var(--acc)', display:'inline-block' }} />
+              {sessionPaused ? 'Sesja wstrzymana' : 'Aktywna sesja treningowa'}
+            </div>
+            <div style={{ fontWeight:700, fontSize:15, marginTop:3, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{templateName} · {sportType}</div>
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ fontFamily:'var(--mono)', fontWeight:800, fontSize:26, letterSpacing:-1 }}>{fmtTime(elapsed)}</div>
+          <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+            <button className="btn btn-ghost btn-sm" onClick={onExit}>← Powrót do Sportu</button>
             <button className="btn btn-secondary btn-sm" onClick={() => setSessionPaused((p) => !p)}>{sessionPaused ? '▶ Wznów' : '⏸ Pauza'}</button>
-            <button className="btn btn-danger btn-sm" onClick={() => setShowComplete(true)}>● ZAKOŃCZ</button>
+            <button className="btn btn-danger btn-sm" onClick={() => setShowComplete(true)}>● Zakończ</button>
           </div>
         </div>
 
@@ -1725,13 +1751,13 @@ type HistoryRange = 'all' | '30d' | 'month' | '3m';
 type HistorySort = 'newest' | 'oldest' | 'longest' | 'volume';
 
 function SportHistory({ onRepeat, onFillFeelings }: { onRepeat: () => void; onFillFeelings: (sessionId: string) => void }) {
-  const { sessions, repeatSession, feelings, exercises } = useLocalStore();
+  const { sessions, repeatSession, feelings, exercises, sportCategories } = useLocalStore();
   const [sportFilter, setSportFilter] = useState<SportKey | 'Wszystko'>('Wszystko');
   const [range, setRange] = useState<HistoryRange>('all');
   const [sort, setSort] = useState<HistorySort>('newest');
   const [calMonth, setCalMonth] = useState(() => new Date());
 
-  const countForSport = (s: SportKey | 'Wszystko') => sessions.filter((x) => s === 'Wszystko' || x.sportType === s).length;
+  const sportOptions = sportFilterOptions(sportCategories);
 
   const rangeFiltered = sessions.filter((s) => {
     if (range === 'all') return true;
@@ -1757,13 +1783,8 @@ function SportHistory({ onRepeat, onFillFeelings }: { onRepeat: () => void; onFi
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <SportSelectorRow
-        active={sportFilter}
-        onSelect={(s) => setSportFilter(s as SportKey | 'Wszystko')}
-        countLabel={(s) => plCount(countForSport(s as SportKey | 'Wszystko'), 'sesja', 'sesje', 'sesji')}
-      />
-
       <div className="card" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <FilterSelect label="Sport" value={sportFilter} options={sportOptions} onChange={(v) => setSportFilter(v as SportKey | 'Wszystko')} />
         <select className="select" value={range} onChange={(e) => setRange(e.target.value as HistoryRange)}>
           <option value="all">Zakres: wszystkie</option>
           <option value="30d">Ostatnie 30 dni</option>
@@ -1963,14 +1984,9 @@ function SportAnalysis() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <SportSelectorRow
-        active={sport}
-        onSelect={(s) => setSport(s as SportKey | 'Wszystko')}
-        countLabel={(s) => plCount(filterBySport(sessions, s as SportKey | 'Wszystko').length, 'sesja', 'sesje', 'sesji')}
-      />
-
       <div className="card" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <FilterSelect label="Sport" value={sport} options={sportFilterOptions(sportCategories)} onChange={(v) => setSport(v as SportKey | 'Wszystko')} />
           <select className="select" value={windowDays} onChange={(e) => setWindowDays(+e.target.value as 7 | 28 | 90)}>
             <option value={7}>Zakres: Ostatnie 7 dni</option>
             <option value={28}>Zakres: Ostatnie 4 tygodnie</option>
@@ -2234,9 +2250,22 @@ function SportExercises() {
   const [showAdd, setShowAdd] = useState(false);
   const [sportFilter, setSportFilter] = useState<SportKey | 'Wszystko'>('Wszystko');
   const [muscleFilter, setMuscleFilter] = useState<MuscleKey | 'any'>('any');
+  const [equipmentFilter, setEquipmentFilter] = useState('Wszystko');
+  const [difficultyFilter, setDifficultyFilter] = useState('Wszystko');
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<ExerciseSort>('name');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const equipmentOptions = [
+    { value: 'Wszystko', label: 'Wszystkie' },
+    ...[...new Set(exercises.map((e) => e.equipment).filter(Boolean))].sort().map((eq) => ({ value: eq, label: eq })),
+  ];
+  const difficultyOptions = [
+    { value: 'Wszystko', label: 'Wszystkie' },
+    { value: 'beginner', label: 'Początkujący' },
+    { value: 'intermediate', label: 'Średni' },
+    { value: 'advanced', label: 'Zaawansowany' },
+  ];
 
   const [name, setName] = useState('');
   const [sport, setSport] = useState<SportKey>('Siłownia');
@@ -2253,6 +2282,8 @@ function SportExercises() {
   const filtered = exercises.filter((ex) => {
     if (sportFilter !== 'Wszystko' && ex.sportType !== sportFilter && !ex.sportCategories?.includes(sportFilter)) return false;
     if (muscleFilter !== 'any' && !(ex.primaryMuscles ?? []).includes(muscleFilter) && !(ex.secondaryMuscles ?? []).includes(muscleFilter)) return false;
+    if (equipmentFilter !== 'Wszystko' && ex.equipment !== equipmentFilter) return false;
+    if (difficultyFilter !== 'Wszystko' && ex.difficulty !== difficultyFilter) return false;
     if (query.trim() && !ex.name.toLowerCase().includes(query.trim().toLowerCase()) && !(ex.aliases ?? []).some((a) => a.toLowerCase().includes(query.trim().toLowerCase()))) return false;
     return true;
   }).sort((a, b) => {
@@ -2269,23 +2300,24 @@ function SportExercises() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div className="card" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button className={`pill ${muscleFilter === 'any' ? 'accent' : ''}`} onClick={() => setMuscleFilter('any')}>Wszystkie</button>
-        {topMuscles.map((m) => (
-          <button key={m} className={`pill ${muscleFilter === m ? 'accent' : ''}`} onClick={() => setMuscleFilter(m)}>{MUSCLE_LABEL[m]}</button>
-        ))}
-        <select className="select" value={restMuscles.some((m) => m.key === muscleFilter) ? muscleFilter : ''} onChange={(e) => setMuscleFilter(e.target.value as MuscleKey)} style={{ minWidth: 110 }}>
-          <option value="" disabled>Więcej ▾</option>
-          {restMuscles.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
-        </select>
-      </div>
-
-      <div className="card" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <input className="input" placeholder="Szukaj nazwy, partii, sprzętu…" value={query} onChange={(e) => setQuery(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
-        <select className="select" value={sportFilter} onChange={(e) => setSportFilter(e.target.value as SportKey | 'Wszystko')}>
-          <option value="Wszystko">Sport: wszystkie</option>
-          {categoryNames.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
+      <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="filter-bar" style={{ marginBottom: 0 }}>
+          <input className="input" placeholder="Szukaj nazwy, partii, sprzętu…" value={query} onChange={(e) => setQuery(e.target.value)} style={{ flex: 1, minWidth: 180, height: 34 }} />
+          <FilterSelect label="Sport" value={sportFilter} options={sportFilterOptions(sportCategories)} onChange={(v) => setSportFilter(v as SportKey | 'Wszystko')} />
+          <FilterSelect label="Sprzęt" value={equipmentFilter} options={equipmentOptions} onChange={setEquipmentFilter} />
+          <FilterSelect label="Trudność" value={difficultyFilter} options={difficultyOptions} onChange={setDifficultyFilter} />
+          <FilterSelect label="Sortuj" value={sort} options={[{ value: 'name', label: 'Nazwa A–Z' }, { value: 'sport', label: 'Sport' }, { value: 'difficulty', label: 'Trudność' }]} onChange={(v) => setSort(v as ExerciseSort)} />
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button className={`pill ${muscleFilter === 'any' ? 'accent' : ''}`} onClick={() => setMuscleFilter('any')}>Wszystkie partie</button>
+          {topMuscles.map((m) => (
+            <button key={m} className={`pill ${muscleFilter === m ? 'accent' : ''}`} onClick={() => setMuscleFilter(m)}>{MUSCLE_LABEL[m]}</button>
+          ))}
+          <select className="select" value={restMuscles.some((m) => m.key === muscleFilter) ? muscleFilter : ''} onChange={(e) => setMuscleFilter(e.target.value as MuscleKey)} style={{ minWidth: 110 }}>
+            <option value="" disabled>Więcej ▾</option>
+            {restMuscles.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
+          </select>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
@@ -2294,11 +2326,6 @@ function SportExercises() {
             <span className="card-title">Ćwiczenia ({filtered.length})</span>
             <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>+ Nowe</button>
           </div>
-          <select className="select" value={sort} onChange={(e) => setSort(e.target.value as ExerciseSort)} style={{ width: '100%', marginBottom: 10 }}>
-            <option value="name">Sortuj: Nazwa A–Z</option>
-            <option value="sport">Sortuj: Sport</option>
-            <option value="difficulty">Sortuj: Trudność</option>
-          </select>
           <table className="table">
             <thead><tr><th>ĆWICZENIE</th><th>GŁÓWNE MIĘŚNIE</th><th>SPRZĘT</th><th>TRUDNOŚĆ</th></tr></thead>
             <tbody>

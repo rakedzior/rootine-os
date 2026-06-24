@@ -1,6 +1,8 @@
 import { useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { Modal } from '@/components/common';
-import { weatherLabel, type WeatherData, type WeatherHour } from './useWeather';
+import { useUpdateProfile } from '@/features/config/useProfile';
+import { toast } from '@/lib/toast';
+import { weatherLabel, type WeatherData, type WeatherDay, type WeatherHour } from './useWeather';
 
 export function WeatherIcon({ code, size = 18, className }: { code: number; size?: number; className?: string }) {
   const storm = [95, 96, 99].includes(code);
@@ -170,35 +172,110 @@ function HourlyStrip({ chart }: { chart: WeatherHour[] }) {
   );
 }
 
+const DAY_SHORT = ['Niedz', 'Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob'];
+function dayLabel(date: string, idx: number): string {
+  if (idx === 0) return 'Dziś';
+  if (idx === 1) return 'Jutro';
+  return DAY_SHORT[new Date(date).getDay()];
+}
+
+function DailyStrip({ days }: { days: WeatherDay[] }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(days.length, 5)}, 1fr)`, gap: 8 }}>
+      {days.slice(0, 5).map((d, i) => (
+        <div key={d.date} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 6px', borderRadius: 12, border: '1px solid var(--border-soft)', background: 'var(--surface-inset)' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-2)' }}>{dayLabel(d.date, i)}</span>
+          <span style={{ color: 'var(--acc-b)' }}><WeatherIcon code={d.code} size={20} /></span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 800 }}>{Math.round(d.max)}°<span style={{ color: 'var(--ink-3)', fontWeight: 500 }}> {Math.round(d.min)}°</span></span>
+          {d.rainProbability > 0 && <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--ev-blue)' }}>{d.rainProbability}%</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LocationBar({ weather, onSearch }: { weather: WeatherData; onSearch?: (city: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [city, setCity] = useState('');
+  const updateProfile = useUpdateProfile();
+
+  function submit(saveDefault: boolean) {
+    const q = city.trim();
+    if (!q) return;
+    onSearch?.(q);
+    if (saveDefault) {
+      updateProfile.mutate({ default_city: q }, {
+        onSuccess: () => toast.success('Zapisano domyślną lokalizację'),
+        onError: () => toast.error('Nie udało się zapisać lokalizacji'),
+      });
+    }
+    setEditing(false);
+    setCity('');
+  }
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+      <span className="badge badge-gray" style={{ fontSize: 9 }}>
+        {weather.locationSource === 'geo' ? 'Lokalizacja' : weather.locationSource === 'profile' ? 'Z profilu' : weather.locationSource === 'manual' ? 'Wpisana' : 'Domyślna'}
+      </span>
+      <strong style={{ fontSize: 13 }}>{weather.locationLabel}</strong>
+      <button className="btn btn-ghost btn-sm" onClick={() => setEditing((v) => !v)}>Zmień</button>
+      {editing && (
+        <div style={{ display: 'flex', gap: 8, flexBasis: '100%', marginTop: 4 }}>
+          <input
+            className="input"
+            placeholder="Wpisz miejscowość…"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') submit(false); }}
+            style={{ height: 34 }}
+            autoFocus
+          />
+          <button className="btn btn-secondary btn-sm" onClick={() => submit(false)}>Pokaż</button>
+          <button className="btn btn-primary btn-sm" onClick={() => submit(true)}>Zapisz jako domyślną</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface WeatherModalProps {
   open: boolean;
   weather: WeatherData | null;
   loading: boolean;
   error: boolean;
   onClose: () => void;
+  onSearch?: (city: string) => void;
 }
 
-export function WeatherModal({ open, weather, loading, error, onClose }: WeatherModalProps) {
+export function WeatherModal({ open, weather, loading, error, onClose, onSearch }: WeatherModalProps) {
   const chart = weather?.next24 ?? [];
 
   return (
     <Modal open={open} onClose={onClose} title="Pogoda" size="lg">
-      {loading && <div style={{ color: 'var(--ink-3)', fontSize: 13 }}>Ładowanie pogody...</div>}
-      {error && !weather && <div className="auth-banner warn">Nie udało się pobrać pogody.</div>}
+      {loading && !weather && <div style={{ color: 'var(--ink-3)', fontSize: 13 }}>Ładowanie pogody...</div>}
+      {error && !weather && (
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div className="auth-banner warn">Nie udało się pobrać pogody. Wpisz miejscowość.</div>
+          {onSearch && <ManualOnly onSearch={onSearch} />}
+        </div>
+      )}
       {weather && (
         <div style={{ display: 'grid', gap: 16 }}>
+          <LocationBar weather={weather} onSearch={onSearch} />
+
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
               <span style={{ color: 'var(--acc-b)', width: 42, height: 42, display: 'grid', placeItems: 'center' }}><WeatherIcon code={weather.code} size={36} /></span>
               <div>
                 <div style={{ fontFamily: 'var(--mono)', fontSize: 34, fontWeight: 800, lineHeight: 1 }}>{Math.round(weather.temp)}°C</div>
-                <div style={{ color: 'var(--ink-3)', fontSize: 13 }}>{weather.locationLabel} · {weatherLabel(weather.code)}</div>
+                <div style={{ color: 'var(--ink-3)', fontSize: 13 }}>{weatherLabel(weather.code)} · odczuwalna {Math.round(weather.apparent)}°C</div>
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(100px, 1fr))', gap: 8 }}>
               {[
                 ['Min / max', `${Math.round(weather.minTemp)}° / ${Math.round(weather.maxTemp)}°`],
-                ['Odczuwalna', `${Math.round(weather.apparent)}°C`],
+                ['Wilgotność', `${Math.round(weather.humidity)}%`],
                 ['Wiatr', `${Math.round(weather.wind)} km/h`],
                 ['Porywy', `${Math.round(weather.maxWind)} km/h`],
               ].map(([label, value]) => (
@@ -208,6 +285,14 @@ export function WeatherModal({ open, weather, loading, error, onClose }: Weather
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Practical analysis */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, border: '1px solid var(--acc-line)', background: 'var(--acc-soft)' }}>
+            <span style={{ color: 'var(--acc-ink)', flexShrink: 0 }}>
+              <svg viewBox="0 0 24 24" width={22} height={22} fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+            </span>
+            <span style={{ fontWeight: 600, color: 'var(--acc-ink)', fontSize: 13.5 }}>{weather.analysis}</span>
           </div>
 
           <div>
@@ -224,21 +309,26 @@ export function WeatherModal({ open, weather, loading, error, onClose }: Weather
             <HourlyStrip chart={chart} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
-            {[
-              ['Deszcz', weather.rainLikely ? `Tak, do ${weather.maxRainProbability}%` : 'Mało prawdopodobny'],
-              ['Burza', weather.stormLikely ? 'Możliwa' : 'Nie widać'],
-              ['Opad teraz', `${weather.precipitation.toFixed(1)} mm`],
-              ['Status wiatru', weather.maxWind >= 55 ? 'Silny wiatr' : weather.maxWind >= 35 ? 'Umiarkowany' : 'Spokojnie'],
-            ].map(([label, value]) => (
-              <div key={label} style={{ padding: 12, borderRadius: 12, border: '1px solid var(--border-soft)', background: 'var(--surface)' }}>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: 9.5, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>{label}</div>
-                <div style={{ marginTop: 5, fontWeight: 800, color: 'var(--ink)' }}>{value}</div>
+          {weather.daily.length > 0 && (
+            <div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 9.5, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 8 }}>
+                Prognoza na kilka dni
               </div>
-            ))}
-          </div>
+              <DailyStrip days={weather.daily} />
+            </div>
+          )}
         </div>
       )}
     </Modal>
+  );
+}
+
+function ManualOnly({ onSearch }: { onSearch: (city: string) => void }) {
+  const [city, setCity] = useState('');
+  return (
+    <div style={{ display: 'flex', gap: 8 }}>
+      <input className="input" placeholder="Wpisz miejscowość…" value={city} onChange={(e) => setCity(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && city.trim()) onSearch(city.trim()); }} style={{ height: 34 }} autoFocus />
+      <button className="btn btn-primary btn-sm" onClick={() => city.trim() && onSearch(city.trim())}>Pokaż pogodę</button>
+    </div>
   );
 }

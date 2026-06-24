@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, ProgressBar } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, ProgressBar, PageHeader, MoreMenu } from '@/components/common';
 import {
   useAddMealItem,
   useAddWater,
@@ -58,9 +58,9 @@ function MacroBadge({ kcal, protein, carb, fat }: { kcal: number; protein: numbe
   return (
     <div style={{ display: 'flex', gap: 10, background: 'var(--surface-3)', borderRadius: 8, padding: '8px 12px', fontSize: 12, flexWrap: 'wrap' }}>
       <span><strong>{Math.round(kcal)}</strong> kcal</span>
-      <span style={{ color: '#61A5FF' }}>B <strong>{protein.toFixed(1)}g</strong></span>
-      <span style={{ color: '#F5B642' }}>W <strong>{carb.toFixed(1)}g</strong></span>
-      <span style={{ color: '#FF6B8A' }}>T <strong>{fat.toFixed(1)}g</strong></span>
+      <span style={{ color: 'var(--tone-blue)' }}>B <strong>{protein.toFixed(1)}g</strong></span>
+      <span style={{ color: 'var(--tone-amber)' }}>W <strong>{carb.toFixed(1)}g</strong></span>
+      <span style={{ color: 'var(--tone-pink)' }}>T <strong>{fat.toFixed(1)}g</strong></span>
     </div>
   );
 }
@@ -98,6 +98,14 @@ function FoodSearchDropdown({ query, onQueryChange, onSelect, placeholder }: Foo
         </div>
       )}
     </div>
+  );
+}
+
+function DietHeaderIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 2v7c0 1.1.9 2 2 2h0a2 2 0 0 0 2-2V2M5 11v11M11 2v20M19 2c-1.66 0-3 2-3 5s1.34 5 3 5v10" />
+    </svg>
   );
 }
 
@@ -172,28 +180,40 @@ function DietHub() {
       await addMealItem.mutateAsync({ ...item, meal_id: meal.id });
     }
   }
+  async function clearMeal(mealName: string) {
+    const mealRecord = meals.find(m => m.name === mealName);
+    const entries = mealRecord ? items.filter(e => e.meal_id === mealRecord.id) : [];
+    if (!entries.length) return;
+    if (!window.confirm(`Wyczyścić wszystkie produkty z posiłku „${mealName}"?`)) return;
+    for (const entry of entries) await deleteMealItem.mutateAsync(entry.id);
+  }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <PageHeader
+        icon={<DietHeaderIcon />}
+        title="Dieta"
+        desc="Posiłki, makroskładniki i nawodnienie w jednym miejscu."
+        actions={<>
+          <button className="btn btn-primary btn-sm" onClick={() => { setDefaultMeal(config.meals[0] ?? DEFAULT_MEALS[0]); setShowAdd(true); }}>+ Dodaj produkt</button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowProductModal(true)}>+ Produkt własny</button>
+          <button className="btn btn-secondary btn-sm" onClick={() => setShowTemplateModal(true)}>+ Własny posiłek</button>
+        </>}
+      />
       <DateToolbar selectedDate={selectedDate} viewMode={viewMode} onPrev={() => shiftDate(-1)} onNext={() => shiftDate(1)} onToday={() => setSelectedDate(todayStr())} onMode={setViewMode} onPick={setSelectedDate} />
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button className="btn btn-primary btn-sm" onClick={() => { setDefaultMeal(config.meals[0] ?? DEFAULT_MEALS[0]); setShowAdd(true); }}>+ Dodaj produkt</button>
-        <button className="btn btn-secondary btn-sm" onClick={() => setShowProductModal(true)}>+ Produkt własny</button>
-        <button className="btn btn-secondary btn-sm" onClick={() => setShowTemplateModal(true)}>+ Własny posiłek</button>
-      </div>
       {viewMode === 'day' ? (
         <div className="diet-day-grid">
           <div className="col" style={{ minWidth: 0 }}>
             {loadingItems ? [1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 90, borderRadius: 12, marginBottom: 12 }} />) : config.meals.map(mealName => {
               const mealRecord = meals.find(m => m.name === mealName);
               const entries = mealRecord ? items.filter(e => e.meal_id === mealRecord.id) : [];
-              return <MealCard key={mealName} mealName={mealName} entries={entries} totals={computeTotals(entries)} onAdd={() => { setDefaultMeal(mealName); setShowAdd(true); }} onCopy={() => copyMeal(mealName)} onSaveTemplate={() => saveTemplateFromMeal(mealName)} onDelete={setDeleteId} onAmount={(entry, amount) => {
+              return <MealCard key={mealName} mealName={mealName} entries={entries} totals={computeTotals(entries)} onAdd={() => { setDefaultMeal(mealName); setShowAdd(true); }} onCopy={() => copyMeal(mealName)} onSaveTemplate={() => saveTemplateFromMeal(mealName)} onClear={() => clearMeal(mealName)} onDelete={setDeleteId} onAmount={(entry, amount) => {
                 if (amount <= 0 || amount === entry.amount) return;
                 const ratio = amount / entry.amount;
                 updateMealItem.mutate({ id: entry.id, patch: { amount, kcal: entry.kcal * ratio, protein: entry.protein * ratio, carb: entry.carb * ratio, fat: entry.fat * ratio } });
               }} />;
             })}
           </div>
-          <div className="col">
+          <div className="col diet-side-sticky">
             <SummaryCard totals={totals} targets={targets} waterMl={waterMl} onSettings={() => setShowSettings(true)} />
             <WaterCard waterMl={waterMl} target={targets.water} on200={() => addWater200.mutate()} on300={() => addWater300.mutate()} on500={() => addWater500.mutate()} />
             <MealTemplatesCard templates={mealTemplates} onUse={addTemplateToDefaultMeal} onDelete={(id) => setMealTemplates(prev => prev.filter(t => t.id !== id))} />
@@ -215,13 +235,13 @@ function DateToolbar({ selectedDate, viewMode, onPrev, onNext, onToday, onMode, 
   return <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '12px 14px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button className="icon-btn" onClick={onPrev}>‹</button><div style={{ minWidth: 240 }}><div style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Wybrana data</div><div style={{ fontSize: 18, fontWeight: 800 }}>{fmtDate(selectedDate, true)}</div></div><button className="icon-btn" onClick={onNext}>›</button><button className="btn btn-secondary btn-sm" onClick={onToday}>Dzisiaj</button><div className="icon-btn" style={{ position: 'relative' }} title="Wybierz datę"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg><input type="date" value={selectedDate} onChange={e => { if (e.target.value) onPick(e.target.value); }} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} /></div></div><div style={{ display: 'flex', gap: 6, background: 'var(--surface-inset)', border: '1px solid var(--border-soft)', padding: 4, borderRadius: 12 }}>{(['day', 'week', 'month'] as const).map(m => <button key={m} className={`btn btn-sm ${viewMode === m ? 'btn-primary' : 'btn-ghost'}`} onClick={() => onMode(m)}>{m === 'day' ? 'Dzień' : m === 'week' ? 'Tydzień' : 'Miesiąc'}</button>)}</div></div>;
 }
 
-function MealCard({ mealName, entries, totals, onAdd, onCopy, onSaveTemplate, onDelete, onAmount }: { mealName: string; entries: MealItem[]; totals: ReturnType<typeof computeTotals>; onAdd: () => void; onCopy: () => void; onSaveTemplate: () => void; onDelete: (id: string) => void; onAmount: (entry: MealItem, amount: number) => void }) {
-  return <div className="card"><div className="card-head" style={{ flexWrap: 'wrap', gap: 10 }}><span className="card-title">{mealName}</span><div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}><div style={{ display: 'flex', gap: 9, fontSize: 12, fontFamily: 'var(--mono)' }}><span style={{ fontWeight: 800, color: 'var(--ink)' }}>{Math.round(totals.kcal)} kcal</span><span style={{ color: '#61A5FF' }}>B {totals.protein.toFixed(0)}g</span><span style={{ color: '#F5B642' }}>W {totals.carb.toFixed(0)}g</span><span style={{ color: '#FF6B8A' }}>T {totals.fat.toFixed(0)}g</span></div><div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><button className="btn btn-secondary btn-sm" onClick={onCopy} disabled={!entries.length}>Kopiuj</button><button className="btn btn-secondary btn-sm" onClick={onSaveTemplate} disabled={!entries.length}>Zapisz szablon</button><button className="btn btn-primary btn-sm" onClick={onAdd}>+ Dodaj</button></div></div></div>{!entries.length ? <div style={{ fontSize: 13, color: 'var(--ink-3)', padding: '10px 0', textAlign: 'center' }}>Brak wpisów</div> : <table className="table"><thead><tr><th></th><th>PRODUKT</th><th style={{ textAlign: 'right' }}>ILOŚĆ</th><th style={{ textAlign: 'right' }}>KCAL</th><th style={{ textAlign: 'right' }}>B</th><th style={{ textAlign: 'right' }}>W</th><th style={{ textAlign: 'right', paddingRight: 0 }}>T</th></tr></thead><tbody>{entries.map(e => <tr key={e.id}><td style={{ width: 30 }}><button className="icon-btn" style={{ fontSize: 12 }} onClick={() => onDelete(e.id)}>x</button></td><td style={{ fontWeight: 600 }}>{e.name}</td><td style={{ textAlign: 'right' }}><input className="input" type="number" defaultValue={Math.round(e.amount)} onBlur={(ev) => onAmount(e, +ev.currentTarget.value)} style={{ width: 76, height: 30, textAlign: 'right', padding: '4px 8px' }} /></td><td style={{ textAlign: 'right', fontWeight: 700 }}>{Math.round(e.kcal)}</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12 }}>{e.protein.toFixed(1)}g</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12 }}>{e.carb.toFixed(1)}g</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12, paddingRight: 0 }}>{e.fat.toFixed(1)}g</td></tr>)}</tbody></table>}</div>;
+function MealCard({ mealName, entries, totals, onAdd, onCopy, onSaveTemplate, onClear, onDelete, onAmount }: { mealName: string; entries: MealItem[]; totals: ReturnType<typeof computeTotals>; onAdd: () => void; onCopy: () => void; onSaveTemplate: () => void; onClear: () => void; onDelete: (id: string) => void; onAmount: (entry: MealItem, amount: number) => void }) {
+  return <div className="card"><div className="card-head" style={{ flexWrap: 'wrap', gap: 10 }}><span className="card-title">{mealName}</span><div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}><div style={{ display: 'flex', gap: 9, fontSize: 12, fontFamily: 'var(--mono)' }}><span style={{ fontWeight: 800, color: 'var(--ink)' }}>{Math.round(totals.kcal)} kcal</span><span style={{ color: 'var(--tone-blue)' }}>B {totals.protein.toFixed(0)}g</span><span style={{ color: 'var(--tone-amber)' }}>W {totals.carb.toFixed(0)}g</span><span style={{ color: 'var(--tone-pink)' }}>T {totals.fat.toFixed(0)}g</span></div><div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><button className="btn btn-primary btn-sm" onClick={onAdd}>+ Dodaj</button><MoreMenu items={[{ label: 'Kopiuj posiłek', onClick: onCopy, disabled: !entries.length }, { label: 'Zapisz jako szablon', onClick: onSaveTemplate, disabled: !entries.length }, { label: 'Wyczyść posiłek', onClick: onClear, danger: true, disabled: !entries.length }]} /></div></div></div>{!entries.length ? <div style={{ fontSize: 13, color: 'var(--ink-3)', padding: '10px 0', textAlign: 'center' }}>Brak wpisów</div> : <table className="table"><thead><tr><th></th><th>PRODUKT</th><th style={{ textAlign: 'right' }}>ILOŚĆ</th><th style={{ textAlign: 'right' }}>KCAL</th><th style={{ textAlign: 'right' }}>B</th><th style={{ textAlign: 'right' }}>W</th><th style={{ textAlign: 'right', paddingRight: 0 }}>T</th></tr></thead><tbody>{entries.map(e => <tr key={e.id}><td style={{ width: 30 }}><button className="icon-btn" style={{ fontSize: 12 }} onClick={() => onDelete(e.id)}>x</button></td><td style={{ fontWeight: 600 }}>{e.name}</td><td style={{ textAlign: 'right' }}><input className="input" type="number" defaultValue={Math.round(e.amount)} onBlur={(ev) => onAmount(e, +ev.currentTarget.value)} style={{ width: 76, height: 30, textAlign: 'right', padding: '4px 8px' }} /></td><td style={{ textAlign: 'right', fontWeight: 700 }}>{Math.round(e.kcal)}</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12 }}>{e.protein.toFixed(1)}g</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12 }}>{e.carb.toFixed(1)}g</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12, paddingRight: 0 }}>{e.fat.toFixed(1)}g</td></tr>)}</tbody></table>}</div>;
 }
 
 function SummaryCard({ totals, targets, waterMl, onSettings }: { totals: ReturnType<typeof computeTotals>; targets: typeof DEFAULTS; waterMl: number; onSettings: () => void }) {
   const pct = Math.min((totals.kcal / targets.kcal) * 100, 100);
-  return <div className="card"><div className="card-head"><span className="card-title">Podsumowanie</span><button className="icon-btn" onClick={onSettings} aria-label="Ustawienia celów">⚙</button></div><div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 16 }}><svg viewBox="0 0 36 36" style={{ width: 84, height: 84, transform: 'rotate(-90deg)', flexShrink: 0 }}><circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--surface-3)" strokeWidth="3" /><circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--green-mid)" strokeWidth="3" strokeDasharray={`${pct} 100`} strokeLinecap="round" /></svg><div><div style={{ fontSize: 24, fontWeight: 900 }}>{Math.round(totals.kcal)} / {targets.kcal}</div><div style={{ fontSize: 12, color: 'var(--ink-3)' }}>Pozostało {Math.max(0, targets.kcal - Math.round(totals.kcal))} kcal</div><div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 3 }}>Nawodnienie {(waterMl / 1000).toFixed(1)} / {(targets.water / 1000).toFixed(1)} L</div></div></div>{[{ label: 'Białko', val: totals.protein, goal: targets.protein, color: '#61A5FF' }, { label: 'Węglowodany', val: totals.carb, goal: targets.carb, color: '#F5B642' }, { label: 'Tłuszcze', val: totals.fat, goal: targets.fat, color: '#FF6B8A' }].map(m => <div key={m.label} style={{ marginBottom: 10 }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 13 }}><span style={{ fontWeight: 600 }}>{m.label}</span><span style={{ color: 'var(--ink-3)' }}>{m.val.toFixed(0)}/{m.goal}g</span></div><ProgressBar value={m.val} max={m.goal} size="sm" color={m.color} /></div>)}</div>;
+  return <div className="card"><div className="card-head"><span className="card-title">Podsumowanie</span><button className="icon-btn" onClick={onSettings} aria-label="Ustawienia celów">⚙</button></div><div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 16 }}><svg viewBox="0 0 36 36" style={{ width: 84, height: 84, transform: 'rotate(-90deg)', flexShrink: 0 }}><circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--surface-3)" strokeWidth="3" /><circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--green-mid)" strokeWidth="3" strokeDasharray={`${pct} 100`} strokeLinecap="round" /></svg><div><div style={{ fontSize: 24, fontWeight: 900 }}>{Math.round(totals.kcal)} / {targets.kcal}</div><div style={{ fontSize: 12, color: 'var(--ink-3)' }}>Pozostało {Math.max(0, targets.kcal - Math.round(totals.kcal))} kcal</div><div style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 3 }}>Nawodnienie {(waterMl / 1000).toFixed(1)} / {(targets.water / 1000).toFixed(1)} L</div></div></div>{[{ label: 'Białko', val: totals.protein, goal: targets.protein, color: 'var(--tone-blue)' }, { label: 'Węglowodany', val: totals.carb, goal: targets.carb, color: 'var(--tone-amber)' }, { label: 'Tłuszcze', val: totals.fat, goal: targets.fat, color: 'var(--tone-pink)' }].map(m => <div key={m.label} style={{ marginBottom: 10 }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 13 }}><span style={{ fontWeight: 600 }}>{m.label}</span><span style={{ color: 'var(--ink-3)' }}>{m.val.toFixed(0)}/{m.goal}g</span></div><ProgressBar value={m.val} max={m.goal} size="sm" color={m.color} /></div>)}</div>;
 }
 
 function WaterCard({ waterMl, target, on200, on300, on500 }: { waterMl: number; target: number; on200: () => void; on300: () => void; on500: () => void }) {

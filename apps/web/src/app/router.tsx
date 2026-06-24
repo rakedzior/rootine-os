@@ -60,6 +60,7 @@ export const router = createBrowserRouter([
       { path: 'notes', element: lazyRoute(<NotesScreen />) },
       { path: 'work', element: lazyRoute(<PracaScreen />) },
       { path: 'settings', element: lazyRoute(<SettingsScreen />) },
+      { path: 'settings/profile', element: lazyRoute(<SettingsScreen tab="profile" />) },
       { path: 'settings/integrations', element: lazyRoute(<SettingsScreen tab="integrations" />) },
       { path: 'settings/security', element: lazyRoute(<SettingsScreen tab="security" />) },
       { path: 'settings/modules', element: lazyRoute(<SettingsScreen tab="modules" />) },
