@@ -852,14 +852,14 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
         style={{
           minHeight: compact ? 72 : 150, borderRadius:'var(--r-sm)',
           background: dropTargetDate === dateStr
-            ? 'color-mix(in srgb, var(--acc-a) 16%, var(--surface-inset))'
-            : (isActive ? 'color-mix(in srgb, var(--acc-a) 24%, var(--surface-inset))' : isCellToday ? 'var(--acc-a-soft)' : 'var(--surface-inset)'),
+            ? 'color-mix(in srgb, var(--accent-ice) 12%, var(--surface-calendar))'
+            : (isActive ? 'color-mix(in srgb, var(--accent-ice) 8%, var(--surface-calendar))' : isCellToday ? 'color-mix(in srgb, var(--accent-ice) 8%, var(--surface-calendar))' : 'var(--surface-calendar)'),
           border: dropTargetDate === dateStr
-            ? '1px solid var(--acc-line)'
-            : ((isActive || isCellToday) ? '1px solid var(--acc-a)' : '1px solid var(--border-soft)'),
+            ? '1px solid var(--border-active)'
+            : ((isActive || isCellToday) ? '1px solid color-mix(in srgb, var(--border-active) 70%, transparent)' : '1px solid var(--border-soft)'),
           boxShadow: dropTargetDate === dateStr
-            ? '0 0 0 2px color-mix(in srgb, var(--acc-a) 36%, transparent)'
-            : (isActive ? '0 0 0 2px color-mix(in srgb, var(--acc-a) 45%, transparent)' : undefined),
+            ? '0 0 0 2px color-mix(in srgb, var(--accent-ice) 30%, transparent)'
+            : (isActive ? '0 0 0 2px color-mix(in srgb, var(--accent-ice) 32%, transparent)' : undefined),
           padding:7, display:'flex', flexDirection:'column', gap:3,
           cursor:'pointer',
           transition:'.14s',
@@ -870,7 +870,7 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
         <div style={{
           fontVariantNumeric:'tabular-nums',
           ...(isCellToday
-            ? { color:'var(--on-acc)', background:'var(--acc-a)', width:22, height:22, borderRadius:'50%', display:'grid', placeItems:'center', fontSize:11, fontWeight:700 }
+            ? { color:'var(--surface-base)', background:'var(--accent-ice)', width:22, height:22, borderRadius:'50%', display:'grid', placeItems:'center', fontSize:11, fontWeight:700 }
             : { fontSize:12, fontWeight:600, color:'var(--ink-2)' })
         }}>{date.getDate()}</div>
         {dayTasks.map(t => (
