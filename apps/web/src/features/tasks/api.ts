@@ -24,10 +24,12 @@ export async function insertTask(input: NewTaskInput): Promise<Task> {
     .insert({
       user_id: userId,
       title: input.title,
+      tags: input.tags ?? [],
       category: input.category ?? null,
       priority: input.priority ?? 'mid',
       due_date: input.due_date ?? null,
       scheduled_time: input.scheduled_time ?? null,
+      duration_minutes: input.duration_minutes ?? null,
       note: input.note ?? '',
       series_id: input.series_id ?? null,
       repeat_mode: input.repeat_mode ?? 'none',

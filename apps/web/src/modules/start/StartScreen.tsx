@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, type MouseEvent, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, useRef, type MouseEvent as ReactMouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { ConfirmDelete, Field, Modal, PageHeader } from '@/components/common';
 import { useHabits, useHabitLogs, useToggleHabitLog } from '@/features/habits/hooks';
@@ -17,6 +17,47 @@ function fmtShortDate(iso: string) {
   const [y, m, d] = iso.split('-').map(Number);
   if (!y || !m || !d) return iso;
   return `${d} ${MONTH_SHORT[m - 1] ?? ''}`;
+}
+
+function normalizeTag(value: string): string {
+  return value.trim().replace(/^#/, '').toLowerCase();
+}
+
+function dedupeTags(tags: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of tags) {
+    const tag = normalizeTag(raw);
+    if (!tag) continue;
+    if (seen.has(tag)) continue;
+    seen.add(tag);
+    out.push(tag);
+  }
+  return out;
+}
+
+function consumeCompletedTags(text: string, currentTags: string[]): { title: string; tags: string[] } {
+  const captured: string[] = [];
+  const title = text
+    .replace(/(^|\s)#([\p{L}\p{N}_-]+)\s+/gu, (_m, lead: string, tag: string) => {
+      captured.push(tag);
+      return lead;
+    })
+    .replace(/\s{2,}/g, ' ')
+    .trimStart();
+  return { title, tags: dedupeTags([...currentTags, ...captured]) };
+}
+
+function extractTitleAndTags(text: string, currentTags: string[]): { title: string; tags: string[] } {
+  const captured: string[] = [];
+  const title = text
+    .replace(/(^|\s)#([\p{L}\p{N}_-]+)(?=\s|$)/gu, (_m, lead: string, tag: string) => {
+      captured.push(tag);
+      return lead;
+    })
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  return { title, tags: dedupeTags([...currentTags, ...captured]) };
 }
 
 // ─── ADD TASK MODAL ───────────────────────────────────────────
@@ -44,6 +85,7 @@ type RepeatEndMode = 'date' | 'count';
 
 interface NewTask {
   title: string;
+  tags: string[];
   priority: 'high' | 'mid' | 'low';
   dueDates: string[];
   repeatMode: RepeatMode;
@@ -138,6 +180,8 @@ function expandTaskDates(task: Pick<NewTask, 'dueDates' | 'repeatMode' | 'repeat
 interface AddTaskModalProps {
   open: boolean;
   defaultDate: string;
+  initialTitle?: string;
+  initialTags?: string[];
   task?: SupabaseTask | null;
   seriesCount?: number;
   saving?: boolean;
@@ -151,6 +195,8 @@ interface AddTaskModalProps {
 function AddTaskModal({
   open,
   defaultDate,
+  initialTitle,
+  initialTags,
   task = null,
   seriesCount = 0,
   saving = false,
@@ -162,6 +208,7 @@ function AddTaskModal({
 }: AddTaskModalProps) {
   const isEditing = !!task;
   const [title, setTitle] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [priority, setPriority] = useState<'high' | 'mid' | 'low'>('mid');
   const [selectedDates, setSelectedDates] = useState<Set<string>>(() => new Set([defaultDate]));
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('none');
@@ -188,6 +235,7 @@ function AddTaskModal({
     if (task) {
       const date = task.due_date ?? defaultDate;
       setTitle(task.title);
+      setTags(dedupeTags(task.tags ?? []));
       setPriority(task.priority ?? 'mid');
       setRepeatMode('none');
       setRepeatWeekdays([weekdayFromDateStr(date)]);
@@ -198,7 +246,9 @@ function AddTaskModal({
       focusDate(date);
       return;
     }
-    setTitle('');
+    const parsed = extractTitleAndTags(initialTitle ?? '', initialTags ?? []);
+    setTitle(parsed.title);
+    setTags(parsed.tags);
     setPriority('mid');
     setRepeatMode('none');
     setRepeatEndMode('date');
@@ -206,10 +256,11 @@ function AddTaskModal({
     setRepeatCount(8);
     setNote('');
     focusDate(defaultDate);
-  }, [defaultDate, open, task]);
+  }, [defaultDate, initialTags, initialTitle, open, task]);
 
   const reset = () => {
     setTitle('');
+    setTags([]);
     setPriority('mid');
     setRepeatMode('none');
     setRepeatEndMode('date');
@@ -234,11 +285,13 @@ function AddTaskModal({
   }).length;
 
   async function handleSave() {
-    if (!title.trim() || selectedDateList.length === 0 || repeatUntilInvalid || repeatCountInvalid || saving) return;
+    const parsed = extractTitleAndTags(title, tags);
+    if (!parsed.title || selectedDateList.length === 0 || repeatUntilInvalid || repeatCountInvalid || saving) return;
     try {
       await onSave({
         editingId: task?.id,
-        title: title.trim(),
+        title: parsed.title,
+        tags: parsed.tags,
         priority,
         dueDates: isEditing ? selectedDateList.slice(0, 1) : selectedDateList,
         repeatMode: isEditing ? 'none' : repeatMode,
@@ -283,7 +336,7 @@ function AddTaskModal({
     }
   }
 
-  function beginDateDrag(date: string, event: MouseEvent<HTMLButtonElement>) {
+  function beginDateDrag(date: string, event: ReactMouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     dragMovedRef.current = false;
     setDragRange({ start: date, end: date });
@@ -376,15 +429,44 @@ function AddTaskModal({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 18, width: '100%', minWidth: 0 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0 }}>
           <Field label="Tytuł zadania" required>
-            <input
-              autoFocus
-              className="input"
-              placeholder="Wpisz zadanie..."
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-              style={{ width: '100%', boxSizing: 'border-box' }}
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {tags.length > 0 && (
+                <div className="task-tags-row">
+                  {tags.map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      className="task-tag-badge"
+                      onClick={() => setTags((prev) => prev.filter((item) => item !== tag))}
+                      title="Usuń tag"
+                    >
+                      #{tag}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <input
+                autoFocus
+                className="input"
+                placeholder="Wpisz zadanie... #praca #pilne"
+                value={title}
+                onChange={(e) => {
+                  const consumed = consumeCompletedTags(e.target.value, tags);
+                  setTitle(consumed.title);
+                  setTags(consumed.tags);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    void handleSave();
+                  }
+                  if (e.key === 'Backspace' && !title && tags.length > 0) {
+                    setTags((prev) => prev.slice(0, -1));
+                  }
+                }}
+                style={{ width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
           </Field>
 
           <Field label="Priorytet">
@@ -659,7 +741,7 @@ function startOfWeekDate(d: Date): Date {
 
 interface CalendarProps {
   tasks: SupabaseTask[];
-  onDayClick: (dateStr: string) => void;
+  onDayClick: (dateStr: string, anchor: { x: number; y: number }) => void;
   onTaskClick: (task: SupabaseTask) => void;
   onToggleTask: (id: string, done: boolean) => void;
   onMoveTask: (task: SupabaseTask, dateStr: string) => void;
@@ -710,7 +792,7 @@ function Calendar({ tasks, onDayClick, onTaskClick, onToggleTask, onMoveTask }: 
     return (
       <div key={dateStr}
         className="day-cell"
-        onClick={() => onDayClick(dateStr)}
+        onClick={(e) => onDayClick(dateStr, { x: e.clientX, y: e.clientY })}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
@@ -896,7 +978,7 @@ function Calendar({ tasks, onDayClick, onTaskClick, onToggleTask, onMoveTask }: 
               </div>
             ))}
             <button
-              onClick={() => onDayClick(cursorDateStr)}
+              onClick={(e) => onDayClick(cursorDateStr, { x: e.clientX, y: e.clientY })}
               style={{ marginTop:4, display:'flex', alignItems:'center', gap:6, background:'transparent', border:'1px dashed var(--border)', borderRadius:10, padding:'11px 12px', color:'var(--ink-3)', cursor:'pointer', fontSize:13, flexShrink:0 }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -1027,11 +1109,10 @@ interface TodayPanelProps {
   tasks: SupabaseTask[];
   isLoading: boolean;
   isSaving: boolean;
-  onAddTask: () => void;
-  onQuickAddTask: (title: string) => Promise<void> | void;
+  onAddTask: (prefillTitle?: string, prefillTags?: string[], anchor?: { x: number; y: number }) => void;
+  onQuickAddTask: (title: string, tags: string[]) => Promise<void> | void;
   onTaskClick: (task: SupabaseTask) => void;
   onToggleTask: (id: string, done: boolean) => void;
-  onDeleteCompleted: (tasks: SupabaseTask[]) => void;
 }
 
 function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
@@ -1040,7 +1121,10 @@ function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
   onToggleTask: (id: string, done: boolean) => void;
 }) {
   const isDone = task.done;
-  const overdue = !isDone && !!task.due_date && task.due_date < todayStr;
+  const dueLabel = task.due_date
+    ? (task.due_date === todayStr ? 'dziś' : task.due_date === addDaysStr(todayStr, 1) ? 'jutro' : fmtShortDate(task.due_date))
+    : 'bez terminu';
+  const tags = dedupeTags(task.tags ?? []);
   return (
     <div
       role="button"
@@ -1048,7 +1132,7 @@ function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
       onClick={() => onTaskClick(task)}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onTaskClick(task)}
       className="hover-row"
-      style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 6px', margin:'0 -6px', borderRadius:8, cursor:'pointer', opacity:isDone ? .72 : 1 }}
+      style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 6px', margin:0, borderRadius:8, cursor:'pointer', opacity:isDone ? .72 : 1, minWidth: 0 }}
     >
       <div
         role="checkbox"
@@ -1063,26 +1147,19 @@ function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
       <span style={{ flex:1, fontSize:13, color:isDone?'var(--ink-3)':'var(--ink)', fontWeight:500, textDecoration:isDone?'line-through':'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
         {task.title}
       </span>
-      {overdue && <span className="badge status-overdue" style={{ flexShrink:0 }}>Po terminie</span>}
-      {!overdue && task.due_date && task.due_date !== todayStr && (
-        <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-3)', flexShrink:0 }}>{fmtShortDate(task.due_date)}</span>
-      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, minWidth: 0, maxWidth: '56%' }}>
+        <div className="task-tags-row" style={{ justifyContent: 'flex-end', overflow: 'hidden', minWidth: 0 }}>
+          {tags.map((tag) => (
+            <span key={tag} className="task-tag-badge">{tag}</span>
+          ))}
+        </div>
+        <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-3)', flexShrink:0, whiteSpace:'nowrap' }}>{dueLabel}</span>
+      </div>
     </div>
   );
 }
 
-function PlannerSection({ label, count, children }: { label: string; count: number; children: ReactNode }) {
-  if (count === 0) return null;
-  return (
-    <div style={{ marginBottom:14 }}>
-      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, padding:'0 2px' }}>
-        <span style={{ fontFamily:'var(--mono)', fontSize:10, letterSpacing:'.08em', textTransform:'uppercase', color:'var(--ink-3)', fontWeight:700 }}>{label}</span>
-        <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-4)' }}>{count}</span>
-      </div>
-      {children}
-    </div>
-  );
-}
+type TaskWindow = 'today' | 'tomorrow' | 'week' | 'month' | 'all';
 
 function TodayPanel({
   tasks,
@@ -1092,31 +1169,60 @@ function TodayPanel({
   onQuickAddTask,
   onTaskClick,
   onToggleTask,
-  onDeleteCompleted,
 }: TodayPanelProps) {
   const [quickTitle, setQuickTitle] = useState('');
+  const [quickTags, setQuickTags] = useState<string[]>([]);
+  const [windowFilter, setWindowFilter] = useState<TaskWindow>('today');
   const now = useMemo(() => new Date(), []);
   const todayStr = toDateStr(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrowStr = addDaysStr(todayStr, 1);
+  const dow = now.getDay();
+  const weekStart = addDaysStr(todayStr, -(dow === 0 ? 6 : dow - 1));
+  const weekEnd = addDaysStr(weekStart, 6);
+  const monthKey = todayStr.slice(0, 7);
 
   const byDate = (a: SupabaseTask, b: SupabaseTask) => {
-    const aDate = a.due_date ?? '';
-    const bDate = b.due_date ?? '';
+    const aDate = a.due_date ?? '9999-12-31';
+    const bDate = b.due_date ?? '9999-12-31';
     if (aDate !== bDate) return aDate.localeCompare(bDate);
     return a.created_at.localeCompare(b.created_at);
   };
 
-  // Sekcje: Dzisiaj (dziś + po terminie), Nadchodzące, Bez daty.
-  const todaySec = tasks.filter((t) => !t.done && (t.due_date === todayStr || (!!t.due_date && t.due_date < todayStr))).sort(byDate);
-  const upcomingSec = tasks.filter((t) => !t.done && !!t.due_date && t.due_date > todayStr).sort(byDate);
-  const undatedSec = tasks.filter((t) => !t.done && !t.due_date).sort(byDate);
-  const completedToday = tasks.filter((t) => t.done && (!t.due_date || t.due_date === todayStr)).sort(byDate);
-  const total = todaySec.length + upcomingSec.length + undatedSec.length + completedToday.length;
+  const activeTasks = useMemo(() => tasks.filter((t) => !t.done), [tasks]);
+  const counters = useMemo(() => {
+    const today = activeTasks.filter((t) => t.due_date === todayStr).length;
+    const tomorrow = activeTasks.filter((t) => t.due_date === tomorrowStr).length;
+    const week = activeTasks.filter((t) => !!t.due_date && t.due_date >= weekStart && t.due_date <= weekEnd).length;
+    const month = activeTasks.filter((t) => !!t.due_date && t.due_date.startsWith(monthKey)).length;
+    const all = activeTasks.length;
+    return { today, tomorrow, week, month, all };
+  }, [activeTasks, monthKey, todayStr, tomorrowStr, weekEnd, weekStart]);
+
+  const visibleTasks = useMemo(() => {
+    const filtered = activeTasks.filter((t) => {
+      if (windowFilter === 'today') return t.due_date === todayStr;
+      if (windowFilter === 'tomorrow') return t.due_date === tomorrowStr;
+      if (windowFilter === 'week') return !!t.due_date && t.due_date >= weekStart && t.due_date <= weekEnd;
+      if (windowFilter === 'month') return !!t.due_date && t.due_date.startsWith(monthKey);
+      return true;
+    });
+    return filtered.sort(byDate);
+  }, [activeTasks, monthKey, todayStr, tomorrowStr, weekEnd, weekStart, windowFilter]);
+
+  const tabs: Array<{ id: TaskWindow; label: string; count: number }> = [
+    { id: 'today', label: 'DZISIAJ', count: counters.today },
+    { id: 'tomorrow', label: 'JUTRO', count: counters.tomorrow },
+    { id: 'week', label: 'TYDZIEŃ', count: counters.week },
+    { id: 'month', label: 'MIESIĄC', count: counters.month },
+    { id: 'all', label: 'WSZYSTKIE', count: counters.all },
+  ];
 
   async function handleQuickSubmit() {
-    const title = quickTitle.trim();
-    if (!title || isSaving) return;
-    await onQuickAddTask(title);
+    const parsed = extractTitleAndTags(quickTitle, quickTags);
+    if (!parsed.title || isSaving) return;
+    await onQuickAddTask(parsed.title, parsed.tags);
     setQuickTitle('');
+    setQuickTags([]);
   }
 
   return (
@@ -1126,43 +1232,66 @@ function TodayPanel({
         <span style={{ fontFamily:'var(--display)', fontSize:28, fontWeight:600, letterSpacing:'-.02em', lineHeight:1 }}>Zadania</span>
       </div>
 
+      <div className="task-filter-row">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={`task-filter-btn${windowFilter === tab.id ? ' is-active' : ''}`}
+            onClick={() => setWindowFilter(tab.id)}
+          >
+            <span>{tab.label}</span>
+            <sup>{tab.count}</sup>
+          </button>
+        ))}
+      </div>
+
       {/* Task list — scrollable, grouped */}
-      <div style={{ flex:1, overflowY:'auto', minHeight:0, paddingRight:2 }}>
+      <div style={{ flex:1, overflowY:'auto', overflowX:'hidden', minHeight:0, paddingRight:2 }}>
         {isLoading ? (
           <div style={{ textAlign:'center', padding:'24px 0', color:'var(--ink-3)', fontSize:13 }}>Ladowanie zadan...</div>
-        ) : total === 0 ? (
+        ) : visibleTasks.length === 0 ? (
           <div style={{ textAlign:'center', padding:'24px 0', color:'var(--ink-3)', fontSize:13 }}>Brak zadań. Dodaj pierwsze poniżej.</div>
         ) : (
-          <>
-            <PlannerSection label="Dzisiaj" count={todaySec.length}>
-              {todaySec.map((task) => <PlannerTaskRow key={task.id} task={task} todayStr={todayStr} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />)}
-            </PlannerSection>
-            <PlannerSection label="Nadchodzące" count={upcomingSec.length}>
-              {upcomingSec.map((task) => <PlannerTaskRow key={task.id} task={task} todayStr={todayStr} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />)}
-            </PlannerSection>
-            <PlannerSection label="Bez daty" count={undatedSec.length}>
-              {undatedSec.map((task) => <PlannerTaskRow key={task.id} task={task} todayStr={todayStr} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />)}
-            </PlannerSection>
-            <PlannerSection label="Ukończone dziś" count={completedToday.length}>
-              {completedToday.map((task) => <PlannerTaskRow key={task.id} task={task} todayStr={todayStr} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />)}
-            </PlannerSection>
-          </>
+          visibleTasks.map((task) => <PlannerTaskRow key={task.id} task={task} todayStr={todayStr} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />)
         )}
       </div>
 
       {/* Quick add row */}
       <div style={{ display:'flex', alignItems:'center', gap:8, paddingTop:12, marginTop:8, borderTop:'1px solid var(--border-soft)', flexShrink:0 }}>
+        {quickTags.length > 0 && (
+          <div className="task-tags-row" style={{ marginRight: 2 }}>
+            {quickTags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                className="task-tag-badge"
+                title="Usuń tag"
+                onClick={() => setQuickTags((prev) => prev.filter((item) => item !== tag))}
+              >
+                #{tag}
+              </button>
+            ))}
+          </div>
+        )}
         <input
           className="input"
           value={quickTitle}
-          onChange={(e) => setQuickTitle(e.target.value)}
+          onChange={(e) => {
+            const consumed = consumeCompletedTags(e.target.value, quickTags);
+            setQuickTitle(consumed.title);
+            setQuickTags(consumed.tags);
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
               void handleQuickSubmit();
             }
+            if (e.key === 'Backspace' && !quickTitle && quickTags.length > 0) {
+              setQuickTags((prev) => prev.slice(0, -1));
+            }
           }}
-          placeholder="Dodaj zadanie na dziś..."
+          placeholder="Dodaj zadanie na dziś... #praca #pilne"
           aria-label="Szybkie dodanie zadania na dziś"
           disabled={isSaving}
           style={{ flex: 1, height: 36 }}
@@ -1182,7 +1311,7 @@ function TodayPanel({
         </button>
         <button
           type="button"
-          onClick={onAddTask}
+          onClick={(e) => onAddTask(quickTitle, quickTags, { x: e.clientX, y: e.clientY })}
           className="icon-btn"
           aria-label="Otwórz pełne okno dodawania zadania"
           title="Więcej opcji"
@@ -1193,15 +1322,303 @@ function TodayPanel({
             <path d="M16 2v4M8 2v4M3 10h18" />
           </svg>
         </button>
-        {completedToday.length > 0 && (
-          <button
-            type="button"
-            onClick={() => onDeleteCompleted(completedToday)}
-            style={{ background:'transparent', border:0, color:'var(--ink-3)', cursor:'pointer', fontFamily:'var(--mono)', fontSize:10, letterSpacing:'.06em', textTransform:'uppercase', fontWeight:700, padding:0, whiteSpace:'nowrap' }}
-          >
-            Usuń wykonane
+      </div>
+    </div>
+  );
+}
+
+interface TaskOptionsState {
+  open: boolean;
+  x: number;
+  y: number;
+  title: string;
+  tags: string[];
+  dueDate: string;
+  scheduledTime: string;
+  durationMinutes: number | null;
+  priority: 'high' | 'mid' | 'low';
+  reminderMode: 'at_time' | '5m' | '30m' | '1h' | '1d';
+  repeatModeUi: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+  repeatAnchor: 'due_date' | 'completion_date';
+}
+
+interface TaskOptionsPopoverProps {
+  state: TaskOptionsState;
+  saving: boolean;
+  onClose: () => void;
+  onChange: (next: Partial<TaskOptionsState>) => void;
+  onSave: () => void;
+}
+
+const DURATION_OPTIONS = [15, 30, 45, 60, 90, 120];
+const TIME_OPTIONS = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '18:00', '19:00'];
+
+function addMinutesToTime(time: string, minutes: number | null): string {
+  if (!time || !minutes) return '';
+  const [h, m] = time.split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return '';
+  const total = h * 60 + m + minutes;
+  const hh = Math.floor((total % (24 * 60)) / 60);
+  const mm = total % 60;
+  return `${pad(hh)}:${pad(mm)}`;
+}
+
+function clampPopoverPosition(x: number, y: number, width: number, height: number, pad = 12) {
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+  const left = Math.min(Math.max(pad, x), Math.max(pad, vw - width - pad));
+  const top = Math.min(Math.max(pad, y), Math.max(pad, vh - height - pad));
+  return { left, top };
+}
+
+function monthGridDates(baseDate: string): Array<{ value: string; day: number; currentMonth: boolean }> {
+  const dt = parseDateStr(baseDate) ?? new Date();
+  const y = dt.getFullYear();
+  const m = dt.getMonth();
+  const first = new Date(y, m, 1);
+  const startOffset = (first.getDay() + 6) % 7;
+  const grid: Array<{ value: string; day: number; currentMonth: boolean }> = [];
+  const start = new Date(y, m, 1 - startOffset);
+  for (let i = 0; i < 42; i += 1) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    grid.push({
+      value: toDateStr(d.getFullYear(), d.getMonth(), d.getDate()),
+      day: d.getDate(),
+      currentMonth: d.getMonth() === m,
+    });
+  }
+  return grid;
+}
+
+function TaskOptionsPopover({ state, saving, onClose, onChange, onSave }: TaskOptionsPopoverProps) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [subpanel, setSubpanel] = useState<'none' | 'time' | 'reminder' | 'repeat' | 'repeat_rule'>('none');
+  const monthGrid = useMemo(() => monthGridDates(state.dueDate), [state.dueDate]);
+  const selectedDate = parseDateStr(state.dueDate) ?? new Date();
+  const endTime = addMinutesToTime(state.scheduledTime, state.durationMinutes);
+  const mainPos = clampPopoverPosition(state.x - 160, state.y + 8, 280, 560);
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
+  const preferredSubLeft = state.x + 210;
+  const subWidth = 272;
+  const subLeft = preferredSubLeft + subWidth + 12 <= vw ? preferredSubLeft : state.x - subWidth - 14;
+  const subPos = clampPopoverPosition(subLeft, state.y + 8, subWidth, 420);
+
+  useEffect(() => {
+    if (!state.open) return;
+    setSubpanel('none');
+  }, [state.open]);
+
+  useEffect(() => {
+    if (!state.open) return;
+    function onDown(ev: MouseEvent) {
+      if (!ref.current) return;
+      if (ref.current.contains(ev.target as Node)) return;
+      onClose();
+    }
+    function onEsc(ev: KeyboardEvent) {
+      if (ev.key === 'Escape') onClose();
+    }
+    window.addEventListener('mousedown', onDown);
+    window.addEventListener('keydown', onEsc);
+    return () => {
+      window.removeEventListener('mousedown', onDown);
+      window.removeEventListener('keydown', onEsc);
+    };
+  }, [onClose, state.open]);
+
+  if (!state.open) return null;
+
+  return (
+    <>
+      <div
+        ref={ref}
+        className="task-options-pop"
+        style={{ left: mainPos.left, top: mainPos.top }}
+        role="dialog"
+        aria-label="Dodatkowe opcje zadania"
+      >
+        <div className="task-options-segment">
+          <button type="button" className="is-active">Data</button>
+          <button type="button">Czas trwania</button>
+        </div>
+        <div className="task-options-icons">
+          <button type="button" aria-label="Rano">☀</button>
+          <button type="button" aria-label="Południe">◔</button>
+          <button type="button" aria-label="Własna data">📅</button>
+          <button type="button" aria-label="Wieczór">☾</button>
+        </div>
+        <div className="task-options-month">{MONTH_FULL[selectedDate.getMonth()]} {selectedDate.getFullYear()}</div>
+        <div className="task-options-weekdays">{['P', 'W', 'Ś', 'C', 'P', 'S', 'N'].map((day) => <span key={day}>{day}</span>)}</div>
+        <div className="task-options-days">
+          {monthGrid.map((item) => {
+            const active = item.value === state.dueDate;
+            return (
+              <button
+                key={item.value}
+                type="button"
+                className={`${active ? 'is-active' : ''}${item.currentMonth ? '' : ' is-out'}`}
+                onClick={() => onChange({ dueDate: item.value })}
+              >
+                {item.day}
+              </button>
+            );
+          })}
+        </div>
+        <div className="task-options-range">
+          <div>
+            <span>Start</span>
+            <strong>{fmtShortDate(state.dueDate)}</strong>
+          </div>
+          <div>
+            <span>Godzina</span>
+            <strong>{state.scheduledTime || 'Brak'}</strong>
+          </div>
+          <div>
+            <span>Koniec</span>
+            <strong>{endTime || 'Brak'}</strong>
+          </div>
+        </div>
+        <div className="task-options-links">
+          <button type="button" onClick={() => setSubpanel('time')}><span>Czas</span><em>{state.scheduledTime || 'Brak'}</em></button>
+          <button type="button" onClick={() => setSubpanel('reminder')}><span>Przypomnienie</span><em>{state.reminderMode === 'at_time' ? 'O godzinie' : state.reminderMode === '5m' ? '5 minut wcześniej' : state.reminderMode === '30m' ? '30 minut wcześniej' : state.reminderMode === '1h' ? '1 godzinę wcześniej' : '1 dzień wcześniej'}</em></button>
+          <button type="button" onClick={() => setSubpanel('repeat')}><span>Powtarzaj</span><em>{state.repeatModeUi === 'none' ? 'Brak' : state.repeatModeUi === 'daily' ? 'Codziennie' : state.repeatModeUi === 'weekly' ? 'Co tydzień' : state.repeatModeUi === 'monthly' ? 'Miesięcznie' : 'Rocznie'}</em></button>
+        </div>
+        <div className="task-options-actions">
+          <button className="btn btn-secondary btn-sm" type="button" onClick={() => onChange({ scheduledTime: '', durationMinutes: null, reminderMode: 'at_time', repeatModeUi: 'none' })}>Wyczyść</button>
+          <button className="btn btn-primary btn-sm" type="button" onClick={onSave} disabled={saving || !state.title.trim()}>
+            {saving ? 'Zapisywanie...' : 'OK'}
           </button>
-        )}
+        </div>
+      </div>
+      {subpanel !== 'none' && (
+        <div className="task-options-subpop" style={{ left: subPos.left, top: subPos.top }}>
+          {subpanel === 'time' && (
+            <>
+              <div className="task-sub-head">Czas</div>
+              <div className="task-sub-list">
+                {TIME_OPTIONS.map((time) => (
+                  <button key={time} type="button" className={time === state.scheduledTime ? 'is-active' : ''} onClick={() => onChange({ scheduledTime: time })}>{time}</button>
+                ))}
+              </div>
+              <div className="task-sub-foot">
+                <span>Czas trwania</span>
+                <select className="select" value={state.durationMinutes ?? ''} onChange={(e) => onChange({ durationMinutes: e.target.value ? Number(e.target.value) : null })}>
+                  <option value="">Brak</option>
+                  {DURATION_OPTIONS.map((value) => <option key={value} value={value}>{value} min</option>)}
+                </select>
+              </div>
+            </>
+          )}
+          {subpanel === 'reminder' && (
+            <>
+              <div className="task-sub-head">Przypomnienie</div>
+              <div className="task-sub-list">
+                <button type="button" className={state.reminderMode === 'at_time' ? 'is-active' : ''} onClick={() => onChange({ reminderMode: 'at_time' })}>O godzinie</button>
+                <button type="button" className={state.reminderMode === '5m' ? 'is-active' : ''} onClick={() => onChange({ reminderMode: '5m' })}>5 minut wcześniej</button>
+                <button type="button" className={state.reminderMode === '30m' ? 'is-active' : ''} onClick={() => onChange({ reminderMode: '30m' })}>30 minut wcześniej</button>
+                <button type="button" className={state.reminderMode === '1h' ? 'is-active' : ''} onClick={() => onChange({ reminderMode: '1h' })}>1 godzinę wcześniej</button>
+                <button type="button" className={state.reminderMode === '1d' ? 'is-active' : ''} onClick={() => onChange({ reminderMode: '1d' })}>1 dzień wcześniej</button>
+              </div>
+            </>
+          )}
+          {subpanel === 'repeat' && (
+            <>
+              <div className="task-sub-head">Powtarzaj</div>
+              <div className="task-sub-list">
+                <button type="button" className={state.repeatModeUi === 'daily' ? 'is-active' : ''} onClick={() => onChange({ repeatModeUi: 'daily' })}>Dziennie</button>
+                <button type="button" className={state.repeatModeUi === 'weekly' ? 'is-active' : ''} onClick={() => onChange({ repeatModeUi: 'weekly' })}>Co tydzień</button>
+                <button type="button" className={state.repeatModeUi === 'monthly' ? 'is-active' : ''} onClick={() => onChange({ repeatModeUi: 'monthly' })}>Miesięcznie</button>
+                <button type="button" className={state.repeatModeUi === 'yearly' ? 'is-active' : ''} onClick={() => onChange({ repeatModeUi: 'yearly' })}>Rocznie</button>
+              </div>
+              <button type="button" className="task-sub-link" onClick={() => setSubpanel('repeat_rule')}>Według daty ukończenia...</button>
+            </>
+          )}
+          {subpanel === 'repeat_rule' && (
+            <>
+              <div className="task-sub-head">Reguła</div>
+              <div className="task-sub-list">
+                <button type="button" className={state.repeatAnchor === 'due_date' ? 'is-active' : ''} onClick={() => onChange({ repeatAnchor: 'due_date' })}>Według dat wymagalności</button>
+                <button type="button" className={state.repeatAnchor === 'completion_date' ? 'is-active' : ''} onClick={() => onChange({ repeatAnchor: 'completion_date' })}>Według daty ukończenia</button>
+              </div>
+            </>
+          )}
+      </div>
+      )}
+    </>
+  );
+}
+
+interface CalendarQuickState {
+  open: boolean;
+  x: number;
+  y: number;
+  date: string;
+  title: string;
+  tags: string[];
+}
+
+interface CalendarQuickPopoverProps {
+  state: CalendarQuickState;
+  saving: boolean;
+  onClose: () => void;
+  onChange: (next: Partial<CalendarQuickState>) => void;
+  onSubmit: () => void;
+  onOpenOptions: () => void;
+}
+
+function CalendarQuickPopover({ state, saving, onClose, onChange, onSubmit, onOpenOptions }: CalendarQuickPopoverProps) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const quickPos = clampPopoverPosition(state.x - 180, state.y + 8, 280, 170);
+
+  useEffect(() => {
+    if (!state.open) return;
+    function onDown(ev: MouseEvent) {
+      if (!ref.current) return;
+      if (ref.current.contains(ev.target as Node)) return;
+      onClose();
+    }
+    function onEsc(ev: KeyboardEvent) {
+      if (ev.key === 'Escape') onClose();
+    }
+    window.addEventListener('mousedown', onDown);
+    window.addEventListener('keydown', onEsc);
+    return () => {
+      window.removeEventListener('mousedown', onDown);
+      window.removeEventListener('keydown', onEsc);
+    };
+  }, [onClose, state.open]);
+
+  if (!state.open) return null;
+
+  return (
+    <div ref={ref} className="task-quick-pop" style={{ left: quickPos.left, top: quickPos.top }}>
+      <input
+        className="input"
+        value={state.title}
+        placeholder="Dodaj zadanie... #tag"
+        onChange={(e) => {
+          const consumed = consumeCompletedTags(e.target.value, state.tags);
+          onChange({ title: consumed.title, tags: consumed.tags });
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            void onSubmit();
+          }
+        }}
+        autoFocus
+      />
+      <div className="task-quick-row">
+        <span>{fmtShortDate(state.date)}</span>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button className="icon-btn" type="button" onClick={() => void onSubmit()} disabled={saving || !state.title.trim()}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}><path d="M12 5v14M5 12h14" /></svg>
+          </button>
+          <button className="icon-btn" type="button" onClick={onOpenOptions}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1229,6 +1646,30 @@ export function StartScreen() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalDate, setModalDate] = useState(todayStr);
+  const [modalInitialTitle, setModalInitialTitle] = useState('');
+  const [modalInitialTags, setModalInitialTags] = useState<string[]>([]);
+  const [taskOptions, setTaskOptions] = useState<TaskOptionsState>({
+    open: false,
+    x: 0,
+    y: 0,
+    title: '',
+    tags: [],
+    dueDate: todayStr,
+    scheduledTime: '',
+    durationMinutes: null,
+    priority: 'mid',
+    reminderMode: 'at_time',
+    repeatModeUi: 'none',
+    repeatAnchor: 'due_date',
+  });
+  const [calendarQuick, setCalendarQuick] = useState<CalendarQuickState>({
+    open: false,
+    x: 0,
+    y: 0,
+    date: todayStr,
+    title: '',
+    tags: [],
+  });
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [seriesDeleteTarget, setSeriesDeleteTarget] = useState<SupabaseTask | null>(null);
 
@@ -1238,14 +1679,56 @@ export function StartScreen() {
     : 0;
   const taskMutationPending = createTask.isPending || updateTask.isPending || toggleTask.isPending || deleteTask.isPending || deleteTasks.isPending;
 
-  function openForToday() {
+  function openForToday(prefillTitle = '', prefillTags: string[] = []) {
     setEditingTaskId(null);
+    setModalInitialTitle(prefillTitle.trim());
+    setModalInitialTags(dedupeTags(prefillTags));
     setModalDate(todayStr);
     setModalOpen(true);
   }
-  async function handleQuickAddTask(title: string) {
+
+  function openTaskOptions(anchor: { x: number; y: number }, prefillTitle: string, prefillTags: string[], dueDate: string) {
+    const parsed = extractTitleAndTags(prefillTitle, prefillTags);
+    setTaskOptions({
+      open: true,
+      x: anchor.x,
+      y: anchor.y,
+      title: parsed.title,
+      tags: parsed.tags,
+      dueDate,
+      scheduledTime: '',
+      durationMinutes: null,
+      priority: 'mid',
+      reminderMode: 'at_time',
+      repeatModeUi: 'none',
+      repeatAnchor: 'due_date',
+    });
+  }
+
+  async function saveTaskOptions() {
+    const parsed = extractTitleAndTags(taskOptions.title, taskOptions.tags);
+    if (!parsed.title || taskMutationPending) return;
+    await createTask.mutateAsync({
+      title: parsed.title,
+      tags: parsed.tags,
+      category: null,
+      priority: taskOptions.priority,
+      due_date: taskOptions.dueDate || null,
+      scheduled_time: taskOptions.scheduledTime || null,
+      duration_minutes: taskOptions.durationMinutes,
+      note: '',
+      series_id: null,
+      repeat_mode: taskOptions.repeatModeUi === 'daily' ? 'daily' : taskOptions.repeatModeUi === 'weekly' ? 'weekly' : 'none',
+      repeat_until: null,
+      repeat_weekdays: taskOptions.repeatModeUi === 'weekly' ? [weekdayFromDateStr(taskOptions.dueDate)] : null,
+    });
+    setTaskOptions((prev) => ({ ...prev, open: false }));
+  }
+
+  async function handleQuickAddTask(title: string, tags: string[]) {
     await createTask.mutateAsync({
       title,
+      tags,
       category: null,
       priority: 'mid',
       due_date: todayStr,
@@ -1257,19 +1740,48 @@ export function StartScreen() {
       repeat_weekdays: null,
     });
   }
-  function openForDay(dateStr: string) {
-    setEditingTaskId(null);
-    setModalDate(dateStr);
-    setModalOpen(true);
+  function openCalendarQuick(dateStr: string, anchor: { x: number; y: number }) {
+    setCalendarQuick({
+      open: true,
+      x: anchor.x,
+      y: anchor.y,
+      date: dateStr,
+      title: '',
+      tags: [],
+    });
+  }
+
+  async function submitCalendarQuick() {
+    const parsed = extractTitleAndTags(calendarQuick.title, calendarQuick.tags);
+    if (!parsed.title || taskMutationPending) return;
+    await createTask.mutateAsync({
+      title: parsed.title,
+      tags: parsed.tags,
+      category: null,
+      priority: 'mid',
+      due_date: calendarQuick.date,
+      scheduled_time: null,
+      duration_minutes: null,
+      note: '',
+      series_id: null,
+      repeat_mode: 'none',
+      repeat_until: null,
+      repeat_weekdays: null,
+    });
+    setCalendarQuick((prev) => ({ ...prev, open: false, title: '', tags: [] }));
   }
   function openTask(task: SupabaseTask) {
     setEditingTaskId(task.id);
+    setModalInitialTitle('');
+    setModalInitialTags([]);
     setModalDate(task.due_date ?? todayStr);
     setModalOpen(true);
   }
   function closeTaskModal() {
     setModalOpen(false);
     setEditingTaskId(null);
+    setModalInitialTitle('');
+    setModalInitialTags([]);
   }
   async function handleSaveTask(task: TaskModalPayload) {
     if (task.editingId) {
@@ -1277,6 +1789,7 @@ export function StartScreen() {
         id: task.editingId,
         patch: {
           title: task.title,
+          tags: task.tags,
           category: null,
           priority: task.priority,
           due_date: task.dueDates[0] ?? null,
@@ -1290,6 +1803,7 @@ export function StartScreen() {
     for (const dueDate of dueDates) {
       await createTask.mutateAsync({
         title: task.title,
+        tags: task.tags,
         category: null,
         priority: task.priority,
         due_date: dueDate || null,
@@ -1324,10 +1838,6 @@ export function StartScreen() {
     setSeriesDeleteTarget(null);
     closeTaskModal();
   }
-  function handleDeleteCompleted(doneTasks: SupabaseTask[]) {
-    deleteTasks.mutate(doneTasks.map((task) => task.id));
-  }
-
   return (
     <div className="module-page">
       <div className="planner-shell">
@@ -1335,7 +1845,7 @@ export function StartScreen() {
           icon={<PlannerHeaderIcon />}
           title="Planer"
           desc={'Zaplanuj dzie\u0144, zadania, nawyki i cele w jednym miejscu.'}
-          actions={<button className="btn btn-primary btn-sm" type="button" onClick={openForToday}>+ Nowe zadanie</button>}
+          actions={<button className="btn btn-primary btn-sm" type="button" onClick={() => openForToday()}>+ Nowe zadanie</button>}
         />
         <div className="planner-layout">
           <aside className="planner-sidebar">
@@ -1344,11 +1854,11 @@ export function StartScreen() {
                 tasks={tasks}
                 isLoading={tasksLoading}
                 isSaving={taskMutationPending}
-                onAddTask={openForToday}
+                onAddTask={(prefillTitle = '', prefillTags = [], anchor) =>
+                  openTaskOptions(anchor ?? { x: window.innerWidth - 320, y: window.innerHeight - 170 }, prefillTitle, prefillTags, todayStr)}
                 onQuickAddTask={handleQuickAddTask}
                 onTaskClick={openTask}
                 onToggleTask={(id, done) => toggleTask.mutate({ id, done })}
-                onDeleteCompleted={handleDeleteCompleted}
               />
             </div>
             <div className="card planner-habits-card"><HabitsStrip /></div>
@@ -1356,7 +1866,7 @@ export function StartScreen() {
           <section className="card planner-calendar-card">
             <Calendar
               tasks={tasks}
-              onDayClick={openForDay}
+              onDayClick={openCalendarQuick}
               onTaskClick={openTask}
               onToggleTask={(id, done) => toggleTask.mutate({ id, done })}
               onMoveTask={handleMoveTask}
@@ -1365,9 +1875,31 @@ export function StartScreen() {
         </div>
       </div>
 
+      <TaskOptionsPopover
+        state={taskOptions}
+        saving={taskMutationPending}
+        onClose={() => setTaskOptions((prev) => ({ ...prev, open: false }))}
+        onChange={(next) => setTaskOptions((prev) => ({ ...prev, ...next }))}
+        onSave={saveTaskOptions}
+      />
+
+      <CalendarQuickPopover
+        state={calendarQuick}
+        saving={taskMutationPending}
+        onClose={() => setCalendarQuick((prev) => ({ ...prev, open: false }))}
+        onChange={(next) => setCalendarQuick((prev) => ({ ...prev, ...next }))}
+        onSubmit={submitCalendarQuick}
+        onOpenOptions={() => {
+          openTaskOptions({ x: calendarQuick.x, y: calendarQuick.y }, calendarQuick.title, calendarQuick.tags, calendarQuick.date);
+          setCalendarQuick((prev) => ({ ...prev, open: false }));
+        }}
+      />
+
       <AddTaskModal
         open={modalOpen}
         defaultDate={modalDate}
+        initialTitle={modalInitialTitle}
+        initialTags={modalInitialTags}
         task={editingTask}
         seriesCount={editingSeriesCount}
         saving={taskMutationPending}
