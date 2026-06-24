@@ -741,13 +741,14 @@ function startOfWeekDate(d: Date): Date {
 
 interface CalendarProps {
   tasks: SupabaseTask[];
+  activeDate?: string | null;
   onDayClick: (dateStr: string, anchor: { x: number; y: number }) => void;
   onTaskClick: (task: SupabaseTask) => void;
   onToggleTask: (id: string, done: boolean) => void;
   onMoveTask: (task: SupabaseTask, dateStr: string) => void;
 }
 
-function Calendar({ tasks, onDayClick, onTaskClick, onToggleTask, onMoveTask }: CalendarProps) {
+function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, onMoveTask }: CalendarProps) {
   const now = new Date();
   const [view, setView] = useState<'month'|'week'|'day'>('month');
   const [cursor, setCursor] = useState(() => new Date(now.getFullYear(), now.getMonth(), now.getDate()));
@@ -783,6 +784,7 @@ function Calendar({ tasks, onDayClick, onTaskClick, onToggleTask, onMoveTask }: 
   function renderDayCell(date: Date, compact: boolean) {
     const dateStr = toDateStr(date.getFullYear(), date.getMonth(), date.getDate());
     const isCellToday = dateStr === todayDateStr;
+    const isActive = dateStr === activeDate;
     const allDayTasks = tasks
       .filter(t => t.due_date === dateStr)
       .sort((a, b) => Number(a.done) - Number(b.done) || a.created_at.localeCompare(b.created_at));
@@ -792,7 +794,7 @@ function Calendar({ tasks, onDayClick, onTaskClick, onToggleTask, onMoveTask }: 
     return (
       <div key={dateStr}
         className="day-cell"
-        onClick={(e) => onDayClick(dateStr, { x: e.clientX, y: e.clientY })}
+        onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); onDayClick(dateStr, { x: r.right + 8, y: r.top }); }}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
@@ -802,8 +804,9 @@ function Calendar({ tasks, onDayClick, onTaskClick, onToggleTask, onMoveTask }: 
         }}
         style={{
           minHeight: compact ? 72 : 150, borderRadius:'var(--r-sm)',
-          background: isCellToday ? 'var(--acc-a-soft)' : 'var(--surface-inset)',
-          border: isCellToday ? '1px solid var(--acc-a)' : '1px solid var(--border-soft)',
+          background: isActive ? 'color-mix(in srgb, var(--acc-a) 24%, var(--surface-inset))' : isCellToday ? 'var(--acc-a-soft)' : 'var(--surface-inset)',
+          border: (isActive || isCellToday) ? '1px solid var(--acc-a)' : '1px solid var(--border-soft)',
+          boxShadow: isActive ? '0 0 0 2px color-mix(in srgb, var(--acc-a) 45%, transparent)' : undefined,
           padding:7, display:'flex', flexDirection:'column', gap:3,
           cursor:'pointer',
           transition:'.14s',
@@ -841,21 +844,9 @@ function Calendar({ tasks, onDayClick, onTaskClick, onToggleTask, onMoveTask }: 
                 e.stopPropagation();
                 onToggleTask(t.id, !t.done);
               }}
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: 4,
-                border: `1.4px solid ${t.done ? 'var(--acc-a)' : 'currentColor'}`,
-                background: t.done ? 'var(--acc-a)' : 'transparent',
-                color: 'var(--on-acc)',
-                display: 'grid',
-                placeItems: 'center',
-                padding: 0,
-                flexShrink: 0,
-                cursor: 'pointer',
-              }}
+              className={`tsk-check tsk-check-sm ${t.done ? 'is-done' : ''}`}
             >
-              {t.done && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
+              {t.done && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
             </button>
             {isRecurringTask(t) && <RecurringIcon />}
             <span style={{ overflow:'hidden', textOverflow:'ellipsis' }}>{t.title}</span>
@@ -967,9 +958,9 @@ function Calendar({ tasks, onDayClick, onTaskClick, onToggleTask, onMoveTask }: 
                     e.stopPropagation();
                     onToggleTask(t.id, !t.done);
                   }}
-                  style={{ width:18, height:18, borderRadius:6, border:`1.5px solid ${t.done?'var(--acc-a)':'var(--border)'}`, background:t.done?'var(--acc-a)':'transparent', flexShrink:0, display:'grid', placeItems:'center', color:'var(--on-acc)', cursor:'pointer' }}
+                  className={`tsk-check ${t.done ? 'is-done' : ''}`}
                 >
-                  {t.done && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
+                  {t.done && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
                 </button>
                 <span style={{ flex:1, display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'var(--ink)', textDecoration:t.done?'line-through':'none' }}>
                   {t.title}
@@ -978,7 +969,7 @@ function Calendar({ tasks, onDayClick, onTaskClick, onToggleTask, onMoveTask }: 
               </div>
             ))}
             <button
-              onClick={(e) => onDayClick(cursorDateStr, { x: e.clientX, y: e.clientY })}
+              onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); onDayClick(cursorDateStr, { x: r.left, y: r.top }); }}
               style={{ marginTop:4, display:'flex', alignItems:'center', gap:6, background:'transparent', border:'1px dashed var(--border)', borderRadius:10, padding:'11px 12px', color:'var(--ink-3)', cursor:'pointer', fontSize:13, flexShrink:0 }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -1140,9 +1131,9 @@ function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
         tabIndex={0}
         onClick={(e) => { e.stopPropagation(); onToggleTask(task.id, !task.done); }}
         onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.stopPropagation(); onToggleTask(task.id, !task.done); } }}
-        style={{ width:18, height:18, borderRadius:6, border:`1.5px solid ${isDone?'var(--acc-a)':'var(--border)'}`, background:isDone?'var(--acc-a)':'transparent', flexShrink:0, display:'grid', placeItems:'center', color:'var(--on-acc)', cursor:'pointer', transition:'.15s' }}
+        className={`tsk-check ${isDone ? 'is-done' : ''}`}
       >
-        {isDone && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
+        {isDone && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
       </div>
       <span style={{ flex:1, fontSize:13, color:isDone?'var(--ink-3)':'var(--ink)', fontWeight:500, textDecoration:isDone?'line-through':'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
         {task.title}
@@ -1335,11 +1326,15 @@ interface TaskOptionsState {
   tags: string[];
   dueDate: string;
   scheduledTime: string;
+  endDate: string;
+  endTime: string;
+  allDay: boolean;
   durationMinutes: number | null;
   priority: 'high' | 'mid' | 'low';
   reminderMode: 'at_time' | '5m' | '30m' | '1h' | '1d';
   repeatModeUi: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
   repeatAnchor: 'due_date' | 'completion_date';
+  editingId: string | null;
 }
 
 interface TaskOptionsPopoverProps {
@@ -1348,20 +1343,40 @@ interface TaskOptionsPopoverProps {
   onClose: () => void;
   onChange: (next: Partial<TaskOptionsState>) => void;
   onSave: () => void;
+  onDelete: () => void;
 }
 
-const DURATION_OPTIONS = [15, 30, 45, 60, 90, 120];
-const TIME_OPTIONS = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '18:00', '19:00'];
+type TaskSubpanel = 'none' | 'time-start' | 'time-end' | 'reminder' | 'repeat' | 'repeat_rule';
 
-function addMinutesToTime(time: string, minutes: number | null): string {
-  if (!time || !minutes) return '';
-  const [h, m] = time.split(':').map(Number);
-  if (!Number.isFinite(h) || !Number.isFinite(m)) return '';
-  const total = h * 60 + m + minutes;
-  const hh = Math.floor((total % (24 * 60)) / 60);
-  const mm = total % 60;
-  return `${pad(hh)}:${pad(mm)}`;
-}
+const TIME_OPTIONS = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '18:00', '19:00', '20:00', '21:00'];
+
+const REMINDER_LABEL: Record<TaskOptionsState['reminderMode'], string> = {
+  at_time: 'O godzinie',
+  '5m': '5 minut wcześniej',
+  '30m': '30 minut wcześniej',
+  '1h': '1 godzinę wcześniej',
+  '1d': '1 dzień wcześniej',
+};
+
+const REPEAT_LABEL: Record<TaskOptionsState['repeatModeUi'], string> = {
+  none: 'Brak',
+  daily: 'Codziennie',
+  weekly: 'Co tydzień',
+  monthly: 'Miesięcznie',
+  yearly: 'Rocznie',
+};
+
+const IC_SUN = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>);
+const IC_SUNRISE = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M17 18a5 5 0 0 0-10 0" /><path d="M12 2v6M9.5 5.5 12 3l2.5 2.5" /><path d="M2 18h2M20 18h2M22 22H2" /></svg>);
+const IC_WEEK = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /><text x="12" y="19" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="currentColor" stroke="none">+7</text></svg>);
+const IC_MOON = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>);
+const IC_CLOCK = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7.5V12l3 1.8" /></svg>);
+const IC_BELL = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>);
+const IC_REPEAT = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>);
+const IC_CHEVRON_L = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>);
+const IC_CHEVRON_R = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>);
+const IC_CHEVRON_D = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>);
+const IC_CHECK = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>);
 
 function clampPopoverPosition(x: number, y: number, width: number, height: number, pad = 12) {
   const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
@@ -1371,49 +1386,79 @@ function clampPopoverPosition(x: number, y: number, width: number, height: numbe
   return { left, top };
 }
 
-function monthGridDates(baseDate: string): Array<{ value: string; day: number; currentMonth: boolean }> {
-  const dt = parseDateStr(baseDate) ?? new Date();
-  const y = dt.getFullYear();
-  const m = dt.getMonth();
-  const first = new Date(y, m, 1);
+function firstOfMonth(dateStr: string): string {
+  const dt = parseDateStr(dateStr) ?? new Date();
+  return toDateStr(dt.getFullYear(), dt.getMonth(), 1);
+}
+
+function shiftMonth(monthStr: string, delta: number): string {
+  const dt = parseDateStr(monthStr) ?? new Date();
+  return toDateStr(dt.getFullYear(), dt.getMonth() + delta, 1);
+}
+
+function monthGridFor(year: number, month: number): Array<{ value: string; day: number; currentMonth: boolean }> {
+  const first = new Date(year, month, 1);
   const startOffset = (first.getDay() + 6) % 7;
+  const start = new Date(year, month, 1 - startOffset);
   const grid: Array<{ value: string; day: number; currentMonth: boolean }> = [];
-  const start = new Date(y, m, 1 - startOffset);
   for (let i = 0; i < 42; i += 1) {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
     grid.push({
       value: toDateStr(d.getFullYear(), d.getMonth(), d.getDate()),
       day: d.getDate(),
-      currentMonth: d.getMonth() === m,
+      currentMonth: d.getMonth() === month,
     });
   }
   return grid;
 }
 
-function TaskOptionsPopover({ state, saving, onClose, onChange, onSave }: TaskOptionsPopoverProps) {
+function timeToMinutes(t: string): number | null {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(t);
+  if (!m) return null;
+  return Number(m[1]) * 60 + Number(m[2]);
+}
+
+function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete }: TaskOptionsPopoverProps) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const [subpanel, setSubpanel] = useState<'none' | 'time' | 'reminder' | 'repeat' | 'repeat_rule'>('none');
-  const monthGrid = useMemo(() => monthGridDates(state.dueDate), [state.dueDate]);
-  const selectedDate = parseDateStr(state.dueDate) ?? new Date();
-  const endTime = addMinutesToTime(state.scheduledTime, state.durationMinutes);
-  const mainPos = clampPopoverPosition(state.x - 160, state.y + 8, 280, 560);
+  const subRef = useRef<HTMLDivElement | null>(null);
+  const [subpanel, setSubpanel] = useState<TaskSubpanel>('none');
+  const [calEdit, setCalEdit] = useState<'start' | 'end'>('start');
+  const [viewMonth, setViewMonth] = useState(() => firstOfMonth(state.dueDate));
+
+  const today = new Date();
+  const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
+  const quick = {
+    today: todayStr,
+    tomorrow: addDaysStr(todayStr, 1),
+    week: addDaysStr(todayStr, 7),
+    month: addDaysStr(todayStr, 30),
+  };
+
+  const viewDate = parseDateStr(viewMonth) ?? today;
+  const monthGrid = useMemo(() => monthGridFor(viewDate.getFullYear(), viewDate.getMonth()), [viewMonth]);
+  const endDateEffective = state.endDate || state.dueDate;
+
+  const mainPos = clampPopoverPosition(state.x, state.y, 320, 560, 14);
   const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
-  const preferredSubLeft = state.x + 210;
-  const subWidth = 272;
-  const subLeft = preferredSubLeft + subWidth + 12 <= vw ? preferredSubLeft : state.x - subWidth - 14;
-  const subPos = clampPopoverPosition(subLeft, state.y + 8, subWidth, 420);
+  const subWidth = 248;
+  const preferredSubLeft = mainPos.left + 320 + 10;
+  const subLeft = preferredSubLeft + subWidth + 14 <= vw ? preferredSubLeft : mainPos.left - subWidth - 10;
+  const subPos = clampPopoverPosition(subLeft, mainPos.top + 40, subWidth, 380, 14);
 
   useEffect(() => {
     if (!state.open) return;
     setSubpanel('none');
+    setCalEdit('start');
+    setViewMonth(firstOfMonth(state.dueDate));
   }, [state.open]);
 
   useEffect(() => {
     if (!state.open) return;
     function onDown(ev: MouseEvent) {
-      if (!ref.current) return;
-      if (ref.current.contains(ev.target as Node)) return;
+      const node = ev.target as Node;
+      if (ref.current?.contains(node)) return;
+      if (subRef.current?.contains(node)) return;
       onClose();
     }
     function onEsc(ev: KeyboardEvent) {
@@ -1429,6 +1474,25 @@ function TaskOptionsPopover({ state, saving, onClose, onChange, onSave }: TaskOp
 
   if (!state.open) return null;
 
+  function pickQuick(target: string) {
+    setCalEdit('start');
+    onChange(state.endDate && state.endDate < target ? { dueDate: target, endDate: '' } : { dueDate: target });
+    setViewMonth(firstOfMonth(target));
+  }
+
+  function pickDay(value: string) {
+    if (calEdit === 'end') {
+      onChange({ endDate: value < state.dueDate ? '' : value });
+    } else {
+      onChange(state.endDate && state.endDate < value ? { dueDate: value, endDate: '' } : { dueDate: value });
+    }
+  }
+
+  function toggleAllDay() {
+    const next = !state.allDay;
+    onChange(next ? { allDay: true, scheduledTime: '', endTime: '' } : { allDay: false });
+  }
+
   return (
     <>
       <div
@@ -1438,87 +1502,124 @@ function TaskOptionsPopover({ state, saving, onClose, onChange, onSave }: TaskOp
         role="dialog"
         aria-label="Dodatkowe opcje zadania"
       >
-        <div className="task-options-segment">
-          <button type="button" className="is-active">Data</button>
-          <button type="button">Czas trwania</button>
-        </div>
+        {state.editingId && (
+          <input
+            className="task-options-title"
+            value={state.title}
+            placeholder="Nazwa zadania"
+            onChange={(e) => onChange({ title: e.target.value })}
+            aria-label="Nazwa zadania"
+          />
+        )}
         <div className="task-options-icons">
-          <button type="button" aria-label="Rano">☀</button>
-          <button type="button" aria-label="Południe">◔</button>
-          <button type="button" aria-label="Własna data">📅</button>
-          <button type="button" aria-label="Wieczór">☾</button>
+          <button type="button" className={state.dueDate === quick.today ? 'is-active' : ''} title="Dziś" aria-label="Dziś" onClick={() => pickQuick(quick.today)}>{IC_SUN}</button>
+          <button type="button" className={state.dueDate === quick.tomorrow ? 'is-active' : ''} title="Jutro" aria-label="Jutro" onClick={() => pickQuick(quick.tomorrow)}>{IC_SUNRISE}</button>
+          <button type="button" className={state.dueDate === quick.week ? 'is-active' : ''} title="Za tydzień" aria-label="Za tydzień" onClick={() => pickQuick(quick.week)}>{IC_WEEK}</button>
+          <button type="button" className={state.dueDate === quick.month ? 'is-active' : ''} title="Za miesiąc" aria-label="Za miesiąc" onClick={() => pickQuick(quick.month)}>{IC_MOON}</button>
         </div>
-        <div className="task-options-month">{MONTH_FULL[selectedDate.getMonth()]} {selectedDate.getFullYear()}</div>
-        <div className="task-options-weekdays">{['P', 'W', 'Ś', 'C', 'P', 'S', 'N'].map((day) => <span key={day}>{day}</span>)}</div>
+
+        <div className="task-options-navhead">
+          <button type="button" aria-label="Poprzedni miesiąc" onClick={() => setViewMonth((m) => shiftMonth(m, -1))}>{IC_CHEVRON_L}</button>
+          <span>{MONTH_FULL[viewDate.getMonth()]} {viewDate.getFullYear()}</span>
+          <button type="button" aria-label="Następny miesiąc" onClick={() => setViewMonth((m) => shiftMonth(m, 1))}>{IC_CHEVRON_R}</button>
+        </div>
+        <div className="task-options-weekdays">{['P', 'W', 'Ś', 'C', 'P', 'S', 'N'].map((day, i) => <span key={`${day}-${i}`}>{day}</span>)}</div>
         <div className="task-options-days">
           {monthGrid.map((item) => {
-            const active = item.value === state.dueDate;
+            const isStart = item.value === state.dueDate;
+            const isEnd = !!state.endDate && item.value === state.endDate;
+            const isEditing = (calEdit === 'start' && isStart) || (calEdit === 'end' && isEnd);
+            const cls = [
+              isStart ? 'is-start' : '',
+              isEnd ? 'is-end' : '',
+              isEditing ? 'is-editing' : '',
+              item.value === todayStr && !isStart && !isEnd ? 'is-today' : '',
+              item.currentMonth ? '' : 'is-out',
+            ].filter(Boolean).join(' ');
             return (
-              <button
-                key={item.value}
-                type="button"
-                className={`${active ? 'is-active' : ''}${item.currentMonth ? '' : ' is-out'}`}
-                onClick={() => onChange({ dueDate: item.value })}
-              >
+              <button key={item.value} type="button" className={cls} onClick={() => pickDay(item.value)}>
                 {item.day}
               </button>
             );
           })}
         </div>
-        <div className="task-options-range">
-          <div>
-            <span>Start</span>
-            <strong>{fmtShortDate(state.dueDate)}</strong>
+
+        <div className="task-options-fields">
+          <div className={`tof-row ${calEdit === 'start' ? 'is-editing' : ''}`} role="button" tabIndex={0} onClick={() => setCalEdit('start')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCalEdit('start'); } }}>
+            <span className="tof-label">Start</span>
+            <span className="tof-chips">
+              <span className="tof-date">{fmtShortDate(state.dueDate)}</span>
+              {!state.allDay && (
+                <span className="tof-time" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); setCalEdit('start'); setSubpanel('time-start'); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setSubpanel('time-start'); } }}>{state.scheduledTime || '—:—'}<span className="tof-time-chev">{IC_CHEVRON_D}</span></span>
+              )}
+            </span>
           </div>
-          <div>
-            <span>Godzina</span>
-            <strong>{state.scheduledTime || 'Brak'}</strong>
-          </div>
-          <div>
-            <span>Koniec</span>
-            <strong>{endTime || 'Brak'}</strong>
+          <div className={`tof-row ${calEdit === 'end' ? 'is-editing' : ''}`} role="button" tabIndex={0} onClick={() => setCalEdit('end')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCalEdit('end'); } }}>
+            <span className="tof-label">Koniec</span>
+            <span className="tof-chips">
+              <span className="tof-date">{fmtShortDate(endDateEffective)}</span>
+              {!state.allDay && (
+                <span className="tof-time" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); setCalEdit('end'); setSubpanel('time-end'); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setSubpanel('time-end'); } }}>{state.endTime || '—:—'}<span className="tof-time-chev">{IC_CHEVRON_D}</span></span>
+              )}
+            </span>
           </div>
         </div>
+
+        <button type="button" className="task-options-allday" role="switch" aria-checked={state.allDay} onClick={toggleAllDay}>
+          <span>Cały dzień</span>
+          <span className={`task-tgl ${state.allDay ? 'is-on' : ''}`}><i /></span>
+        </button>
+
         <div className="task-options-links">
-          <button type="button" onClick={() => setSubpanel('time')}><span>Czas</span><em>{state.scheduledTime || 'Brak'}</em></button>
-          <button type="button" onClick={() => setSubpanel('reminder')}><span>Przypomnienie</span><em>{state.reminderMode === 'at_time' ? 'O godzinie' : state.reminderMode === '5m' ? '5 minut wcześniej' : state.reminderMode === '30m' ? '30 minut wcześniej' : state.reminderMode === '1h' ? '1 godzinę wcześniej' : '1 dzień wcześniej'}</em></button>
-          <button type="button" onClick={() => setSubpanel('repeat')}><span>Powtarzaj</span><em>{state.repeatModeUi === 'none' ? 'Brak' : state.repeatModeUi === 'daily' ? 'Codziennie' : state.repeatModeUi === 'weekly' ? 'Co tydzień' : state.repeatModeUi === 'monthly' ? 'Miesięcznie' : 'Rocznie'}</em></button>
+          <button type="button" onClick={() => setSubpanel('repeat')}>
+            <span className="tol-ic">{IC_REPEAT}</span><span className="tol-lbl">Powtarzaj</span><em>{REPEAT_LABEL[state.repeatModeUi]}</em><span className="tol-chev">{IC_CHEVRON_R}</span>
+          </button>
+          <button type="button" onClick={() => setSubpanel('reminder')}>
+            <span className="tol-ic">{IC_BELL}</span><span className="tol-lbl">Przypomnienie</span><em>{REMINDER_LABEL[state.reminderMode]}</em><span className="tol-chev">{IC_CHEVRON_R}</span>
+          </button>
+          {!state.allDay && (
+            <button type="button" onClick={() => { setCalEdit('start'); setSubpanel('time-start'); }}>
+              <span className="tol-ic">{IC_CLOCK}</span><span className="tol-lbl">Godzina</span><em>{state.scheduledTime || 'Brak'}</em><span className="tol-chev">{IC_CHEVRON_R}</span>
+            </button>
+          )}
         </div>
+
         <div className="task-options-actions">
-          <button className="btn btn-secondary btn-sm" type="button" onClick={() => onChange({ scheduledTime: '', durationMinutes: null, reminderMode: 'at_time', repeatModeUi: 'none' })}>Wyczyść</button>
+          {state.editingId ? (
+            <button className="btn btn-secondary btn-sm task-del-btn" type="button" onClick={onDelete}>Usuń</button>
+          ) : (
+            <button className="btn btn-secondary btn-sm" type="button" onClick={() => onChange({ scheduledTime: '', endDate: '', endTime: '', allDay: false, durationMinutes: null, reminderMode: 'at_time', repeatModeUi: 'none' })}>Wyczyść</button>
+          )}
           <button className="btn btn-primary btn-sm" type="button" onClick={onSave} disabled={saving || !state.title.trim()}>
             {saving ? 'Zapisywanie...' : 'OK'}
           </button>
         </div>
       </div>
       {subpanel !== 'none' && (
-        <div className="task-options-subpop" style={{ left: subPos.left, top: subPos.top }}>
-          {subpanel === 'time' && (
-            <>
-              <div className="task-sub-head">Czas</div>
-              <div className="task-sub-list">
-                {TIME_OPTIONS.map((time) => (
-                  <button key={time} type="button" className={time === state.scheduledTime ? 'is-active' : ''} onClick={() => onChange({ scheduledTime: time })}>{time}</button>
-                ))}
-              </div>
-              <div className="task-sub-foot">
-                <span>Czas trwania</span>
-                <select className="select" value={state.durationMinutes ?? ''} onChange={(e) => onChange({ durationMinutes: e.target.value ? Number(e.target.value) : null })}>
-                  <option value="">Brak</option>
-                  {DURATION_OPTIONS.map((value) => <option key={value} value={value}>{value} min</option>)}
-                </select>
-              </div>
-            </>
-          )}
+        <div ref={subRef} className="task-options-subpop" style={{ left: subPos.left, top: subPos.top }}>
+          {(subpanel === 'time-start' || subpanel === 'time-end') && (() => {
+            const isStart = subpanel === 'time-start';
+            const value = isStart ? state.scheduledTime : state.endTime;
+            const set = (time: string) => onChange(isStart ? { scheduledTime: time } : { endTime: time });
+            return (
+              <>
+                <div className="task-sub-head">{isStart ? 'Godzina rozpoczęcia' : 'Godzina zakończenia'}</div>
+                <div className="task-sub-list">
+                  <button type="button" className={value === '' ? 'is-active' : ''} onClick={() => set('')}>Brak{value === '' && <span className="task-sub-check">{IC_CHECK}</span>}</button>
+                  {TIME_OPTIONS.map((time) => (
+                    <button key={time} type="button" className={time === value ? 'is-active' : ''} onClick={() => set(time)}>{time}{time === value && <span className="task-sub-check">{IC_CHECK}</span>}</button>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
           {subpanel === 'reminder' && (
             <>
               <div className="task-sub-head">Przypomnienie</div>
               <div className="task-sub-list">
-                <button type="button" className={state.reminderMode === 'at_time' ? 'is-active' : ''} onClick={() => onChange({ reminderMode: 'at_time' })}>O godzinie</button>
-                <button type="button" className={state.reminderMode === '5m' ? 'is-active' : ''} onClick={() => onChange({ reminderMode: '5m' })}>5 minut wcześniej</button>
-                <button type="button" className={state.reminderMode === '30m' ? 'is-active' : ''} onClick={() => onChange({ reminderMode: '30m' })}>30 minut wcześniej</button>
-                <button type="button" className={state.reminderMode === '1h' ? 'is-active' : ''} onClick={() => onChange({ reminderMode: '1h' })}>1 godzinę wcześniej</button>
-                <button type="button" className={state.reminderMode === '1d' ? 'is-active' : ''} onClick={() => onChange({ reminderMode: '1d' })}>1 dzień wcześniej</button>
+                {(Object.keys(REMINDER_LABEL) as Array<TaskOptionsState['reminderMode']>).map((mode) => (
+                  <button key={mode} type="button" className={state.reminderMode === mode ? 'is-active' : ''} onClick={() => onChange({ reminderMode: mode })}>{REMINDER_LABEL[mode]}{state.reminderMode === mode && <span className="task-sub-check">{IC_CHECK}</span>}</button>
+                ))}
               </div>
             </>
           )}
@@ -1526,24 +1627,23 @@ function TaskOptionsPopover({ state, saving, onClose, onChange, onSave }: TaskOp
             <>
               <div className="task-sub-head">Powtarzaj</div>
               <div className="task-sub-list">
-                <button type="button" className={state.repeatModeUi === 'daily' ? 'is-active' : ''} onClick={() => onChange({ repeatModeUi: 'daily' })}>Dziennie</button>
-                <button type="button" className={state.repeatModeUi === 'weekly' ? 'is-active' : ''} onClick={() => onChange({ repeatModeUi: 'weekly' })}>Co tydzień</button>
-                <button type="button" className={state.repeatModeUi === 'monthly' ? 'is-active' : ''} onClick={() => onChange({ repeatModeUi: 'monthly' })}>Miesięcznie</button>
-                <button type="button" className={state.repeatModeUi === 'yearly' ? 'is-active' : ''} onClick={() => onChange({ repeatModeUi: 'yearly' })}>Rocznie</button>
+                {([['none', 'Brak'], ['daily', 'Dziennie'], ['weekly', 'Co tydzień'], ['monthly', 'Miesięcznie'], ['yearly', 'Rocznie']] as Array<[TaskOptionsState['repeatModeUi'], string]>).map(([mode, label]) => (
+                  <button key={mode} type="button" className={state.repeatModeUi === mode ? 'is-active' : ''} onClick={() => onChange({ repeatModeUi: mode })}>{label}{state.repeatModeUi === mode && <span className="task-sub-check">{IC_CHECK}</span>}</button>
+                ))}
               </div>
-              <button type="button" className="task-sub-link" onClick={() => setSubpanel('repeat_rule')}>Według daty ukończenia...</button>
+              <button type="button" className="task-sub-link" onClick={() => setSubpanel('repeat_rule')}>Reguła powtarzania…</button>
             </>
           )}
           {subpanel === 'repeat_rule' && (
             <>
               <div className="task-sub-head">Reguła</div>
               <div className="task-sub-list">
-                <button type="button" className={state.repeatAnchor === 'due_date' ? 'is-active' : ''} onClick={() => onChange({ repeatAnchor: 'due_date' })}>Według dat wymagalności</button>
-                <button type="button" className={state.repeatAnchor === 'completion_date' ? 'is-active' : ''} onClick={() => onChange({ repeatAnchor: 'completion_date' })}>Według daty ukończenia</button>
+                <button type="button" className={state.repeatAnchor === 'due_date' ? 'is-active' : ''} onClick={() => onChange({ repeatAnchor: 'due_date' })}>Według dat wymagalności{state.repeatAnchor === 'due_date' && <span className="task-sub-check">{IC_CHECK}</span>}</button>
+                <button type="button" className={state.repeatAnchor === 'completion_date' ? 'is-active' : ''} onClick={() => onChange({ repeatAnchor: 'completion_date' })}>Według daty ukończenia{state.repeatAnchor === 'completion_date' && <span className="task-sub-check">{IC_CHECK}</span>}</button>
               </div>
             </>
           )}
-      </div>
+        </div>
       )}
     </>
   );
@@ -1556,6 +1656,7 @@ interface CalendarQuickState {
   date: string;
   title: string;
   tags: string[];
+  flagged: boolean;
 }
 
 interface CalendarQuickPopoverProps {
@@ -1567,9 +1668,21 @@ interface CalendarQuickPopoverProps {
   onOpenOptions: () => void;
 }
 
-function CalendarQuickPopover({ state, saving, onClose, onChange, onSubmit, onOpenOptions }: CalendarQuickPopoverProps) {
+function quickDateLabel(dateStr: string): string {
+  const today = new Date();
+  const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
+  if (dateStr === todayStr) return `Dziś, ${fmtShortDate(dateStr)}`;
+  if (dateStr === addDaysStr(todayStr, 1)) return `Jutro, ${fmtShortDate(dateStr)}`;
+  const dt = parseDateStr(dateStr);
+  const wd = dt ? ['ndz', 'pon', 'wt', 'śr', 'czw', 'pt', 'sob'][dt.getDay()] : '';
+  return `${wd}, ${fmtShortDate(dateStr)}`;
+}
+
+const IC_CAL_SM = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>);
+const IC_FLAG = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><path d="M4 22v-7" /></svg>);
+function CalendarQuickPopover({ state, onClose, onChange, onSubmit, onOpenOptions }: CalendarQuickPopoverProps) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const quickPos = clampPopoverPosition(state.x - 180, state.y + 8, 280, 170);
+  const quickPos = clampPopoverPosition(state.x, state.y, 300, 196, 12);
 
   useEffect(() => {
     if (!state.open) return;
@@ -1593,33 +1706,32 @@ function CalendarQuickPopover({ state, saving, onClose, onChange, onSubmit, onOp
 
   return (
     <div ref={ref} className="task-quick-pop" style={{ left: quickPos.left, top: quickPos.top }}>
-      <input
-        className="input"
+      <div className="tq-head">
+        <button type="button" className="tq-date" onClick={onOpenOptions} title="Szczegóły zadania">
+          <span className="tq-date-ic">{IC_CAL_SM}</span>
+          <span>{quickDateLabel(state.date)}</span>
+        </button>
+        <button type="button" className={`tq-flag ${state.flagged ? 'is-on' : ''}`} onClick={() => onChange({ flagged: !state.flagged })} aria-pressed={state.flagged} aria-label="Oflaguj jako ważne">
+          {IC_FLAG}
+        </button>
+      </div>
+      <textarea
+        className="tq-input"
+        rows={3}
         value={state.title}
-        placeholder="Dodaj zadanie... #tag"
+        placeholder="Co chciałbyś zrobić?"
         onChange={(e) => {
           const consumed = consumeCompletedTags(e.target.value, state.tags);
           onChange({ title: consumed.title, tags: consumed.tags });
         }}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') {
+          if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             void onSubmit();
           }
         }}
         autoFocus
       />
-      <div className="task-quick-row">
-        <span>{fmtShortDate(state.date)}</span>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button className="icon-btn" type="button" onClick={() => void onSubmit()} disabled={saving || !state.title.trim()}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}><path d="M12 5v14M5 12h14" /></svg>
-          </button>
-          <button className="icon-btn" type="button" onClick={onOpenOptions}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -1656,11 +1768,15 @@ export function StartScreen() {
     tags: [],
     dueDate: todayStr,
     scheduledTime: '',
+    endDate: '',
+    endTime: '',
+    allDay: false,
     durationMinutes: null,
     priority: 'mid',
     reminderMode: 'at_time',
     repeatModeUi: 'none',
     repeatAnchor: 'due_date',
+    editingId: null,
   });
   const [calendarQuick, setCalendarQuick] = useState<CalendarQuickState>({
     open: false,
@@ -1669,6 +1785,7 @@ export function StartScreen() {
     date: todayStr,
     title: '',
     tags: [],
+    flagged: false,
   });
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [seriesDeleteTarget, setSeriesDeleteTarget] = useState<SupabaseTask | null>(null);
@@ -1697,32 +1814,75 @@ export function StartScreen() {
       tags: parsed.tags,
       dueDate,
       scheduledTime: '',
+      endDate: '',
+      endTime: '',
+      allDay: false,
       durationMinutes: null,
       priority: 'mid',
       reminderMode: 'at_time',
       repeatModeUi: 'none',
       repeatAnchor: 'due_date',
+      editingId: null,
     });
   }
 
   async function saveTaskOptions() {
     const parsed = extractTitleAndTags(taskOptions.title, taskOptions.tags);
     if (!parsed.title || taskMutationPending) return;
-    await createTask.mutateAsync({
-      title: parsed.title,
-      tags: parsed.tags,
-      category: null,
-      priority: taskOptions.priority,
-      due_date: taskOptions.dueDate || null,
-      scheduled_time: taskOptions.scheduledTime || null,
-      duration_minutes: taskOptions.durationMinutes,
-      note: '',
-      series_id: null,
-      repeat_mode: taskOptions.repeatModeUi === 'daily' ? 'daily' : taskOptions.repeatModeUi === 'weekly' ? 'weekly' : 'none',
-      repeat_until: null,
-      repeat_weekdays: taskOptions.repeatModeUi === 'weekly' ? [weekdayFromDateStr(taskOptions.dueDate)] : null,
-    });
+    const startTime = taskOptions.allDay ? '' : taskOptions.scheduledTime;
+    const endTime = taskOptions.allDay ? '' : taskOptions.endTime;
+    const endDate = taskOptions.endDate || taskOptions.dueDate;
+    let durationMinutes: number | null = null;
+    const startMin = timeToMinutes(startTime);
+    const endMin = timeToMinutes(endTime);
+    const startDay = parseDateStr(taskOptions.dueDate);
+    const endDay = parseDateStr(endDate);
+    if (startMin != null && endMin != null && startDay && endDay) {
+      const dayDiff = Math.round((endDay.getTime() - startDay.getTime()) / 86400000);
+      const total = dayDiff * 1440 + endMin - startMin;
+      durationMinutes = total > 0 ? total : null;
+    }
+    const repeatMode = taskOptions.repeatModeUi === 'daily' ? 'daily' : taskOptions.repeatModeUi === 'weekly' ? 'weekly' : 'none';
+    const repeatWeekdays = taskOptions.repeatModeUi === 'weekly' ? [weekdayFromDateStr(taskOptions.dueDate)] : null;
+    if (taskOptions.editingId) {
+      await updateTask.mutateAsync({
+        id: taskOptions.editingId,
+        patch: {
+          title: parsed.title,
+          tags: parsed.tags,
+          priority: taskOptions.priority,
+          due_date: taskOptions.dueDate || null,
+          scheduled_time: startTime || null,
+          duration_minutes: durationMinutes,
+          repeat_mode: repeatMode,
+          repeat_weekdays: repeatWeekdays,
+        },
+      });
+    } else {
+      await createTask.mutateAsync({
+        title: parsed.title,
+        tags: parsed.tags,
+        category: null,
+        priority: taskOptions.priority,
+        due_date: taskOptions.dueDate || null,
+        scheduled_time: startTime || null,
+        duration_minutes: durationMinutes,
+        note: '',
+        series_id: null,
+        repeat_mode: repeatMode,
+        repeat_until: null,
+        repeat_weekdays: repeatWeekdays,
+      });
+    }
     setTaskOptions((prev) => ({ ...prev, open: false }));
+  }
+
+  function deleteTaskOptions() {
+    const id = taskOptions.editingId;
+    setTaskOptions((prev) => ({ ...prev, open: false }));
+    if (!id) return;
+    const task = tasks.find((t) => t.id === id);
+    if (task) requestDeleteSeries(task);
   }
 
   async function handleQuickAddTask(title: string, tags: string[]) {
@@ -1748,6 +1908,7 @@ export function StartScreen() {
       date: dateStr,
       title: '',
       tags: [],
+      flagged: false,
     });
   }
 
@@ -1758,7 +1919,7 @@ export function StartScreen() {
       title: parsed.title,
       tags: parsed.tags,
       category: null,
-      priority: 'mid',
+      priority: calendarQuick.flagged ? 'high' : 'mid',
       due_date: calendarQuick.date,
       scheduled_time: null,
       duration_minutes: null,
@@ -1768,14 +1929,38 @@ export function StartScreen() {
       repeat_until: null,
       repeat_weekdays: null,
     });
-    setCalendarQuick((prev) => ({ ...prev, open: false, title: '', tags: [] }));
+    setCalendarQuick((prev) => ({ ...prev, open: false, title: '', tags: [], flagged: false }));
   }
   function openTask(task: SupabaseTask) {
-    setEditingTaskId(task.id);
-    setModalInitialTitle('');
-    setModalInitialTags([]);
-    setModalDate(task.due_date ?? todayStr);
-    setModalOpen(true);
+    const startTime = task.scheduled_time ?? '';
+    let endDate = '';
+    let endTime = '';
+    const startMin = timeToMinutes(startTime);
+    if (startMin != null && task.duration_minutes) {
+      const total = startMin + task.duration_minutes;
+      const addDays = Math.floor(total / 1440);
+      const mm = total % 1440;
+      endTime = `${pad(Math.floor(mm / 60))}:${pad(mm % 60)}`;
+      if (addDays > 0) endDate = addDaysStr(task.due_date ?? todayStr, addDays);
+    }
+    setTaskOptions({
+      open: true,
+      x: Math.max(16, (window.innerWidth - 320) / 2),
+      y: 64,
+      title: task.title,
+      tags: dedupeTags(task.tags ?? []),
+      dueDate: task.due_date ?? todayStr,
+      scheduledTime: startTime,
+      endDate,
+      endTime,
+      allDay: false,
+      durationMinutes: task.duration_minutes ?? null,
+      priority: task.priority ?? 'mid',
+      reminderMode: 'at_time',
+      repeatModeUi: task.repeat_mode === 'daily' ? 'daily' : task.repeat_mode === 'weekly' ? 'weekly' : 'none',
+      repeatAnchor: 'due_date',
+      editingId: task.id,
+    });
   }
   function closeTaskModal() {
     setModalOpen(false);
@@ -1866,6 +2051,7 @@ export function StartScreen() {
           <section className="card planner-calendar-card">
             <Calendar
               tasks={tasks}
+              activeDate={calendarQuick.open ? calendarQuick.date : taskOptions.open ? taskOptions.dueDate : null}
               onDayClick={openCalendarQuick}
               onTaskClick={openTask}
               onToggleTask={(id, done) => toggleTask.mutate({ id, done })}
@@ -1881,6 +2067,7 @@ export function StartScreen() {
         onClose={() => setTaskOptions((prev) => ({ ...prev, open: false }))}
         onChange={(next) => setTaskOptions((prev) => ({ ...prev, ...next }))}
         onSave={saveTaskOptions}
+        onDelete={deleteTaskOptions}
       />
 
       <CalendarQuickPopover
