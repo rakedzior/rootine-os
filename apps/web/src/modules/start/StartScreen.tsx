@@ -1026,7 +1026,9 @@ function HabitsStrip() {
 interface TodayPanelProps {
   tasks: SupabaseTask[];
   isLoading: boolean;
+  isSaving: boolean;
   onAddTask: () => void;
+  onQuickAddTask: (title: string) => Promise<void> | void;
   onTaskClick: (task: SupabaseTask) => void;
   onToggleTask: (id: string, done: boolean) => void;
   onDeleteCompleted: (tasks: SupabaseTask[]) => void;
@@ -1085,11 +1087,14 @@ function PlannerSection({ label, count, children }: { label: string; count: numb
 function TodayPanel({
   tasks,
   isLoading,
+  isSaving,
   onAddTask,
+  onQuickAddTask,
   onTaskClick,
   onToggleTask,
   onDeleteCompleted,
 }: TodayPanelProps) {
+  const [quickTitle, setQuickTitle] = useState('');
   const now = useMemo(() => new Date(), []);
   const todayStr = toDateStr(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -1106,6 +1111,13 @@ function TodayPanel({
   const undatedSec = tasks.filter((t) => !t.done && !t.due_date).sort(byDate);
   const completedToday = tasks.filter((t) => t.done && (!t.due_date || t.due_date === todayStr)).sort(byDate);
   const total = todaySec.length + upcomingSec.length + undatedSec.length + completedToday.length;
+
+  async function handleQuickSubmit() {
+    const title = quickTitle.trim();
+    if (!title || isSaving) return;
+    await onQuickAddTask(title);
+    setQuickTitle('');
+  }
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
@@ -1138,14 +1150,48 @@ function TodayPanel({
         )}
       </div>
 
-      {/* Add task row */}
+      {/* Quick add row */}
       <div style={{ display:'flex', alignItems:'center', gap:8, paddingTop:12, marginTop:8, borderTop:'1px solid var(--border-soft)', flexShrink:0 }}>
+        <input
+          className="input"
+          value={quickTitle}
+          onChange={(e) => setQuickTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              void handleQuickSubmit();
+            }
+          }}
+          placeholder="Dodaj zadanie na dziś..."
+          aria-label="Szybkie dodanie zadania na dziś"
+          disabled={isSaving}
+          style={{ flex: 1, height: 36 }}
+        />
         <button
-          onClick={onAddTask}
-          style={{ display:'flex', alignItems:'center', gap:7, flex:1, background:'transparent', border:0, color:'var(--ink-3)', cursor:'pointer', fontFamily:'var(--sans)', fontSize:13, padding:0, textAlign:'left' }}
+          type="button"
+          onClick={() => void handleQuickSubmit()}
+          className="icon-btn"
+          aria-label="Szybko dodaj zadanie na dziś"
+          title="Dodaj na dziś"
+          disabled={isSaving || !quickTitle.trim()}
+          style={{ width: 36, height: 36, borderRadius: 999 }}
         >
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color:'var(--acc-a)', flexShrink:0 }}><path d="M12 5v14M5 12h14"/></svg>
-          Dodaj zadanie
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}>
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={onAddTask}
+          className="icon-btn"
+          aria-label="Otwórz pełne okno dodawania zadania"
+          title="Więcej opcji"
+          style={{ width: 36, height: 36, borderRadius: 999 }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}>
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4M8 2v4M3 10h18" />
+          </svg>
         </button>
         {completedToday.length > 0 && (
           <button
@@ -1196,6 +1242,20 @@ export function StartScreen() {
     setEditingTaskId(null);
     setModalDate(todayStr);
     setModalOpen(true);
+  }
+  async function handleQuickAddTask(title: string) {
+    await createTask.mutateAsync({
+      title,
+      category: null,
+      priority: 'mid',
+      due_date: todayStr,
+      scheduled_time: null,
+      note: '',
+      series_id: null,
+      repeat_mode: 'none',
+      repeat_until: null,
+      repeat_weekdays: null,
+    });
   }
   function openForDay(dateStr: string) {
     setEditingTaskId(null);
@@ -1283,7 +1343,9 @@ export function StartScreen() {
               <TodayPanel
                 tasks={tasks}
                 isLoading={tasksLoading}
+                isSaving={taskMutationPending}
                 onAddTask={openForToday}
+                onQuickAddTask={handleQuickAddTask}
                 onTaskClick={openTask}
                 onToggleTask={(id, done) => toggleTask.mutate({ id, done })}
                 onDeleteCompleted={handleDeleteCompleted}
