@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Modal, EmptyState, ConfirmDelete, Field, ProgressBar, PriorityBadge, PageHeader, KpiCard, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, ProgressBar, PriorityBadge, PageHeader, KpiCard, DetailPanel, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore } from '@/components/common';
 import { HabitList } from '@/features/habits/HabitList';
 import { useHabits, useHabitLogs } from '@/features/habits/hooks';
 import { todayStr, addDays, weekdayOf, habitOccursOn, habitStats, HABIT_WEEKDAYS } from '@/features/habits/dates';
@@ -304,26 +304,32 @@ function GoalDetail({ goal, onAddToday, onAddPlanner, onEdit, onToggleComplete, 
   return (
     <div className="goals-detail">
       <div className="card goals-detail-card">
-        <div className="goals-detail-head">
-          <div className="goals-detail-head-main">
-            <span className="goals-detail-emoji">{goal.emoji}</span>
-            <div>
-              <h2>{goal.title}</h2>
-              <div className="goals-detail-meta">{goal.category} · {goal.type === 'project' ? 'Projekt' : 'Prosty cel'}</div>
-            </div>
-          </div>
-          <div className="goals-detail-head-actions">
+        <DetailPanel
+          title={<><span className="goals-detail-emoji">{goal.emoji}</span>{goal.title}</>}
+          subtitle={`${goal.category} · ${goal.type === 'project' ? 'Projekt' : 'Prosty cel'}`}
+          badges={(
+            <>
+              {(() => { const s = goalStatus(goal); return <span className={`badge ${s.cls}`}>{s.label}</span>; })()}
+              {goal.priority && <PriorityBadge priority={goal.priority} />}
+            </>
+          )}
+          fields={[
+            ...(goal.deadline ? [{ label: 'Termin', value: fmtDate(goal.deadline) }] : []),
+            ...((goal.streak && goal.streak > 0) ? [{ label: 'Seria', value: `${goal.streak} dni` }] : []),
+            ...(goalNextStep(goal) ? [{ label: 'Następny krok', value: goalNextStep(goal) }] : []),
+          ]}
+          actions={(
+            <>
             <button className="btn btn-secondary btn-sm" type="button" onClick={onAddToday}><GoalsIcon name="clock" /> Dodaj do dzisiaj</button>
             <button className="btn btn-secondary btn-sm" type="button" onClick={onAddPlanner}><GoalsIcon name="calendar" /> Dodaj do Planera</button>
-            {(() => { const s = goalStatus(goal); return <span className={`badge ${s.cls}`}>{s.label}</span>; })()}
-            {goal.priority && <PriorityBadge priority={goal.priority} />}
             <MoreMenu actions={[
               { label: 'Edytuj cel', onClick: onEdit },
               { label: goal.completedAt ? 'Wznów cel' : 'Oznacz jako ukończony', onClick: onToggleComplete },
               { label: 'Usuń cel', onClick: onDelete, danger: true },
             ]} />
-          </div>
-        </div>
+            </>
+          )}
+        >
 
         {goal.description && <p className="goals-detail-desc">{goal.description}</p>}
 
@@ -333,11 +339,7 @@ function GoalDetail({ goal, onAddToday, onAddPlanner, onEdit, onToggleComplete, 
           <div className="goals-progress-label">Postęp główny</div>
         </div>
 
-        <div className="goals-detail-footer">
-          {goal.deadline && <span>Termin: <strong>{fmtDate(goal.deadline)}</strong></span>}
-          {!!goal.streak && goal.streak > 0 && <span>🔥 Seria: <strong>{goal.streak} dni</strong></span>}
-          {goalNextStep(goal) && <span>Następny krok: <strong>{goalNextStep(goal)}</strong></span>}
-        </div>
+        </DetailPanel>
       </div>
 
       <div className="card goals-tasks-card">

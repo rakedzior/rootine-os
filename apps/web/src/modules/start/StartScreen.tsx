@@ -4,10 +4,8 @@ import { ConfirmDelete, Field, Modal, PageHeader } from '@/components/common';
 import { useHabits, useHabitLogs, useToggleHabitLog } from '@/features/habits/hooks';
 import { habitOccursOn, habitScheduleLabel, habitStats, todayStr as habitsTodayStr } from '@/features/habits/dates';
 import type { HabitLog } from '@/features/habits/types';
-import { useLocalStore } from '@/store/localStore';
 import { useCreateTask, useDeleteTask, useDeleteTasks, useTasks, useToggleTask, useUpdateTask } from '@/features/tasks/hooks';
 import type { Task as SupabaseTask } from '@/features/tasks/types';
-import { useNutritionToday, useTodayMealItems } from '@/features/diet/hooks';
 
 const MONTH_FULL = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
 const MONTH_SHORT = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
@@ -23,7 +21,6 @@ function fmtShortDate(iso: string) {
 
 // ─── ADD TASK MODAL ───────────────────────────────────────────
 
-const CAT_OPTIONS = ['Rutyna', 'Trening', 'Praca', 'Regeneracja', 'Cel', 'Inne'];
 const PRIO_OPTIONS: { value: 'high' | 'mid' | 'low'; label: string }[] = [
   { value: 'high', label: 'Wysoki' },
   { value: 'mid',  label: 'Średni' },
@@ -43,15 +40,17 @@ const DEFAULT_REPEAT_DAYS = 84;
 const MAX_TASK_OCCURRENCES = 120;
 
 type RepeatMode = 'none' | 'daily' | 'weekly';
+type RepeatEndMode = 'date' | 'count';
 
 interface NewTask {
   title: string;
-  category: string;
   priority: 'high' | 'mid' | 'low';
   dueDates: string[];
   repeatMode: RepeatMode;
   repeatWeekdays: number[];
+  repeatEndMode: RepeatEndMode;
   repeatUntil: string;
+  repeatCount: number;
   note: string;
 }
 
@@ -104,19 +103,22 @@ function dateRangeInclusive(start: string, end: string): string[] {
   return dates;
 }
 
-function expandTaskDates(task: Pick<NewTask, 'dueDates' | 'repeatMode' | 'repeatWeekdays' | 'repeatUntil'>): string[] {
+function expandTaskDates(task: Pick<NewTask, 'dueDates' | 'repeatMode' | 'repeatWeekdays' | 'repeatEndMode' | 'repeatUntil' | 'repeatCount'>): string[] {
   const baseDates = uniqueSorted(task.dueDates.filter(isDateStr));
   if (baseDates.length === 0) return [];
   if (task.repeatMode === 'none') return baseDates;
 
   const start = baseDates[0];
-  const end = task.repeatUntil && isDateStr(task.repeatUntil) && task.repeatUntil >= start
+  const end = task.repeatEndMode === 'date' && task.repeatUntil && isDateStr(task.repeatUntil) && task.repeatUntil >= start
     ? task.repeatUntil
     : addDaysStr(start, DEFAULT_REPEAT_DAYS);
+  const occurrenceLimit = task.repeatEndMode === 'count'
+    ? Math.max(1, Math.min(MAX_TASK_OCCURRENCES, Math.floor(task.repeatCount || 1)))
+    : MAX_TASK_OCCURRENCES;
   const dates = new Set(baseDates);
 
   if (task.repeatMode === 'daily') {
-    for (let cursor = start; cursor <= end && dates.size < MAX_TASK_OCCURRENCES; cursor = addDaysStr(cursor, 1)) {
+    for (let cursor = start; cursor <= end && dates.size < occurrenceLimit; cursor = addDaysStr(cursor, 1)) {
       dates.add(cursor);
     }
   }
@@ -125,12 +127,12 @@ function expandTaskDates(task: Pick<NewTask, 'dueDates' | 'repeatMode' | 'repeat
     const weekdays = task.repeatWeekdays.length
       ? task.repeatWeekdays
       : [...new Set(baseDates.map(weekdayFromDateStr))];
-    for (let cursor = start; cursor <= end && dates.size < MAX_TASK_OCCURRENCES; cursor = addDaysStr(cursor, 1)) {
+    for (let cursor = start; cursor <= end && dates.size < occurrenceLimit; cursor = addDaysStr(cursor, 1)) {
       if (weekdays.includes(weekdayFromDateStr(cursor))) dates.add(cursor);
     }
   }
 
-  return uniqueSorted([...dates]).slice(0, MAX_TASK_OCCURRENCES);
+  return uniqueSorted([...dates]).slice(0, occurrenceLimit);
 }
 
 interface AddTaskModalProps {
@@ -141,6 +143,7 @@ interface AddTaskModalProps {
   saving?: boolean;
   onClose: () => void;
   onSave: (task: TaskModalPayload) => Promise<void> | void;
+  onComplete?: (task: SupabaseTask) => Promise<void> | void;
   onDeleteSingle?: (task: SupabaseTask) => Promise<void> | void;
   onDeleteSeries?: (task: SupabaseTask) => Promise<void> | void;
 }
@@ -153,17 +156,19 @@ function AddTaskModal({
   saving = false,
   onClose,
   onSave,
+  onComplete,
   onDeleteSingle,
   onDeleteSeries,
 }: AddTaskModalProps) {
   const isEditing = !!task;
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('Praca');
   const [priority, setPriority] = useState<'high' | 'mid' | 'low'>('mid');
   const [selectedDates, setSelectedDates] = useState<Set<string>>(() => new Set([defaultDate]));
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('none');
   const [repeatWeekdays, setRepeatWeekdays] = useState<number[]>([weekdayFromDateStr(defaultDate)]);
+  const [repeatEndMode, setRepeatEndMode] = useState<RepeatEndMode>('date');
   const [repeatUntil, setRepeatUntil] = useState('');
+  const [repeatCount, setRepeatCount] = useState(8);
   const [pickerYear, setPickerYear] = useState(() => parseDateStr(defaultDate)?.getFullYear() ?? new Date().getFullYear());
   const [pickerMonth, setPickerMonth] = useState(() => parseDateStr(defaultDate)?.getMonth() ?? new Date().getMonth());
   const [note, setNote] = useState('');
@@ -183,30 +188,33 @@ function AddTaskModal({
     if (task) {
       const date = task.due_date ?? defaultDate;
       setTitle(task.title);
-      setCategory(task.category ?? 'Praca');
       setPriority(task.priority ?? 'mid');
       setRepeatMode('none');
       setRepeatWeekdays([weekdayFromDateStr(date)]);
+      setRepeatEndMode('date');
       setRepeatUntil('');
+      setRepeatCount(8);
       setNote(task.note ?? '');
       focusDate(date);
       return;
     }
     setTitle('');
-    setCategory('Praca');
     setPriority('mid');
     setRepeatMode('none');
+    setRepeatEndMode('date');
     setRepeatUntil('');
+    setRepeatCount(8);
     setNote('');
     focusDate(defaultDate);
   }, [defaultDate, open, task]);
 
   const reset = () => {
     setTitle('');
-    setCategory('Praca');
     setPriority('mid');
     setRepeatMode('none');
+    setRepeatEndMode('date');
     setRepeatUntil('');
+    setRepeatCount(8);
     setNote('');
     focusDate(defaultDate);
   };
@@ -214,26 +222,30 @@ function AddTaskModal({
   const selectedDateList = uniqueSorted([...selectedDates]);
   const displayedDateSet = dragRange ? new Set(dateRangeInclusive(dragRange.start, dragRange.end)) : selectedDates;
   const repeatUntilClean = repeatUntil.trim();
-  const repeatUntilInvalid = repeatUntilClean !== '' && !isDateStr(repeatUntilClean);
+  const repeatUntilInvalid = !isEditing && repeatMode !== 'none' && repeatEndMode === 'date' && repeatUntilClean !== '' && (!isDateStr(repeatUntilClean) || repeatUntilClean < selectedDateList[0]);
+  const repeatCountInvalid = !isEditing && repeatMode !== 'none' && repeatEndMode === 'count' && (!Number.isFinite(repeatCount) || repeatCount < 1 || repeatCount > MAX_TASK_OCCURRENCES);
   const previewCount = isEditing ? 1 : expandTaskDates({
     dueDates: selectedDateList,
     repeatMode,
     repeatWeekdays,
+    repeatEndMode,
     repeatUntil: repeatUntilClean,
+    repeatCount,
   }).length;
 
   async function handleSave() {
-    if (!title.trim() || selectedDateList.length === 0 || repeatUntilInvalid || saving) return;
+    if (!title.trim() || selectedDateList.length === 0 || repeatUntilInvalid || repeatCountInvalid || saving) return;
     try {
       await onSave({
         editingId: task?.id,
         title: title.trim(),
-        category,
         priority,
         dueDates: isEditing ? selectedDateList.slice(0, 1) : selectedDateList,
         repeatMode: isEditing ? 'none' : repeatMode,
         repeatWeekdays,
+        repeatEndMode,
         repeatUntil: isEditing ? '' : repeatUntilClean,
+        repeatCount,
         note,
       });
       reset();
@@ -332,6 +344,11 @@ function AddTaskModal({
       footer={
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, width: '100%', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {task && !task.done && (
+              <button className="btn btn-primary btn-sm" onClick={() => onComplete?.(task)} disabled={saving}>
+                Zakończ zadanie
+              </button>
+            )}
             {task && (
               <button className="btn btn-danger btn-sm" onClick={() => onDeleteSingle?.(task)} disabled={saving}>
                 Usuń zdarzenie
@@ -348,7 +365,7 @@ function AddTaskModal({
             <button
               className="btn btn-primary btn-sm"
               onClick={handleSave}
-              disabled={!title.trim() || selectedDateList.length === 0 || repeatUntilInvalid || saving}
+              disabled={!title.trim() || selectedDateList.length === 0 || repeatUntilInvalid || repeatCountInvalid || saving}
             >
               {saving ? 'Zapisywanie...' : isEditing ? 'Zapisz' : `Dodaj ${previewCount > 1 ? previewCount : ''}`.trim()}
             </button>
@@ -370,52 +387,11 @@ function AddTaskModal({
             />
           </Field>
 
-          <Field label="Kategoria">
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {CAT_OPTIONS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setCategory(c)}
-                  style={{
-                    padding: '7px 12px',
-                    borderRadius: 10,
-                    border: '1px solid var(--border)',
-                    fontFamily: 'var(--mono)',
-                    fontSize: 10,
-                    fontWeight: 700,
-                    letterSpacing: '.06em',
-                    textTransform: 'uppercase',
-                    cursor: 'pointer',
-                    transition: '.14s',
-                    background: category === c ? 'var(--acc-a-soft)' : 'var(--surface)',
-                    color: category === c ? 'var(--acc-a-ink)' : 'var(--ink-2)',
-                  }}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
+          <Field label="Priorytet">
+            <select className="select" value={priority} onChange={(e) => setPriority(e.target.value as 'high' | 'mid' | 'low')} style={{ width: '100%' }}>
+              {PRIO_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+            </select>
           </Field>
-
-          <div style={{ display: 'grid', gridTemplateColumns: !isEditing && repeatMode !== 'none' ? '1fr 1fr' : '1fr', gap: 10 }}>
-            <Field label="Priorytet">
-              <select className="select" value={priority} onChange={(e) => setPriority(e.target.value as 'high' | 'mid' | 'low')} style={{ width: '100%' }}>
-                {PRIO_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-              </select>
-            </Field>
-            {!isEditing && repeatMode !== 'none' && (
-              <Field label="Koniec serii">
-                <input
-                  className="input"
-                  value={repeatUntil}
-                  onChange={(e) => setRepeatUntil(e.target.value)}
-                  placeholder="Opcjonalnie: RRRR-MM-DD"
-                  style={{ width: '100%', borderColor: repeatUntilInvalid ? 'var(--p-high)' : undefined }}
-                />
-              </Field>
-            )}
-          </div>
 
           {!isEditing && (
             <Field label="Powtarzanie">
@@ -454,6 +430,67 @@ function AddTaskModal({
                 ))}
               </div>
             </Field>
+          )}
+
+          {!isEditing && repeatMode !== 'none' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 12, border: '1px solid var(--border-soft)', borderRadius: 'var(--r-mid)', background: 'var(--surface-inset)' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 800 }}>
+                Zakończenie powtarzania
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                {([
+                  ['date', 'Do daty'],
+                  ['count', 'Po liczbie'],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setRepeatEndMode(value)}
+                    style={{
+                      minHeight: 34,
+                      borderRadius: 10,
+                      border: '1px solid var(--border)',
+                      background: repeatEndMode === value ? 'var(--acc-a-soft)' : 'var(--surface)',
+                      color: repeatEndMode === value ? 'var(--acc-a-ink)' : 'var(--ink-2)',
+                      fontFamily: 'var(--mono)',
+                      fontSize: 10,
+                      fontWeight: 800,
+                      letterSpacing: '.06em',
+                      textTransform: 'uppercase',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {repeatEndMode === 'date' ? (
+                <Field label="Data końca">
+                  <input
+                    className="input"
+                    type="date"
+                    value={repeatUntil}
+                    onChange={(e) => setRepeatUntil(e.target.value)}
+                    style={{ width: '100%', borderColor: repeatUntilInvalid ? 'var(--p-high)' : undefined }}
+                  />
+                </Field>
+              ) : (
+                <Field label="Liczba wystąpień">
+                  <input
+                    className="input"
+                    type="number"
+                    min={1}
+                    max={MAX_TASK_OCCURRENCES}
+                    value={repeatCount}
+                    onChange={(e) => setRepeatCount(Number(e.target.value))}
+                    style={{ width: '100%', borderColor: repeatCountInvalid ? 'var(--p-high)' : undefined }}
+                  />
+                </Field>
+              )}
+              <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+                Seria utworzy <strong style={{ color: 'var(--ink)' }}>{previewCount}</strong> wystąpień.
+              </div>
+            </div>
           )}
 
           {!isEditing && repeatMode === 'weekly' && (
@@ -563,7 +600,10 @@ function AddTaskModal({
             {!isEditing && <span>Utworzy: <strong style={{ color: 'var(--ink)' }}>{previewCount}</strong></span>}
           </div>
           {repeatUntilInvalid && (
-            <div style={{ marginTop: 8, color: 'var(--p-high)', fontSize: 12 }}>Data końca musi mieć format RRRR-MM-DD.</div>
+            <div style={{ marginTop: 8, color: 'var(--p-high)', fontSize: 12 }}>Data końca musi być poprawna i nie może być wcześniejsza niż pierwszy termin.</div>
+          )}
+          {repeatCountInvalid && (
+            <div style={{ marginTop: 8, color: 'var(--p-high)', fontSize: 12 }}>Liczba wystąpień musi być od 1 do {MAX_TASK_OCCURRENCES}.</div>
           )}
         </div>
       </div>
@@ -621,9 +661,11 @@ interface CalendarProps {
   tasks: SupabaseTask[];
   onDayClick: (dateStr: string) => void;
   onTaskClick: (task: SupabaseTask) => void;
+  onToggleTask: (id: string, done: boolean) => void;
+  onMoveTask: (task: SupabaseTask, dateStr: string) => void;
 }
 
-function Calendar({ tasks, onDayClick, onTaskClick }: CalendarProps) {
+function Calendar({ tasks, onDayClick, onTaskClick, onToggleTask, onMoveTask }: CalendarProps) {
   const now = new Date();
   const [view, setView] = useState<'month'|'week'|'day'>('month');
   const [cursor, setCursor] = useState(() => new Date(now.getFullYear(), now.getMonth(), now.getDate()));
@@ -669,6 +711,13 @@ function Calendar({ tasks, onDayClick, onTaskClick }: CalendarProps) {
       <div key={dateStr}
         className="day-cell"
         onClick={() => onDayClick(dateStr)}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const taskId = e.dataTransfer.getData('text/plain');
+          const movedTask = tasks.find((item) => item.id === taskId);
+          if (movedTask && movedTask.due_date !== dateStr) onMoveTask(movedTask, dateStr);
+        }}
         style={{
           minHeight: compact ? 72 : 150, borderRadius:'var(--r-sm)',
           background: isCellToday ? 'var(--acc-a-soft)' : 'var(--surface-inset)',
@@ -690,13 +739,42 @@ function Calendar({ tasks, onDayClick, onTaskClick }: CalendarProps) {
           <div
             key={t.id}
             className="ev green ev-task"
+            draggable
+            onDragStart={(e) => {
+              e.stopPropagation();
+              e.dataTransfer.setData('text/plain', t.id);
+              e.dataTransfer.effectAllowed = 'move';
+            }}
             onClick={(e) => {
               e.stopPropagation();
               onTaskClick(t);
             }}
-            style={{ fontSize:9.5, opacity:t.done ? .75 : 1, textDecoration:t.done?'line-through':'none' }}
+            style={{ fontSize:9.5, opacity:t.done ? .75 : 1, textDecoration:t.done?'line-through':'none', cursor:'grab' }}
             title="Edytuj zadanie"
           >
+            <button
+              type="button"
+              aria-label={t.done ? 'Oznacz jako niewykonane' : 'Zakończ zadanie'}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleTask(t.id, !t.done);
+              }}
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: 4,
+                border: `1.4px solid ${t.done ? 'var(--acc-a)' : 'currentColor'}`,
+                background: t.done ? 'var(--acc-a)' : 'transparent',
+                color: 'var(--on-acc)',
+                display: 'grid',
+                placeItems: 'center',
+                padding: 0,
+                flexShrink: 0,
+                cursor: 'pointer',
+              }}
+            >
+              {t.done && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
+            </button>
             {isRecurringTask(t) && <RecurringIcon />}
             <span style={{ overflow:'hidden', textOverflow:'ellipsis' }}>{t.title}</span>
           </div>
@@ -792,15 +870,29 @@ function Calendar({ tasks, onDayClick, onTaskClick }: CalendarProps) {
               <div
                 key={t.id}
                 className="day-cell hover-row"
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('text/plain', t.id);
+                  e.dataTransfer.effectAllowed = 'move';
+                }}
                 onClick={() => onTaskClick(t)}
                 style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 12px', borderRadius:10, border:'1px solid var(--border-soft)', background:'var(--surface-inset)', cursor:'pointer', opacity:t.done?.7:1 }}
               >
-                <i style={{ width:7, height:7, borderRadius:'50%', background:CAT_COLORS[t.category ?? '']??CAT_COLORS.default, flexShrink:0 }} />
+                <button
+                  type="button"
+                  aria-label={t.done ? 'Oznacz jako niewykonane' : 'Zakończ zadanie'}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleTask(t.id, !t.done);
+                  }}
+                  style={{ width:18, height:18, borderRadius:6, border:`1.5px solid ${t.done?'var(--acc-a)':'var(--border)'}`, background:t.done?'var(--acc-a)':'transparent', flexShrink:0, display:'grid', placeItems:'center', color:'var(--on-acc)', cursor:'pointer' }}
+                >
+                  {t.done && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
+                </button>
                 <span style={{ flex:1, display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:600, color:'var(--ink)', textDecoration:t.done?'line-through':'none' }}>
                   {t.title}
                   {isRecurringTask(t) && <RecurringIcon size={11} />}
                 </span>
-                {t.category && <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-3)' }}>{t.category}</span>}
               </div>
             ))}
             <button
@@ -929,140 +1021,7 @@ function HabitsStrip() {
   );
 }
 
-function TrainingStrip() {
-  const { templates, sessions } = useLocalStore();
-  const tpl = templates.find(t=>t.isActive) ?? templates[0];
-  const lastSess = sessions[0];
-
-  return (
-    <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexShrink:0 }}>
-        <span style={{ fontFamily:'var(--mono)',fontSize:10.5,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--ink-3)',fontWeight:600 }}>Następny trening</span>
-        {tpl && <span style={{ fontFamily:'var(--mono)',fontSize:9.5,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--acc-b-ink)',background:'var(--acc-b-soft)',padding:'4px 9px',borderRadius:999,fontWeight:600 }}>Push A</span>}
-      </div>
-      {tpl ? (
-        <div style={{ display:'flex', flexDirection:'column', flex:1, justifyContent:'center', gap:16, minHeight:0 }}>
-          <div style={{ display:'flex', gap:16, alignItems:'center' }}>
-            <div style={{ width:72, flexShrink:0, display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-              <svg viewBox="0 0 40 80" width="48" height="96" fill="none">
-                <ellipse cx="20" cy="9" rx="7" ry="7" stroke="var(--border)" strokeWidth="1.5" fill="var(--surface-2)"/>
-                <rect x="11" y="17" width="18" height="22" rx="3" stroke="var(--border)" strokeWidth="1.5" fill="var(--acc-a-soft)"/>
-                <rect x="3" y="17" width="7" height="16" rx="3" stroke="var(--border)" strokeWidth="1.5" fill="var(--acc-a-soft)"/>
-                <rect x="30" y="17" width="7" height="16" rx="3" stroke="var(--border)" strokeWidth="1.5" fill="var(--acc-a-soft)"/>
-                <rect x="12" y="40" width="7" height="20" rx="3" stroke="var(--border)" strokeWidth="1.5" fill="var(--surface-2)"/>
-                <rect x="21" y="40" width="7" height="20" rx="3" stroke="var(--border)" strokeWidth="1.5" fill="var(--surface-2)"/>
-                <rect x="12" y="61" width="7" height="16" rx="3" stroke="var(--border)" strokeWidth="1.5" fill="var(--surface-2)"/>
-                <rect x="21" y="61" width="7" height="16" rx="3" stroke="var(--border)" strokeWidth="1.5" fill="var(--surface-2)"/>
-              </svg>
-            </div>
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:17, fontWeight:700, color:'var(--ink)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{tpl.name}</div>
-              <div style={{ fontFamily:'var(--mono)', fontSize:9.5, letterSpacing:'.06em', textTransform:'uppercase', color:'var(--ink-3)', marginTop:4 }}>
-                Ćwiczenie · {tpl.exercises.length > 0 ? tpl.exercises.reduce((s,e)=>s+e.sets.length,0) : 23} serii
-              </div>
-            </div>
-          </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:10, padding:'14px 0', borderTop:'1px solid var(--border-soft)', borderBottom:'1px solid var(--border-soft)' }}>
-            {[
-              { k:'Czas.',    v: tpl.estimatedDuration + ' min' },
-              { k:'Obj.',     v: lastSess ? '9 240 kg' : '–' },
-              { k:'Top seria',v: 'RIR 2' },
-            ].map(s => (
-              <div key={s.k} style={{ textAlign:'center' }}>
-                <div style={{ fontFamily:'var(--mono)', fontSize:9, letterSpacing:'.06em', textTransform:'uppercase', color:'var(--ink-3)' }}>{s.k}</div>
-                <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)', marginTop:3 }}>{s.v}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color:'var(--ink-3)', textAlign:'center' }}>Brak szablonu</div>
-      )}
-      {tpl && (
-        <div style={{ display:'flex', gap:8, marginTop:16, flexShrink:0 }}>
-          <Link to="/sport" style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:7, background:'var(--ink)', color:'var(--bg-1)', borderRadius:'var(--r-mid)', padding:'11px', fontFamily:'var(--mono)', fontSize:10.5, letterSpacing:'.08em', textTransform:'uppercase', fontWeight:600, textDecoration:'none' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            Rozpocznij sesję
-          </Link>
-          <Link to="/sport" style={{ display:'flex', alignItems:'center', justifyContent:'center', background:'transparent', color:'var(--ink-2)', border:'1px solid var(--border)', borderRadius:'var(--r-mid)', padding:'11px 14px', fontFamily:'var(--mono)', fontSize:10.5, letterSpacing:'.08em', textTransform:'uppercase', fontWeight:600, textDecoration:'none' }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-          </Link>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function CaloriesStrip() {
-  const { data: entries = [] } = useTodayMealItems();
-  const { data: nutrition } = useNutritionToday();
-  const kcalGoal = nutrition?.kcal_target ?? 2500;
-  const proteinGoal = nutrition?.protein_target ?? 180;
-  const carbGoal = nutrition?.carb_target ?? 240;
-  const fatGoal = nutrition?.fat_target ?? 70;
-  const eaten = entries.reduce((s,e)=>s+e.kcal,0);
-  const protein = Math.round(entries.reduce((s,e)=>s+e.protein,0));
-  const carbs = Math.round(entries.reduce((s,e)=>s+e.carb,0));
-  const fat = Math.round(entries.reduce((s,e)=>s+e.fat,0));
-  const pct = kcalGoal > 0 ? Math.min(100, Math.round(eaten/kcalGoal*100)) : 0;
-  const remaining = Math.round(kcalGoal - eaten);
-
-  return (
-    <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexShrink:0 }}>
-        <span style={{ fontFamily:'var(--mono)',fontSize:10.5,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--ink-3)',fontWeight:600 }}>Podsumowanie kalorii</span>
-      </div>
-      <div style={{ display:'flex', flexDirection:'column', flex:1, justifyContent:'center', gap:22, minHeight:0 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:20 }}>
-          <div style={{ position:'relative', width:108, height:108, flexShrink:0 }}>
-            <svg viewBox="0 0 100 100" style={{ width:'100%', height:'100%', transform:'rotate(-90deg)' }}>
-              <circle cx="50" cy="50" r="43" fill="none" stroke="var(--surface-inset)" strokeWidth="13"/>
-              <circle cx="50" cy="50" r="43" fill="none" stroke="var(--acc-a)" strokeWidth="13" strokeLinecap="round"
-                strokeDasharray="270.2" strokeDashoffset={270.2-(270.2*pct/100)}/>
-            </svg>
-          </div>
-          <div style={{ minWidth:0, flex:1 }}>
-            <div style={{ fontFamily:'var(--mono)', fontSize:26, fontWeight:800, color:'var(--ink)', lineHeight:1.1 }}>
-              {Math.round(eaten)} <span style={{ color:'var(--ink-3)', fontWeight:600 }}>/ {kcalGoal}</span>
-            </div>
-            <div style={{ fontFamily:'var(--mono)', fontSize:10, letterSpacing:'.08em', textTransform:'uppercase', color:'var(--ink-3)', marginTop:5 }}>kcal</div>
-            <div style={{ fontSize:13, color: remaining >= 0 ? 'var(--ink-2)' : 'var(--p-high)', marginTop:12, fontWeight:700 }}>
-              {remaining >= 0 ? `Pozostało ${remaining}` : `Przekroczono ${Math.abs(remaining)}`} kcal
-            </div>
-          </div>
-        </div>
-        <div style={{ width:'100%' }}>
-          {[
-            { k:'Białko', v:protein, goal:proteinGoal, color:'var(--acc-a)' },
-            { k:'Węglowodany', v:carbs, goal:carbGoal, color:'var(--ev-blue)' },
-            { k:'Tłuszcze', v:fat, goal:fatGoal, color:'var(--acc-b)' },
-          ].map(m => (
-            <div key={m.k} style={{ marginBottom:10 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
-                <span style={{ fontSize:12.5, color:'var(--ink-2)', fontWeight:500 }}>{m.k}</span>
-                <span style={{ fontFamily:'var(--mono)', fontSize:11.5, color:'var(--ink)', fontWeight:600 }}>{m.v} <span style={{ color:'var(--ink-3)', fontWeight:400 }}>/ {m.goal} g</span></span>
-              </div>
-              <div style={{ height:5, borderRadius:999, background:'var(--surface-inset)', overflow:'hidden' }}>
-                <div style={{ height:'100%', width:`${m.goal > 0 ? Math.min(100,Math.round(m.v/m.goal*100)) : 0}%`, background:m.color, borderRadius:999 }}/>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <Link to="/diet" style={{ display:'inline-flex',alignItems:'center',gap:5,marginTop:12,fontFamily:'var(--mono)',fontSize:9.5,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--acc-a-ink)',textDecoration:'none',fontWeight:600,flexShrink:0 }}>
-        Zobacz szczegóły
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-      </Link>
-    </div>
-  );
-}
-
 // ─── TODAY PANEL ──────────────────────────────────────────────
-
-const CAT_COLORS: Record<string,string> = {
-  Rutyna:'var(--acc-a)', Trening:'var(--acc-b)', Praca:'var(--ev-blue)',
-  Regeneracja:'var(--ev-lav)', Cel:'var(--ev-clay)', default:'var(--ink-4)',
-};
 
 interface TodayPanelProps {
   tasks: SupabaseTask[];
@@ -1105,12 +1064,6 @@ function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
       {overdue && <span className="badge status-overdue" style={{ flexShrink:0 }}>Po terminie</span>}
       {!overdue && task.due_date && task.due_date !== todayStr && (
         <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-3)', flexShrink:0 }}>{fmtShortDate(task.due_date)}</span>
-      )}
-      {task.category && (
-        <span style={{ display:'flex', alignItems:'center', gap:4, fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-3)', flexShrink:0 }}>
-          <i style={{ width:5, height:5, borderRadius:'50%', background:CAT_COLORS[task.category]??CAT_COLORS.default, display:'block' }}/>
-          {task.category}
-        </span>
       )}
     </div>
   );
@@ -1237,7 +1190,7 @@ export function StartScreen() {
   const editingSeriesCount = editingTask?.series_id
     ? tasks.filter((task) => task.series_id === editingTask.series_id).length
     : 0;
-  const taskMutationPending = createTask.isPending || updateTask.isPending || deleteTask.isPending || deleteTasks.isPending;
+  const taskMutationPending = createTask.isPending || updateTask.isPending || toggleTask.isPending || deleteTask.isPending || deleteTasks.isPending;
 
   function openForToday() {
     setEditingTaskId(null);
@@ -1264,7 +1217,7 @@ export function StartScreen() {
         id: task.editingId,
         patch: {
           title: task.title,
-          category: task.category,
+          category: null,
           priority: task.priority,
           due_date: task.dueDates[0] ?? null,
           note: task.note,
@@ -1277,17 +1230,24 @@ export function StartScreen() {
     for (const dueDate of dueDates) {
       await createTask.mutateAsync({
         title: task.title,
-        category: task.category,
+        category: null,
         priority: task.priority,
         due_date: dueDate || null,
         scheduled_time: null,
         note: task.note,
         series_id: seriesId,
         repeat_mode: task.repeatMode,
-        repeat_until: task.repeatUntil || null,
+        repeat_until: task.repeatEndMode === 'date' ? task.repeatUntil || null : dueDates[dueDates.length - 1] ?? null,
         repeat_weekdays: task.repeatMode === 'weekly' ? task.repeatWeekdays : null,
       });
     }
+  }
+  async function handleCompleteTask(task: SupabaseTask) {
+    await toggleTask.mutateAsync({ id: task.id, done: true });
+    closeTaskModal();
+  }
+  function handleMoveTask(task: SupabaseTask, dateStr: string) {
+    updateTask.mutate({ id: task.id, patch: { due_date: dateStr } });
   }
   async function handleDeleteSingle(task: SupabaseTask) {
     await deleteTask.mutateAsync(task.id);
@@ -1310,39 +1270,36 @@ export function StartScreen() {
 
   return (
     <div className="module-page">
-      <div style={{
-        display: 'flex', flexDirection: 'column',
-        gap: 'var(--gap)',
-        width: '100%', boxSizing: 'border-box',
-      }}>
+      <div className="planner-shell">
         <PageHeader
           icon={<PlannerHeaderIcon />}
           title="Planer"
-          desc="Zaplanuj dzień, zadania, nawyki i cele w jednym miejscu."
+          desc={'Zaplanuj dzie\u0144, zadania, nawyki i cele w jednym miejscu.'}
           actions={<button className="btn btn-primary btn-sm" type="button" onClick={openForToday}>+ Nowe zadanie</button>}
         />
-        {/* TOP ROW: Today + Calendar — fixed min-height, not flex-grow */}
-        <div className="planer-top-grid">
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <TodayPanel
+        <div className="planner-layout">
+          <aside className="planner-sidebar">
+            <div className="card planner-tasks-card">
+              <TodayPanel
+                tasks={tasks}
+                isLoading={tasksLoading}
+                onAddTask={openForToday}
+                onTaskClick={openTask}
+                onToggleTask={(id, done) => toggleTask.mutate({ id, done })}
+                onDeleteCompleted={handleDeleteCompleted}
+              />
+            </div>
+            <div className="card planner-habits-card"><HabitsStrip /></div>
+          </aside>
+          <section className="card planner-calendar-card">
+            <Calendar
               tasks={tasks}
-              isLoading={tasksLoading}
-              onAddTask={openForToday}
+              onDayClick={openForDay}
               onTaskClick={openTask}
               onToggleTask={(id, done) => toggleTask.mutate({ id, done })}
-              onDeleteCompleted={handleDeleteCompleted}
+              onMoveTask={handleMoveTask}
             />
-          </div>
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-            <Calendar tasks={tasks} onDayClick={openForDay} onTaskClick={openTask} />
-          </div>
-        </div>
-
-        {/* BOTTOM ROW: Habits · Training · Calories — always visible */}
-        <div className="planer-strip-grid">
-          <div className="card"><HabitsStrip /></div>
-          <div className="card"><TrainingStrip /></div>
-          <div className="card"><CaloriesStrip /></div>
+          </section>
         </div>
       </div>
 
@@ -1354,6 +1311,7 @@ export function StartScreen() {
         saving={taskMutationPending}
         onClose={closeTaskModal}
         onSave={handleSaveTask}
+        onComplete={handleCompleteTask}
         onDeleteSingle={handleDeleteSingle}
         onDeleteSeries={requestDeleteSeries}
       />

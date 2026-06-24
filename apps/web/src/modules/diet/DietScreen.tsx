@@ -197,7 +197,7 @@ function DietHub() {
     for (const entry of entries) await deleteMealItem.mutateAsync(entry.id);
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, flex: '1 1 auto', minHeight: 0 }}>
       <PageHeader
         icon={<DietHeaderIcon />}
         title="Dieta"

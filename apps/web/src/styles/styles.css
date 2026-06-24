@@ -145,7 +145,7 @@
 /* ============================================================ BASE */
 *, *::before, *::after { box-sizing: border-box; }
 :root.theme-switching, :root.theme-switching *, :root.theme-switching *::before, :root.theme-switching *::after { transition: none !important; }
-html, body { margin: 0; height: 100%; overflow: hidden; }
+html, body, #root { margin: 0; height: 100%; overflow: hidden; }
 body {
   font-family: var(--font-sans);
   color: var(--ink);
@@ -185,7 +185,8 @@ a:focus-visible, button:focus-visible { outline-offset: 3px; }
 .tag { display: inline-flex; align-items: center; font-family: var(--font-mono); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; padding: 3px 7px; border-radius: var(--r-xs); font-weight: 600; background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--border-soft); }
 
 /* ============================================================ APP SHELL */
-.app { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+.app { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+.app > :not(.topbar):not(.mobile-bottom-nav):not(.mobile-nav) { min-height: 0; }
 
 /* ---- TOPBAR / CONTROL BAR ---- */
 .topbar {
@@ -361,11 +362,12 @@ a:focus-visible, button:focus-visible { outline-offset: 3px; }
 
 /* ============================================================ GRID LAYOUT */
 .main-grid {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   display: grid;
   grid-template-columns: 312px minmax(0, 1fr) 332px;
   gap: var(--gap);
-  align-items: start;
+  align-items: stretch;
   padding: var(--gap);
   width: 100%;
   overflow-y: auto;
@@ -373,12 +375,22 @@ a:focus-visible, button:focus-visible { outline-offset: 3px; }
 }
 .col { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
 
-.diet-day-grid { display: grid; grid-template-columns: 7fr 3fr; gap: var(--gap); align-items: start; }
+.diet-day-grid { display: grid; grid-template-columns: 7fr 3fr; gap: var(--gap); align-items: stretch; min-height: 0; flex: 1 1 auto; }
 .diet-side-sticky { position: sticky; top: var(--gap); }
 @media (max-width: 1000px) { .diet-side-sticky { position: static; } }
 @media (max-width: 860px) { .diet-day-grid { grid-template-columns: 1fr; } }
 
-.module-page { flex: 1; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable; width: 100%; display: flex; flex-direction: column; }
+.module-page {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
 /* ---- MODULE HEADER ---- */
 .module-header {
@@ -406,22 +418,58 @@ a:focus-visible, button:focus-visible { outline-offset: 3px; }
 .finance-nav-month .icon-btn svg { width: 14px; height: 14px; }
 .finance-nav-month input[type="month"] { width: 138px; height: 32px; padding: 0 10px; font-size: 12.5px; }
 
-.sport-hero-grid { display: grid; grid-template-columns: minmax(0, 2.35fr) minmax(260px, .85fr); gap: var(--gap); align-items: stretch; }
-.sport-week-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
-.sport-templates-grid { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); }
+.sport-hero-grid { display: grid; grid-template-columns: minmax(0, 2.35fr) minmax(260px, .85fr); gap: var(--gap); align-items: stretch; min-height: 0; }
+.sport-week-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; min-height: 0; }
+.sport-templates-grid { display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); align-items: stretch; min-height: 0; }
 @media (max-width: 960px) {
   .sport-hero-grid { grid-template-columns: 1fr; }
   .sport-templates-grid { grid-template-columns: 1fr; }
 }
 
-.planer-top-grid { display: grid; grid-template-columns: 380px 1fr; gap: var(--gap); min-height: 480px; }
-.planer-strip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); }
+.planner-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  box-sizing: border-box;
+}
+.planner-layout {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(280px, 30%) minmax(0, 1fr);
+  gap: var(--gap);
+  align-items: stretch;
+}
+.planner-sidebar {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 7fr) minmax(0, 3fr);
+  gap: var(--gap);
+}
+.planner-tasks-card,
+.planner-habits-card,
+.planner-calendar-card {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.planner-calendar-card > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
 @media (max-width: 1100px) {
-  .planer-top-grid { grid-template-columns: 1fr; min-height: 0; }
-  .planer-strip-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .planner-layout { grid-template-columns: 1fr; }
+  .planner-sidebar { grid-template-rows: minmax(360px, auto) minmax(260px, auto); }
+  .planner-calendar-card { min-height: 520px; }
 }
 @media (max-width: 560px) {
-  .planer-strip-grid { grid-template-columns: 1fr; }
+  .planner-sidebar { grid-template-rows: auto auto; }
+  .planner-calendar-card { min-height: 460px; }
 }
 .sub-tabs, .subtabs { display: flex; align-items: center; gap: 4px; padding: 0 12px; flex: 1; overflow-x: auto; scrollbar-width: none; }
 .sub-tabs::-webkit-scrollbar, .subtabs::-webkit-scrollbar { display: none; }
@@ -437,7 +485,22 @@ a:focus-visible, button:focus-visible { outline-offset: 3px; }
 .sub-tab-icon svg { width: 14px; height: 14px; }
 button.active .sub-tab-icon { opacity: 1; }
 
-.module-page > div:not(.module-header), .module-page > section:not(.module-header), .module-page > header { padding: var(--gap) var(--pad); width: 100%; box-sizing: border-box; }
+.module-page > div:not(.module-header):not(.modal-overlay),
+.module-page > section:not(.module-header),
+.module-page > header {
+  padding: var(--gap) var(--pad);
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 0;
+}
+.module-page > .module-head-wrap,
+.module-page > header.page-head {
+  flex: 0 0 auto;
+}
+.module-page > div:not(.module-header):not(.module-head-wrap):not(.modal-overlay):last-child,
+.module-page > section:not(.module-header):last-child {
+  flex: 1 1 auto;
+}
 /* PageHeader as a direct module-page child (Travel/Notes/Work): collapse doubled vertical gap with the following content. */
 .module-page > header.page-head { padding-bottom: 0; margin-bottom: 14px; }
 .module-page > header.page-head + section, .module-page > header.page-head + div { padding-top: 0; }
@@ -852,7 +915,7 @@ button.active .sub-tab-icon { opacity: 1; }
 .hydro-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 /* ============================================================ FINANCE DASHBOARD */
-.finance-shell { display: flex; flex-direction: column; gap: var(--gap); width: 100%; min-width: 0; }
+.finance-shell { display: flex; flex-direction: column; gap: var(--gap); width: 100%; min-width: 0; min-height: 0; flex: 1 1 auto; }
 
 .finance-kpi-grid {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap);
@@ -884,11 +947,11 @@ button.active .sub-tab-icon { opacity: 1; }
 
 .finance-dashboard-grid {
   display: grid; grid-template-columns: minmax(300px, 1fr) minmax(360px, 1fr) minmax(300px, 1fr);
-  gap: var(--gap); align-items: start;
+  gap: var(--gap); align-items: stretch; min-height: 0; flex: 1 1 auto;
 }
 .finance-monthly-grid {
   display: grid; grid-template-columns: minmax(340px, .85fr) minmax(480px, 1.4fr);
-  gap: var(--gap); align-items: start;
+  gap: var(--gap); align-items: stretch; min-height: 0; flex: 1 1 auto;
 }
 .finance-overview-cta {
   display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
@@ -898,7 +961,7 @@ button.active .sub-tab-icon { opacity: 1; }
 }
 .finance-cta-copy { display: flex; align-items: center; gap: 12px; min-width: 0; color: var(--ink-2); font-size: 13px; }
 .finance-cta-copy svg { width: 22px; height: 22px; color: var(--acc); flex-shrink: 0; }
-.finance-bottom-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, .95fr); gap: var(--gap); align-items: start; }
+.finance-bottom-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, .95fr); gap: var(--gap); align-items: stretch; min-height: 0; }
 .finance-card {
   min-width: 0; background: color-mix(in srgb, var(--surface) 92%, transparent);
   border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--sh-2);
@@ -1132,13 +1195,13 @@ button.active .sub-tab-icon { opacity: 1; }
 }
 
 /* ============================================================ GOALS (CELE) */
-.goals-shell { display: flex; flex-direction: column; gap: var(--gap); width: 100%; min-width: 0; }
+.goals-shell { display: flex; flex-direction: column; gap: var(--gap); width: 100%; min-width: 0; min-height: 0; flex: 1 1 auto; }
 
 .goals-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); }
-.goals-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr) 320px; gap: var(--gap); align-items: start; }
+.goals-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr) 320px; gap: var(--gap); align-items: stretch; min-height: 0; flex: 1 1 auto; }
 
-.goals-sidebar { display: flex; flex-direction: column; min-width: 0; }
-.goals-sidebar-list { display: flex; flex-direction: column; max-height: 560px; overflow-y: auto; margin: 0 -4px; padding: 0 4px; }
+.goals-sidebar { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.goals-sidebar-list { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; margin: 0 -4px; padding: 0 4px; }
 .goals-sidebar-row {
   display: flex; align-items: center; gap: 10px; padding: 10px 8px; border-radius: var(--r-mid);
   border: 1px solid transparent; background: transparent; cursor: pointer; text-align: left; font: inherit; color: inherit;
@@ -1161,22 +1224,14 @@ button.active .sub-tab-icon { opacity: 1; }
 
 .goals-empty-detail { display: flex; align-items: center; justify-content: center; min-height: 320px; }
 
-.goals-detail { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
-.goals-detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
-.goals-detail-head-main { display: flex; align-items: center; gap: 12px; }
-.goals-detail-emoji { font-size: 32px; }
-.goals-detail-head-main h2 { font-size: 20px; font-weight: 800; margin: 0; color: var(--ink); }
-.goals-detail-meta { font-size: 13px; color: var(--ink-3); margin-top: 2px; }
-.goals-detail-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.goals-detail-head-actions svg { width: 14px; height: 14px; }
+.goals-detail { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; }
+.goals-detail-emoji { font-size: 24px; margin-right: 8px; vertical-align: -2px; }
 .goals-detail-desc { font-size: 14px; color: var(--ink-2); margin: 0 0 16px; }
 .goals-progress-block { margin-bottom: 14px; }
 .goals-progress-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
 .goals-progress-head span { font-size: 13px; color: var(--ink-3); }
 .goals-progress-head strong { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--ink); }
 .goals-progress-label { margin-top: 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-4); }
-.goals-detail-footer { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink-3); }
-.goals-detail-footer strong { color: var(--ink); }
 
 .goals-tasks-list { display: flex; flex-direction: column; }
 .goals-task-row {
@@ -1214,7 +1269,7 @@ button.active .sub-tab-icon { opacity: 1; }
 .goals-more-menu button.danger { color: var(--danger-ink); }
 .goals-more-menu button.danger:hover { background: var(--danger-soft); }
 
-.goals-right-rail { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.goals-right-rail { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; }
 .goals-today-sub { font-size: 11px; color: var(--ink-3); margin-top: 2px; font-weight: 500; text-transform: none; letter-spacing: 0; }
 .goals-today-list { display: flex; flex-direction: column; }
 .goals-today-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--border-soft); }
@@ -1283,19 +1338,19 @@ button.active .sub-tab-icon { opacity: 1; }
 @media (max-width: 1220px) {
   .goals-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .goals-layout { grid-template-columns: 1fr; }
-  .goals-sidebar-list { max-height: 320px; }
+  .goals-sidebar-list { max-height: none; }
 }
 @media (max-width: 640px) {
   .goals-kpi-grid { grid-template-columns: 1fr; }
 }
 
 /* ============================================================ OFFICE (BIURO) */
-.office-shell { display: flex; flex-direction: column; gap: var(--gap); width: 100%; min-width: 0; }
+.office-shell { display: flex; flex-direction: column; gap: var(--gap); width: 100%; min-width: 0; min-height: 0; flex: 1 1 auto; }
 
 .office-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); }
-.office-layout { display: grid; grid-template-columns: minmax(220px, 25%) minmax(0, 1fr); gap: var(--gap); align-items: start; }
+.office-layout { display: grid; grid-template-columns: minmax(220px, 25%) minmax(0, 1fr); gap: var(--gap); align-items: stretch; min-height: 0; flex: 1 1 auto; }
 
-.office-sidebar { display: flex; flex-direction: column; min-width: 0; }
+.office-sidebar { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .office-category-list { display: flex; flex-direction: column; gap: 4px; }
 .office-category-row {
   display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--r-mid); border: 1px solid transparent;
@@ -1318,7 +1373,7 @@ button.active .sub-tab-icon { opacity: 1; }
 .office-add-category-btn:hover { color: var(--ink); background: var(--surface-2); }
 .office-add-category-btn svg { width: 14px; height: 14px; }
 
-.office-main { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.office-main { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; min-height: 0; }
 .office-tabs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .office-tab { padding: 6px 14px; border-radius: 99px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; background: var(--surface-3); color: var(--ink-2); }
 .office-tab.is-active { background: var(--acc); color: white; }

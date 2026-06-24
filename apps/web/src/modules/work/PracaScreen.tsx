@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, KpiCard } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, KpiCard, DetailPanel, ProgressBar, PriorityBadge, StatusBadge } from '@/components/common';
 import { useLocalStore, type Priority, type TaskStatus, type WorkContext, type WorkProject, type WorkTask } from '@/store/localStore';
 import '@/styles/work.css';
 
@@ -383,66 +383,72 @@ function TaskDetails({ task, project, context, onUpdate }: { task?: WorkTask; pr
     onUpdate?.({ links: links.filter((_, i) => i !== idx) });
   }
 
+  if (!task) {
+    return (
+      <section className="work-panel">
+        <DetailPanel title="Szczegóły zadania">
+          <EmptyState title="Brak zadania" />
+        </DetailPanel>
+      </section>
+    );
+  }
+
   return (
     <section className="work-panel">
-      <div className="work-panel-head">
-        <h2>Szczegóły zadania</h2>
-        <WorkIcon name="settings" />
-      </div>
-      {!task ? (
-        <EmptyState title="Brak zadania" />
-      ) : (
-        <>
-          <div className="work-detail-project"><i />{project?.name ?? context?.name ?? 'Praca'}</div>
-          <h3>{task.title}</h3>
-          <p>{task.description || 'Zbudować i zamodelować zakres zadania zgodnie z wymaganiami projektu.'}</p>
-          <div className="work-detail-list">
-            <DetailLine icon="note" label="Notatki" value={task.notes ? '1 notatka' : '0 notatek'} />
-            <DetailLine icon="link" label="Linki" value={`${links.length} ${links.length === 1 ? 'link' : 'linków'}`} />
-            <DetailLine icon="deadline" label="Deadline" value={task.dueDate ? `${fmtDate(task.dueDate, true)}${left !== null ? ` (${left} dni)` : ''}` : 'Brak'} />
-            <DetailLine icon="progress" label="Postęp" value={`${progress}%`} progress={progress} />
-            <DetailLine icon="user" label="Przypisane" value={project?.name ? initials(project.name)[0] : 'R'} avatar />
-            <DetailLine icon="tag" label="Etykiety" value={project?.name ?? 'Projekt'} tag />
-          </div>
+      <DetailPanel
+        title={task.title}
+        subtitle={project?.name ?? context?.name ?? 'Praca'}
+        badges={(
+          <>
+            <StatusBadge status={task.status} label={STATUS_LABELS[task.status]} />
+            <PriorityBadge priority={task.priority} />
+          </>
+        )}
+        fields={[
+          { label: 'Notatki', value: task.notes ? '1 notatka' : '0 notatek' },
+          { label: 'Linki', value: `${links.length} ${links.length === 1 ? 'link' : 'linków'}` },
+          { label: 'Deadline', value: task.dueDate ? `${fmtDate(task.dueDate, true)}${left !== null ? ` (${left} dni)` : ''}` : 'Brak' },
+          {
+            label: 'Postęp',
+            value: (
+              <span className="work-detail-progress">
+                <span>{progress}%</span>
+                <ProgressBar value={progress} size="sm" />
+              </span>
+            ),
+          },
+          { label: 'Przypisane', value: <span className="work-detail-avatar">{project?.name ? initials(project.name)[0] : 'R'}</span> },
+          { label: 'Etykiety', value: <span className="work-detail-tag">{project?.name ?? 'Projekt'}</span> },
+        ]}
+      >
+          <p className="work-detail-description">{task.description || 'Zbudować i zamodelować zakres zadania zgodnie z wymaganiami projektu.'}</p>
           {task.notes && (
-            <div style={{ marginTop: 12, padding: 12, borderRadius: 'var(--r-mid)', border: '1px solid var(--border-soft)', background: 'var(--surface-inset)' }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 600, marginBottom: 6 }}>Notatki</div>
-              <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-2)', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{task.notes}</p>
+            <div className="work-detail-note-box">
+              <div>Notatki</div>
+              <p>{task.notes}</p>
             </div>
           )}
-          <div style={{ marginTop: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 600 }}>Linki i załączniki</span>
+          <div className="work-detail-links">
+            <div className="work-detail-section-head">
+              <span>Linki i załączniki</span>
               <button className="btn btn-ghost btn-sm" type="button" onClick={addLink}><WorkIcon name="plus" /> Dodaj link</button>
             </div>
             {links.length === 0 ? (
-              <p style={{ margin: 0, fontSize: 12, color: 'var(--ink-3)' }}>Brak linków. Dodaj odnośnik do dokumentu, repozytorium lub pliku.</p>
+              <p className="work-detail-empty">Brak linków. Dodaj odnośnik do dokumentu, repozytorium lub pliku.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div className="work-detail-link-list">
                 {links.map((link, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-soft)', background: 'var(--surface-inset)' }}>
+                  <div key={i} className="work-detail-link-row">
                     <WorkIcon name="link" />
-                    <a href={link.url} target="_blank" rel="noreferrer" style={{ flex: 1, minWidth: 0, fontSize: 13, color: 'var(--acc-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{link.label}</a>
+                    <a href={link.url} target="_blank" rel="noreferrer">{link.label}</a>
                     <button className="icon-btn" type="button" onClick={() => removeLink(i)} aria-label="Usuń link"><WorkIcon name="trash" /></button>
                   </div>
                 ))}
               </div>
             )}
           </div>
-        </>
-      )}
+      </DetailPanel>
     </section>
-  );
-}
-
-function DetailLine({ icon, label, value, progress, avatar = false, tag = false }: { icon: WorkIconName; label: string; value: string; progress?: number; avatar?: boolean; tag?: boolean }) {
-  return (
-    <div className="work-detail-line">
-      <WorkIcon name={icon} />
-      <span>{label}</span>
-      <strong className={avatar ? 'as-avatar' : tag ? 'as-tag' : ''}>{value}</strong>
-      {typeof progress === 'number' && <i><span style={{ width: `${progress}%` }} /></i>}
-    </div>
   );
 }
 

@@ -3,10 +3,12 @@
 }
 
 .work-shell {
+  flex: 1 1 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(310px, 390px);
   gap: var(--gap);
-  align-items: start;
+  align-items: stretch;
+  min-height: 0;
 }
 
 .work-main,
@@ -15,11 +17,15 @@
   flex-direction: column;
   gap: var(--gap);
   min-width: 0;
+  min-height: 0;
 }
 
 .work-side {
   position: sticky;
   top: 78px;
+  align-self: start;
+  max-height: calc(100dvh - 96px);
+  overflow-y: auto;
 }
 
 .work-context-panel,
@@ -27,10 +33,17 @@
 .work-activity,
 .work-panel {
   min-width: 0;
+  min-height: 0;
   border: 1px solid var(--border);
   border-radius: var(--r-card);
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   box-shadow: var(--sh-2);
+}
+
+.work-task-board {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .work-context-panel,
@@ -177,8 +190,7 @@
   border: 1px solid var(--border-soft);
 }
 
-.work-project-copy i span,
-.work-detail-line i span {
+.work-project-copy i span {
   display: block;
   height: 100%;
   border-radius: inherit;
@@ -388,8 +400,7 @@
 }
 
 .work-project-pill i,
-.work-deadline small i,
-.work-detail-project i {
+.work-deadline small i {
   width: 7px;
   height: 7px;
   flex-shrink: 0;
@@ -554,84 +565,118 @@
   height: 13px;
 }
 
-.work-detail-project {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ink-3);
-  font-size: 12px;
-}
-
-.work-panel h3 {
-  margin: 8px 0 8px;
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: 18px;
-  line-height: 1.2;
-  font-weight: 760;
-  letter-spacing: 0;
-}
-
-.work-panel p {
-  margin: 0 0 16px;
+.work-detail-description {
+  margin: 0;
   color: var(--ink-2);
   font-size: 12.5px;
   line-height: 1.55;
 }
 
-.work-detail-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.work-detail-line {
+.work-detail-progress {
   display: grid;
-  grid-template-columns: 18px minmax(84px, 1fr) auto;
-  gap: 10px;
+  grid-template-columns: auto minmax(74px, 1fr);
   align-items: center;
-  color: var(--ink-2);
-  font-size: 12px;
+  gap: 8px;
+  min-width: 130px;
 }
 
-.work-detail-line svg {
-  width: 16px;
-  height: 16px;
-  color: var(--ink-3);
-}
-
-.work-detail-line strong {
-  color: var(--ink-2);
-  font-size: 12px;
-  font-weight: 650;
-  text-align: right;
-}
-
-.work-detail-line strong.as-avatar {
+.work-detail-avatar {
   width: 24px;
   height: 24px;
-  display: grid;
+  display: inline-grid;
   place-items: center;
   border-radius: 50%;
   color: var(--on-acc);
   background: var(--success);
   font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 650;
 }
 
-.work-detail-line strong.as-tag {
+.work-detail-tag {
+  display: inline-flex;
   padding: 4px 8px;
   border-radius: var(--r-sm);
   color: var(--acc);
   background: var(--acc-soft);
+  font-size: 12px;
+  font-weight: 650;
 }
 
-.work-detail-line i {
-  grid-column: 2 / 4;
-  height: 5px;
-  overflow: hidden;
-  border-radius: var(--r-pill);
-  background: var(--surface-inset);
+.work-detail-note-box {
+  padding: 12px;
+  border-radius: var(--r-mid);
   border: 1px solid var(--border-soft);
+  background: var(--surface-inset);
+}
+
+.work-detail-note-box > div,
+.work-detail-section-head > span {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 600;
+}
+
+.work-detail-note-box p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--ink-2);
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.work-detail-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.work-detail-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.work-detail-empty {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.work-detail-link-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.work-detail-link-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-soft);
+  background: var(--surface-inset);
+}
+
+.work-detail-link-row svg {
+  width: 16px;
+  height: 16px;
+  color: var(--ink-3);
+}
+
+.work-detail-link-row a {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--acc-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .work-deadline-list {
