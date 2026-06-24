@@ -8,6 +8,8 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
  * collapses again on mouse leave. Both choices survive a reload via localStorage.
  */
 interface SidebarState {
+  /** High-level behavior mode used by the lock button. */
+  lockMode: 'auto' | 'pinned-open' | 'pinned-closed';
   /** Effective (visual) expanded state — committed OR hover when unlocked. */
   expanded: boolean;
   /** The pinned state that controls how much horizontal space the content gets. */
@@ -15,7 +17,7 @@ interface SidebarState {
   locked: boolean;
   setHover: (hovering: boolean) => void;
   toggleExpanded: () => void;
-  toggleLock: () => void;
+  cycleLockMode: () => void;
 }
 
 const LS_EXPANDED = 'rootine-sidebar-expanded';
@@ -33,7 +35,7 @@ function readBool(key: string, fallback: boolean): boolean {
 }
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  const [committedExpanded, setCommittedExpanded] = useState(() => readBool(LS_EXPANDED, true));
+  const [committedExpanded, setCommittedExpanded] = useState(() => readBool(LS_EXPANDED, false));
   const [locked, setLocked] = useState(() => readBool(LS_LOCKED, false));
   const [hover, setHover] = useState(false);
 
@@ -44,16 +46,33 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(LS_LOCKED, locked ? '1' : '0'); } catch { /* ignore */ }
   }, [locked]);
 
+  const lockMode: SidebarState['lockMode'] = !locked
+    ? 'auto'
+    : (committedExpanded ? 'pinned-open' : 'pinned-closed');
+
   const expanded = locked ? committedExpanded : (hover || committedExpanded);
 
   const value = useMemo<SidebarState>(() => ({
+    lockMode,
     expanded,
     committedExpanded,
     locked,
     setHover,
     toggleExpanded: () => setCommittedExpanded((v) => !v),
-    toggleLock: () => setLocked((v) => !v),
-  }), [expanded, committedExpanded, locked]);
+    cycleLockMode: () => {
+      if (lockMode === 'auto') {
+        setLocked(true);
+        setCommittedExpanded(true);
+        return;
+      }
+      if (lockMode === 'pinned-open') {
+        setLocked(true);
+        setCommittedExpanded(false);
+        return;
+      }
+      setLocked(false);
+    },
+  }), [lockMode, expanded, committedExpanded, locked]);
 
   return <SidebarCtx.Provider value={value}>{children}</SidebarCtx.Provider>;
 }

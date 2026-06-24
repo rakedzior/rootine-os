@@ -88,11 +88,18 @@ interface NewTask {
   tags: string[];
   priority: 'high' | 'mid' | 'low';
   dueDates: string[];
+  allDay: boolean;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  reminderMode: 'at_time' | '5m' | '30m' | '1h' | '1d';
   repeatMode: RepeatMode;
   repeatWeekdays: number[];
   repeatEndMode: RepeatEndMode;
   repeatUntil: string;
   repeatCount: number;
+  repeatModeUi: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+  repeatAnchor: 'due_date' | 'completion_date';
   note: string;
 }
 
@@ -243,6 +250,8 @@ function AddTaskModal({
       setRepeatUntil('');
       setRepeatCount(8);
       setNote(task.note ?? '');
+      setRepeatMode(task.repeat_mode === 'daily' ? 'daily' : task.repeat_mode === 'weekly' ? 'weekly' : 'none');
+      if (task.repeat_until) setRepeatUntil(task.repeat_until);
       focusDate(date);
       return;
     }
@@ -294,11 +303,28 @@ function AddTaskModal({
         tags: parsed.tags,
         priority,
         dueDates: isEditing ? selectedDateList.slice(0, 1) : selectedDateList,
+        allDay: true,
+        startTime: '',
+        endDate: '',
+        endTime: '',
+        reminderMode: 'at_time',
         repeatMode: isEditing ? 'none' : repeatMode,
         repeatWeekdays,
         repeatEndMode,
         repeatUntil: isEditing ? '' : repeatUntilClean,
         repeatCount,
+        repeatModeUi: isEditing
+          ? (task?.repeat_mode === 'daily'
+            ? 'daily'
+            : task?.repeat_mode === 'weekly'
+              ? 'weekly'
+              : task?.repeat_mode === 'monthly'
+                ? 'monthly'
+                : task?.repeat_mode === 'yearly'
+                  ? 'yearly'
+                  : 'none')
+          : (repeatMode === 'daily' ? 'daily' : repeatMode === 'weekly' ? 'weekly' : 'none'),
+        repeatAnchor: 'due_date',
         note,
       });
       reset();
@@ -752,6 +778,8 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
   const now = new Date();
   const [view, setView] = useState<'month'|'week'|'day'>('month');
   const [cursor, setCursor] = useState(() => new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+  const [dragTaskId, setDragTaskId] = useState<string | null>(null);
+  const [dropTargetDate, setDropTargetDate] = useState<string | null>(null);
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
@@ -795,18 +823,43 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
       <div key={dateStr}
         className="day-cell"
         onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); onDayClick(dateStr, { x: r.right + 8, y: r.top }); }}
-        onDragOver={(e) => e.preventDefault()}
+        onDragOver={(e) => {
+          if (!dragTaskId) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          setDropTargetDate(dateStr);
+        }}
+        onDragEnter={(e) => {
+          if (!dragTaskId) return;
+          e.preventDefault();
+          setDropTargetDate(dateStr);
+        }}
+        onDragLeave={() => {
+          if (dropTargetDate === dateStr) setDropTargetDate(null);
+        }}
         onDrop={(e) => {
           e.preventDefault();
           const taskId = e.dataTransfer.getData('text/plain');
           const movedTask = tasks.find((item) => item.id === taskId);
+          setDropTargetDate(null);
+          setDragTaskId(null);
           if (movedTask && movedTask.due_date !== dateStr) onMoveTask(movedTask, dateStr);
+        }}
+        onDragEnd={() => {
+          setDropTargetDate(null);
+          setDragTaskId(null);
         }}
         style={{
           minHeight: compact ? 72 : 150, borderRadius:'var(--r-sm)',
-          background: isActive ? 'color-mix(in srgb, var(--acc-a) 24%, var(--surface-inset))' : isCellToday ? 'var(--acc-a-soft)' : 'var(--surface-inset)',
-          border: (isActive || isCellToday) ? '1px solid var(--acc-a)' : '1px solid var(--border-soft)',
-          boxShadow: isActive ? '0 0 0 2px color-mix(in srgb, var(--acc-a) 45%, transparent)' : undefined,
+          background: dropTargetDate === dateStr
+            ? 'color-mix(in srgb, var(--acc-a) 16%, var(--surface-inset))'
+            : (isActive ? 'color-mix(in srgb, var(--acc-a) 24%, var(--surface-inset))' : isCellToday ? 'var(--acc-a-soft)' : 'var(--surface-inset)'),
+          border: dropTargetDate === dateStr
+            ? '1px solid var(--acc-line)'
+            : ((isActive || isCellToday) ? '1px solid var(--acc-a)' : '1px solid var(--border-soft)'),
+          boxShadow: dropTargetDate === dateStr
+            ? '0 0 0 2px color-mix(in srgb, var(--acc-a) 36%, transparent)'
+            : (isActive ? '0 0 0 2px color-mix(in srgb, var(--acc-a) 45%, transparent)' : undefined),
           padding:7, display:'flex', flexDirection:'column', gap:3,
           cursor:'pointer',
           transition:'.14s',
@@ -829,12 +882,24 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
               e.stopPropagation();
               e.dataTransfer.setData('text/plain', t.id);
               e.dataTransfer.effectAllowed = 'move';
+              setDragTaskId(t.id);
+            }}
+            onDragEnd={() => {
+              setDropTargetDate(null);
+              setDragTaskId(null);
             }}
             onClick={(e) => {
               e.stopPropagation();
               onTaskClick(t);
             }}
-            style={{ fontSize:9.5, opacity:t.done ? .75 : 1, textDecoration:t.done?'line-through':'none', cursor:'grab' }}
+            style={{
+              fontSize:9.5,
+              opacity:t.done ? .75 : 1,
+              textDecoration:t.done?'line-through':'none',
+              cursor:'grab',
+              zIndex: dragTaskId === t.id ? 6 : 1,
+              transform: dragTaskId === t.id ? 'scale(1.01)' : 'none',
+            }}
             title="Edytuj zadanie"
           >
             <button
@@ -1419,6 +1484,46 @@ function timeToMinutes(t: string): number | null {
   return Number(m[1]) * 60 + Number(m[2]);
 }
 
+function minutesToReminderOffset(mode: TaskOptionsState['reminderMode']): number {
+  if (mode === 'at_time') return 0;
+  if (mode === '5m') return 5;
+  if (mode === '30m') return 30;
+  if (mode === '1h') return 60;
+  if (mode === '1d') return 24 * 60;
+  return 0;
+}
+
+function combineDateAndTimeToIso(dateStr: string, timeStr: string): string | null {
+  if (!dateStr) return null;
+  const parsedDate = parseDateStr(dateStr);
+  if (!parsedDate) return null;
+  const hasTime = /^\d{1,2}:\d{2}$/.test(timeStr);
+  const [hh, mm] = hasTime ? timeStr.split(':').map(Number) : [0, 0];
+  const dt = new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), hh, mm, 0, 0);
+  return Number.isNaN(dt.getTime()) ? null : dt.toISOString();
+}
+
+function isoFromDateWithOffset(dateStr: string, timeStr: string, offsetMinutes: number): string | null {
+  const base = combineDateAndTimeToIso(dateStr, timeStr);
+  if (!base) return null;
+  const baseMs = new Date(base).getTime();
+  const reminderMs = baseMs - offsetMinutes * 60_000;
+  return Number.isNaN(reminderMs) ? null : new Date(reminderMs).toISOString();
+}
+
+function reminderModeFromTask(startAt: string | null, reminderAt: string | null): TaskOptionsState['reminderMode'] {
+  if (!startAt || !reminderAt) return 'at_time';
+  const startMs = new Date(startAt).getTime();
+  const reminderMs = new Date(reminderAt).getTime();
+  if (Number.isNaN(startMs) || Number.isNaN(reminderMs)) return 'at_time';
+  const diffMinutes = Math.round((startMs - reminderMs) / 60_000);
+  if (diffMinutes === 5) return '5m';
+  if (diffMinutes === 30) return '30m';
+  if (diffMinutes === 60) return '1h';
+  if (diffMinutes === 24 * 60) return '1d';
+  return 'at_time';
+}
+
 function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete }: TaskOptionsPopoverProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const subRef = useRef<HTMLDivElement | null>(null);
@@ -1832,6 +1937,9 @@ export function StartScreen() {
     const startTime = taskOptions.allDay ? '' : taskOptions.scheduledTime;
     const endTime = taskOptions.allDay ? '' : taskOptions.endTime;
     const endDate = taskOptions.endDate || taskOptions.dueDate;
+
+    if (!taskOptions.allDay && !startTime) return;
+
     let durationMinutes: number | null = null;
     const startMin = timeToMinutes(startTime);
     const endMin = timeToMinutes(endTime);
@@ -1842,8 +1950,33 @@ export function StartScreen() {
       const total = dayDiff * 1440 + endMin - startMin;
       durationMinutes = total > 0 ? total : null;
     }
-    const repeatMode = taskOptions.repeatModeUi === 'daily' ? 'daily' : taskOptions.repeatModeUi === 'weekly' ? 'weekly' : 'none';
-    const repeatWeekdays = taskOptions.repeatModeUi === 'weekly' ? [weekdayFromDateStr(taskOptions.dueDate)] : null;
+    if (!taskOptions.allDay && startTime && endTime && durationMinutes == null) return;
+
+    const repeatMode = taskOptions.repeatModeUi;
+    const repeatWeekdays = repeatMode === 'weekly' ? [weekdayFromDateStr(taskOptions.dueDate)] : null;
+    const repeatRule = repeatMode === 'none'
+      ? null
+      : {
+        frequency: repeatMode,
+        interval: 1,
+        anchor: taskOptions.repeatAnchor,
+        days_of_week: repeatWeekdays,
+        until: null,
+      };
+
+    const startAtIso = taskOptions.allDay ? combineDateAndTimeToIso(taskOptions.dueDate, '00:00') : combineDateAndTimeToIso(taskOptions.dueDate, startTime || '00:00');
+    const endAtIso = taskOptions.allDay
+      ? null
+      : (endTime
+        ? combineDateAndTimeToIso(endDate, endTime)
+        : (durationMinutes && startAtIso
+          ? new Date(new Date(startAtIso).getTime() + durationMinutes * 60_000).toISOString()
+          : null));
+
+    const reminderAt = taskOptions.allDay
+      ? null
+      : isoFromDateWithOffset(taskOptions.dueDate, startTime || '00:00', minutesToReminderOffset(taskOptions.reminderMode));
+
     if (taskOptions.editingId) {
       await updateTask.mutateAsync({
         id: taskOptions.editingId,
@@ -1851,10 +1984,16 @@ export function StartScreen() {
           title: parsed.title,
           tags: parsed.tags,
           priority: taskOptions.priority,
+          all_day: taskOptions.allDay,
           due_date: taskOptions.dueDate || null,
           scheduled_time: startTime || null,
+          start_at: startAtIso,
+          end_at: endAtIso,
+          reminder_at: reminderAt,
           duration_minutes: durationMinutes,
           repeat_mode: repeatMode,
+          repeat_rule: repeatRule,
+          repeat_anchor: taskOptions.repeatAnchor,
           repeat_weekdays: repeatWeekdays,
         },
       });
@@ -1862,14 +2001,21 @@ export function StartScreen() {
       await createTask.mutateAsync({
         title: parsed.title,
         tags: parsed.tags,
+        source: 'manual',
         category: null,
         priority: taskOptions.priority,
+        all_day: taskOptions.allDay,
         due_date: taskOptions.dueDate || null,
         scheduled_time: startTime || null,
+        start_at: startAtIso,
+        end_at: endAtIso,
+        reminder_at: reminderAt,
         duration_minutes: durationMinutes,
         note: '',
         series_id: null,
         repeat_mode: repeatMode,
+        repeat_rule: repeatRule,
+        repeat_anchor: taskOptions.repeatAnchor,
         repeat_until: null,
         repeat_weekdays: repeatWeekdays,
       });
@@ -1889,6 +2035,7 @@ export function StartScreen() {
     await createTask.mutateAsync({
       title,
       tags,
+      source: 'quick_add',
       category: null,
       priority: 'mid',
       due_date: todayStr,
@@ -1918,6 +2065,7 @@ export function StartScreen() {
     await createTask.mutateAsync({
       title: parsed.title,
       tags: parsed.tags,
+      source: 'calendar_quick',
       category: null,
       priority: calendarQuick.flagged ? 'high' : 'mid',
       due_date: calendarQuick.date,
@@ -1953,12 +2101,20 @@ export function StartScreen() {
       scheduledTime: startTime,
       endDate,
       endTime,
-      allDay: false,
+      allDay: task.all_day,
       durationMinutes: task.duration_minutes ?? null,
       priority: task.priority ?? 'mid',
-      reminderMode: 'at_time',
-      repeatModeUi: task.repeat_mode === 'daily' ? 'daily' : task.repeat_mode === 'weekly' ? 'weekly' : 'none',
-      repeatAnchor: 'due_date',
+      reminderMode: reminderModeFromTask(task.start_at, task.reminder_at),
+      repeatModeUi: task.repeat_mode === 'daily'
+        ? 'daily'
+        : task.repeat_mode === 'weekly'
+          ? 'weekly'
+          : task.repeat_mode === 'monthly'
+            ? 'monthly'
+            : task.repeat_mode === 'yearly'
+              ? 'yearly'
+              : 'none',
+      repeatAnchor: task.repeat_anchor ?? 'due_date',
       editingId: task.id,
     });
   }
@@ -1969,6 +2125,7 @@ export function StartScreen() {
     setModalInitialTags([]);
   }
   async function handleSaveTask(task: TaskModalPayload) {
+    const primaryDueDate = task.dueDates[0] ?? todayStr;
     if (task.editingId) {
       await updateTask.mutateAsync({
         id: task.editingId,
@@ -1977,7 +2134,27 @@ export function StartScreen() {
           tags: task.tags,
           category: null,
           priority: task.priority,
+          all_day: task.allDay,
           due_date: task.dueDates[0] ?? null,
+          scheduled_time: task.startTime || null,
+          start_at: task.allDay ? combineDateAndTimeToIso(primaryDueDate, '00:00') : combineDateAndTimeToIso(primaryDueDate, task.startTime || '00:00'),
+          end_at: task.allDay
+            ? null
+            : (task.endTime
+              ? combineDateAndTimeToIso(task.endDate || primaryDueDate, task.endTime)
+              : null),
+          reminder_at: task.allDay ? null : isoFromDateWithOffset(primaryDueDate, task.startTime || '00:00', minutesToReminderOffset(task.reminderMode)),
+          repeat_mode: task.repeatModeUi,
+          repeat_rule: task.repeatModeUi === 'none'
+            ? null
+            : {
+              frequency: task.repeatModeUi,
+              interval: 1,
+              anchor: task.repeatAnchor,
+              days_of_week: task.repeatModeUi === 'weekly' ? task.repeatWeekdays : null,
+              until: task.repeatEndMode === 'date' ? task.repeatUntil || null : null,
+            },
+          repeat_anchor: task.repeatAnchor,
           note: task.note,
         },
       });
@@ -1989,13 +2166,32 @@ export function StartScreen() {
       await createTask.mutateAsync({
         title: task.title,
         tags: task.tags,
+        source: task.repeatMode === 'none' ? 'manual' : 'imported',
         category: null,
         priority: task.priority,
         due_date: dueDate || null,
-        scheduled_time: null,
+        all_day: task.allDay,
+        scheduled_time: task.startTime || null,
+        start_at: task.allDay ? combineDateAndTimeToIso(dueDate, '00:00') : combineDateAndTimeToIso(dueDate, task.startTime || '00:00'),
+        end_at: task.allDay
+          ? null
+          : (task.endTime
+            ? combineDateAndTimeToIso(task.endDate || dueDate, task.endTime)
+            : null),
+        reminder_at: task.allDay ? null : isoFromDateWithOffset(dueDate, task.startTime || '00:00', minutesToReminderOffset(task.reminderMode)),
         note: task.note,
         series_id: seriesId,
-        repeat_mode: task.repeatMode,
+        repeat_mode: task.repeatModeUi === 'none' ? task.repeatMode : task.repeatModeUi,
+        repeat_rule: task.repeatModeUi === 'none'
+          ? null
+          : {
+            frequency: task.repeatModeUi,
+            interval: 1,
+            anchor: task.repeatAnchor,
+            days_of_week: task.repeatModeUi === 'weekly' ? task.repeatWeekdays : null,
+            until: task.repeatEndMode === 'date' ? task.repeatUntil || null : null,
+          },
+        repeat_anchor: task.repeatAnchor,
         repeat_until: task.repeatEndMode === 'date' ? task.repeatUntil || null : dueDates[dueDates.length - 1] ?? null,
         repeat_weekdays: task.repeatMode === 'weekly' ? task.repeatWeekdays : null,
       });
@@ -2006,7 +2202,7 @@ export function StartScreen() {
     closeTaskModal();
   }
   function handleMoveTask(task: SupabaseTask, dateStr: string) {
-    updateTask.mutate({ id: task.id, patch: { due_date: dateStr } });
+    updateTask.mutate({ id: task.id, patch: { due_date: dateStr, source: 'drag_drop' } });
   }
   async function handleDeleteSingle(task: SupabaseTask) {
     await deleteTask.mutateAsync(task.id);

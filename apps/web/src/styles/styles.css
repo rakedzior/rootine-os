@@ -88,31 +88,35 @@
 
 /* ============================================================ THEME — Graphite Cool Ice v3 (dark control-center) */
 [data-theme="dark"] {
-  --bg-0: #0c1016; --bg-1: #11161f;
-  --surface: #171d28; --surface-2: #1e2531; --surface-3: #131822; --surface-inset: var(--surface-3);
-  --border: rgba(150, 170, 200, .13); --border-soft: rgba(150, 170, 200, .07); --border-strong: rgba(150, 170, 200, .24);
-  --ink: #e9eef6; --ink-2: #a6b3c5; --ink-3: #6e7c90; --ink-4: #47535f;
+  --bg-0: #0d131b; --bg-1: #111a24;
+  --surface: #141d29; --surface-2: #1b2836; --surface-3: #25364a; --surface-inset: #111a24;
+  --border: #25364a; --border-soft: rgba(37, 54, 74, .62); --border-strong: rgba(125, 211, 252, .36);
+  --ink: #e6edf5; --ink-2: #a7b4c2; --ink-3: #78899a; --ink-4: rgba(230, 237, 245, .38);
 
-  /* cool ice-blue accent — reserved for active items, CTAs, focus rings */
-  --acc: #5aa2ea; --acc-ink: #93c2f4; --acc-soft: rgba(90, 162, 234, .15); --acc-line: rgba(90, 162, 234, .34);
-  --acc-solid: #4f97e6; --on-acc: #f3f9ff;
-  --acc-b: #6fb0ef; --acc-b-ink: #9cc8f6; --acc-b-soft: rgba(111, 176, 239, .16);
-  --success: #5cba93; --success-ink: #76d0aa; --success-soft: rgba(92, 186, 147, .16);
+  /* Graphite Cool Ice v3 semantic accents */
+  --acc: #7dd3fc; --acc-ink: #b9e9ff; --acc-soft: rgba(125, 211, 252, .14); --acc-line: rgba(125, 211, 252, .48);
+  --acc-solid: #38bdf8; --on-acc: #f3fbff;
+  --acc-b: #5eead4; --acc-b-ink: #5eead4; --acc-b-soft: rgba(94, 234, 212, .16);
+  --success: #34d399; --success-ink: #6ee7b7; --success-soft: rgba(52, 211, 153, .17);
 
-  --warn: #e0a34a; --warn-ink: #f0bd6e; --warn-soft: rgba(224, 163, 74, .16);
-  --danger: #f06a5e; --danger-ink: #ff8a7e; --danger-soft: rgba(240, 106, 94, .16);
-  --info: #7fa6d8; --info-ink: #a3c2ec; --info-soft: rgba(127, 166, 216, .16);
+  --warn: #fbbf24; --warn-ink: #fcd34d; --warn-soft: rgba(251, 191, 36, .16);
+  --danger: #f87171; --danger-ink: #fca5a5; --danger-soft: rgba(248, 113, 113, .16);
+  --info: #38bdf8; --info-ink: #7dd3fc; --info-soft: rgba(56, 189, 248, .18);
 
-  --ev-blue: #7fa6d8; --ev-blue-bg: rgba(127, 166, 216, .18);
-  --ev-green: #5cba93; --ev-green-bg: rgba(92, 186, 147, .16);
-  --ev-clay: #d6a07f; --ev-clay-bg: rgba(214, 160, 127, .18);
-  --ev-lav: #a594c8; --ev-lav-bg: rgba(165, 148, 200, .18);
+  --ev-blue: #7dd3fc; --ev-blue-bg: rgba(125, 211, 252, .16);
+  --ev-green: #34d399; --ev-green-bg: rgba(52, 211, 153, .16);
+  --ev-clay: #fbbf24; --ev-clay-bg: rgba(251, 191, 36, .15);
+  --ev-lav: #a78bfa; --ev-lav-bg: rgba(167, 139, 250, .16);
 
-  --sh-1: 0 1px 2px rgba(0, 0, 0, .4);
-  --sh-2: 0 1px 2px rgba(0, 0, 0, .4), 0 12px 32px -16px rgba(0, 0, 0, .7);
-  --sh-3: 0 2px 8px rgba(0, 0, 0, .5), 0 20px 50px -20px rgba(0, 0, 0, .8);
-  --sh-pop: 0 24px 64px -18px rgba(0, 0, 0, .85);
-  --ring: 0 0 0 3px var(--acc-soft);
+  --text-disabled: rgba(230, 237, 245, .38);
+  --accent-special: #a78bfa;
+  --accent-hot: #f472b6;
+
+  --sh-1: 0 1px 2px rgba(2, 10, 20, .55);
+  --sh-2: 0 1px 2px rgba(2, 10, 20, .55), 0 14px 36px -18px rgba(8, 24, 44, .9);
+  --sh-3: 0 2px 8px rgba(2, 10, 20, .6), 0 24px 56px -22px rgba(8, 24, 44, .95);
+  --sh-pop: 0 28px 72px -20px rgba(3, 12, 24, .96);
+  --ring: 0 0 0 3px color-mix(in srgb, var(--acc) 34%, transparent);
 }
 
 /* ============================================================ THEME — cool bright (blue-tinted, green accents) */
@@ -643,6 +647,15 @@ button.active .sub-tab-icon { opacity: 1; }
 .btn-primary:hover { filter: brightness(1.06); transform: translateY(-1px); box-shadow: var(--sh-2); }
 .btn-primary:active { transform: translateY(0); box-shadow: var(--sh-1); }
 .btn-primary svg { width: 14px; height: 14px; }
+[data-theme="dark"] .btn-primary {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 56%, var(--acc-solid)), var(--acc-solid));
+  border-color: color-mix(in srgb, var(--acc) 46%, transparent);
+  color: var(--on-acc);
+}
+[data-theme="dark"] .btn-primary:hover {
+  filter: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 62%, var(--acc-solid)), color-mix(in srgb, var(--acc-solid) 94%, #0f1724));
+}
 
 .btn-secondary {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -2139,13 +2152,19 @@ button.task-tag-badge {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 14px 12px;
+  padding: 14px 12px 62px; /* extra bottom room for the docked lock button */
   background: color-mix(in srgb, var(--bg-1) 80%, var(--surface));
   border-right: 1px solid var(--border);
   box-shadow: var(--sh-1);
   transition: width var(--t);
 }
-[data-theme="dark"] .sidebar, [data-theme="magenta"] .sidebar { background: color-mix(in srgb, var(--bg-1) 64%, var(--surface)); }
+[data-theme="dark"] .sidebar, [data-theme="magenta"] .sidebar {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 92%, var(--bg-0) 8%),
+    color-mix(in srgb, var(--surface-inset) 84%, var(--bg-0) 16%)
+  );
+}
 
 /* brand / head */
 .sidebar-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; padding: 2px; min-height: 40px; }
@@ -2228,19 +2247,24 @@ button.task-tag-badge {
 .sb-profile-menu button.danger svg { color: var(--danger-ink); }
 
 .sb-footer-actions { display: flex; align-items: center; gap: 6px; }
+/* lock button pinned to the absolute bottom of the rail */
+.sb-lock-dock { position: absolute; bottom: 14px; left: 12px; right: 12px; display: flex; flex-direction: column; }
 .sb-item-sm { height: 40px; flex: 1; font-size: 13px; }
-.sb-lock { position: relative; display: flex; align-items: center; gap: 8px; flex-shrink: 0; height: 40px; padding: 0 12px; border-radius: 10px; border: 0; background: transparent; color: var(--ink-3); cursor: pointer; font-size: 12px; font-weight: 500; transition: var(--t); }
-.sb-lock:hover { background: var(--surface-2); color: var(--ink-2); }
+/* sb-lock extends sb-item — reset button defaults, then state overrides */
+.sb-lock { border: 0; background: transparent; cursor: pointer; font-family: inherit; appearance: none; -webkit-appearance: none; }
+.sb-lock,
+.sb-lock:hover,
+.sb-lock:focus,
+.sb-lock:focus-visible { box-shadow: none; }
 .sb-lock.is-on { color: var(--acc-ink); background: var(--acc-soft); }
-.sb-lock-label { white-space: nowrap; }
+.sb-lock.is-on .sb-item-ic { color: var(--acc-ink); }
 
 /* collapsed-state tooltip (shown when sidebar is pinned collapsed) */
 .sb-tooltip { display: none; }
 .sidebar[data-collapsed="true"] .sb-item:hover > .sb-tooltip,
 .sidebar[data-collapsed="true"] .sb-weather:hover > .sb-tooltip,
 .sidebar[data-collapsed="true"] .sb-time:hover > .sb-tooltip,
-.sidebar[data-collapsed="true"] .sb-profile:hover > .sb-tooltip,
-.sidebar[data-collapsed="true"] .sb-lock:hover > .sb-tooltip {
+.sidebar[data-collapsed="true"] .sb-profile:hover > .sb-tooltip {
   display: block; position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%);
   background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 8px;
   padding: 6px 10px; font-size: 12px; font-weight: 500; white-space: nowrap; box-shadow: var(--sh-pop);
@@ -2251,7 +2275,6 @@ button.task-tag-badge {
 .sidebar[data-collapsed="true"] .sb-brand-text,
 .sidebar[data-collapsed="true"] .sb-item-label,
 .sidebar[data-collapsed="true"] .sb-item-badge,
-.sidebar[data-collapsed="true"] .sb-lock-label,
 .sidebar[data-collapsed="true"] .sb-weather-text,
 .sidebar[data-collapsed="true"] .sb-time-text,
 .sidebar[data-collapsed="true"] .sb-profile-id { display: none; }
@@ -2261,8 +2284,7 @@ button.task-tag-badge {
 .sidebar[data-collapsed="true"] .sb-time,
 .sidebar[data-collapsed="true"] .sb-profile { justify-content: center; gap: 0; padding-left: 0; padding-right: 0; width: 48px; margin: 0 auto; }
 .sidebar[data-collapsed="true"] .sb-footer-actions { flex-direction: column; gap: 3px; }
-.sidebar[data-collapsed="true"] .sb-item-sm,
-.sidebar[data-collapsed="true"] .sb-lock { width: 48px; justify-content: center; gap: 0; padding: 0; margin: 0 auto; }
+.sidebar[data-collapsed="true"] .sb-item-sm { width: 48px; justify-content: center; gap: 0; padding: 0; margin: 0 auto; }
 .sidebar[data-collapsed="true"] .sb-profile-menu { left: 0; }
 
 @media (max-width: 860px) {

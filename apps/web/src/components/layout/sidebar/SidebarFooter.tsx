@@ -4,7 +4,6 @@ import { SETTINGS_ITEM } from './navConfig';
 import { WeatherWidget } from './WeatherWidget';
 import { TimeWidget } from './TimeWidget';
 import { UserProfileWidget } from './UserProfileWidget';
-import { SidebarLockButton } from './SidebarLockButton';
 
 /** Bottom cluster: weather · time · profile · settings · lock. */
 export function SidebarFooter({ expanded }: { expanded: boolean }) {
@@ -29,7 +28,6 @@ export function SidebarFooter({ expanded }: { expanded: boolean }) {
           <span className="sb-item-label">{SETTINGS_ITEM.label}</span>
           {!expanded && <span className="sb-tooltip" role="tooltip">{SETTINGS_ITEM.label}</span>}
         </NavLink>
-        <SidebarLockButton expanded={expanded} />
       </div>
     </div>
   );

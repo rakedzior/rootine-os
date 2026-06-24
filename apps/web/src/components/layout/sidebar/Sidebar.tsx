@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { useSidebar } from './SidebarContext';
 import { NAV_ITEMS } from './navConfig';
 import { SidebarItem } from './SidebarItem';
-import { SidebarToggleButton } from './SidebarToggleButton';
 import { SidebarFooter } from './SidebarFooter';
+import { SidebarLockButton } from './SidebarLockButton';
 
 /** The left navigation rail. When unlocked, hover expands it (pushing content);
  *  a short close delay keeps it from collapsing on an accidental cursor graze. */
@@ -36,7 +36,6 @@ export function Sidebar() {
           <span className="sb-logo">R</span>
           <span className="sb-brand-text"><b>Rootine</b> OS</span>
         </Link>
-        <SidebarToggleButton />
       </div>
 
       {/* Primary nav */}
@@ -47,6 +46,11 @@ export function Sidebar() {
       </nav>
 
       <SidebarFooter expanded={expanded} />
+
+      {/* Lock button pinned to the very bottom so it never overflows the rail */}
+      <div className="sb-lock-dock">
+        <SidebarLockButton expanded={expanded} />
+      </div>
     </aside>
   );
 }
