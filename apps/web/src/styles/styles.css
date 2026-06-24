@@ -26,6 +26,10 @@
 
   /* — spacing — */
   --pad: 20px; --gap: 16px;
+  /* Page-edge margin (sidebar↔content and content↔right-edge) — kept distinct from --pad
+     (cards/modals) so the global full-width rule (see .lay-page/.module-page) can use a more
+     generous, consistent margin without puffing up every card and modal too. */
+  --page-pad: 28px;
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
   --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
 
@@ -541,7 +545,7 @@ button.active .sub-tab-icon { opacity: 1; }
 .module-page > div:not(.module-header):not(.modal-overlay):not(.task-options-pop):not(.task-quick-pop):not(.task-options-subpop),
 .module-page > section:not(.module-header),
 .module-page > header {
-  padding: var(--gap) var(--pad);
+  padding: var(--gap) var(--page-pad);
   width: 100%;
   box-sizing: border-box;
   min-height: 0;
@@ -2018,7 +2022,7 @@ button.task-tag-badge {
 /* ============================================================ RESPONSIVE */
 @media (max-width: 1200px) { .main-grid { grid-template-columns: 280px minmax(0, 1fr) 300px; } }
 @media (max-width: 1000px) { .main-grid { grid-template-columns: 1fr; } .form-grid { grid-template-columns: 1fr; } }
-@media (max-width: 600px) { :root { --pad: 16px; --gap: 12px; } .page-header h1 { font-size: 22px; } .greet { font-size: 30px; } }
+@media (max-width: 600px) { :root { --pad: 16px; --gap: 12px; --page-pad: 16px; } .page-header h1 { font-size: 22px; } .greet { font-size: 30px; } }
 
 /* ============================================================ THEME — coastal retreat (teal + brown) */
 [data-theme="coastal"] {
@@ -2317,11 +2321,11 @@ button.task-tag-badge {
 .sb-lock-dock { position: absolute; bottom: 14px; left: 12px; right: 12px; display: flex; flex-direction: column; }
 .sb-item-sm { height: 40px; flex: 1; font-size: 13px; }
 /* sb-lock extends sb-item — reset button defaults, then state overrides */
-.sb-lock { border: 0; background: transparent; cursor: pointer; font-family: inherit; appearance: none; -webkit-appearance: none; }
+.sb-lock { border: 1px solid transparent; background: transparent; cursor: pointer; font-family: inherit; appearance: none; -webkit-appearance: none; }
 .sb-lock,
 .sb-lock:hover,
-.sb-lock:focus,
-.sb-lock:focus-visible { box-shadow: none; }
+.sb-lock:focus { box-shadow: none; }
+.sb-lock:focus-visible { outline: none; box-shadow: var(--ring); }
 .sb-lock.is-on {
   color: var(--accent-ice);
   background: color-mix(in srgb, var(--accent-ice) 12%, transparent);
@@ -2363,7 +2367,10 @@ button.task-tag-badge {
 }
 
 /* ============================================================ LAYOUT PRIMITIVES (shared, lay-*) */
-.lay-page { width: 100%; max-width: 1680px; margin: 0 auto; padding: var(--pad); display: flex; flex-direction: column; gap: var(--gap); box-sizing: border-box; min-height: 0; }
+/* No max-width: every tab fills the space between the sidebar and the right edge of the
+   window (global rule — see Sport's reference build-out). Grids below are auto-fit/auto-fill
+   so they reflow into more columns on wide screens instead of leaving dead space. */
+.lay-page { width: 100%; padding: var(--page-pad); display: flex; flex-direction: column; gap: var(--gap); box-sizing: border-box; min-height: 0; }
 .lay-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--lay-col-min, 280px)), 1fr)); gap: var(--gap); align-items: start; }
 .lay-cols { display: grid; grid-template-columns: var(--lay-cols, 1fr); gap: var(--gap); align-items: stretch; min-height: 0; }
 @media (max-width: 900px) { .lay-cols { grid-template-columns: 1fr; } }

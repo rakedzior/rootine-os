@@ -17,8 +17,8 @@ const TABS: { tab: Tab; to: string; label: string }[] = [
 
 export function SettingsScreen({ tab = 'account' }: { tab?: Tab }) {
   return (
-    <main className="grid" style={{ gridTemplateColumns: '1fr', maxWidth: 760 }}>
-      <section className="col">
+    <main className="lay-page">
+      <section className="col" style={{ width: '100%', minWidth: 0 }}>
         <article className="card session">
           <div className="greet">Ustawienia</div>
           <nav className="nav" style={{ marginTop: 16, flexWrap: 'wrap' }}>

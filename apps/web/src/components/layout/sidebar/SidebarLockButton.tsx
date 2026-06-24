@@ -24,7 +24,7 @@ export function SidebarLockButton({ expanded }: { expanded: boolean }) {
       aria-label={label}
       title={expanded ? undefined : label}
     >
-      <span className="sb-item-ic"><Icon name={iconName} size={18} /></span>
+      <span className="sb-item-ic"><Icon name={iconName} size={20} /></span>
       <span className="sb-item-label">{text}</span>
       {!expanded && <span className="sb-tooltip" role="tooltip">{label}</span>}
     </button>

@@ -25,7 +25,6 @@ export const NAV_ITEMS: NavItem[] = [
   { key: 'office', path: '/office', label: 'Biuro', icon: 'office' },
   { key: 'work', path: '/work', label: 'Praca', icon: 'work' },
   { key: 'travel', path: '/travel', label: 'Podróże', icon: 'travel' },
-  { key: 'documents', path: '/documents', label: 'Dokumenty', icon: 'documents' },
   { key: 'notes', path: '/notes', label: 'Notatki', icon: 'notes' },
 ];
 

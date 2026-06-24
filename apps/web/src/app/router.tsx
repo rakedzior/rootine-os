@@ -17,7 +17,6 @@ const BiuroScreen = lazy(() => import('@/modules/office/BiuroScreen').then((m) =
 const TravelScreen = lazy(() => import('@/modules/travel/TravelScreen').then((m) => ({ default: m.TravelScreen })));
 const NotesScreen = lazy(() => import('@/modules/notes/NotesScreen').then((m) => ({ default: m.NotesScreen })));
 const PracaScreen = lazy(() => import('@/modules/work/PracaScreen').then((m) => ({ default: m.PracaScreen })));
-const DocumentsScreen = lazy(() => import('@/modules/documents/DocumentsScreen').then((m) => ({ default: m.DocumentsScreen })));
 const SettingsScreen = lazy(() => import('@/features/settings/SettingsScreen').then((m) => ({ default: m.SettingsScreen })));
 
 function RouteFallback() {
@@ -60,7 +59,6 @@ export const router = createBrowserRouter([
       { path: 'travel', element: lazyRoute(<TravelScreen />) },
       { path: 'notes', element: lazyRoute(<NotesScreen />) },
       { path: 'work', element: lazyRoute(<PracaScreen />) },
-      { path: 'documents', element: lazyRoute(<DocumentsScreen />) },
       { path: 'settings', element: lazyRoute(<SettingsScreen />) },
       { path: 'settings/profile', element: lazyRoute(<SettingsScreen tab="profile" />) },
       { path: 'settings/integrations', element: lazyRoute(<SettingsScreen tab="integrations" />) },

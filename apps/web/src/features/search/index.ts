@@ -117,7 +117,7 @@ function buildIndex(): SearchResult[] {
 
   results.push(
     { id: 'action:settings-integrations', group: 'action', title: 'Integracje', subtitle: 'Ustawienia', path: '/settings/integrations', keywords: ['google calendar', 'strava', 'połącz'] },
-    { id: 'action:settings-personalization', group: 'action', title: 'Zmień motyw', subtitle: 'Ustawienia', path: '/settings/personalization', keywords: ['personalizacja', 'wygląd', 'ciemny', 'jasny'] },
+    { id: 'action:settings-personalization', group: 'action', title: 'Zmień motyw', subtitle: 'Ustawienia', path: '/settings/profile', keywords: ['personalizacja', 'wygląd', 'ciemny', 'jasny'] },
     { id: 'action:settings-modules', group: 'action', title: 'Zarządzaj modułami', subtitle: 'Ustawienia', path: '/settings/modules', keywords: ['układ aplikacji', 'widoczność'] },
     { id: 'action:settings-security', group: 'action', title: 'Bezpieczeństwo', subtitle: 'Ustawienia', path: '/settings/security', keywords: ['hasło', 'zmiana hasła', 'mfa'] },
     { id: 'action:settings-account', group: 'action', title: 'Konto i eksport danych', subtitle: 'Ustawienia', path: '/settings', keywords: ['eksport', 'usuń konto'] },

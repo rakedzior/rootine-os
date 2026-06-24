@@ -244,11 +244,12 @@ interface WeatherModalProps {
   weather: WeatherData | null;
   loading: boolean;
   error: boolean;
+  needsCity?: boolean;
   onClose: () => void;
   onSearch?: (city: string) => void;
 }
 
-export function WeatherModal({ open, weather, loading, error, onClose, onSearch }: WeatherModalProps) {
+export function WeatherModal({ open, weather, loading, error, needsCity, onClose, onSearch }: WeatherModalProps) {
   const chart = weather?.next24 ?? [];
 
   return (
@@ -262,6 +263,16 @@ export function WeatherModal({ open, weather, loading, error, onClose, onSearch 
       )}
       {weather && (
         <div style={{ display: 'grid', gap: 16 }}>
+          {needsCity && (
+            <div className="auth-banner warn">
+              Pokazuję domyślną lokalizację. Wpisz miejscowość, aby dopasować pogodę do siebie.
+            </div>
+          )}
+          {error && (
+            <div className="auth-banner warn">
+              Nie udało się odświeżyć pogody. Pokazuję ostatnie dostępne dane.
+            </div>
+          )}
           <LocationBar weather={weather} onSearch={onSearch} />
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
@@ -327,7 +338,7 @@ function ManualOnly({ onSearch }: { onSearch: (city: string) => void }) {
   const [city, setCity] = useState('');
   return (
     <div style={{ display: 'flex', gap: 8 }}>
-      <input className="input" placeholder="Wpisz miejscowość…" value={city} onChange={(e) => setCity(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && city.trim()) onSearch(city.trim()); }} style={{ height: 34 }} autoFocus />
+      <input className="input" placeholder="Wpisz miejscowość..." value={city} onChange={(e) => setCity(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && city.trim()) onSearch(city.trim()); }} style={{ height: 34 }} autoFocus />
       <button className="btn btn-primary btn-sm" onClick={() => city.trim() && onSearch(city.trim())}>Pokaż pogodę</button>
     </div>
   );
