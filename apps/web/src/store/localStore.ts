@@ -218,12 +218,15 @@ export interface WorkProject {
   workContextId: string; name: string; description: string;
   status: TaskStatus; deadline?: string; progress: number; notes: string;
 }
+export interface WorkLink { label: string; url: string; }
+
 export interface WorkTask {
   id: string; createdAt: string; updatedAt: string;
   workContextId: string; projectId?: string; parentTaskId?: string;
   title: string; description: string; status: TaskStatus;
   priority: Priority; dueDate?: string; dueTime?: string;
   notes: string; subtasks: WorkTask[];
+  links?: WorkLink[];
 }
 
 // — NOTES —

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, SubTabs, IcoTrash } from '@/components/common';
 import { useLocalStore, type Trip, type WishlistPlace } from '@/store/localStore';
 import '@/styles/travel.css';
 
@@ -302,12 +302,25 @@ function TripsRail({ trips, selectedId, onSelect, onAdd }: { trips: Trip[]; sele
   );
 }
 
+const TRIP_TABS = [
+  { id: 'plan', label: 'Plan' },
+  { id: 'rezerwacje', label: 'Rezerwacje' },
+  { id: 'noclegi', label: 'Noclegi' },
+  { id: 'transport', label: 'Transport' },
+  { id: 'budzet', label: 'Budżet' },
+  { id: 'pakowanie', label: 'Lista pakowania' },
+  { id: 'dokumenty', label: 'Dokumenty' },
+  { id: 'notatki', label: 'Notatki' },
+];
+
 function TripCentral({ trip, packingState, onTogglePacking, onDelete }: { trip: Trip; packingState: Record<string, boolean>; onTogglePacking: (id: string, fallback: boolean) => void; onDelete: () => void }) {
+  const [tab, setTab] = useState('plan');
   const budget = buildBudget(trip);
   const lodgings = buildLodgings(trip);
   const transport = buildTransport(trip);
   const tripDays = daysBetween(trip.startDate, trip.endDate);
   const budgetPct = Math.min(100, Math.round((budget.reserved / Math.max(trip.budget ?? budget.reserved, 1)) * 100));
+  const budgetTotal = budget.rows.reduce((sum, row) => sum + row.amount, 0);
 
   return (
     <main className="travel-central">
@@ -341,87 +354,136 @@ function TripCentral({ trip, packingState, onTogglePacking, onDelete }: { trip: 
         </div>
       </section>
 
-      <div className="travel-central-grid">
-        <section className="travel-card travel-packing-card">
-          <TravelSectionTitle code="A" title="Lista pakowania" />
-          <div className="travel-pack-list">
-            {PACKING_ITEMS.map((item) => {
-              const checked = packingState[item.id] ?? item.packed;
-              return (
-                <button key={item.id} className={`travel-pack-item ${checked ? 'is-done' : ''}`} type="button" onClick={() => onTogglePacking(item.id, item.packed)}>
-                  <span><TravelIcon name="check" /></span>
-                  <strong>{item.label}</strong>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+      <SubTabs tabs={TRIP_TABS} active={tab} onChange={setTab} />
 
-        <section className="travel-card travel-plan-card">
-          <TravelSectionTitle code="B" title="Noclegi" />
-          <div className="travel-table">
-            <div className="travel-table-head"><span>Nazwa</span><span>Miejscowość</span><span>Daty</span><span>Cena</span><span>Link</span></div>
-            {lodgings.map((row) => (
-              <div className="travel-table-row" key={row.name}>
-                <span>{row.name}</span><span>{row.place}</span><span>{row.dates}</span><strong>{fmtPLN(row.price)}</strong><a href="#">{row.link}</a>
+      <div className="travel-detail-body">
+        {tab === 'plan' && (
+          <section className="travel-card travel-info-card">
+            <TravelSectionTitle code="A" title="Plan i ważne informacje" />
+            <div className="travel-info-grid">
+              <TravelInfo icon="shield" text="Paszport ważny do 20.12.2028" ok />
+              <TravelInfo icon="document" text="Ubezpieczenie podróżne aktywne" ok />
+              <TravelInfo icon="card" text="Karta eSIM gotowa do aktywacji" ok />
+              <TravelInfo icon="info" text="Sprawdź wymogi wjazdowe przed lotem" />
+            </div>
+          </section>
+        )}
+
+        {tab === 'rezerwacje' && (
+          <section className="travel-card travel-plan-card">
+            <TravelSectionTitle code="B" title="Rezerwacje" />
+            {lodgings.length + transport.length === 0 ? (
+              <EmptyState title="Brak rezerwacji" desc="Noclegi i transport pojawią się tutaj." />
+            ) : (
+              <div className="travel-table">
+                <div className="travel-table-head"><span>Typ</span><span>Nazwa / trasa</span><span>Data</span><span>Cena</span><span></span></div>
+                {lodgings.map((row) => (
+                  <div className="travel-table-row" key={`l-${row.name}`}>
+                    <span>Nocleg</span><span>{row.name} · {row.place}</span><span>{row.dates}</span><strong>{fmtPLN(row.price)}</strong><a href="#">{row.link}</a>
+                  </div>
+                ))}
+                {transport.map((row) => (
+                  <div className="travel-table-row" key={`t-${row.type}-${row.route}`}>
+                    <span>{row.type}</span><span>{row.route} · {row.carrier}</span><span>{row.date}</span><strong>{fmtPLN(row.price)}</strong><span /></div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            )}
+          </section>
+        )}
 
-        <section className="travel-card travel-budget-card">
-          <TravelSectionTitle code="D" title="Planowany budżet" />
-          <div className="travel-budget-list">
-            {budget.rows.map((row) => {
-              const pct = Math.round((row.amount / Math.max(trip.budget ?? budget.rows.reduce((sum, item) => sum + item.amount, 0), 1)) * 100);
-              return (
-                <div className="travel-budget-row" key={row.label}>
-                  <span>{row.label}</span>
-                  <strong>{fmtPLN(row.amount)}</strong>
-                  <em>{pct}%</em>
-                  <div className={`travel-progress travel-tone-${row.tone}`}><i style={{ width: `${Math.min(100, pct)}%` }} /></div>
+        {tab === 'noclegi' && (
+          <section className="travel-card travel-plan-card">
+            <TravelSectionTitle code="C" title="Noclegi" />
+            <div className="travel-table">
+              <div className="travel-table-head"><span>Nazwa</span><span>Miejscowość</span><span>Daty</span><span>Cena</span><span>Link</span></div>
+              {lodgings.map((row) => (
+                <div className="travel-table-row" key={row.name}>
+                  <span>{row.name}</span><span>{row.place}</span><span>{row.dates}</span><strong>{fmtPLN(row.price)}</strong><a href="#">{row.link}</a>
                 </div>
-              );
-            })}
-          </div>
-          <div className="travel-budget-sum">
-            <span>Suma</span>
-            <strong>{fmtPLN(budget.rows.reduce((sum, row) => sum + row.amount, 0))}</strong>
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
-        <section className="travel-card travel-transport-card">
-          <TravelSectionTitle code="C" title="Transport" />
-          <div className="travel-table">
-            <div className="travel-table-head"><span>Typ</span><span>Trasa / szczegóły</span><span>Data</span><span>Przewoźnik</span><span>Cena</span></div>
-            {transport.map((row) => (
-              <div className="travel-table-row" key={`${row.type}-${row.route}`}>
-                <span>{row.type}</span><span>{row.route}</span><span>{row.date}</span><span>{row.carrier}</span><strong>{fmtPLN(row.price)}</strong>
-              </div>
-            ))}
-          </div>
-        </section>
+        {tab === 'transport' && (
+          <section className="travel-card travel-transport-card">
+            <TravelSectionTitle code="D" title="Transport" />
+            <div className="travel-table">
+              <div className="travel-table-head"><span>Typ</span><span>Trasa / szczegóły</span><span>Data</span><span>Przewoźnik</span><span>Cena</span></div>
+              {transport.map((row) => (
+                <div className="travel-table-row" key={`${row.type}-${row.route}`}>
+                  <span>{row.type}</span><span>{row.route}</span><span>{row.date}</span><span>{row.carrier}</span><strong>{fmtPLN(row.price)}</strong>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
-        <section className="travel-card travel-notes-card">
-          <TravelSectionTitle code="E" title="Notatki" />
-          <ul>
-            {(trip.notes ? trip.notes.split('\n') : [
-              'Sprawdzić wymagane dokumenty przed wyjazdem',
-              'Kupić lokalną kartę SIM lub eSIM',
-              'Zarezerwować transfer z lotniska',
-            ]).map((note) => <li key={note}>{note}</li>)}
-          </ul>
-        </section>
+        {tab === 'budzet' && (
+          <section className="travel-card travel-budget-card">
+            <TravelSectionTitle code="E" title="Planowany budżet" />
+            <div className="travel-budget-list">
+              {budget.rows.map((row) => {
+                const pct = Math.round((row.amount / Math.max(trip.budget ?? budgetTotal, 1)) * 100);
+                return (
+                  <div className="travel-budget-row" key={row.label}>
+                    <span>{row.label}</span>
+                    <strong>{fmtPLN(row.amount)}</strong>
+                    <em>{pct}%</em>
+                    <div className={`travel-progress travel-tone-${row.tone}`}><i style={{ width: `${Math.min(100, pct)}%` }} /></div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="travel-budget-sum">
+              <span>Suma</span>
+              <strong>{fmtPLN(budgetTotal)}</strong>
+            </div>
+          </section>
+        )}
 
-        <section className="travel-card travel-info-card">
-          <TravelSectionTitle code="F" title="Ważne informacje" />
-          <div className="travel-info-grid">
-            <TravelInfo icon="shield" text="Paszport ważny do 20.12.2028" ok />
-            <TravelInfo icon="document" text="Ubezpieczenie podróżne aktywne" ok />
-            <TravelInfo icon="card" text="Karta eSIM gotowa do aktywacji" ok />
-            <TravelInfo icon="info" text="Sprawdź wymogi wjazdowe przed lotem" />
-          </div>
-        </section>
+        {tab === 'pakowanie' && (
+          <section className="travel-card travel-packing-card">
+            <TravelSectionTitle code="F" title="Lista pakowania" />
+            <div className="travel-pack-list">
+              {PACKING_ITEMS.map((item) => {
+                const checked = packingState[item.id] ?? item.packed;
+                return (
+                  <button key={item.id} className={`travel-pack-item ${checked ? 'is-done' : ''}`} type="button" onClick={() => onTogglePacking(item.id, item.packed)}>
+                    <span><TravelIcon name="check" /></span>
+                    <strong>{item.label}</strong>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {tab === 'dokumenty' && (
+          <section className="travel-card travel-info-card">
+            <TravelSectionTitle code="G" title="Dokumenty" />
+            <div className="travel-info-grid">
+              <TravelInfo icon="document" text="Paszport / dowód" />
+              <TravelInfo icon="shield" text="Polisa ubezpieczeniowa" />
+              <TravelInfo icon="card" text="Bilety i potwierdzenia rezerwacji" />
+              <TravelInfo icon="info" text="Wizy / wymagane pozwolenia" />
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 12 }}>Załączanie plików pojawi się w kolejnej wersji.</p>
+          </section>
+        )}
+
+        {tab === 'notatki' && (
+          <section className="travel-card travel-notes-card">
+            <TravelSectionTitle code="H" title="Notatki" />
+            <ul>
+              {(trip.notes ? trip.notes.split('\n') : [
+                'Sprawdzić wymagane dokumenty przed wyjazdem',
+                'Kupić lokalną kartę SIM lub eSIM',
+                'Zarezerwować transfer z lotniska',
+              ]).map((note) => <li key={note}>{note}</li>)}
+            </ul>
+          </section>
+        )}
       </div>
     </main>
   );

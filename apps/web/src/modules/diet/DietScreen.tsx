@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, ProgressBar, PageHeader, MoreMenu } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, ProgressBar, PageHeader, MoreMenu, SubTabs } from '@/components/common';
 import {
   useAddMealItem,
   useAddWater,
@@ -117,9 +117,19 @@ export function DietScreen() {
   );
 }
 
+type DietTab = 'day' | 'week' | 'month' | 'products' | 'templates';
+const DIET_TABS = [
+  { id: 'day', label: 'Dzień' },
+  { id: 'week', label: 'Tydzień' },
+  { id: 'month', label: 'Miesiąc' },
+  { id: 'products', label: 'Produkty' },
+  { id: 'templates', label: 'Szablony' },
+];
+
 function DietHub() {
   const [selectedDate, setSelectedDate] = useState(todayStr());
   const [viewMode, setViewMode] = useState<DietViewMode>('day');
+  const [tab, setTab] = useState<DietTab>('day');
   const [config, setConfig] = useState<DietConfig>(() => loadJson(DIET_CONFIG_KEY, { ...DEFAULTS, meals: DEFAULT_MEALS, goalMode: 'fixed', productCategories: ['Nabial', 'Mieso', 'Warzywa', 'Owoce', 'Produkty suche', 'Gotowe'] }));
   const [mealTemplates, setMealTemplates] = useState<MealTemplate[]>(() => loadJson(MEAL_TEMPLATES_KEY, []));
   const [foodMeta, setFoodMeta] = useState<Record<string, FoodMeta>>(() => loadJson(FOOD_META_KEY, {}));
@@ -140,7 +150,6 @@ function DietHub() {
   const [defaultMeal, setDefaultMeal] = useState(config.meals[0] ?? DEFAULT_MEALS[0]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [showProductModal, setShowProductModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   useEffect(() => { localStorage.setItem(DIET_CONFIG_KEY, JSON.stringify(config)); }, [config]);
   useEffect(() => { localStorage.setItem(MEAL_TEMPLATES_KEY, JSON.stringify(mealTemplates)); }, [mealTemplates]);
@@ -193,14 +202,20 @@ function DietHub() {
         icon={<DietHeaderIcon />}
         title="Dieta"
         desc="Posiłki, makroskładniki i nawodnienie w jednym miejscu."
-        actions={<>
-          <button className="btn btn-primary btn-sm" onClick={() => { setDefaultMeal(config.meals[0] ?? DEFAULT_MEALS[0]); setShowAdd(true); }}>+ Dodaj produkt</button>
-          <button className="btn btn-secondary btn-sm" onClick={() => setShowProductModal(true)}>+ Produkt własny</button>
-          <button className="btn btn-secondary btn-sm" onClick={() => setShowTemplateModal(true)}>+ Własny posiłek</button>
-        </>}
+        actions={(tab === 'day' || tab === 'week' || tab === 'month')
+          ? <button className="btn btn-primary btn-sm" onClick={() => { setDefaultMeal(config.meals[0] ?? DEFAULT_MEALS[0]); setShowAdd(true); }}>+ Dodaj produkt</button>
+          : tab === 'templates'
+            ? <button className="btn btn-primary btn-sm" onClick={() => setShowTemplateModal(true)}>+ Nowy szablon</button>
+            : undefined}
       />
-      <DateToolbar selectedDate={selectedDate} viewMode={viewMode} onPrev={() => shiftDate(-1)} onNext={() => shiftDate(1)} onToday={() => setSelectedDate(todayStr())} onMode={setViewMode} onPick={setSelectedDate} />
-      {viewMode === 'day' ? (
+
+      <SubTabs tabs={DIET_TABS} active={tab} onChange={(id) => { setTab(id as DietTab); if (id === 'day' || id === 'week' || id === 'month') setViewMode(id as DietViewMode); }} />
+
+      {(tab === 'day' || tab === 'week' || tab === 'month') && (
+        <DateToolbar selectedDate={selectedDate} onPrev={() => shiftDate(-1)} onNext={() => shiftDate(1)} onToday={() => setSelectedDate(todayStr())} onPick={setSelectedDate} />
+      )}
+
+      {tab === 'day' && (
         <div className="diet-day-grid">
           <div className="col" style={{ minWidth: 0 }}>
             {loadingItems ? [1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height: 90, borderRadius: 12, marginBottom: 12 }} />) : config.meals.map(mealName => {
@@ -219,20 +234,48 @@ function DietHub() {
             <MealTemplatesCard templates={mealTemplates} onUse={addTemplateToDefaultMeal} onDelete={(id) => setMealTemplates(prev => prev.filter(t => t.id !== id))} />
           </div>
         </div>
-      ) : (
+      )}
+
+      {(tab === 'week' || tab === 'month') && (
         <PeriodSummary selectedDate={selectedDate} viewMode={viewMode} items={historyItems} nutrition={nutritionHistory} targets={targets} currentDayItems={items} />
       )}
+
+      {tab === 'products' && (
+        <ProductLibraryPanel foodItems={foodItems} meta={foodMeta} setMeta={setFoodMeta} categories={config.productCategories} setCategories={(productCategories) => setConfig(c => ({ ...c, productCategories }))} />
+      )}
+
+      {tab === 'templates' && (
+        <div className="card" style={{ maxWidth: 640 }}>
+          <div className="card-head"><span className="card-title">Własne posiłki (szablony)</span><button className="btn btn-primary btn-sm" onClick={() => setShowTemplateModal(true)}>+ Nowy szablon</button></div>
+          {!mealTemplates.length ? (
+            <EmptyState title="Brak szablonów" desc="Zapisz posiłek jako szablon, aby szybko go ponownie dodać." cta="Nowy szablon" onCta={() => setShowTemplateModal(true)} />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {mealTemplates.map(t => (
+                <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface-3)', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{t.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{t.items.length} produktów · {Math.round(computeTotals(t.items).kcal)} kcal</div>
+                  </div>
+                  <button className="btn btn-secondary btn-sm" onClick={() => addTemplateToDefaultMeal(t)}>Dodaj do dnia</button>
+                  <button className="icon-btn" onClick={() => setMealTemplates(prev => prev.filter(x => x.id !== t.id))}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <AddMealModal open={showAdd} date={selectedDate} defaultMeal={defaultMeal} mealNames={config.meals} templates={mealTemplates} onClose={() => setShowAdd(false)} />
       <DietSettingsModal open={showSettings} onClose={() => setShowSettings(false)} config={config} setConfig={setConfig} selectedDate={selectedDate} nutrition={nutrition} />
-      <ProductLibraryModal open={showProductModal} onClose={() => setShowProductModal(false)} foodItems={foodItems} meta={foodMeta} setMeta={setFoodMeta} categories={config.productCategories} setCategories={(productCategories) => setConfig(c => ({ ...c, productCategories }))} />
       <MealTemplateModal open={showTemplateModal} onClose={() => setShowTemplateModal(false)} onSave={(tpl) => setMealTemplates(prev => [...prev, tpl])} />
       <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { deleteMealItem.mutate(deleteId!); setDeleteId(null); }} label="ten wpis" />
     </div>
   );
 }
 
-function DateToolbar({ selectedDate, viewMode, onPrev, onNext, onToday, onMode, onPick }: { selectedDate: string; viewMode: DietViewMode; onPrev: () => void; onNext: () => void; onToday: () => void; onMode: (m: DietViewMode) => void; onPick: (date: string) => void }) {
-  return <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '12px 14px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button className="icon-btn" onClick={onPrev}>‹</button><div style={{ minWidth: 240 }}><div style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Wybrana data</div><div style={{ fontSize: 18, fontWeight: 800 }}>{fmtDate(selectedDate, true)}</div></div><button className="icon-btn" onClick={onNext}>›</button><button className="btn btn-secondary btn-sm" onClick={onToday}>Dzisiaj</button><div className="icon-btn" style={{ position: 'relative' }} title="Wybierz datę"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg><input type="date" value={selectedDate} onChange={e => { if (e.target.value) onPick(e.target.value); }} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} /></div></div><div style={{ display: 'flex', gap: 6, background: 'var(--surface-inset)', border: '1px solid var(--border-soft)', padding: 4, borderRadius: 12 }}>{(['day', 'week', 'month'] as const).map(m => <button key={m} className={`btn btn-sm ${viewMode === m ? 'btn-primary' : 'btn-ghost'}`} onClick={() => onMode(m)}>{m === 'day' ? 'Dzień' : m === 'week' ? 'Tydzień' : 'Miesiąc'}</button>)}</div></div>;
+function DateToolbar({ selectedDate, onPrev, onNext, onToday, onPick }: { selectedDate: string; onPrev: () => void; onNext: () => void; onToday: () => void; onPick: (date: string) => void }) {
+  return <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 14px' }}><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><button className="icon-btn" onClick={onPrev}>‹</button><div style={{ minWidth: 240 }}><div style={{ fontFamily: 'var(--mono)', fontSize: 10.5, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Wybrana data</div><div style={{ fontSize: 18, fontWeight: 800 }}>{fmtDate(selectedDate, true)}</div></div><button className="icon-btn" onClick={onNext}>›</button><button className="btn btn-secondary btn-sm" onClick={onToday}>Dzisiaj</button><div className="icon-btn" style={{ position: 'relative' }} title="Wybierz datę"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg><input type="date" value={selectedDate} onChange={e => { if (e.target.value) onPick(e.target.value); }} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} /></div></div></div>;
 }
 
 function MealCard({ mealName, entries, totals, onAdd, onCopy, onSaveTemplate, onClear, onDelete, onAmount }: { mealName: string; entries: MealItem[]; totals: ReturnType<typeof computeTotals>; onAdd: () => void; onCopy: () => void; onSaveTemplate: () => void; onClear: () => void; onDelete: (id: string) => void; onAmount: (entry: MealItem, amount: number) => void }) {
@@ -567,16 +610,12 @@ interface ProductForm {
   per_amount: string;
 }
 
-function ProductLibraryModal({ open, onClose, foodItems, meta, setMeta, categories, setCategories }: { open: boolean; onClose: () => void; foodItems: FoodItem[]; meta: Record<string, FoodMeta>; setMeta: Dispatch<SetStateAction<Record<string, FoodMeta>>>; categories: string[]; setCategories: (categories: string[]) => void }) {
+function ProductLibraryPanel({ foodItems, meta, setMeta, categories, setCategories }: { foodItems: FoodItem[]; meta: Record<string, FoodMeta>; setMeta: Dispatch<SetStateAction<Record<string, FoodMeta>>>; categories: string[]; setCategories: (categories: string[]) => void }) {
   const [form, setForm] = useState<ProductForm>({ name: '', brand: '', category: categories[0] ?? 'Inne', kcal: '', protein: '', carb: '', fat: '', per_amount: '100' });
   const [editingId, setEditingId] = useState<string | null>(null);
   const insertFood = useInsertFoodItem();
   const updateFood = useUpdateFoodItem();
   const deleteFood = useDeleteFoodItem();
-
-  useEffect(() => {
-    if (open && !editingId) setForm({ name: '', brand: '', category: categories[0] ?? 'Inne', kcal: '', protein: '', carb: '', fat: '', per_amount: '100' });
-  }, [categories, editingId, open]);
 
   function edit(item: FoodItem) {
     setEditingId(item.id);
@@ -627,8 +666,7 @@ function ProductLibraryModal({ open, onClose, foodItems, meta, setMeta, categori
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Produkty własne" size="lg">
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: 16, maxWidth: '100%', overflowX: 'hidden' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 16, maxWidth: '100%', overflowX: 'hidden' }}>
         <div className="card" style={{ margin: 0 }}>
           <div className="card-head"><span className="card-title">{editingId ? 'Edytuj produkt' : '+ Produkt własny'}</span></div>
           <Field label="Nazwa" required><input className="input" value={form.name} onChange={e => setForm(v => ({ ...v, name: e.target.value }))} /></Field>
@@ -669,8 +707,7 @@ function ProductLibraryModal({ open, onClose, foodItems, meta, setMeta, categori
             </div>
           )}
         </div>
-      </div>
-    </Modal>
+    </div>
   );
 }
 

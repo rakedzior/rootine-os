@@ -328,6 +328,15 @@
   min-width: 0;
 }
 
+.travel-central > .sub-tabs {
+  flex: none;
+  padding: 4px;
+  background: var(--surface-inset);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-mid);
+}
+.travel-detail-body { min-width: 0; }
+
 .travel-detail-card {
   padding: 0;
   overflow: hidden;

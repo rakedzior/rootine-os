@@ -246,7 +246,7 @@ export function PracaScreen() {
         </main>
 
         <aside className="work-side">
-          <TaskDetails task={selectedTask} project={selectedTask ? taskProject(selectedTask, workProjects) : undefined} context={context} />
+          <TaskDetails task={selectedTask} project={selectedTask ? taskProject(selectedTask, workProjects) : undefined} context={context} onUpdate={(patch) => selectedTask && updateWorkTask(selectedTask.id, patch)} />
           <DeadlinesPanel deadlines={deadlines} />
           <WorkKpiPanel metrics={metrics} />
         </aside>
@@ -368,9 +368,20 @@ function WorkTaskRow({ task, project, selected, onSelect, onToggle, onDelete }: 
   );
 }
 
-function TaskDetails({ task, project, context }: { task?: WorkTask; project?: WorkProject; context?: WorkContext }) {
+function TaskDetails({ task, project, context, onUpdate }: { task?: WorkTask; project?: WorkProject; context?: WorkContext; onUpdate?: (patch: Partial<WorkTask>) => void }) {
   const left = daysUntil(task?.dueDate);
   const progress = task?.status === 'done' ? 100 : task?.status === 'active' ? 65 : task?.status === 'waiting' ? 40 : task?.status === 'blocked' ? 20 : 15;
+  const links = task?.links ?? [];
+
+  function addLink() {
+    const url = window.prompt('Adres URL linku:')?.trim();
+    if (!url) return;
+    const label = window.prompt('Etykieta (opcjonalnie):')?.trim() || url.replace(/^https?:\/\//, '').slice(0, 40);
+    onUpdate?.({ links: [...links, { label, url }] });
+  }
+  function removeLink(idx: number) {
+    onUpdate?.({ links: links.filter((_, i) => i !== idx) });
+  }
 
   return (
     <section className="work-panel">
@@ -387,7 +398,7 @@ function TaskDetails({ task, project, context }: { task?: WorkTask; project?: Wo
           <p>{task.description || 'Zbudować i zamodelować zakres zadania zgodnie z wymaganiami projektu.'}</p>
           <div className="work-detail-list">
             <DetailLine icon="note" label="Notatki" value={task.notes ? '1 notatka' : '0 notatek'} />
-            <DetailLine icon="link" label="Linki" value="0 linków" />
+            <DetailLine icon="link" label="Linki" value={`${links.length} ${links.length === 1 ? 'link' : 'linków'}`} />
             <DetailLine icon="deadline" label="Deadline" value={task.dueDate ? `${fmtDate(task.dueDate, true)}${left !== null ? ` (${left} dni)` : ''}` : 'Brak'} />
             <DetailLine icon="progress" label="Postęp" value={`${progress}%`} progress={progress} />
             <DetailLine icon="user" label="Przypisane" value={project?.name ? initials(project.name)[0] : 'R'} avatar />
@@ -399,6 +410,25 @@ function TaskDetails({ task, project, context }: { task?: WorkTask; project?: Wo
               <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-2)', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{task.notes}</p>
             </div>
           )}
+          <div style={{ marginTop: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--ink-3)', fontWeight: 600 }}>Linki i załączniki</span>
+              <button className="btn btn-ghost btn-sm" type="button" onClick={addLink}><WorkIcon name="plus" /> Dodaj link</button>
+            </div>
+            {links.length === 0 ? (
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--ink-3)' }}>Brak linków. Dodaj odnośnik do dokumentu, repozytorium lub pliku.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {links.map((link, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 'var(--r-sm)', border: '1px solid var(--border-soft)', background: 'var(--surface-inset)' }}>
+                    <WorkIcon name="link" />
+                    <a href={link.url} target="_blank" rel="noreferrer" style={{ flex: 1, minWidth: 0, fontSize: 13, color: 'var(--acc-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{link.label}</a>
+                    <button className="icon-btn" type="button" onClick={() => removeLink(i)} aria-label="Usuń link"><WorkIcon name="trash" /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </>
       )}
     </section>

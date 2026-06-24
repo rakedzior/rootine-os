@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PriorityBadge, StatusBadge, PageHeader, IcoTrash, IcoPlus, IcoCheck } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PriorityBadge, StatusBadge, PageHeader, SubTabs, IcoTrash, IcoPlus, IcoCheck } from '@/components/common';
 import { useLocalStore, type OfficeTask, type Priority, type VacationEntry } from '@/store/localStore';
+
+const OFFICE_TABS = [
+  { id: 'sprawy', label: 'Sprawy' },
+  { id: 'dokumenty', label: 'Dokumenty' },
+];
+
+interface RecurringDeadline { id: string; label: string; sub: string; date: string; }
 
 function fmtDate(d?: string) {
   if (!d) return '—';
@@ -65,8 +72,10 @@ export function BiuroScreen() {
   const {
     officeTasks, officeCategories, addOfficeTask, updateOfficeTask, deleteOfficeTask,
     addOfficeCategory, deleteOfficeCategory, vacationBalance,
+    officeDocuments, cars, insurances,
   } = useLocalStore();
 
+  const [tab, setTab] = useState('sprawy');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [statusTab, setStatusTab] = useState<'open' | 'all' | 'done'>('open');
   const [showAdd, setShowAdd] = useState(false);
@@ -112,6 +121,19 @@ export function BiuroScreen() {
     [officeTasks]
   );
 
+  const recurringDeadlines = useMemo<RecurringDeadline[]>(() => {
+    const out: RecurringDeadline[] = [];
+    for (const c of cars) {
+      if (c.insuranceExpiry) out.push({ id: `car-oc-${c.id}`, label: `OC — ${c.name}`, sub: c.plateNumber, date: c.insuranceExpiry });
+      if (c.inspectionDate) out.push({ id: `car-pp-${c.id}`, label: `Przegląd — ${c.name}`, sub: c.plateNumber, date: c.inspectionDate });
+    }
+    for (const i of insurances) out.push({ id: `ins-${i.id}`, label: i.name, sub: i.insurer, date: i.expiryDate });
+    for (const d of officeDocuments) if (d.expiryDate && !d.isArchived) out.push({ id: `doc-${d.id}`, label: d.name, sub: d.category, date: d.expiryDate });
+    return out.filter(d => d.date).sort((a, b) => a.date.localeCompare(b.date));
+  }, [cars, insurances, officeDocuments]);
+
+  const visibleDocuments = officeDocuments.filter(d => !d.isArchived);
+
   return (
     <div className="module-page">
       <div className="office-shell">
@@ -119,9 +141,15 @@ export function BiuroScreen() {
           icon={<OfficeIcon name="briefcase" />}
           title="Biuro"
           desc="Wszystkie sprawy, dokumenty i terminy w jednym miejscu."
-          actions={<button className="btn btn-primary btn-sm" type="button" onClick={() => setShowAdd(true)}><IcoPlus /> Nowe zadanie</button>}
+          actions={tab === 'sprawy' ? <button className="btn btn-primary btn-sm" type="button" onClick={() => setShowAdd(true)}><IcoPlus /> Nowe zadanie</button> : undefined}
         />
 
+        <SubTabs tabs={OFFICE_TABS} active={tab} onChange={setTab} />
+
+        {tab === 'dokumenty' ? (
+          <OfficeDocuments documents={visibleDocuments} deadlines={recurringDeadlines} />
+        ) : (
+        <>
         <div className="office-kpi-grid">
           <OfficeMetric icon="todo" tone="pink" label="Do zrobienia" value={String(active.filter(t => t.status === 'todo').length)} note="wszystkie sprawy" />
           <OfficeMetric icon="active" tone="blue" label="W trakcie" value={String(active.filter(t => t.status === 'active').length)} note="w realizacji" />
@@ -227,6 +255,8 @@ export function BiuroScreen() {
             ))
           }
         </div>
+        </>
+        )}
       </div>
 
       <TaskFormModal
@@ -246,6 +276,66 @@ export function BiuroScreen() {
         onReopen={(id) => updateOfficeTask(id, { status: 'todo' })}
         onDelete={(id) => deleteOfficeTask(id)}
       />
+    </div>
+  );
+}
+
+// ─── DOCUMENTS / RECURRING DEADLINES ────────────────────────────
+
+function deadlineStatus(date: string): { label: string; cls: string } {
+  const days = daysLeft(date);
+  if (days === null) return { label: '—', cls: 'status-cancelled' };
+  if (days < 0) return { label: 'Po terminie', cls: 'status-overdue' };
+  if (days <= 30) return { label: `Za ${days} dni`, cls: 'status-warn' };
+  return { label: 'OK', cls: 'status-done' };
+}
+
+function OfficeDocuments({ documents, deadlines }: { documents: { id: string; name: string; category: string; documentNumber?: string; expiryDate?: string }[]; deadlines: RecurringDeadline[] }) {
+  return (
+    <div className="office-layout">
+      <div className="card" style={{ minWidth: 0 }}>
+        <div className="card-head"><span className="card-title">Terminy cykliczne</span></div>
+        <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: '0 0 12px' }}>OC, przegląd, ubezpieczenia, PIT, ZUS i inne powtarzalne terminy.</p>
+        {deadlines.length === 0 ? (
+          <EmptyState title="Brak terminów" desc="Dodaj auto, ubezpieczenie lub dokument z datą ważności." />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {deadlines.map(d => {
+              const s = deadlineStatus(d.date);
+              return (
+                <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 'var(--r-mid)', border: '1px solid var(--border-soft)', background: 'var(--surface-inset)' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>{d.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{d.sub} · {fmtDate(d.date)}</div>
+                  </div>
+                  <span className={`badge ${s.cls}`}>{s.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="card" style={{ minWidth: 0 }}>
+        <div className="card-head"><span className="card-title">Dokumenty</span></div>
+        {documents.length === 0 ? (
+          <EmptyState title="Brak dokumentów" desc="Tu pojawią się dowody, polisy, umowy i inne dokumenty." />
+        ) : (
+          <table className="table">
+            <thead><tr><th>NAZWA</th><th>KATEGORIA</th><th>NUMER</th><th>WAŻNY DO</th></tr></thead>
+            <tbody>
+              {documents.map(d => (
+                <tr key={d.id}>
+                  <td style={{ fontWeight: 600 }}>{d.name}</td>
+                  <td style={{ color: 'var(--ink-3)', fontSize: 12.5 }}>{d.category}</td>
+                  <td style={{ color: 'var(--ink-3)', fontSize: 12.5 }}>{d.documentNumber ?? '—'}</td>
+                  <td>{d.expiryDate ? fmtDate(d.expiryDate) : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }
