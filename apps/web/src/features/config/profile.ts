@@ -72,7 +72,7 @@ export async function fetchPreferences(): Promise<Preferences | null> {
   if (error) throw error;
   if (!data) return null;
   return {
-    theme: data.theme ?? 'magenta',
+    theme: data.theme ?? 'dark',
     mode: (data.mode ?? 'system') as ThemeMode,
     locale: data.locale ?? 'pl',
     notifications: (data.notifications ?? {}) as Record<string, boolean>,

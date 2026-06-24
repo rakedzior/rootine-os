@@ -1,18 +1,18 @@
-/* Auth screens - fixed to the Magenta palette. */
+/* Auth screens - Graphite Cool Ice login panel. */
 .auth-wrap{
-  --bg-0:#101c22; --bg-1:#15242b;
-  --surface:#1b2b33; --surface-2:#21333d; --surface-3:#14222a; --surface-inset:var(--surface-3);
-  --border:rgba(150,180,190,.13); --border-soft:rgba(150,180,190,.07); --border-strong:rgba(150,180,190,.24);
-  --ink:#e9eef0; --ink-2:#a6b6bc; --ink-3:#6d8088; --ink-4:#46565f;
-  --acc:#e24a9c; --acc-ink:#f178b5; --acc-soft:rgba(226,74,156,.16); --acc-line:rgba(226,74,156,.40);
-  --acc-solid:#cf2487; --on-acc:#ffffff;
-  --acc-b:#2fa093; --acc-b-ink:#5fc7ba; --acc-b-soft:rgba(47,160,147,.18);
-  --success:#46c08a; --success-ink:#6fd6a6; --success-soft:rgba(70,192,138,.16);
-  --warn:#e0a34a; --warn-ink:#f0bd6e; --warn-soft:rgba(224,163,74,.16);
-  --danger:#ef5d6a; --danger-ink:#ff8a93; --danger-soft:rgba(239,93,106,.16);
+  --bg-0:#0d131b; --bg-1:#111a24;
+  --surface:#141d29; --surface-2:#1b2836; --surface-3:#25364a; --surface-inset:var(--surface-3);
+  --border:#25364a; --border-soft:#1f2e3f; --border-strong:rgba(125,211,252,.36);
+  --ink:#e6edf5; --ink-2:#a7b4c2; --ink-3:#78899a; --ink-4:rgba(230,237,245,.38);
+  --acc:#7dd3fc; --acc-ink:#b9e9ff; --acc-soft:rgba(125,211,252,.16); --acc-line:rgba(125,211,252,.40);
+  --acc-solid:#38bdf8; --on-acc:#06111a;
+  --acc-b:#5eead4; --acc-b-ink:#99f6e4; --acc-b-soft:rgba(94,234,212,.14);
+  --success:#34d399; --success-ink:#6ee7b7; --success-soft:rgba(52,211,153,.16);
+  --warn:#fbbf24; --warn-ink:#fcd34d; --warn-soft:rgba(251,191,36,.16);
+  --danger:#f87171; --danger-ink:#fca5a5; --danger-soft:rgba(248,113,113,.16);
   --ring:0 0 0 3px var(--acc-soft);
-  --sh-1:0 1px 2px rgba(0,0,0,.4);
-  --sh-2:0 1px 2px rgba(0,0,0,.4),0 12px 32px -16px rgba(0,0,0,.7);
+  --sh-1:0 1px 2px rgba(2,10,20,.55);
+  --sh-2:0 1px 2px rgba(2,10,20,.55),0 14px 36px -18px rgba(8,24,44,.9);
   min-height:100vh; display:grid; place-items:center; padding:40px 20px;
   color:var(--ink);
   background:
@@ -20,7 +20,16 @@
     radial-gradient(760px 480px at 8% 110%, var(--acc-b-soft), transparent 58%),
     linear-gradient(168deg,var(--bg-1),var(--bg-0));
 }
-.auth-card{ width:100%; max-width:412px; }
+.auth-card{
+  width:100%; max-width:420px;
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  border:1px solid var(--border-soft);
+  border-radius:24px;
+  box-shadow:0 2px 8px rgba(2,10,20,.6), 0 24px 56px -22px rgba(8,24,44,.95);
+  backdrop-filter:blur(16px) saturate(120%);
+  -webkit-backdrop-filter:blur(16px) saturate(120%);
+  padding:24px 22px;
+}
 .auth-logo{ display:flex; align-items:center; gap:9px; justify-content:center; margin-bottom:8px; }
 .auth-logo .dot{ width:9px; height:9px; border-radius:3px; background:var(--acc); box-shadow:0 0 0 4px var(--acc-soft); transform:rotate(45deg); }
 .auth-logo .wm{ font-family:var(--mono); font-size:11px; letter-spacing:.16em; color:var(--ink-2); text-transform:uppercase; font-weight:500; }
@@ -38,10 +47,10 @@
 .auth-note{ color:var(--ink-2); font-size:12px; }
 
 .auth-btn{ width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  background:var(--acc-solid); color:var(--on-acc); border:1px solid transparent; border-radius:var(--r-mid); padding:13px;
+  background:var(--acc); color:var(--on-acc); border:1px solid rgba(125,211,252,.65); border-radius:var(--r-mid); padding:13px;
   font-family:var(--sans); font-size:13.5px; letter-spacing:-.01em; font-weight:600;
   cursor:pointer; transition:var(--t); margin-top:4px; box-shadow:var(--sh-1); }
-.auth-btn:hover{ transform:translateY(-1px); filter:brightness(1.06); box-shadow:var(--sh-2); }
+.auth-btn:hover{ transform:translateY(-1px); background:var(--acc-solid); box-shadow:0 0 0 3px rgba(125,211,252,.14); }
 .auth-btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; filter:none; box-shadow:none; }
 
 .auth-alt{ text-align:center; font-size:12.5px; color:var(--ink-2); margin-top:16px; }
