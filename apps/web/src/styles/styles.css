@@ -474,6 +474,14 @@ button.active .sub-tab-icon { opacity: 1; }
 .kpi-icon svg { width: 15px; height: 15px; }
 .kpi-value { font-family: var(--font-display); font-size: 23px; font-weight: 700; letter-spacing: -.02em; color: var(--ink); line-height: 1.05; }
 .kpi-sub { font-size: 11.5px; color: var(--ink-3); }
+.kpi-sub-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.kpi-sub-row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kpi-card-action {
+  display: block; width: 100%; padding: 0; border: 0; background: transparent; color: inherit;
+  text-align: left; cursor: pointer; font: inherit;
+}
+.kpi-card-action .kpi-card { height: 100%; transition: transform var(--t), border-color var(--t), box-shadow var(--t); }
+.kpi-card-action:hover .kpi-card { transform: translateY(-1px); border-color: var(--border-strong); box-shadow: var(--sh-2); }
 .kpi-card[data-tone="pink"]   { border-left: 3px solid var(--acc); }
 .kpi-card[data-tone="pink"]   .kpi-icon { background: var(--acc-soft); color: var(--acc-ink); }
 .kpi-card[data-tone="green"]  { border-left: 3px solid var(--success); }
@@ -849,54 +857,12 @@ button.active .sub-tab-icon { opacity: 1; }
 .finance-kpi-grid {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap);
 }
-.finance-metric {
-  position: relative; min-height: 84px; overflow: hidden;
-  display: grid; grid-template-columns: 44px minmax(0, 1fr) 112px; align-items: center; gap: 13px;
-  padding: 16px; border: 1px solid var(--border); border-radius: var(--r-card);
-  background: color-mix(in srgb, var(--surface) 86%, var(--acc-soft));
-  box-shadow: var(--sh-2);
-}
-.finance-metric-icon {
-  width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--r-mid);
-  border: 1px solid var(--border-soft); background: var(--surface-inset);
-}
-.finance-metric-icon svg { width: 20px; height: 20px; }
-.finance-metric-blue .finance-metric-icon { color: var(--ev-blue); background: var(--ev-blue-bg); }
-.finance-metric-violet .finance-metric-icon { color: var(--ev-lav); background: var(--ev-lav-bg); }
-.finance-metric-teal .finance-metric-icon { color: var(--success-ink); background: var(--success-soft); }
-.finance-metric-pink .finance-metric-icon { color: var(--acc); background: var(--acc-soft); }
-.finance-metric-body { min-width: 0; }
-.finance-metric-label {
-  display: flex; align-items: center; gap: 7px;
-  font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--ink-3); font-weight: 600;
-}
 .finance-inline-edit {
   display: inline-grid; place-items: center; width: 22px; height: 22px; padding: 0;
   border: 0; background: transparent; color: var(--ink-3); cursor: pointer; border-radius: var(--r-xs);
 }
 .finance-inline-edit:hover { color: var(--ink); background: var(--surface-2); }
 .finance-inline-edit svg { width: 13px; height: 13px; }
-.finance-metric-value {
-  margin-top: 3px; font-family: var(--font-display); font-size: 27px; line-height: 1.05;
-  font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--ink);
-  overflow-wrap: anywhere;
-}
-.finance-metric-note { margin-top: 4px; font-size: 12px; color: var(--ink-3); }
-.finance-metric-blue .finance-metric-note { color: var(--ev-blue); }
-.finance-metric-violet .finance-metric-note { color: var(--ev-lav); }
-.finance-metric-teal .finance-metric-note { color: var(--success-ink); }
-.finance-metric-pink .finance-metric-note { color: var(--acc-ink); }
-.finance-spark { width: 108px; height: 40px; color: var(--acc); align-self: center; opacity: .95; }
-.finance-spark polyline { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-.finance-metric-blue .finance-spark { color: var(--ev-blue); }
-.finance-metric-violet .finance-spark { color: var(--ev-lav); }
-.finance-metric-teal .finance-spark { color: var(--success); }
-.finance-metric-pink .finance-spark { color: var(--acc); }
-
-.finance-budget-metric { grid-template-columns: 44px minmax(0, 1fr); }
-.finance-budget-metric .finance-metric-icon { color: var(--ev-blue); background: var(--ev-blue-bg); }
-.finance-budget-metric-body { min-width: 0; }
 .finance-budget-metric-stats {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 10px;
 }
@@ -1148,8 +1114,6 @@ button.active .sub-tab-icon { opacity: 1; }
 
 @media (max-width: 1220px) {
   .finance-kpi-grid, .finance-dashboard-grid, .finance-bottom-grid, .finance-monthly-grid { grid-template-columns: 1fr; }
-  .finance-metric { grid-template-columns: 44px minmax(0, 1fr); }
-  .finance-spark { display: none; }
 }
 @media (max-width: 720px) {
   .finance-budget-summary, .finance-payment-summary, .finance-budget-metric-stats { grid-template-columns: 1fr; }
@@ -1171,22 +1135,6 @@ button.active .sub-tab-icon { opacity: 1; }
 .goals-shell { display: flex; flex-direction: column; gap: var(--gap); width: 100%; min-width: 0; }
 
 .goals-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); }
-.goals-metric {
-  display: grid; grid-template-columns: 40px minmax(0, 1fr); align-items: center; gap: 12px;
-  padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--r-card);
-  background: color-mix(in srgb, var(--surface) 86%, var(--acc-soft)); box-shadow: var(--sh-2);
-}
-.goals-metric-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--r-mid); border: 1px solid var(--border-soft); background: var(--surface-inset); }
-.goals-metric-icon svg { width: 19px; height: 19px; }
-.goals-metric-pink .goals-metric-icon, .goals-metric-pink.goals-metric .goals-metric-icon { color: var(--acc); background: var(--acc-soft); }
-.goals-metric-blue .goals-metric-icon { color: var(--ev-blue); background: var(--ev-blue-bg); }
-.goals-metric-teal .goals-metric-icon { color: var(--success-ink); background: var(--success-soft); }
-.goals-metric-violet .goals-metric-icon { color: var(--ev-lav); background: var(--ev-lav-bg); }
-.goals-metric-body { min-width: 0; }
-.goals-metric-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
-.goals-metric-value { margin-top: 3px; font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -.02em; color: var(--ink); }
-.goals-metric-note { margin-top: 2px; font-size: 11.5px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
 .goals-layout { display: grid; grid-template-columns: 300px minmax(0, 1fr) 320px; gap: var(--gap); align-items: start; }
 
 .goals-sidebar { display: flex; flex-direction: column; min-width: 0; }
@@ -1345,23 +1293,6 @@ button.active .sub-tab-icon { opacity: 1; }
 .office-shell { display: flex; flex-direction: column; gap: var(--gap); width: 100%; min-width: 0; }
 
 .office-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); }
-.office-metric {
-  display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: var(--r-mid);
-  background: var(--surface); border: 1px solid var(--border); box-shadow: var(--sh-1);
-}
-.office-metric-clickable { cursor: pointer; text-align: left; width: 100%; transition: var(--t); }
-.office-metric-clickable:hover { border-color: var(--border-strong); transform: translateY(-1px); }
-.office-metric-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: var(--r-mid); border: 1px solid var(--border-soft); background: var(--surface-inset); flex-shrink: 0; }
-.office-metric-icon svg { width: 19px; height: 19px; }
-.office-metric-pink .office-metric-icon { color: var(--acc); background: var(--acc-soft); }
-.office-metric-blue .office-metric-icon { color: var(--ev-blue); background: var(--ev-blue-bg); }
-.office-metric-teal .office-metric-icon { color: var(--success-ink); background: var(--success-soft); }
-.office-metric-violet .office-metric-icon { color: var(--ev-lav); background: var(--ev-lav-bg); }
-.office-metric-body { min-width: 0; }
-.office-metric-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
-.office-metric-value { margin-top: 3px; font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -.02em; color: var(--ink); }
-.office-metric-note { margin-top: 2px; font-size: 11.5px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
 .office-layout { display: grid; grid-template-columns: minmax(220px, 25%) minmax(0, 1fr); gap: var(--gap); align-items: start; }
 
 .office-sidebar { display: flex; flex-direction: column; min-width: 0; }

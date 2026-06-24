@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Modal, EmptyState, ConfirmDelete, Field, ProgressBar, PriorityBadge, PageHeader, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, ProgressBar, PriorityBadge, PageHeader, KpiCard, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore } from '@/components/common';
 import { HabitList } from '@/features/habits/HabitList';
 import { useHabits, useHabitLogs } from '@/features/habits/hooks';
 import { todayStr, addDays, weekdayOf, habitOccursOn, habitStats, HABIT_WEEKDAYS } from '@/features/habits/dates';
@@ -95,14 +95,7 @@ function MoreMenu({ actions }: { actions: { label: string; onClick: () => void; 
 
 function GoalsMetric({ icon, tone, label, value, note }: { icon: 'target' | 'calendar' | 'clock' | 'flame'; tone: 'pink' | 'blue' | 'teal' | 'violet'; label: string; value: string; note: string }) {
   return (
-    <article className={`goals-metric goals-metric-${tone}`}>
-      <div className="goals-metric-icon"><GoalsIcon name={icon} /></div>
-      <div className="goals-metric-body">
-        <div className="goals-metric-label">{label}</div>
-        <div className="goals-metric-value">{value}</div>
-        <div className="goals-metric-note">{note}</div>
-      </div>
-    </article>
+    <KpiCard icon={<GoalsIcon name={icon} />} tone={tone} label={label} value={value} sub={note} />
   );
 }
 

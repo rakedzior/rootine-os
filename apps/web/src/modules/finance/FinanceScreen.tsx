@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash } from '@/components/common';
+import { useEffect, useState, type ReactNode } from 'react';
+import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, PageHeader, KpiCard, IcoTrash } from '@/components/common';
 import {
   useLocalStore,
   type Account,
@@ -293,34 +293,34 @@ function FinanceMonthly({ month }: { month: string }) {
 
 function MetricCard({ icon, label, value, note, tone, onEdit }: { icon: IconName; label: string; value: string; note: string; tone: FinanceTone; onEdit?: () => void }) {
   return (
-    <article className={`finance-metric finance-metric-${tone}`}>
-      <div className="finance-metric-icon"><FinanceIcon name={icon} /></div>
-      <div className="finance-metric-body">
-        <div className="finance-metric-label">
-          {label}
+    <KpiCard
+      icon={<FinanceIcon name={icon} />}
+      label={label}
+      value={value}
+      tone={tone}
+      sub={(
+        <span className="kpi-sub-row">
+          <span>{note}</span>
           {onEdit && (
             <button className="finance-inline-edit" type="button" onClick={onEdit} aria-label={`Edytuj: ${label}`}>
               <FinanceIcon name="edit" />
             </button>
           )}
-        </div>
-        <div className="finance-metric-value">{value}</div>
-        <div className="finance-metric-note">{note}</div>
-      </div>
-      <MiniSparkline tone={tone} />
-    </article>
+        </span>
+      )}
+    />
   );
 }
 
 function BudgetMetric({ planned, actual, remaining, pct }: { planned: number; actual: number; remaining: number; pct: number }) {
   return (
-    <article className="finance-metric finance-budget-metric">
-      <div className="finance-metric-icon"><FinanceIcon name="budget" /></div>
-      <div className="finance-budget-metric-body">
-        <div className="finance-metric-label">
-          Budżet miesiąca
-          <span className="finance-inline-edit" aria-hidden="true"><FinanceIcon name="edit" /></span>
-        </div>
+    <KpiCard
+      icon={<FinanceIcon name="budget" />}
+      label="Budżet miesiąca"
+      value={`${fmtNumber(pct)}%`}
+      tone="blue"
+      sub={(
+        <>
         <div className="finance-budget-metric-stats">
           <Stat label="Zaplanowane" value={fmtPLN(planned)} />
           <Stat label="Wydane" value={fmtPLN(actual)} />
@@ -330,8 +330,9 @@ function BudgetMetric({ planned, actual, remaining, pct }: { planned: number; ac
           <span style={{ width: `${pct}%` }} />
           <strong>{fmtNumber(pct)}%</strong>
         </div>
-      </div>
-    </article>
+        </>
+      )}
+    />
   );
 }
 
@@ -1200,20 +1201,6 @@ function ReminderModal({ open, reminder, month, onClose, onSave }: { open: boole
       </div>
       <label className="finance-toggle"><input type="checkbox" checked={completed} onChange={(e) => setCompleted(e.target.checked)} /> Opłacone</label>
     </Modal>
-  );
-}
-
-function MiniSparkline({ tone }: { tone: FinanceTone }) {
-  const points = useMemo(() => {
-    if (tone === 'violet') return '0,34 12,31 24,33 36,22 48,18 60,24 72,20 84,12 96,10 108,3';
-    if (tone === 'teal') return '0,29 12,28 24,18 36,19 48,12 60,15 72,10 84,11 96,5 108,4';
-    if (tone === 'pink') return '0,30 12,19 24,23 36,16 48,18 60,12 72,8 84,9 96,2 108,11';
-    return '0,30 12,24 24,27 36,17 48,13 60,19 72,15 84,9 96,10 108,2';
-  }, [tone]);
-  return (
-    <svg className="finance-spark" viewBox="0 0 108 40" preserveAspectRatio="none" aria-hidden="true">
-      <polyline points={points} />
-    </svg>
   );
 }
 

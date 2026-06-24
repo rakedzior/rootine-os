@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PriorityBadge, StatusBadge, PageHeader, SubTabs, IcoTrash, IcoPlus, IcoCheck } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PriorityBadge, StatusBadge, PageHeader, SubTabs, KpiCard, IcoTrash, IcoPlus, IcoCheck } from '@/components/common';
 import { useLocalStore, type OfficeTask, type Priority, type VacationEntry } from '@/store/localStore';
 
 const OFFICE_TABS = [
@@ -55,17 +55,9 @@ function categoryIcon(category: string): IconName {
 }
 
 function OfficeMetric({ icon, tone, label, value, note, onClick }: { icon: IconName; tone: 'pink' | 'blue' | 'teal' | 'violet'; label: string; value: string; note: string; onClick?: () => void }) {
-  const Tag = onClick ? 'button' : 'article';
-  return (
-    <Tag className={`office-metric office-metric-${tone}${onClick ? ' office-metric-clickable' : ''}`} type={onClick ? 'button' : undefined} onClick={onClick}>
-      <div className="office-metric-icon"><OfficeIcon name={icon} /></div>
-      <div className="office-metric-body">
-        <div className="office-metric-label">{label}</div>
-        <div className="office-metric-value">{value}</div>
-        <div className="office-metric-note">{note}</div>
-      </div>
-    </Tag>
-  );
+  const card = <KpiCard icon={<OfficeIcon name={icon} />} tone={tone} label={label} value={value} sub={note} />;
+  if (!onClick) return card;
+  return <button className="kpi-card-action" type="button" onClick={onClick}>{card}</button>;
 }
 
 export function BiuroScreen() {

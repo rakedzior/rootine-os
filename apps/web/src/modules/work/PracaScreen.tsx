@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PageHeader } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, KpiCard } from '@/components/common';
 import { useLocalStore, type Priority, type TaskStatus, type WorkContext, type WorkProject, type WorkTask } from '@/store/localStore';
 import '@/styles/work.css';
 
@@ -300,28 +300,28 @@ function buildWorkMetrics(projects: WorkProject[], tasks: WorkTask[]) {
       label: 'Aktywne projekty',
       value: projects.filter((project) => project.status !== 'done').length,
       note: '+1 w tym miesiącu',
-      tone: 'blue',
+      tone: 'blue' as const,
     },
     {
       icon: 'task' as const,
       label: 'Otwarte zadania',
       value: tasks.filter((task) => task.status !== 'done').length,
       note: '-3 od wczoraj',
-      tone: 'violet',
+      tone: 'violet' as const,
     },
     {
       icon: 'week' as const,
       label: 'Do zrobienia w tym tygodniu',
       value: tasks.filter((task) => task.status !== 'done' && task.dueDate && task.dueDate >= today && task.dueDate <= weekEnd).length,
       note: '3 dziś',
-      tone: 'amber',
+      tone: 'amber' as const,
     },
     {
       icon: 'done' as const,
       label: 'Zakończone zadania',
       value: tasks.filter((task) => task.status === 'done').length,
       note: '+8 w tym miesiącu',
-      tone: 'teal',
+      tone: 'teal' as const,
     },
   ];
 }
@@ -483,14 +483,14 @@ function WorkKpiPanel({ metrics }: { metrics: ReturnType<typeof buildWorkMetrics
       </div>
       <div className="work-side-kpis">
         {metrics.map((metric) => (
-          <article className={`work-side-kpi work-tone-${metric.tone}`} key={metric.label}>
-            <span><WorkIcon name={metric.icon} /></span>
-            <div>
-              <small>{metric.label}</small>
-              <strong>{metric.value}</strong>
-              <em>{metric.note}</em>
-            </div>
-          </article>
+          <KpiCard
+            key={metric.label}
+            icon={<WorkIcon name={metric.icon} />}
+            label={metric.label}
+            value={metric.value}
+            sub={metric.note}
+            tone={metric.tone}
+          />
         ))}
       </div>
     </section>
