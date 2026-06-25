@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { SubTabs, Modal, EmptyState, ConfirmDelete, Field, PageHeader, KpiCard, IcoTrash } from '@/components/common';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ConfirmDelete, Field } from '@/components/common';
 import {
   useLocalStore,
   type Account,
@@ -7,192 +7,71 @@ import {
   type FinancialReminder,
   type JdgItem,
   type RecurringExpense,
-  type RecurringFolder,
   type SavingsGoal,
 } from '@/store/localStore';
 
-const TABS = [
-  { id: 'przeglad', label: 'Przegląd', icon: () => <TabIcon name="overview" /> },
-  { id: 'miesieczne', label: 'Miesięczne', icon: () => <TabIcon name="calendar" /> },
-  { id: 'budzet', label: 'Budżet', icon: () => <TabIcon name="budget" /> },
-  { id: 'cele', label: 'Cele', icon: () => <TabIcon name="savings" /> },
-  { id: 'historia', label: 'Historia', icon: () => <TabIcon name="overview" /> },
+type FinanceSegment = 'accounts' | 'due' | 'budget' | 'savings' | 'jdg' | 'history';
+type SummaryKey = 'accounts' | 'savings' | 'budget' | 'due';
+type PaymentRow = {
+  id: string;
+  source: 'recurring' | 'reminder';
+  name: string;
+  category: string;
+  amount: number;
+  dueDate: string;
+  type: string;
+  status: 'due' | 'paid' | 'overdue';
+  paid: boolean;
+  raw: RecurringExpense | FinancialReminder;
+};
+type IconName =
+  | 'wallet' | 'savings' | 'budget' | 'due' | 'paid' | 'home' | 'transport' | 'food' | 'entertainment'
+  | 'health' | 'business' | 'car' | 'phone' | 'shield' | 'cash' | 'bank' | 'plus' | 'edit' | 'trash'
+  | 'check' | 'settings' | 'history' | 'calendar' | 'note' | 'arrow' | 'close' | 'reset';
+
+const SEGMENTS: Array<{ id: FinanceSegment; label: string }> = [
+  { id: 'due', label: 'Płatności' },
+  { id: 'budget', label: 'Budżet' },
+  { id: 'jdg', label: 'JDG' },
+  { id: 'history', label: 'Historia' },
 ];
 
-type FinanceTab = 'przeglad' | 'miesieczne' | 'budzet' | 'cele' | 'historia';
-type FinanceTone = 'blue' | 'violet' | 'teal' | 'pink';
-type IconName =
-  | 'overview' | 'calendar' | 'accounts' | 'budget' | 'savings' | 'payments' | 'business' | 'settings'
-  | 'due' | 'paid' | 'edit' | 'plus' | 'reset' | 'check'
-  | 'home' | 'transport' | 'food' | 'entertainment' | 'health' | 'utilities' | 'phone'
-  | 'shield' | 'car' | 'travel' | 'cash' | 'bank' | 'wallet' | 'other';
-
 const CATEGORY_OPTIONS = ['Mieszkanie', 'Transport', 'Jedzenie', 'Rozrywka', 'Zdrowie', 'JDG', 'Auto', 'Inne'];
-const ACCOUNT_TYPES = ['główne', 'oszczędnościowe', 'gotówka', 'karta', 'walutowe', 'inwestycje'];
+const ACCOUNT_TYPES = ['main_account', 'savings_account', 'foreign_currency', 'cash', 'joint_account', 'investment', 'other'];
+const ACCOUNT_TYPE_LABELS: Record<string, string> = {
+  main_account: 'Konto główne',
+  savings_account: 'Konto oszczędnościowe',
+  foreign_currency: 'Konto walutowe',
+  cash: 'Gotówka',
+  joint_account: 'Konto wspólne',
+  investment: 'Inwestycje',
+  other: 'Inne',
+  główne: 'Konto główne',
+  oszczędnościowe: 'Konto oszczędnościowe',
+  gotówka: 'Gotówka',
+  karta: 'Karta',
+  walutowe: 'Konto walutowe',
+  inwestycje: 'Inwestycje',
+};
 const CURRENCIES = ['PLN', 'EUR', 'USD', 'GBP'];
 const BUDGET_COLORS = ['#3B82F6', '#F59E0B', '#22C55E', '#8B5CF6', '#EF4444', '#14B8A6', '#6B7280'];
+const PAYMENT_TYPES = [
+  { value: 'one_time', label: 'jednorazowa' },
+  { value: 'monthly', label: 'miesięczna' },
+  { value: 'yearly', label: 'roczna' },
+  { value: 'jdg', label: 'JDG' },
+  { value: 'custom_recurring', label: 'własna' },
+];
+const MONTHS = ['styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec', 'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień'];
 
 function currentYearMonth() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-function fmtPLN(n: number, currency = 'PLN') {
-  return n.toLocaleString('pl-PL', { style: 'currency', currency, maximumFractionDigits: 0 });
-}
-
-function fmtNumber(n: number) {
-  return n.toLocaleString('pl-PL', { maximumFractionDigits: 0 });
-}
-
-function fmtMonth(month: string) {
-  return new Date(`${month}-01T12:00:00`).toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
-}
-
-function daysInMonth(month: string) {
-  const [year, monthIndex] = month.split('-').map(Number);
-  return new Date(year, monthIndex, 0).getDate();
-}
-
-function dueDateFor(month: string, dueDay: number) {
-  const day = Math.min(Math.max(1, dueDay), daysInMonth(month));
-  return `${month}-${String(day).padStart(2, '0')}`;
-}
-
-function clampPct(value: number) {
-  if (!Number.isFinite(value)) return 0;
-  return Math.max(0, Math.min(100, value));
-}
-
-function num(value: string, fallback = 0) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
-}
-
-function normalized(value: string) {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-}
-
-function iconForAccount(account: Account): IconName {
-  const source = normalized(`${account.type} ${account.name} ${account.institution ?? ''}`);
-  if (source.includes('oszczed')) return 'bank';
-  if (source.includes('gotow') || source.includes('cash')) return 'wallet';
-  if (source.includes('walut') || source.includes('inwest')) return 'cash';
-  return 'accounts';
-}
-
-function toneForAccount(account: Account): FinanceTone {
-  const source = normalized(`${account.type} ${account.name}`);
-  if (source.includes('oszczed')) return 'violet';
-  if (source.includes('gotow')) return 'teal';
-  if (source.includes('wspol') || source.includes('inwest')) return 'pink';
-  return 'blue';
-}
-
-function iconForCategory(category: string, name = ''): IconName {
-  const source = normalized(`${category} ${name}`);
-  if (source.includes('miesz') || source.includes('czynsz')) return 'home';
-  if (source.includes('transport') || source.includes('parking')) return 'transport';
-  if (source.includes('jedz')) return 'food';
-  if (source.includes('rozryw') || source.includes('netflix')) return 'entertainment';
-  if (source.includes('zdrow') || source.includes('silown')) return 'health';
-  if (source.includes('prad') || source.includes('internet') || source.includes('dom')) return 'utilities';
-  if (source.includes('telefon') || source.includes('abonament')) return 'phone';
-  if (source.includes('ubez')) return 'shield';
-  if (source.includes('auto') || source.includes('samoch') || source.includes('oc')) return 'car';
-  if (source.includes('jdg') || source.includes('ksieg') || source.includes('faktur')) return 'business';
-  return 'other';
-}
-
-function toneForCategory(category: string): FinanceTone {
-  const source = normalized(category);
-  if (source.includes('miesz') || source.includes('transport') || source.includes('auto')) return 'blue';
-  if (source.includes('jedz') || source.includes('dom') || source.includes('ubez')) return 'teal';
-  if (source.includes('rozryw')) return 'violet';
-  return 'pink';
-}
-
-function iconForSavings(goal: SavingsGoal): IconName {
-  const source = normalized(`${goal.name} ${goal.notes ?? ''}`);
-  if (source.includes('podusz') || source.includes('bezpiec')) return 'shield';
-  if (source.includes('wakac') || source.includes('urlop')) return 'travel';
-  if (source.includes('samoch') || source.includes('auto')) return 'car';
-  return 'savings';
-}
-
-function toneForSavings(goal: SavingsGoal): FinanceTone {
-  const source = normalized(`${goal.name} ${goal.notes ?? ''}`);
-  if (source.includes('wakac') || source.includes('urlop')) return 'pink';
-  if (source.includes('samoch') || source.includes('auto')) return 'blue';
-  return 'teal';
-}
-
-export function FinanceScreen() {
-  const [tab, setTab] = useState<FinanceTab>('miesieczne');
-  const [month, setMonth] = useState(currentYearMonth());
-
-  return (
-    <div className="module-page">
-      <div className="module-head-wrap">
-        <PageHeader
-          icon={<FinanceHeaderIcon />}
-          title="Finanse"
-          desc="Przegląd finansów, budżetu i płatności w jednym miejscu."
-          actions={<FinanceMonthSwitcher month={month} onMonthChange={setMonth} />}
-        />
-        <SubTabs tabs={TABS} active={tab} onChange={(id) => setTab(id as FinanceTab)} />
-      </div>
-
-      {tab === 'przeglad' && <FinanceOverview month={month} onNavigate={setTab} />}
-      {tab === 'miesieczne' && <FinanceMonthly month={month} />}
-      {tab === 'budzet' && <div className="finance-shell"><BudgetPanel month={month} detailed /></div>}
-      {tab === 'cele' && <div className="finance-shell"><SavingsPanel detailed /></div>}
-      {tab === 'historia' && <FinanceHistory month={month} />}
-    </div>
-  );
-}
-
-function FinanceHistory({ month }: { month: string }) {
-  const { recurringExpenses, financialReminders } = useLocalStore();
-  const paidRecurring = recurringExpenses.filter((item) => item.paidThisMonth);
-  const paidReminders = financialReminders.filter((r) => r.completed && r.dueDate.startsWith(month));
-  const rows = [
-    ...paidRecurring.map((item) => ({ id: `r-${item.id}`, name: item.name, amount: item.amount, date: month, kind: 'Płatność cykliczna' })),
-    ...paidReminders.map((r) => ({ id: `p-${r.id}`, name: r.title, amount: r.amount ?? 0, date: r.dueDate, kind: 'Przypomnienie' })),
-  ].sort((a, b) => b.date.localeCompare(a.date));
-  const total = rows.reduce((sum, r) => sum + r.amount, 0);
-
-  return (
-    <div className="finance-shell">
-      <SectionCard title={`Historia · ${fmtMonth(month)}`}>
-        {rows.length === 0 ? (
-          <EmptyState title="Brak historii" desc="Opłacone płatności i przypomnienia z tego miesiąca pojawią się tutaj." />
-        ) : (
-          <table className="table">
-            <thead><tr><th>POZYCJA</th><th>TYP</th><th style={{ textAlign: 'right' }}>KWOTA</th></tr></thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id}>
-                  <td style={{ fontWeight: 600 }}>{r.name}</td>
-                  <td style={{ color: 'var(--ink-3)', fontSize: 12.5 }}>{r.kind}</td>
-                  <td style={{ textAlign: 'right', fontWeight: 700 }}>{fmtPLN(r.amount)}</td>
-                </tr>
-              ))}
-              <tr className="finance-total-row"><td colSpan={2}>Razem opłacone</td><td style={{ textAlign: 'right' }}>{fmtPLN(total)}</td></tr>
-            </tbody>
-          </table>
-        )}
-      </SectionCard>
-    </div>
-  );
-}
-
-function FinanceHeaderIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="5" width="20" height="14" rx="2" /><path d="M2 10h20M6 15h4" />
-    </svg>
-  );
+function monthFromUrl() {
+  const value = new URLSearchParams(window.location.search).get('month');
+  return value && /^\d{4}-\d{2}$/.test(value) ? value : currentYearMonth();
 }
 
 function shiftMonth(month: string, delta: number) {
@@ -201,1045 +80,783 @@ function shiftMonth(month: string, delta: number) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
-function FinanceMonthSwitcher({ month, onMonthChange }: { month: string; onMonthChange: (month: string) => void }) {
-  return (
-    <div className="finance-nav-month">
-      <button className="icon-btn" type="button" onClick={() => onMonthChange(shiftMonth(month, -1))} aria-label="Poprzedni miesiąc">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M15 18 9 12l6-6" /></svg>
-      </button>
-      <input className="input" type="month" value={month} onChange={(e) => onMonthChange(e.target.value || currentYearMonth())} />
-      <button className="icon-btn" type="button" onClick={() => onMonthChange(shiftMonth(month, 1))} aria-label="Następny miesiąc">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-      </button>
-    </div>
-  );
+function monthLabel(month: string) {
+  const [year, m] = month.split('-').map(Number);
+  return `${MONTHS[m - 1]} ${year}`;
 }
 
-function FinanceOverview({ month, onNavigate }: { month: string; onNavigate: (tab: FinanceTab) => void }) {
-  const { accounts, savingsGoals, recurringExpenses } = useLocalStore();
-  const activeAccounts = accounts.filter((a) => !a.archived);
-  const totalBalance = activeAccounts.reduce((sum, account) => sum + account.balance, 0);
-  const totalSavings = savingsGoals.reduce((sum, goal) => sum + goal.currentAmount, 0);
-  const monthlyFixed = recurringExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-
-  return (
-    <div className="finance-shell">
-      <div className="finance-kpi-grid">
-        <MetricCard
-          icon="accounts"
-          label="Łączne środki"
-          value={fmtPLN(totalBalance)}
-          note={`${activeAccounts.length} aktywnych źródeł`}
-          tone="blue"
-          onEdit={() => onNavigate('przeglad')}
-        />
-        <MetricCard
-          icon="savings"
-          label="Łączne oszczędności"
-          value={fmtPLN(totalSavings)}
-          note={`${savingsGoals.length} cele oszczędnościowe`}
-          tone="violet"
-          onEdit={() => onNavigate('przeglad')}
-        />
-        <MetricCard
-          icon="payments"
-          label="Miesięczne stałe wydatki"
-          value={fmtPLN(monthlyFixed)}
-          note={`Stałe koszty w ${fmtMonth(month)}`}
-          tone="teal"
-          onEdit={() => onNavigate('miesieczne')}
-        />
-      </div>
-
-      <div className="finance-dashboard-grid">
-        <AccountsPanel />
-        <SavingsPanel />
-        <FixedExpensesPanel onConfigure={() => onNavigate('miesieczne')} />
-      </div>
-    </div>
-  );
+function daysInMonth(month: string) {
+  const [year, monthIndex] = month.split('-').map(Number);
+  return new Date(year, monthIndex, 0).getDate();
 }
 
-function FinanceMonthly({ month }: { month: string }) {
-  const { budgetCategories, recurringExpenses, financialReminders } = useLocalStore();
-  const categories = budgetCategories.filter((cat) => cat.month === month);
-  const planned = categories.reduce((sum, cat) => sum + cat.plannedAmount, 0);
-  const actual = categories.reduce((sum, cat) => sum + cat.actualAmount, 0);
-  const paidRecurring = recurringExpenses.filter((item) => item.paidThisMonth).reduce((sum, item) => sum + item.amount, 0);
-  const dueRecurring = recurringExpenses.filter((item) => !item.paidThisMonth).reduce((sum, item) => sum + item.amount, 0);
-  const monthReminders = financialReminders.filter((reminder) => reminder.dueDate.startsWith(month));
-  const paidReminders = monthReminders.filter((reminder) => reminder.completed).reduce((sum, reminder) => sum + (reminder.amount ?? 0), 0);
-  const dueReminders = monthReminders.filter((reminder) => !reminder.completed).reduce((sum, reminder) => sum + (reminder.amount ?? 0), 0);
-  const paid = paidRecurring + paidReminders;
-  const due = dueRecurring + dueReminders;
-  const remaining = planned - actual;
-  const budgetPct = clampPct((actual / Math.max(planned, 1)) * 100);
-
-  return (
-    <div className="finance-shell">
-      <div className="finance-kpi-grid">
-        <MetricCard icon="due" label="Do zapłaty" value={fmtPLN(due)} note={`Pozostało w ${fmtMonth(month)}`} tone="pink" />
-        <MetricCard icon="paid" label="Opłacone" value={fmtPLN(paid)} note={`Opłacone w ${fmtMonth(month)}`} tone="teal" />
-        <BudgetMetric planned={planned} actual={actual} remaining={remaining} pct={budgetPct} />
-      </div>
-
-      <div className="finance-monthly-grid">
-        <BudgetPanel month={month} detailed />
-        <RecurringPanel month={month} detailed />
-      </div>
-    </div>
-  );
+function dueDateFor(month: string, dueDay: number) {
+  const day = Math.min(Math.max(1, dueDay || 1), daysInMonth(month));
+  return `${month}-${String(day).padStart(2, '0')}`;
 }
 
-function MetricCard({ icon, label, value, note, tone, onEdit }: { icon: IconName; label: string; value: string; note: string; tone: FinanceTone; onEdit?: () => void }) {
-  return (
-    <KpiCard
-      icon={<FinanceIcon name={icon} />}
-      label={label}
-      value={value}
-      tone={tone}
-      sub={(
-        <span className="kpi-sub-row">
-          <span>{note}</span>
-          {onEdit && (
-            <button className="finance-inline-edit" type="button" onClick={onEdit} aria-label={`Edytuj: ${label}`}>
-              <FinanceIcon name="edit" />
-            </button>
-          )}
-        </span>
-      )}
-    />
-  );
+function formatDate(date: string) {
+  return new Date(`${date}T12:00:00`).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function BudgetMetric({ planned, actual, remaining, pct }: { planned: number; actual: number; remaining: number; pct: number }) {
+function fmtMoney(n: number, currency = 'PLN') {
+  return n.toLocaleString('pl-PL', { style: 'currency', currency, maximumFractionDigits: currency === 'PLN' ? 0 : 2 });
+}
+
+function fmtNumber(n: number) {
+  return n.toLocaleString('pl-PL', { maximumFractionDigits: 0 });
+}
+
+function num(value: string, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function normalized(value: string) {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function clampPct(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, value));
+}
+
+function isPast(date: string) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(`${date}T12:00:00`) < today;
+}
+
+function categoryIcon(category: string, name = ''): IconName {
+  const source = normalized(`${category} ${name}`);
+  if (source.includes('miesz') || source.includes('czynsz')) return 'home';
+  if (source.includes('transport')) return 'transport';
+  if (source.includes('jedz')) return 'food';
+  if (source.includes('rozryw')) return 'entertainment';
+  if (source.includes('zdrow')) return 'health';
+  if (source.includes('jdg') || source.includes('ksieg')) return 'business';
+  if (source.includes('auto') || source.includes('oc')) return 'car';
+  if (source.includes('telefon')) return 'phone';
+  if (source.includes('ubez')) return 'shield';
+  return 'wallet';
+}
+
+function accountIcon(account: Account): IconName {
+  const source = normalized(`${account.type} ${account.name}`);
+  if (source.includes('oszcz')) return 'bank';
+  if (source.includes('got')) return 'cash';
+  if (source.includes('walut')) return 'cash';
+  return 'wallet';
+}
+
+function toPaymentRows(recurring: RecurringExpense[], reminders: FinancialReminder[], month: string): PaymentRow[] {
+  const recurringRows = recurring.map((item) => {
+    const paid = Boolean(item.paidThisMonth);
+    const dueDate = dueDateFor(month, item.dueDay);
+    return {
+      id: `recurring:${item.id}`,
+      source: 'recurring' as const,
+      name: item.name,
+      category: item.category,
+      amount: item.amount,
+      dueDate,
+      type: item.frequency === 'yearly' ? 'roczna' : item.frequency === 'jdg' ? 'JDG' : 'miesięczna',
+      status: paid ? 'paid' as const : isPast(dueDate) ? 'overdue' as const : 'due' as const,
+      paid,
+      raw: item,
+    };
+  });
+  const reminderRows = reminders.filter((item) => item.dueDate.startsWith(month)).map((item) => {
+    const paid = Boolean(item.completed);
+    return {
+      id: `reminder:${item.id}`,
+      source: 'reminder' as const,
+      name: item.title,
+      category: item.category,
+      amount: item.amount ?? 0,
+      dueDate: item.dueDate,
+      type: 'jednorazowa',
+      status: paid ? 'paid' as const : isPast(item.dueDate) ? 'overdue' as const : 'due' as const,
+      paid,
+      raw: item,
+    };
+  });
+  return [...recurringRows, ...reminderRows].sort((a, b) => {
+    if (a.paid !== b.paid) return a.paid ? 1 : -1;
+    return a.dueDate.localeCompare(b.dueDate) || a.name.localeCompare(b.name, 'pl');
+  });
+}
+
+export function FinanceScreen() {
+  const [month, setMonth] = useState(monthFromUrl);
+  const [segment, setSegment] = useState<FinanceSegment>('due');
+  const [activeSummary, setActiveSummary] = useState<SummaryKey>('due');
+  const [accountEditorToken, setAccountEditorToken] = useState(0);
+  const [paymentDrawer, setPaymentDrawer] = useState<{ open: boolean; row?: PaymentRow | null }>({ open: false });
+  const [budgetDrawer, setBudgetDrawer] = useState<{ open: boolean; category?: BudgetCategory | null }>({ open: false });
+  const [savingsDrawer, setSavingsDrawer] = useState<{ open: boolean; goal?: SavingsGoal | null }>({ open: false });
+  const [jdgDrawer, setJdgDrawer] = useState<{ open: boolean; item?: JdgItem | null }>({ open: false });
+
+  const store = useLocalStore();
+  const activeAccounts = store.accounts.filter((account) => !account.archived);
+  const monthBudget = store.budgetCategories.filter((category) => category.month === month);
+  const payments = useMemo(() => toPaymentRows(store.recurringExpenses, store.financialReminders, month), [store.recurringExpenses, store.financialReminders, month]);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    params.set('month', month);
+    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
+  }, [month]);
+
+  const totals = useMemo(() => {
+    const funds = activeAccounts.reduce((sum, account) => sum + account.balance, 0);
+    const savings = store.savingsGoals.reduce((sum, goal) => sum + goal.currentAmount, 0);
+    const due = payments.filter((row) => !row.paid).reduce((sum, row) => sum + row.amount, 0);
+    const paid = payments.filter((row) => row.paid).reduce((sum, row) => sum + row.amount, 0);
+    const planned = monthBudget.reduce((sum, category) => sum + category.plannedAmount, 0);
+    const spent = monthBudget.reduce((sum, category) => sum + category.actualAmount, 0);
+    const budgetPct = clampPct((spent / Math.max(planned, 1)) * 100);
+    return { funds, savings, due, paid, planned, spent, budgetPct };
+  }, [activeAccounts, monthBudget, payments, store.savingsGoals]);
+
+  const openSummary = (key: SummaryKey) => {
+    setActiveSummary(key);
+    if (key === 'accounts') setSegment('accounts');
+    if (key === 'savings') setSegment('savings');
+    if (key === 'budget') setSegment('budget');
+    if (key === 'due') setSegment('due');
+  };
+
+  const addForSegment = () => {
+    if (segment === 'accounts') setAccountEditorToken((value) => value + 1);
+    if (segment === 'due') setPaymentDrawer({ open: true });
+    if (segment === 'budget') setBudgetDrawer({ open: true });
+    if (segment === 'savings') setSavingsDrawer({ open: true });
+    if (segment === 'jdg') setJdgDrawer({ open: true });
+    if (segment === 'history') exportHistoryCsv(month, payments);
+  };
+
   return (
-    <KpiCard
-      icon={<FinanceIcon name="budget" />}
-      label="Budżet miesiąca"
-      value={`${fmtNumber(pct)}%`}
-      tone="blue"
-      sub={(
-        <>
-        <div className="finance-budget-metric-stats">
-          <Stat label="Zaplanowane" value={fmtPLN(planned)} />
-          <Stat label="Wydane" value={fmtPLN(actual)} />
-          <Stat label="Pozostało" value={fmtPLN(remaining)} danger={remaining < 0} />
+    <div className="module-page finance-os">
+      <header className="finance-os-header">
+        <div>
+          <h1>Finanse</h1>
+          <p>Przegląd finansów, budżetu i płatności w jednym miejscu.</p>
         </div>
-        <div className="finance-budget-meter">
-          <span style={{ width: `${pct}%` }} />
-          <strong>{fmtNumber(pct)}%</strong>
+        <div className="finance-month-control">
+          <button className="icon-btn" type="button" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Poprzedni miesiąc"><Icon name="arrow" flip /></button>
+          <input className="input finance-month-input" type="month" value={month} onChange={(event) => setMonth(event.target.value || currentYearMonth())} />
+          <button className="icon-btn" type="button" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Następny miesiąc"><Icon name="arrow" /></button>
         </div>
-        </>
-      )}
-    />
-  );
-}
+      </header>
 
-function SectionCard({ title, action, children, className = '' }: { title: string; action?: ReactNode; children: ReactNode; className?: string }) {
-  return (
-    <section className={`finance-card ${className}`}>
-      <div className="finance-card-head">
-        <div className="finance-card-title">{title}</div>
-        {action}
+      <section className="finance-summary-strip">
+        <SummaryTile active={activeSummary === 'accounts'} label="Środki" value={fmtMoney(totals.funds)} note={`${activeAccounts.length} aktywnych źródeł`} onClick={() => openSummary('accounts')} />
+        <SummaryTile active={activeSummary === 'savings'} label="Oszczędności" value={fmtMoney(totals.savings)} note={`${store.savingsGoals.length} cele oszczędnościowe`} onClick={() => openSummary('savings')} />
+        <SummaryTile active={activeSummary === 'budget'} label="Budżet" value={`${fmtNumber(totals.budgetPct)}%`} note={`${fmtMoney(totals.spent)} wydane z ${fmtMoney(totals.planned)}`} onClick={() => openSummary('budget')} />
+        <SummaryTile active={activeSummary === 'due'} label="Płatności" value={fmtMoney(totals.due)} note={`Pozostało w ${monthLabel(month)}`} onClick={() => openSummary('due')} />
+      </section>
+
+      <div className="finance-workspace">
+        <main className="finance-month-panel">
+          <div className="finance-segment-toolbar">
+            <nav className="finance-segment-tabs">
+              {SEGMENTS.map((item) => <button key={item.id} className={segment === item.id ? 'is-active' : ''} type="button" onClick={() => setSegment(item.id)}>{item.label}</button>)}
+            </nav>
+            <div className="finance-segment-side">
+              <SegmentKpiRail segment={segment} month={month} accounts={activeAccounts} payments={payments} goals={store.savingsGoals} totals={totals} jdgItems={store.jdgItems} jdgMonths={store.jdgMonths} />
+              <button className="btn btn-primary btn-sm finance-segment-cta" type="button" onClick={addForSegment}>{ctaLabel(segment)}</button>
+            </div>
+          </div>
+          <div className="finance-segment-body">
+            {segment === 'accounts' && <AccountsSegment editorToken={accountEditorToken} />}
+            {segment === 'due' && <PaymentsSegment month={month} payments={payments} onEdit={(row) => setPaymentDrawer({ open: true, row })} />}
+            {segment === 'budget' && <BudgetSegment categories={monthBudget} onEdit={(category) => setBudgetDrawer({ open: true, category })} />}
+            {segment === 'savings' && <SavingsSegment goals={store.savingsGoals} onEdit={(goal) => setSavingsDrawer({ open: true, goal })} />}
+            {segment === 'jdg' && <JdgSegment month={month} onEdit={(item) => setJdgDrawer({ open: true, item })} />}
+            {segment === 'history' && <HistorySegment month={month} payments={payments} />}
+          </div>
+        </main>
+
       </div>
-      {children}
-    </section>
+
+      <PaymentDrawer open={paymentDrawer.open} row={paymentDrawer.row ?? null} month={month} onClose={() => setPaymentDrawer({ open: false })} />
+      <BudgetDrawer open={budgetDrawer.open} category={budgetDrawer.category ?? null} month={month} onClose={() => setBudgetDrawer({ open: false })} />
+      <SavingsDrawer open={savingsDrawer.open} goal={savingsDrawer.goal ?? null} onClose={() => setSavingsDrawer({ open: false })} />
+      <JdgDrawer open={jdgDrawer.open} item={jdgDrawer.item ?? null} month={month} onClose={() => setJdgDrawer({ open: false })} />
+    </div>
   );
 }
 
-function AccountsPanel({ detailed = false }: { detailed?: boolean }) {
-  const { accounts, addAccount, updateAccount, deleteAccount } = useLocalStore();
-  const active = accounts.filter((account) => !account.archived);
-  const total = active.reduce((sum, account) => sum + account.balance, 0);
-  const [editing, setEditing] = useState<Account | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
+function ctaLabel(segment: FinanceSegment) {
+  if (segment === 'accounts') return '+ Źródło';
+  if (segment === 'due') return '+ Płatność';
+  if (segment === 'budget') return '+ Kategoria';
+  if (segment === 'savings') return '+ Nowy cel';
+  if (segment === 'jdg') return '+ Obowiązek';
+  return 'Eksportuj';
+}
+
+function SummaryTile({ label, value, note, active, action, onClick }: { label: string; value: string; note: string; active: boolean; action?: IconName; onClick: () => void }) {
+  return (
+    <button className={`finance-summary-tile ${active ? 'is-active' : ''}`} type="button" onClick={onClick}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <small>{note}</small>
+      {action && <i className="finance-summary-action"><Icon name={action} /></i>}
+    </button>
+  );
+}
+
+function SegmentKpiRail({
+  segment,
+  month,
+  accounts,
+  payments,
+  goals,
+  totals,
+  jdgItems,
+  jdgMonths,
+}: {
+  segment: FinanceSegment;
+  month: string;
+  accounts: Account[];
+  payments: PaymentRow[];
+  goals: SavingsGoal[];
+  totals: { due: number; paid: number; budgetPct: number; spent: number; planned: number };
+  jdgItems: JdgItem[];
+  jdgMonths: { month: string; completed: string[] }[];
+}) {
+  const next = payments.find((row) => !row.paid);
+  const overdue = payments.filter((row) => row.status === 'overdue').length;
+  const remaining = totals.planned - totals.spent;
+  const savings = goals.reduce((sum, goal) => sum + goal.currentAmount, 0);
+  const savingsTarget = goals.reduce((sum, goal) => sum + goal.targetAmount, 0);
+  const jdgCompleted = jdgMonths.find((row) => row.month === month)?.completed.length ?? 0;
+  const paidRows = payments.filter((row) => row.paid);
+  const funds = accounts.reduce((sum, account) => sum + account.balance, 0);
+  const plnFunds = accounts.filter((account) => account.currency === 'PLN').reduce((sum, account) => sum + account.balance, 0);
+  const foreignAccounts = accounts.filter((account) => account.currency !== 'PLN').length;
+
+  if (segment === 'accounts') {
+    return (
+      <div className="finance-segment-kpis">
+        <MiniKpi label="Środki" value={fmtMoney(funds)} />
+        <MiniKpi label="Źródła" value={`${accounts.length}`} />
+        <MiniKpi label="PLN" value={fmtMoney(plnFunds)} />
+        <MiniKpi label="Waluty" value={`${foreignAccounts}`} />
+      </div>
+    );
+  }
+  if (segment === 'due') {
+    return (
+      <div className="finance-segment-kpis">
+        <MiniKpi label="Płatności" value={fmtMoney(totals.due)} />
+        <MiniKpi label="Opłacone" value={fmtMoney(totals.paid)} />
+        <MiniKpi label="Najbliższa" value={next ? formatDate(next.dueDate) : '-'} danger={Boolean(next?.status === 'overdue')} />
+        <MiniKpi label="Po terminie" value={`${overdue}`} danger={overdue > 0} />
+      </div>
+    );
+  }
+  if (segment === 'budget') {
+    return (
+      <div className="finance-segment-kpis">
+        <MiniKpi label="Plan" value={fmtMoney(totals.planned)} />
+        <MiniKpi label="Wydane" value={fmtMoney(totals.spent)} />
+        <MiniKpi label="Pozostało" value={fmtMoney(remaining)} danger={remaining < 0} />
+        <MiniKpi label="Wykonanie" value={`${fmtNumber(totals.budgetPct)}%`} />
+      </div>
+    );
+  }
+  if (segment === 'savings') {
+    return (
+      <div className="finance-segment-kpis">
+        <MiniKpi label="Oszczędności" value={fmtMoney(savings)} />
+        <MiniKpi label="Cele" value={`${goals.length}`} />
+        <MiniKpi label="Realizacja" value={`${fmtNumber((savings / Math.max(savingsTarget, 1)) * 100)}%`} />
+      </div>
+    );
+  }
+  if (segment === 'jdg') {
+    return (
+      <div className="finance-segment-kpis">
+        <MiniKpi label="Ukończone" value={`${jdgCompleted}/${jdgItems.length}`} />
+        <MiniKpi label="Postęp" value={`${jdgItems.length ? fmtNumber((jdgCompleted / jdgItems.length) * 100) : 0}%`} />
+      </div>
+    );
+  }
+  return (
+    <div className="finance-segment-kpis">
+      <MiniKpi label="Zdarzenia" value={`${paidRows.length}`} />
+      <MiniKpi label="Opłacono" value={fmtMoney(paidRows.reduce((sum, row) => sum + row.amount, 0))} />
+    </div>
+  );
+}
+
+function MiniKpi({ label, value, danger }: { label: string; value: string; danger?: boolean }) {
+  return <span className={`finance-mini-kpi ${danger ? 'is-danger' : ''}`}><small>{label}</small><strong>{value}</strong></span>;
+}
+
+function PaymentsSegment({ month, payments, onEdit }: { month: string; payments: PaymentRow[]; onEdit: (row: PaymentRow) => void }) {
+  const { updateRecurringExpense, toggleFinancialReminder, deleteRecurringExpense, deleteFinancialReminder } = useLocalStore();
+  const [deleteTarget, setDeleteTarget] = useState<PaymentRow | null>(null);
+  const total = payments.reduce((sum, row) => sum + row.amount, 0);
+
+  const toggle = (row: PaymentRow) => {
+    if (row.source === 'recurring') updateRecurringExpense((row.raw as RecurringExpense).id, { paidThisMonth: !row.paid });
+    else toggleFinancialReminder((row.raw as FinancialReminder).id);
+  };
 
   return (
     <>
-      <SectionCard
-        title={`Środki (${active.length})`}
-        className={detailed ? 'finance-card-full' : ''}
-        action={<button className="btn btn-primary btn-sm" type="button" onClick={() => setAdding(true)}><FinanceIcon name="plus" /> Nowe źródło</button>}
-      >
-        {active.length === 0 ? (
-          <EmptyState title="Brak źródeł" cta="Dodaj źródło" onCta={() => setAdding(true)} />
-        ) : (
-          <div className="finance-table-wrap">
-            <table className="table finance-table">
-              <thead>
-                <tr>
-                  <th>Nazwa</th>
-                  <th>Typ</th>
-                  <th>Waluta</th>
-                  <th style={{ textAlign: 'right' }}>Saldo</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {active.map((account) => (
-                  <tr key={account.id}>
-                    <td>
-                      <button className="finance-name-btn" type="button" onClick={() => setEditing(account)}>
-                        <span className={`finance-icon-tile finance-tone-${toneForAccount(account)}`}><FinanceIcon name={iconForAccount(account)} /></span>
-                        <span>{account.name}</span>
-                      </button>
-                    </td>
-                    <td>{account.type}</td>
-                    <td>{account.currency}</td>
-                    <td className="finance-money-cell">{fmtPLN(account.balance, account.currency)}</td>
-                    <td className="finance-actions-cell">
-                      <div className="finance-row-actions">
-                        <button className="icon-btn" type="button" onClick={() => setEditing(account)} aria-label={`Edytuj źródło ${account.name}`}><FinanceIcon name="edit" /></button>
-                        <button className="icon-btn" type="button" onClick={() => setDeleteTarget(account)} aria-label={`Archiwizuj źródło ${account.name}`}><IcoTrash /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                <tr className="finance-total-row">
-                  <td colSpan={3}>Łącznie</td>
-                  <td className="finance-money-cell">{fmtPLN(total)}</td>
-                  <td></td>
-                </tr>
-              </tbody>
-            </table>
+      {payments.length === 0 ? (
+        <FinanceEmpty title="Brak płatności w tym miesiącu." desc="Dodaj pierwszą płatność albo skonfiguruj cykliczne koszty." />
+      ) : (
+        <div className="finance-payments-table">
+          <div className="finance-payments-head">
+            <span />
+            <span>Nazwa</span><span>Kategoria</span><span>Termin</span><span>Kwota</span><span>Typ</span><span>Status</span><span>Akcje</span>
           </div>
-        )}
-      </SectionCard>
-
-      <AccountModal
-        open={adding || !!editing}
-        account={editing}
-        onClose={() => { setAdding(false); setEditing(null); }}
-        onSave={(payload) => {
-          if (editing) updateAccount(editing.id, payload);
-          else addAccount(payload);
-          setAdding(false);
-          setEditing(null);
-        }}
-      />
+          {payments.map((row) => (
+            <div key={row.id} className={`finance-payment-line ${row.paid ? 'is-paid' : ''}`} onClick={() => onEdit(row)}>
+              <button className="finance-check" type="button" onClick={(event) => { event.stopPropagation(); toggle(row); }} aria-label="Zmień status płatności">{row.paid && <Icon name="check" />}</button>
+              <span className="finance-payment-name"><span className={`finance-icon-tile finance-tone-${row.status === 'paid' ? 'teal' : 'blue'}`}><Icon name={categoryIcon(row.category, row.name)} /></span><strong>{row.name}</strong></span>
+              <span className="finance-category-cell"><span className={`finance-icon-tile finance-tone-${row.status === 'paid' ? 'teal' : 'blue'}`}><Icon name={categoryIcon(row.category)} /></span>{row.category}</span>
+              <span className={row.status === 'overdue' ? 'finance-danger' : ''}>{formatDate(row.dueDate)}</span>
+              <strong>{fmtMoney(row.amount)}</strong>
+              <Badge>{row.type}</Badge>
+              <StatusBadge status={row.status} />
+              <span className="finance-line-actions">
+                <button className="icon-btn" type="button" onClick={(event) => { event.stopPropagation(); onEdit(row); }}><Icon name="edit" /></button>
+                <button className="icon-btn" type="button" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}><Icon name="trash" /></button>
+              </span>
+            </div>
+          ))}
+          <div className="finance-total-line"><span>{payments.length} płatności</span><strong>{fmtMoney(total)}</strong></div>
+        </div>
+      )}
       <ConfirmDelete
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => { if (deleteTarget) deleteAccount(deleteTarget.id); setDeleteTarget(null); }}
-        label={deleteTarget?.name ?? 'to źródło'}
+        label={deleteTarget?.name ?? 'płatność'}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          if (deleteTarget.source === 'recurring') deleteRecurringExpense((deleteTarget.raw as RecurringExpense).id);
+          else deleteFinancialReminder((deleteTarget.raw as FinancialReminder).id);
+          setDeleteTarget(null);
+        }}
       />
+      <span className="finance-panel-foot">{monthLabel(month)} · suma płatności {fmtMoney(total)}</span>
     </>
   );
 }
 
-function BudgetPanel({ month, detailed = false }: { month: string; detailed?: boolean }) {
-  const { budgetCategories, addBudgetCategory, updateBudgetCategory, deleteBudgetCategory, resetBudgetMonth } = useLocalStore();
-  const categories = budgetCategories.filter((cat) => cat.month === month);
-  const planned = categories.reduce((sum, cat) => sum + cat.plannedAmount, 0);
-  const actual = categories.reduce((sum, cat) => sum + cat.actualAmount, 0);
-  const remaining = planned - actual;
-  const [editing, setEditing] = useState<BudgetCategory | null>(null);
-  const [adding, setAdding] = useState(false);
+function BudgetSegment({ categories, onEdit }: { categories: BudgetCategory[]; onEdit: (category: BudgetCategory) => void }) {
+  const { deleteBudgetCategory } = useLocalStore();
   const [deleteTarget, setDeleteTarget] = useState<BudgetCategory | null>(null);
 
   return (
     <>
-      <SectionCard
-        title="Budżet"
-        className={detailed ? 'finance-card-full' : ''}
-        action={
-          <div className="finance-card-actions">
-            <button className="btn btn-ghost btn-sm" type="button" onClick={() => resetBudgetMonth(month)}><FinanceIcon name="reset" /> Reset</button>
-            <button className="btn btn-primary btn-sm" type="button" onClick={() => setAdding(true)}><FinanceIcon name="plus" /> Kategoria</button>
-          </div>
-        }
-      >
-        <div className="finance-budget-summary">
-          <Stat label="Zaplanowane" value={fmtPLN(planned)} />
-          <Stat label="Wydane" value={fmtPLN(actual)} />
-          <Stat label="Pozostało" value={fmtPLN(remaining)} danger={remaining < 0} />
+      {categories.length === 0 ? (
+        <FinanceEmpty title="Budżet na ten miesiąc nie jest skonfigurowany." desc="Dodaj kategorie i zaplanowane kwoty." />
+      ) : (
+        <div className="finance-budget-table">
+          <div className="finance-budget-row is-head"><span>Kategoria</span><span>Plan</span><span>Wydane</span><span>Pozostało</span><span>%</span><span>Status</span><span>Akcje</span></div>
+          {categories.map((category) => {
+            const pct = clampPct((category.actualAmount / Math.max(category.plannedAmount, 1)) * 100);
+            const left = category.plannedAmount - category.actualAmount;
+            const over = left < 0;
+            return (
+              <button key={category.id} className="finance-budget-row" type="button" onClick={() => onEdit(category)}>
+                <span className="finance-budget-name"><span className={`finance-icon-tile finance-tone-${over ? 'pink' : 'blue'}`}><Icon name={categoryIcon(category.name)} /></span>{category.name}</span>
+                <strong>{fmtMoney(category.plannedAmount)}</strong>
+                <strong>{fmtMoney(category.actualAmount)}</strong>
+                <strong className={over ? 'finance-danger' : ''}>{fmtMoney(left)}</strong>
+                <span className="finance-budget-progress"><i style={{ width: `${pct}%`, background: over ? 'var(--finance-overdue)' : 'var(--accent-ice-strong)' }} />{fmtNumber(pct)}%</span>
+                <span>{over ? <Badge tone="danger">przekroczony</Badge> : <Badge>ok</Badge>}</span>
+                <span className="finance-line-actions"><span className="icon-btn"><Icon name="edit" /></span><span className="icon-btn" onClick={(event) => { event.stopPropagation(); setDeleteTarget(category); }}><Icon name="trash" /></span></span>
+              </button>
+            );
+          })}
         </div>
-
-        {categories.length === 0 ? (
-          <EmptyState title="Brak budżetu" desc="Dodaj kategorie dla wybranego miesiąca." cta="Dodaj kategorię" onCta={() => setAdding(true)} />
-        ) : (
-          <div className="finance-budget-list">
-            <div className="finance-budget-row finance-budget-row-head" aria-hidden="true">
-              <span />
-              <div className="finance-budget-values">
-                <span>Zaplanowane</span>
-                <span>Wydane</span>
-                <span>Pozostało</span>
-              </div>
-            </div>
-            <div className="finance-budget-legend">
-              <span className="finance-legend-dot finance-legend-dot-danger" />
-              Wydane / Pozostało na czerwono = kategoria przekroczona
-            </div>
-            {categories.map((cat) => {
-              const pct = clampPct((cat.actualAmount / Math.max(cat.plannedAmount, 1)) * 100);
-              const over = cat.actualAmount > cat.plannedAmount;
-              const status = over ? { label: 'Przekroczony', cls: 'status-overdue' } : pct >= 80 ? { label: 'Uwaga', cls: 'status-warn' } : { label: 'OK', cls: 'status-done' };
-              return (
-                <div key={cat.id} className="finance-budget-row">
-                  <button className="finance-budget-main" type="button" onClick={() => setEditing(cat)}>
-                    <span className={`finance-icon-tile finance-tone-${toneForCategory(cat.name)}`}><FinanceIcon name={iconForCategory(cat.name)} /></span>
-                    <span>{cat.name}</span>
-                    <span className={`badge ${status.cls}`} style={{ marginLeft: 6 }}>{status.label}</span>
-                  </button>
-                  <div className="finance-budget-values">
-                    <span>{fmtPLN(cat.plannedAmount)}</span>
-                    <span className={over ? 'finance-danger' : ''}>{fmtPLN(cat.actualAmount)}</span>
-                    <span className={over ? 'finance-danger' : ''}>{fmtPLN(cat.plannedAmount - cat.actualAmount)}</span>
-                  </div>
-                  <div className="finance-progress"><span style={{ width: `${pct}%`, background: over ? 'var(--danger)' : cat.color }} /></div>
-                  <div className="finance-row-actions">
-                    <button className="icon-btn" type="button" onClick={() => setEditing(cat)} aria-label={`Edytuj kategorię ${cat.name}`}><FinanceIcon name="edit" /></button>
-                    <button className="icon-btn" type="button" onClick={() => setDeleteTarget(cat)} aria-label={`Usuń kategorię ${cat.name}`}><IcoTrash /></button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </SectionCard>
-
-      <BudgetModal
-        open={adding || !!editing}
-        category={editing}
-        month={month}
-        onClose={() => { setAdding(false); setEditing(null); }}
-        onSave={(payload) => {
-          if (editing) updateBudgetCategory(editing.id, payload);
-          else addBudgetCategory(payload);
-          setAdding(false);
-          setEditing(null);
-        }}
-      />
-      <ConfirmDelete
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={() => { if (deleteTarget) deleteBudgetCategory(deleteTarget.id); setDeleteTarget(null); }}
-        label={deleteTarget?.name ?? 'tę kategorię'}
-      />
+      )}
+      <ConfirmDelete open={!!deleteTarget} onClose={() => setDeleteTarget(null)} label={deleteTarget?.name ?? 'kategorię'} onConfirm={() => { if (deleteTarget) deleteBudgetCategory(deleteTarget.id); setDeleteTarget(null); }} />
     </>
   );
 }
 
-function SavingsPanel({ detailed = false }: { detailed?: boolean }) {
-  const { savingsGoals, addSavingsGoal, updateSavingsGoal, deleteSavingsGoal } = useLocalStore();
-  const [editing, setEditing] = useState<SavingsGoal | null>(null);
-  const [adding, setAdding] = useState(false);
+function SavingsSegment({ goals, onEdit }: { goals: SavingsGoal[]; onEdit: (goal: SavingsGoal) => void }) {
+  const { deleteSavingsGoal } = useLocalStore();
   const [deleteTarget, setDeleteTarget] = useState<SavingsGoal | null>(null);
 
   return (
     <>
-      <SectionCard
-        title="Oszczędności"
-        className={detailed ? 'finance-card-full' : ''}
-        action={<button className="btn btn-primary btn-sm" type="button" onClick={() => setAdding(true)}><FinanceIcon name="plus" /> Nowy cel</button>}
-      >
-        {savingsGoals.length === 0 ? (
-          <EmptyState title="Brak celów" cta="Dodaj cel" onCta={() => setAdding(true)} />
-        ) : (
-          <div className="finance-savings-list">
-            {savingsGoals.map((goal) => {
-              const pct = clampPct((goal.currentAmount / Math.max(goal.targetAmount, 1)) * 100);
-              return (
-                <div key={goal.id} className="finance-saving-row">
-                  <button className="finance-saving-main" type="button" onClick={() => setEditing(goal)}>
-                    <span className={`finance-icon-tile finance-tone-${toneForSavings(goal)}`}><FinanceIcon name={iconForSavings(goal)} /></span>
-                    <span>
-                      <strong>{goal.name}</strong>
-                      <small>{goal.notes || 'Cel oszczędnościowy'}</small>
-                    </span>
-                  </button>
-                  <div className="finance-saving-amounts">
-                    <span>{fmtPLN(goal.currentAmount)}</span>
-                    <small>z {fmtPLN(goal.targetAmount)}</small>
-                  </div>
-                  <div className="finance-progress finance-progress-pink"><span style={{ width: `${pct}%` }} /></div>
-                  <div className="finance-saving-meta">{fmtNumber(pct)}% celu</div>
-                  <div className="finance-row-actions">
-                    <button className="icon-btn" type="button" onClick={() => setEditing(goal)} aria-label={`Edytuj cel ${goal.name}`}><FinanceIcon name="edit" /></button>
-                    <button className="icon-btn" type="button" onClick={() => setDeleteTarget(goal)} aria-label={`Usuń cel ${goal.name}`}><IcoTrash /></button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </SectionCard>
-
-      <SavingsModal
-        open={adding || !!editing}
-        goal={editing}
-        onClose={() => { setAdding(false); setEditing(null); }}
-        onSave={(payload) => {
-          if (editing) updateSavingsGoal(editing.id, payload);
-          else addSavingsGoal(payload);
-          setAdding(false);
-          setEditing(null);
-        }}
-      />
-      <ConfirmDelete
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={() => { if (deleteTarget) deleteSavingsGoal(deleteTarget.id); setDeleteTarget(null); }}
-        label={deleteTarget?.name ?? 'ten cel'}
-      />
-    </>
-  );
-}
-
-function FixedExpensesPanel({ onConfigure }: { onConfigure: () => void }) {
-  const { recurringExpenses } = useLocalStore();
-  const total = recurringExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const grouped = Array.from(recurringExpenses.reduce((map, expense) => {
-    map.set(expense.category, (map.get(expense.category) ?? 0) + expense.amount);
-    return map;
-  }, new Map<string, number>()).entries())
-    .map(([category, amount]) => ({ category, amount, pct: clampPct((amount / Math.max(total, 1)) * 100) }))
-    .sort((a, b) => b.amount - a.amount);
-
-  return (
-    <SectionCard
-      title="Stałe wydatki"
-      action={<button className="finance-inline-edit" type="button" onClick={onConfigure} aria-label="Skonfiguruj stałe wydatki"><FinanceIcon name="edit" /></button>}
-    >
-      {grouped.length === 0 ? (
-        <EmptyState title="Brak stałych wydatków" cta="Skonfiguruj" onCta={onConfigure} />
+      {goals.length === 0 ? (
+        <FinanceEmpty title="Nie masz jeszcze celów oszczędnościowych." desc="Dodaj pierwszy cel i śledź postęp." />
       ) : (
-        <div className="finance-fixed-list">
-          {grouped.map((item) => {
-            const icon = iconForCategory(item.category);
-            const tone = toneForCategory(item.category);
+        <div className="finance-savings-list-v2">
+          {goals.map((goal) => {
+            const pct = clampPct((goal.currentAmount / Math.max(goal.targetAmount, 1)) * 100);
             return (
-              <button key={item.category} className="finance-fixed-row" type="button" onClick={onConfigure}>
-                <span className={`finance-icon-tile finance-tone-${tone}`}><FinanceIcon name={icon} /></span>
-                <span className="finance-fixed-main">
-                  <strong>{item.category}</strong>
-                  <span className="finance-progress"><span style={{ width: `${item.pct}%` }} /></span>
-                </span>
-                <span className="finance-fixed-amount">{fmtPLN(item.amount)}</span>
-                <span className="finance-fixed-share">{fmtNumber(item.pct)}%</span>
+              <button key={goal.id} className="finance-saving-line" type="button" onClick={() => onEdit(goal)}>
+                <span className="finance-icon-tile finance-tone-teal"><Icon name={categoryIcon(goal.name)} /></span>
+                <span><strong>{goal.name}</strong><small>{goal.notes || 'Cel oszczędnościowy'}</small></span>
+                <span><strong>{fmtMoney(goal.currentAmount)}</strong><small>z {fmtMoney(goal.targetAmount)}</small></span>
+                <span className="finance-progress-line"><i style={{ width: `${pct}%` }} />{fmtNumber(pct)}%</span>
+                <span className="finance-line-actions"><span className="icon-btn"><Icon name="edit" /></span><span className="icon-btn" onClick={(event) => { event.stopPropagation(); setDeleteTarget(goal); }}><Icon name="trash" /></span></span>
               </button>
             );
           })}
-          <div className="finance-fixed-total">
-            <span>Łączne stałe wydatki</span>
-            <strong>{fmtPLN(total)} / mies.</strong>
-          </div>
         </div>
       )}
-      <button className="finance-config-strip" type="button" onClick={onConfigure}>
-        <FinanceIcon name="business" />
-        <span>Skonfiguruj stałe wydatki</span>
-      </button>
-    </SectionCard>
-  );
-}
-
-function RecurringPanel({ month, detailed = false }: { month: string; detailed?: boolean }) {
-  const {
-    recurringExpenses, addRecurringExpense, updateRecurringExpense, deleteRecurringExpense,
-    recurringFolders, addRecurringFolder, updateRecurringFolder, deleteRecurringFolder,
-    jdgTabVisible, setJdgTabVisible, jdgItems, addJdgItem, updateJdgItem, deleteJdgItem,
-  } = useLocalStore();
-  const [activeFolder, setActiveFolder] = useState('all');
-  const [editing, setEditing] = useState<RecurringExpense | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<RecurringExpense | null>(null);
-  const [managingFolders, setManagingFolders] = useState(false);
-  const [reminderAddSignal, setReminderAddSignal] = useState(0);
-
-  const isJdgTab = activeFolder === 'jdg';
-  const isOnetimeTab = activeFolder === 'onetime';
-
-  useEffect(() => {
-    const valid = activeFolder === 'all' || activeFolder === 'onetime' || (activeFolder === 'jdg' && jdgTabVisible) || recurringFolders.some((f) => f.id === activeFolder);
-    if (!valid) setActiveFolder('all');
-  }, [activeFolder, jdgTabVisible, recurringFolders]);
-
-  const visibleExpenses = recurringExpenses.filter((e) => activeFolder === 'all' || e.folderId === activeFolder);
-  const sorted = [...visibleExpenses].sort((a, b) => a.dueDay - b.dueDay || a.name.localeCompare(b.name));
-  const total = sorted.reduce((sum, item) => sum + item.amount, 0);
-  const paid = sorted.filter((item) => item.paidThisMonth).reduce((sum, item) => sum + item.amount, 0);
-
-  const folderTabs = [
-    { id: 'all', label: 'Wszystkie' },
-    ...recurringFolders.map((f) => ({ id: f.id, label: f.name })),
-    { id: 'onetime', label: 'Jednorazowe' },
-    ...(jdgTabVisible ? [{ id: 'jdg', label: 'JDG' }] : []),
-  ];
-
-  return (
-    <>
-      <SectionCard
-        title="Cykliczne płatności"
-        className={detailed ? 'finance-card-full' : 'finance-card-wide'}
-        action={
-          <div className="finance-card-actions">
-            <button className="icon-btn" type="button" onClick={() => setManagingFolders(true)} aria-label="Zarządzaj zakładkami płatności"><FinanceIcon name="settings" /></button>
-            {!isJdgTab && (
-              <button
-                className="btn btn-primary btn-sm"
-                type="button"
-                onClick={() => (isOnetimeTab ? setReminderAddSignal((n) => n + 1) : setAdding(true))}
-              >
-                <FinanceIcon name="plus" /> Płatność
-              </button>
-            )}
-          </div>
-        }
-      >
-        <div className="finance-folder-tabs">
-          <SubTabs tabs={folderTabs} active={activeFolder} onChange={setActiveFolder} />
-        </div>
-
-        {isJdgTab ? (
-          <JdgTabContent month={month} />
-        ) : isOnetimeTab ? (
-          <PaymentPlanner month={month} addSignal={reminderAddSignal} />
-        ) : (
-          <>
-            <div className="finance-payment-summary">
-              <Stat label="Suma miesięczna" value={fmtPLN(total)} />
-              <Stat label="Opłacone" value={fmtPLN(paid)} />
-              <Stat label="Do opłacenia" value={fmtPLN(total - paid)} danger={total - paid > 0} />
-            </div>
-
-            {sorted.length === 0 ? (
-              <EmptyState title="Brak płatności" cta="Dodaj płatność" onCta={() => setAdding(true)} />
-            ) : (
-              <div className="finance-payment-list">
-                {sorted.map((expense) => (
-                  <div key={expense.id} className={`finance-payment-row ${expense.paidThisMonth ? 'is-paid' : ''}`}>
-                    <button
-                      className="finance-check"
-                      type="button"
-                      onClick={() => updateRecurringExpense(expense.id, { paidThisMonth: !expense.paidThisMonth })}
-                      aria-label={expense.paidThisMonth ? 'Oznacz jako nieopłacone' : 'Oznacz jako opłacone'}
-                    >
-                      {expense.paidThisMonth && <FinanceIcon name="check" />}
-                    </button>
-                    <span className={`finance-icon-tile finance-tone-${toneForCategory(expense.category)}`}><FinanceIcon name={iconForCategory(expense.category, expense.name)} /></span>
-                    <button className="finance-payment-name" type="button" onClick={() => setEditing(expense)}>
-                      <strong>{expense.name}</strong>
-                      <small>{expense.category} - termin {dueDateFor(month, expense.dueDay)}</small>
-                    </button>
-                    <span className="badge badge-gray">{expense.frequency}</span>
-                    <span className="finance-payment-amount">{fmtPLN(expense.amount)}</span>
-                    <span className={`badge ${expense.paidThisMonth ? 'badge-green' : 'badge-gray'}`}>{expense.paidThisMonth ? 'Opłacone' : 'Do zapłaty'}</span>
-                    <div className="finance-row-actions">
-                      <button className="icon-btn" type="button" onClick={() => setEditing(expense)} aria-label={`Edytuj płatność ${expense.name}`}><FinanceIcon name="edit" /></button>
-                      <button className="icon-btn" type="button" onClick={() => setDeleteTarget(expense)} aria-label={`Usuń płatność ${expense.name}`}><IcoTrash /></button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </SectionCard>
-
-      <RecurringModal
-        open={adding || !!editing}
-        expense={editing}
-        folders={recurringFolders}
-        defaultFolderId={activeFolder !== 'all' && activeFolder !== 'jdg' ? activeFolder : undefined}
-        onClose={() => { setAdding(false); setEditing(null); }}
-        onSave={(payload) => {
-          if (editing) updateRecurringExpense(editing.id, payload);
-          else addRecurringExpense(payload);
-          setAdding(false);
-          setEditing(null);
-        }}
-      />
-      <ConfirmDelete
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={() => { if (deleteTarget) deleteRecurringExpense(deleteTarget.id); setDeleteTarget(null); }}
-        label={deleteTarget?.name ?? 'tę płatność'}
-      />
-      <FolderManagerModal
-        open={managingFolders}
-        onClose={() => setManagingFolders(false)}
-        folders={recurringFolders}
-        onAddFolder={addRecurringFolder}
-        onRenameFolder={(id, name) => updateRecurringFolder(id, { name })}
-        onDeleteFolder={deleteRecurringFolder}
-        jdgVisible={jdgTabVisible}
-        onToggleJdgVisible={setJdgTabVisible}
-        jdgItems={jdgItems}
-        onAddJdgItem={addJdgItem}
-        onUpdateJdgItem={updateJdgItem}
-        onDeleteJdgItem={deleteJdgItem}
-      />
+      <ConfirmDelete open={!!deleteTarget} onClose={() => setDeleteTarget(null)} label={deleteTarget?.name ?? 'cel'} onConfirm={() => { if (deleteTarget) deleteSavingsGoal(deleteTarget.id); setDeleteTarget(null); }} />
     </>
   );
 }
 
-function PaymentPlanner({ month, addSignal }: { month: string; addSignal?: number }) {
-  const { financialReminders, addFinancialReminder, updateFinancialReminder, deleteFinancialReminder, toggleFinancialReminder } = useLocalStore();
-  const [editing, setEditing] = useState<FinancialReminder | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<FinancialReminder | null>(null);
-  const reminders = financialReminders
-    .filter((reminder) => reminder.dueDate.startsWith(month))
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  const total = reminders.reduce((sum, reminder) => sum + (reminder.amount ?? 0), 0);
-  const paid = reminders.filter((reminder) => reminder.completed).reduce((sum, reminder) => sum + (reminder.amount ?? 0), 0);
+function JdgSegment({ month, onEdit }: { month: string; onEdit: (item: JdgItem) => void }) {
+  const { jdgItems, jdgMonths, updateJdgMonth, addJdgMonth } = useLocalStore();
+  const current = jdgMonths.find((item) => item.month === month);
+  const completed = current?.completed ?? [];
 
   useEffect(() => {
-    if (addSignal) setAdding(true);
-  }, [addSignal]);
+    if (!current) addJdgMonth(month);
+  }, [addJdgMonth, current, month]);
 
-  return (
-    <>
-      <div className="finance-payment-summary">
-        <Stat label="Suma miesięczna" value={fmtPLN(total)} />
-        <Stat label="Opłacone" value={fmtPLN(paid)} />
-        <Stat label="Do opłacenia" value={fmtPLN(total - paid)} danger={total - paid > 0} />
-      </div>
-
-      <div className="finance-planner">
-        <div className="finance-subhead">
-          <span>Terminy jednorazowe</span>
-        </div>
-        {reminders.length === 0 ? (
-          <div className="finance-muted-box">Brak dodatkowych terminów w tym miesiącu.</div>
-        ) : (
-          reminders.map((reminder) => (
-            <div key={reminder.id} className={`finance-reminder-row ${reminder.completed ? 'is-paid' : ''}`}>
-              <button className="finance-check" type="button" onClick={() => toggleFinancialReminder(reminder.id)} aria-label="Zmień status terminu">
-                {reminder.completed && <FinanceIcon name="check" />}
-              </button>
-              <button className="finance-payment-name" type="button" onClick={() => setEditing(reminder)}>
-                <strong>{reminder.title}</strong>
-                <small>{reminder.category} - {new Date(`${reminder.dueDate}T12:00:00`).toLocaleDateString('pl-PL')}</small>
-              </button>
-              <span className="finance-payment-amount">{reminder.amount ? fmtPLN(reminder.amount) : '-'}</span>
-              <div className="finance-row-actions">
-                <button className="icon-btn" type="button" onClick={() => setEditing(reminder)} aria-label={`Edytuj termin ${reminder.title}`}><FinanceIcon name="edit" /></button>
-                <button className="icon-btn" type="button" onClick={() => setDeleteTarget(reminder)} aria-label={`Usuń termin ${reminder.title}`}><IcoTrash /></button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      <ReminderModal
-        open={adding || !!editing}
-        reminder={editing}
-        month={month}
-        onClose={() => { setAdding(false); setEditing(null); }}
-        onSave={(payload) => {
-          if (editing) updateFinancialReminder(editing.id, payload);
-          else addFinancialReminder(payload);
-          setAdding(false);
-          setEditing(null);
-        }}
-      />
-      <ConfirmDelete
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={() => { if (deleteTarget) deleteFinancialReminder(deleteTarget.id); setDeleteTarget(null); }}
-        label={deleteTarget?.title ?? 'ten termin'}
-      />
-    </>
-  );
-}
-
-function JdgTabContent({ month }: { month: string }) {
-  const { jdgMonths, updateJdgMonth, addJdgMonth, jdgItems } = useLocalStore();
-  const entry = jdgMonths.find((item) => item.month === month);
-  const completed = entry ? entry.completed.filter((id) => jdgItems.some((item) => item.id === id)).length : 0;
-
-  if (jdgItems.length === 0) {
-    return <EmptyState title="Brak pozycji JDG" desc="Dodaj pozycje checklisty w zarządzaniu zakładkami." />;
-  }
-
-  if (!entry) {
-    return <EmptyState title="Brak miesiąca JDG" desc="Utwórz checklistę dla wybranego miesiąca." cta="Utwórz miesiąc" onCta={() => addJdgMonth(month)} />;
-  }
-
-  const toggle = (itemId: string) => {
-    const has = entry.completed.includes(itemId);
-    updateJdgMonth(entry.id, { completed: has ? entry.completed.filter((id) => id !== itemId) : [...entry.completed, itemId] });
+  const toggle = (item: JdgItem) => {
+    const monthRow = jdgMonths.find((row) => row.month === month);
+    if (!monthRow) return;
+    const next = completed.includes(item.id) ? completed.filter((id) => id !== item.id) : [...completed, item.id];
+    updateJdgMonth(monthRow.id, { completed: next });
   };
 
   return (
-    <div className="finance-jdg-grid">
-      <div className="finance-jdg-list">
-        <div className="finance-jdg-progress">{completed}/{jdgItems.length} ukończonych</div>
-        {jdgItems.map((item) => {
-          const checked = entry.completed.includes(item.id);
-          return (
-            <button key={item.id} className={`finance-jdg-check ${checked ? 'is-paid' : ''}`} type="button" onClick={() => toggle(item.id)}>
-              <span className="finance-check">{checked && <FinanceIcon name="check" />}</span>
-              <span className={`finance-icon-tile finance-tone-${checked ? 'teal' : 'pink'}`}><FinanceIcon name="business" /></span>
-              <span>
-                <strong>{item.label}</strong>
-                {item.dueDay ? <small>do {item.dueDay}. dnia miesiąca</small> : null}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-      <div className="finance-jdg-notes">
-        <textarea
-          className="textarea"
-          value={entry.notes}
-          onChange={(event) => updateJdgMonth(entry.id, { notes: event.target.value })}
-          placeholder="Notatki do miesiąca..."
-          maxLength={500}
-        />
-        <div>{entry.notes.length}/500</div>
-      </div>
-    </div>
-  );
-}
-
-function FolderManagerModal({
-  open, onClose, folders, onAddFolder, onRenameFolder, onDeleteFolder,
-  jdgVisible, onToggleJdgVisible, jdgItems, onAddJdgItem, onUpdateJdgItem, onDeleteJdgItem,
-}: {
-  open: boolean; onClose: () => void;
-  folders: RecurringFolder[]; onAddFolder: (name: string) => void; onRenameFolder: (id: string, name: string) => void; onDeleteFolder: (id: string) => void;
-  jdgVisible: boolean; onToggleJdgVisible: (visible: boolean) => void;
-  jdgItems: JdgItem[]; onAddJdgItem: (payload: Omit<JdgItem, 'id'>) => void; onUpdateJdgItem: (id: string, patch: Partial<JdgItem>) => void; onDeleteJdgItem: (id: string) => void;
-}) {
-  const [newFolderName, setNewFolderName] = useState('');
-  const [newItemLabel, setNewItemLabel] = useState('');
-  const [newItemDay, setNewItemDay] = useState('');
-
-  return (
-    <Modal open={open} onClose={onClose} title="Zarządzaj zakładkami płatności" footer={
-      <button className="btn btn-primary" type="button" onClick={onClose}>Gotowe</button>
-    }>
-      <div className="finance-folder-manager-section">
-        <div className="finance-subhead"><span>Zakładki</span></div>
-        {folders.length === 0 && <p className="finance-muted-box">Brak własnych zakładek. Dodaj pierwszą poniżej.</p>}
-        {folders.map((folder) => (
-          <div key={folder.id} className="finance-folder-edit-row">
-            <input className="input" value={folder.name} onChange={(e) => onRenameFolder(folder.id, e.target.value)} />
-            <button className="icon-btn" type="button" onClick={() => onDeleteFolder(folder.id)} aria-label={`Usuń zakładkę ${folder.name}`}><IcoTrash /></button>
-          </div>
-        ))}
-        <div className="finance-folder-add-row">
-          <input className="input" placeholder="Nazwa nowej zakładki" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} />
-          <button
-            className="btn btn-ghost btn-sm"
-            type="button"
-            onClick={() => { if (!newFolderName.trim()) return; onAddFolder(newFolderName.trim()); setNewFolderName(''); }}
-          >
-            <FinanceIcon name="plus" /> Dodaj
-          </button>
-        </div>
-      </div>
-
-      <div className="finance-folder-manager-section">
-        <label className="finance-toggle">
-          <input type="checkbox" checked={jdgVisible} onChange={(e) => onToggleJdgVisible(e.target.checked)} /> Pokaż zakładkę JDG (rozliczenia działalności)
-        </label>
-
-        {jdgVisible && (
-          <>
-            <div className="finance-subhead" style={{ marginTop: 14 }}><span>Pozycje checklisty JDG</span></div>
-            {jdgItems.map((item) => (
-              <div key={item.id} className="finance-folder-edit-row">
-                <input className="input" value={item.label} onChange={(e) => onUpdateJdgItem(item.id, { label: e.target.value })} />
-                <input
-                  className="input finance-folder-day-input"
-                  type="number"
-                  min={1}
-                  max={31}
-                  placeholder="Dzień"
-                  value={item.dueDay ?? ''}
-                  onChange={(e) => onUpdateJdgItem(item.id, { dueDay: e.target.value ? Number(e.target.value) : undefined })}
-                />
-                <button className="icon-btn" type="button" onClick={() => onDeleteJdgItem(item.id)} aria-label={`Usuń pozycję ${item.label}`}><IcoTrash /></button>
-              </div>
-            ))}
-            <div className="finance-folder-add-row">
-              <input className="input" placeholder="Nazwa pozycji" value={newItemLabel} onChange={(e) => setNewItemLabel(e.target.value)} />
-              <input
-                className="input finance-folder-day-input"
-                type="number"
-                min={1}
-                max={31}
-                placeholder="Dzień"
-                value={newItemDay}
-                onChange={(e) => setNewItemDay(e.target.value)}
-              />
-              <button
-                className="btn btn-ghost btn-sm"
-                type="button"
-                onClick={() => {
-                  if (!newItemLabel.trim()) return;
-                  onAddJdgItem({ label: newItemLabel.trim(), dueDay: newItemDay ? Number(newItemDay) : undefined });
-                  setNewItemLabel('');
-                  setNewItemDay('');
-                }}
-              >
-                <FinanceIcon name="plus" /> Dodaj
+    <>
+      {jdgItems.length === 0 ? (
+        <FinanceEmpty title="Brak obowiązków JDG." desc="Dodaj miesięczną checklistę, np. ZUS, PIT, VAT." />
+      ) : (
+        <div className="finance-jdg-table">
+          <div className="finance-jdg-table-head"><span /><span>Nazwa</span><span>Termin</span><span>Status</span><span>Akcje</span></div>
+          {jdgItems.map((item) => {
+            const done = completed.includes(item.id);
+            return (
+              <button key={item.id} className={`finance-jdg-table-row ${done ? 'is-paid' : ''}`} type="button" onClick={() => toggle(item)}>
+                <span className="finance-check">{done && <Icon name="check" />}</span>
+                <span className="finance-payment-name"><span className="finance-icon-tile finance-tone-pink"><Icon name="business" /></span><strong>{item.label}</strong></span>
+                <span>{item.dueDay ? `${item.dueDay}. dzień miesiąca` : 'bez terminu'}</span>
+                <StatusBadge status={done ? 'paid' : 'due'} />
+                <span className="finance-line-actions"><span className="icon-btn" onClick={(event) => { event.stopPropagation(); onEdit(item); }}><Icon name="edit" /></span></span>
               </button>
-            </div>
-          </>
-        )}
-      </div>
-    </Modal>
+            );
+          })}
+          <div className="finance-total-line"><span>{monthLabel(month)} · ukończone {completed.length}/{jdgItems.length}</span><strong>{jdgItems.length ? `${fmtNumber((completed.length / jdgItems.length) * 100)}%` : '0%'}</strong></div>
+        </div>
+      )}
+    </>
   );
 }
 
-function Stat({ label, value, danger = false }: { label: string; value: string; danger?: boolean }) {
+function HistorySegment({ month, payments }: { month: string; payments: PaymentRow[] }) {
+  const rows = payments.filter((row) => row.paid).map((row) => ({
+    id: row.id,
+    title: `${row.name} oznaczono jako opłacone`,
+    category: row.category,
+    date: row.dueDate,
+    amount: row.amount,
+  }));
   return (
-    <div className="finance-stat">
-      <span>{label}</span>
-      <strong className={danger ? 'finance-danger' : ''}>{value}</strong>
+    <>
+      {rows.length === 0 ? (
+        <FinanceEmpty title="Brak historii" desc="Zdarzenia finansowe z wybranego miesiąca pojawią się tutaj." />
+      ) : (
+        <div className="finance-history-table">
+          <div className="finance-history-table-head"><span>Data</span><span>Zdarzenie</span><span>Kategoria</span><span>Kwota</span></div>
+          {rows.map((row) => (
+            <div key={row.id} className="finance-history-table-row">
+              <span>{formatDate(row.date)}</span>
+              <span className="finance-payment-name"><span className="finance-icon-tile finance-tone-teal"><Icon name={categoryIcon(row.category, row.title)} /></span><strong>{row.title}</strong></span>
+              <span className="finance-category-cell"><span className="finance-icon-tile finance-tone-blue"><Icon name={categoryIcon(row.category)} /></span>{row.category}</span>
+              <strong>{fmtMoney(row.amount)}</strong>
+            </div>
+          ))}
+          <div className="finance-total-line"><span>{monthLabel(month)} · zdarzenia {rows.length}</span><strong>{fmtMoney(rows.reduce((sum, row) => sum + row.amount, 0))}</strong></div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function blankAccount(): Account {
+  return { id: '', createdAt: '', name: '', type: 'main_account', balance: 0, currency: 'PLN', archived: false, color: '#3B82F6' };
+}
+
+function AccountsSegment({ editorToken }: { editorToken: number }) {
+  const { accounts, addAccount, updateAccount, deleteAccount } = useLocalStore();
+  const [editing, setEditing] = useState<Account | null>(null);
+  const active = accounts.filter((account) => !account.archived);
+  const total = active.reduce((sum, account) => sum + account.balance, 0);
+
+  useEffect(() => {
+    if (editorToken > 0) setEditing(blankAccount());
+  }, [editorToken]);
+
+  return (
+    <div className="finance-accounts-panel">
+      <div className="finance-drawer-total"><span>Łączne środki</span><strong>{fmtMoney(total)}</strong></div>
+      <div className="finance-account-list finance-account-list-panel">
+        {active.length === 0 ? <FinanceEmpty title="Nie masz jeszcze źródeł środków." desc="Dodaj konto, gotówkę albo inne źródło." /> : active.map((account) => (
+          <button key={account.id} type="button" className="finance-account-row" onClick={() => setEditing(account)}>
+            <span className="finance-icon-tile finance-tone-blue"><Icon name={accountIcon(account)} /></span>
+            <span><strong>{account.name}</strong><small>{ACCOUNT_TYPE_LABELS[account.type] ?? account.type}</small></span>
+            <b>{fmtMoney(account.balance, account.currency)}</b>
+            <span className="finance-line-actions">
+              <span className="icon-btn"><Icon name="edit" /></span>
+              <span className="icon-btn" onClick={(event) => { event.stopPropagation(); deleteAccount(account.id); }}><Icon name="trash" /></span>
+            </span>
+          </button>
+        ))}
+      </div>
+      <button className="btn btn-secondary finance-inline-add" type="button" onClick={() => setEditing(blankAccount())}>+ Dodaj źródło</button>
+      <AccountEditor account={editing} onClose={() => setEditing(null)} onSave={(payload) => {
+        if (editing?.id) updateAccount(editing.id, payload);
+        else addAccount(payload);
+        setEditing(null);
+      }} />
     </div>
   );
 }
 
-function AccountModal({ open, account, onClose, onSave }: { open: boolean; account: Account | null; onClose: () => void; onSave: (payload: Omit<Account, 'id' | 'createdAt'>) => void }) {
-  const [name, setName] = useState('');
-  const [type, setType] = useState(ACCOUNT_TYPES[0]);
-  const [balance, setBalance] = useState('0');
-  const [currency, setCurrency] = useState('PLN');
-  const [institution, setInstitution] = useState('');
-  const [color, setColor] = useState('#3B82F6');
+function PaymentDrawer({ open, row, month, onClose }: { open: boolean; row: PaymentRow | null; month: string; onClose: () => void }) {
+  const { addRecurringExpense, updateRecurringExpense, addFinancialReminder, updateFinancialReminder } = useLocalStore();
+  const initial = row ? {
+    name: row.name,
+    amount: String(row.amount),
+    category: row.category,
+    dueDate: row.dueDate,
+    paymentType: row.source === 'reminder' ? 'one_time' : (row.raw as RecurringExpense).frequency === 'jdg' ? 'jdg' : 'monthly',
+    status: row.paid ? 'paid' : 'due',
+    reminder: true,
+    showPlanner: false,
+    note: '',
+  } : {
+    name: '',
+    amount: '0',
+    category: CATEGORY_OPTIONS[0],
+    dueDate: `${month}-10`,
+    paymentType: 'monthly',
+    status: 'due',
+    reminder: true,
+    showPlanner: false,
+    note: '',
+  };
+  const [form, setForm] = useState(initial);
+  useEffect(() => setForm(initial), [open, row?.id, month]);
 
-  useEffect(() => {
-    setName(account?.name ?? '');
-    setType(account?.type ?? ACCOUNT_TYPES[0]);
-    setBalance(String(account?.balance ?? 0));
-    setCurrency(account?.currency ?? 'PLN');
-    setInstitution(account?.institution ?? '');
-    setColor(account?.color ?? '#3B82F6');
-  }, [account, open]);
+  const save = () => {
+    if (!form.name.trim()) return;
+    const amount = num(form.amount);
+    if (form.paymentType === 'one_time') {
+      const payload = { title: form.name.trim(), amount, dueDate: form.dueDate, category: form.category, completed: form.status === 'paid' };
+      if (row?.source === 'reminder') updateFinancialReminder((row.raw as FinancialReminder).id, payload);
+      else addFinancialReminder(payload);
+    } else {
+      const payload = {
+        name: form.name.trim(),
+        amount,
+        category: form.category,
+        dueDay: Number(form.dueDate.slice(-2)),
+        frequency: form.paymentType === 'jdg' ? 'jdg' : form.paymentType === 'yearly' ? 'yearly' : 'monthly',
+        reminderEnabled: form.reminder,
+        paidThisMonth: form.status === 'paid',
+        folderId: undefined,
+      };
+      if (row?.source === 'recurring') updateRecurringExpense((row.raw as RecurringExpense).id, payload);
+      else addRecurringExpense(payload);
+    }
+    onClose();
+  };
 
   return (
-    <Modal open={open} onClose={onClose} title={account ? 'Edytuj źródło' : 'Nowe źródło'} footer={
-      <>
-        <button className="btn btn-ghost" type="button" onClick={onClose}>Anuluj</button>
-        <button className="btn btn-primary" type="button" onClick={() => {
-          if (!name.trim()) return;
-          onSave({ name: name.trim(), type, balance: num(balance), currency, institution: institution.trim() || undefined, archived: account?.archived ?? false, color });
-        }}>Zapisz</button>
-      </>
-    }>
-      <Field label="Nazwa" required><input className="input" value={name} onChange={(e) => setName(e.target.value)} /></Field>
-      <div className="form-grid">
-        <Field label="Typ"><select className="select" value={type} onChange={(e) => setType(e.target.value)}>{ACCOUNT_TYPES.map((option) => <option key={option}>{option}</option>)}</select></Field>
-        <Field label="Waluta"><select className="select" value={currency} onChange={(e) => setCurrency(e.target.value)}>{CURRENCIES.map((option) => <option key={option}>{option}</option>)}</select></Field>
-        <Field label="Saldo"><input className="input" type="number" value={balance} onChange={(e) => setBalance(e.target.value)} /></Field>
-        <Field label="Kolor"><input className="input" type="color" value={color} onChange={(e) => setColor(e.target.value)} /></Field>
+    <FinanceDrawer open={open} title={row ? 'Edytuj płatność' : 'Dodaj płatność'} onClose={onClose} footer={<><button className="btn btn-secondary" onClick={onClose}>Anuluj</button><button className="btn btn-primary" onClick={save}>Zapisz</button></>}>
+      <div className="finance-form-grid">
+        <Field label="Nazwa" required><input className="input" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></Field>
+        <Field label="Kwota"><input className="input" type="number" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} /></Field>
+        <Field label="Kategoria"><select className="select" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>{CATEGORY_OPTIONS.map((item) => <option key={item}>{item}</option>)}</select></Field>
+        <Field label="Termin"><input className="input" type="date" value={form.dueDate} onChange={(event) => setForm({ ...form, dueDate: event.target.value })} /></Field>
+        <Field label="Typ płatności"><select className="select" value={form.paymentType} onChange={(event) => setForm({ ...form, paymentType: event.target.value })}>{PAYMENT_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></Field>
+        <Field label="Status"><select className="select" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option value="due">do zapłaty</option><option value="paid">opłacone</option><option value="cancelled">anulowane</option></select></Field>
       </div>
-      <Field label="Instytucja"><input className="input" value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="Bank, portfel, broker..." /></Field>
-    </Modal>
+      <label className="finance-toggle"><input type="checkbox" checked={form.reminder} onChange={(event) => setForm({ ...form, reminder: event.target.checked })} /> Przypomnij 2 dni przed terminem</label>
+      <label className="finance-toggle"><input type="checkbox" checked={form.showPlanner} onChange={(event) => setForm({ ...form, showPlanner: event.target.checked })} /> Pokaż w Planerze</label>
+      <Field label="Notatka"><textarea className="textarea" value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} /></Field>
+    </FinanceDrawer>
   );
 }
 
-function BudgetModal({ open, category, month, onClose, onSave }: { open: boolean; category: BudgetCategory | null; month: string; onClose: () => void; onSave: (payload: Omit<BudgetCategory, 'id'>) => void }) {
-  const [name, setName] = useState('');
-  const [planned, setPlanned] = useState('0');
-  const [actual, setActual] = useState('0');
-  const [selectedMonth, setSelectedMonth] = useState(month);
-  const [color, setColor] = useState(BUDGET_COLORS[0]);
-
-  useEffect(() => {
-    setName(category?.name ?? '');
-    setPlanned(String(category?.plannedAmount ?? 0));
-    setActual(String(category?.actualAmount ?? 0));
-    setSelectedMonth(category?.month ?? month);
-    setColor(category?.color ?? BUDGET_COLORS[0]);
-  }, [category, month, open]);
-
+function BudgetDrawer({ open, category, month, onClose }: { open: boolean; category: BudgetCategory | null; month: string; onClose: () => void }) {
+  const { addBudgetCategory, updateBudgetCategory } = useLocalStore();
+  const [form, setForm] = useState({ name: '', planned: '0', spent: '0', color: BUDGET_COLORS[0], note: '' });
+  useEffect(() => setForm({ name: category?.name ?? '', planned: String(category?.plannedAmount ?? 0), spent: String(category?.actualAmount ?? 0), color: category?.color ?? BUDGET_COLORS[0], note: '' }), [category, open]);
+  const save = () => {
+    if (!form.name.trim()) return;
+    const payload = { name: form.name.trim(), plannedAmount: num(form.planned), actualAmount: num(form.spent), month, color: form.color };
+    if (category) updateBudgetCategory(category.id, payload);
+    else addBudgetCategory(payload);
+    onClose();
+  };
   return (
-    <Modal open={open} onClose={onClose} title={category ? 'Edytuj kategorię budżetu' : 'Nowa kategoria budżetu'} footer={
-      <>
-        <button className="btn btn-ghost" type="button" onClick={onClose}>Anuluj</button>
-        <button className="btn btn-primary" type="button" onClick={() => {
-          if (!name.trim()) return;
-          onSave({ name: name.trim(), plannedAmount: num(planned), actualAmount: num(actual), month: selectedMonth, color });
-        }}>Zapisz</button>
-      </>
-    }>
-      <Field label="Nazwa" required><input className="input" value={name} onChange={(e) => setName(e.target.value)} /></Field>
-      <div className="form-grid">
-        <Field label="Miesiąc"><input className="input" type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} /></Field>
-        <Field label="Kolor"><input className="input" type="color" value={color} onChange={(e) => setColor(e.target.value)} /></Field>
-        <Field label="Zaplanowane"><input className="input" type="number" value={planned} onChange={(e) => setPlanned(e.target.value)} /></Field>
-        <Field label="Wydane"><input className="input" type="number" value={actual} onChange={(e) => setActual(e.target.value)} /></Field>
+    <FinanceDrawer open={open} title={category ? 'Edytuj kategorię budżetu' : 'Dodaj kategorię budżetu'} onClose={onClose} footer={<><button className="btn btn-secondary" onClick={onClose}>Anuluj</button><button className="btn btn-primary" onClick={save}>Zapisz</button></>}>
+      <Field label="Nazwa" required><input className="input" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></Field>
+      <div className="finance-form-grid">
+        <Field label="Miesięczny plan"><input className="input" type="number" value={form.planned} onChange={(event) => setForm({ ...form, planned: event.target.value })} /></Field>
+        <Field label="Wydane"><input className="input" type="number" value={form.spent} onChange={(event) => setForm({ ...form, spent: event.target.value })} /></Field>
+        <Field label="Kolor"><input className="input" type="color" value={form.color} onChange={(event) => setForm({ ...form, color: event.target.value })} /></Field>
       </div>
-    </Modal>
+      <Field label="Notatka"><textarea className="textarea" value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} /></Field>
+    </FinanceDrawer>
   );
 }
 
-function SavingsModal({ open, goal, onClose, onSave }: { open: boolean; goal: SavingsGoal | null; onClose: () => void; onSave: (payload: Omit<SavingsGoal, 'id' | 'createdAt'>) => void }) {
-  const [name, setName] = useState('');
-  const [symbol, setSymbol] = useState('$');
-  const [target, setTarget] = useState('10000');
-  const [current, setCurrent] = useState('0');
-  const [deadline, setDeadline] = useState('');
-  const [notes, setNotes] = useState('');
-
-  useEffect(() => {
-    setName(goal?.name ?? '');
-    setSymbol(goal?.emoji ?? '$');
-    setTarget(String(goal?.targetAmount ?? 10000));
-    setCurrent(String(goal?.currentAmount ?? 0));
-    setDeadline(goal?.deadline ?? '');
-    setNotes(goal?.notes ?? '');
-  }, [goal, open]);
-
+function SavingsDrawer({ open, goal, onClose }: { open: boolean; goal: SavingsGoal | null; onClose: () => void }) {
+  const { addSavingsGoal, updateSavingsGoal } = useLocalStore();
+  const [form, setForm] = useState({ name: '', current: '0', target: '10000', deadline: '', notes: '', contribution: '' });
+  useEffect(() => setForm({ name: goal?.name ?? '', current: String(goal?.currentAmount ?? 0), target: String(goal?.targetAmount ?? 10000), deadline: goal?.deadline ?? '', notes: goal?.notes ?? '', contribution: '' }), [goal, open]);
+  const save = () => {
+    if (!form.name.trim()) return;
+    const current = num(form.current) + num(form.contribution);
+    const payload = { name: form.name.trim(), currentAmount: current, targetAmount: num(form.target), deadline: form.deadline || undefined, notes: form.notes, emoji: goal?.emoji ?? '$' };
+    if (goal) updateSavingsGoal(goal.id, payload);
+    else addSavingsGoal(payload);
+    onClose();
+  };
   return (
-    <Modal open={open} onClose={onClose} title={goal ? 'Edytuj cel' : 'Nowy cel oszczędnościowy'} footer={
-      <>
-        <button className="btn btn-ghost" type="button" onClick={onClose}>Anuluj</button>
-        <button className="btn btn-primary" type="button" onClick={() => {
-          if (!name.trim()) return;
-          onSave({ name: name.trim(), emoji: symbol.trim() || '$', targetAmount: num(target), currentAmount: num(current), deadline: deadline || undefined, notes });
-        }}>Zapisz</button>
-      </>
-    }>
-      <div className="form-grid">
-        <Field label="Symbol"><input className="input" value={symbol} onChange={(e) => setSymbol(e.target.value)} maxLength={3} /></Field>
-        <Field label="Termin"><input className="input" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} /></Field>
+    <FinanceDrawer open={open} title={goal ? 'Edytuj cel oszczędnościowy' : 'Nowy cel oszczędnościowy'} onClose={onClose} footer={<><button className="btn btn-secondary" onClick={onClose}>Anuluj</button><button className="btn btn-primary" onClick={save}>Zapisz</button></>}>
+      <Field label="Nazwa" required><input className="input" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></Field>
+      <div className="finance-form-grid">
+        <Field label="Aktualnie"><input className="input" type="number" value={form.current} onChange={(event) => setForm({ ...form, current: event.target.value })} /></Field>
+        <Field label="Cel"><input className="input" type="number" value={form.target} onChange={(event) => setForm({ ...form, target: event.target.value })} /></Field>
+        <Field label="Termin"><input className="input" type="date" value={form.deadline} onChange={(event) => setForm({ ...form, deadline: event.target.value })} /></Field>
+        <Field label="+ Dodaj wpłatę"><input className="input" type="number" value={form.contribution} onChange={(event) => setForm({ ...form, contribution: event.target.value })} /></Field>
       </div>
-      <Field label="Nazwa" required><input className="input" value={name} onChange={(e) => setName(e.target.value)} /></Field>
-      <div className="form-grid">
-        <Field label="Cel"><input className="input" type="number" value={target} onChange={(e) => setTarget(e.target.value)} /></Field>
-        <Field label="Aktualnie"><input className="input" type="number" value={current} onChange={(e) => setCurrent(e.target.value)} /></Field>
-      </div>
-      <Field label="Notatki"><textarea className="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
-    </Modal>
+      <Field label="Notatka"><textarea className="textarea" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></Field>
+    </FinanceDrawer>
   );
 }
 
-function RecurringModal({ open, expense, folders, defaultFolderId, onClose, onSave }: {
-  open: boolean; expense: RecurringExpense | null; folders: RecurringFolder[]; defaultFolderId?: string;
-  onClose: () => void; onSave: (payload: Omit<RecurringExpense, 'id' | 'createdAt'>) => void;
-}) {
-  const [name, setName] = useState('');
-  const [amount, setAmount] = useState('0');
-  const [category, setCategory] = useState(CATEGORY_OPTIONS[0]);
-  const [dueDay, setDueDay] = useState('10');
-  const [frequency, setFrequency] = useState('monthly');
-  const [reminderEnabled, setReminderEnabled] = useState(true);
-  const [paidThisMonth, setPaidThisMonth] = useState(false);
-  const [folderId, setFolderId] = useState('');
-
-  useEffect(() => {
-    setName(expense?.name ?? '');
-    setAmount(String(expense?.amount ?? 0));
-    setCategory(expense?.category ?? CATEGORY_OPTIONS[0]);
-    setDueDay(String(expense?.dueDay ?? 10));
-    setFrequency(expense?.frequency ?? 'monthly');
-    setReminderEnabled(expense?.reminderEnabled ?? true);
-    setPaidThisMonth(expense?.paidThisMonth ?? false);
-    setFolderId(expense?.folderId ?? defaultFolderId ?? '');
-  }, [expense, defaultFolderId, open]);
-
+function JdgDrawer({ open, item, month, onClose }: { open: boolean; item: JdgItem | null; month: string; onClose: () => void }) {
+  const { addJdgItem, updateJdgItem } = useLocalStore();
+  const [form, setForm] = useState({ title: '', dueDay: '', description: '', planner: false });
+  useEffect(() => setForm({ title: item?.label ?? '', dueDay: item?.dueDay ? String(item.dueDay) : '', description: '', planner: false }), [item, open]);
+  const save = () => {
+    if (!form.title.trim()) return;
+    const payload = { label: form.title.trim(), dueDay: form.dueDay ? Number(form.dueDay) : undefined };
+    if (item) updateJdgItem(item.id, payload);
+    else addJdgItem(payload);
+    onClose();
+  };
   return (
-    <Modal open={open} onClose={onClose} title={expense ? 'Edytuj płatność' : 'Nowa płatność cykliczna'} footer={
-      <>
-        <button className="btn btn-ghost" type="button" onClick={onClose}>Anuluj</button>
-        <button className="btn btn-primary" type="button" onClick={() => {
-          if (!name.trim()) return;
-          onSave({ name: name.trim(), amount: num(amount), category, dueDay: Math.max(1, Math.min(31, Math.round(num(dueDay, 1)))), frequency, reminderEnabled, paidThisMonth, folderId: folderId || undefined });
-        }}>Zapisz</button>
-      </>
-    }>
-      <Field label="Nazwa" required><input className="input" value={name} onChange={(e) => setName(e.target.value)} /></Field>
-      <div className="form-grid">
-        <Field label="Kwota"><input className="input" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>
-        <Field label="Dzień miesiąca"><input className="input" type="number" min={1} max={31} value={dueDay} onChange={(e) => setDueDay(e.target.value)} /></Field>
-        <Field label="Kategoria"><select className="select" value={category} onChange={(e) => setCategory(e.target.value)}>{CATEGORY_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></Field>
-        <Field label="Częstotliwość"><select className="select" value={frequency} onChange={(e) => setFrequency(e.target.value)}><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="yearly">Yearly</option></select></Field>
-      </div>
-      <Field label="Zakładka">
-        <select className="select" value={folderId} onChange={(e) => setFolderId(e.target.value)}>
-          <option value="">Wszystkie (bez zakładki)</option>
-          {folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
-        </select>
-      </Field>
-      <label className="finance-toggle"><input type="checkbox" checked={paidThisMonth} onChange={(e) => setPaidThisMonth(e.target.checked)} /> Opłacone w wybranym miesiącu</label>
-      <label className="finance-toggle"><input type="checkbox" checked={reminderEnabled} onChange={(e) => setReminderEnabled(e.target.checked)} /> Przypominaj o terminie</label>
-    </Modal>
+    <FinanceDrawer open={open} title={item ? 'Edytuj obowiązek JDG' : 'Dodaj obowiązek JDG'} onClose={onClose} footer={<><button className="btn btn-secondary" onClick={onClose}>Anuluj</button><button className="btn btn-primary" onClick={save}>Zapisz</button></>}>
+      <Field label="Nazwa" required><input className="input" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></Field>
+      <Field label={`Dzień miesiąca (${monthLabel(month)})`}><input className="input" type="number" min={1} max={31} value={form.dueDay} onChange={(event) => setForm({ ...form, dueDay: event.target.value })} /></Field>
+      <label className="finance-toggle"><input type="checkbox" checked={form.planner} onChange={(event) => setForm({ ...form, planner: event.target.checked })} /> Pokaż w Planerze</label>
+      <Field label="Opis"><textarea className="textarea" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} /></Field>
+    </FinanceDrawer>
   );
 }
 
-function ReminderModal({ open, reminder, month, onClose, onSave }: { open: boolean; reminder: FinancialReminder | null; month: string; onClose: () => void; onSave: (payload: Omit<FinancialReminder, 'id'>) => void }) {
-  const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
-  const [dueDate, setDueDate] = useState(`${month}-10`);
-  const [category, setCategory] = useState(CATEGORY_OPTIONS[0]);
-  const [completed, setCompleted] = useState(false);
-
-  useEffect(() => {
-    setTitle(reminder?.title ?? '');
-    setAmount(reminder?.amount == null ? '' : String(reminder.amount));
-    setDueDate(reminder?.dueDate ?? `${month}-10`);
-    setCategory(reminder?.category ?? CATEGORY_OPTIONS[0]);
-    setCompleted(reminder?.completed ?? false);
-  }, [reminder, month, open]);
-
+function AccountEditor({ account, onClose, onSave }: { account: Account | null; onClose: () => void; onSave: (payload: Omit<Account, 'id' | 'createdAt'>) => void }) {
+  const [form, setForm] = useState({ name: '', type: 'main_account', balance: '0', currency: 'PLN', institution: '', color: '#3B82F6' });
+  useEffect(() => setForm({ name: account?.name ?? '', type: account?.type ?? 'main_account', balance: String(account?.balance ?? 0), currency: account?.currency ?? 'PLN', institution: account?.institution ?? '', color: account?.color ?? '#3B82F6' }), [account]);
+  if (!account) return null;
   return (
-    <Modal open={open} onClose={onClose} title={reminder ? 'Edytuj termin' : 'Nowy termin płatności'} footer={
-      <>
-        <button className="btn btn-ghost" type="button" onClick={onClose}>Anuluj</button>
-        <button className="btn btn-primary" type="button" onClick={() => {
-          if (!title.trim()) return;
-          onSave({ title: title.trim(), amount: amount.trim() ? num(amount) : undefined, dueDate, category, completed });
-        }}>Zapisz</button>
-      </>
-    }>
-      <Field label="Tytuł" required><input className="input" value={title} onChange={(e) => setTitle(e.target.value)} /></Field>
-      <div className="form-grid">
-        <Field label="Kwota"><input className="input" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>
-        <Field label="Termin"><input className="input" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></Field>
-        <Field label="Kategoria"><select className="select" value={category} onChange={(e) => setCategory(e.target.value)}>{CATEGORY_OPTIONS.map((option) => <option key={option}>{option}</option>)}</select></Field>
+    <div className="finance-inline-editor">
+      <Field label="Nazwa" required><input className="input" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} /></Field>
+      <div className="finance-form-grid">
+        <Field label="Typ"><select className="select" value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value })}>{ACCOUNT_TYPES.map((type) => <option key={type} value={type}>{ACCOUNT_TYPE_LABELS[type]}</option>)}</select></Field>
+        <Field label="Waluta"><select className="select" value={form.currency} onChange={(event) => setForm({ ...form, currency: event.target.value })}>{CURRENCIES.map((currency) => <option key={currency}>{currency}</option>)}</select></Field>
+        <Field label="Saldo"><input className="input" type="number" value={form.balance} onChange={(event) => setForm({ ...form, balance: event.target.value })} /></Field>
       </div>
-      <label className="finance-toggle"><input type="checkbox" checked={completed} onChange={(e) => setCompleted(e.target.checked)} /> Opłacone</label>
-    </Modal>
+      <div className="finance-drawer-footer"><button className="btn btn-secondary" onClick={onClose}>Anuluj</button><button className="btn btn-primary" onClick={() => { if (!form.name.trim()) return; onSave({ name: form.name.trim(), type: form.type, balance: num(form.balance), currency: form.currency, institution: form.institution || undefined, archived: false, color: form.color }); }}>Zapisz</button></div>
+    </div>
   );
 }
 
-function TabIcon({ name }: { name: IconName }) {
-  return <FinanceIcon name={name} />;
+function FinanceDrawer({ open, title, onClose, children, footer }: { open: boolean; title: string; onClose: () => void; children: ReactNode; footer?: ReactNode }) {
+  useEffect(() => {
+    if (!open) return;
+    const handler = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, onClose]);
+  if (!open) return null;
+  return (
+    <div className="finance-drawer-overlay" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose(); }}>
+      <aside className="finance-drawer" role="dialog" aria-modal="true" aria-label={title}>
+        <header><strong>{title}</strong><button className="icon-btn" onClick={onClose} aria-label="Zamknij"><Icon name="close" /></button></header>
+        <div className="finance-drawer-body">{children}</div>
+        {footer && <footer className="finance-drawer-footer">{footer}</footer>}
+      </aside>
+    </div>
+  );
 }
 
-function FinanceIcon({ name }: { name: IconName }) {
+function Badge({ children, tone }: { children: ReactNode; tone?: 'danger' | 'success' | 'jdg' }) {
+  return <span className={`finance-badge ${tone ? `is-${tone}` : ''}`}>{children}</span>;
+}
+
+function StatusBadge({ status }: { status: PaymentRow['status'] }) {
+  if (status === 'paid') return <Badge tone="success">opłacone</Badge>;
+  if (status === 'overdue') return <Badge tone="danger">po terminie</Badge>;
+  return <Badge>do zapłaty</Badge>;
+}
+
+function FinanceEmpty({ title, desc }: { title: string; desc: string }) {
+  return <div className="finance-empty"><strong>{title}</strong><span>{desc}</span></div>;
+}
+
+function exportHistoryCsv(month: string, payments: PaymentRow[]) {
+  const rows = payments.map((row) => `${row.dueDate},${row.name},${row.category},${row.amount},${row.status}`).join('\n');
+  const blob = new Blob([`date,name,category,amount,status\n${rows}`], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `rootine-finanse-${month}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function Icon({ name, flip = false }: { name: IconName; flip?: boolean }) {
   const common = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      {name === 'accounts' && <><rect x="3" y="5" width="18" height="14" rx="2" {...common} /><path d="M3 10h18M7 15h4" {...common} /></>}
-      {name === 'overview' && <><rect x="4" y="4" width="7" height="7" rx="1.5" {...common} /><rect x="13" y="4" width="7" height="7" rx="1.5" {...common} /><rect x="4" y="13" width="7" height="7" rx="1.5" {...common} /><rect x="13" y="13" width="7" height="7" rx="1.5" {...common} /></>}
-      {name === 'budget' && <><path d="M12 3v18M17 7H9.5a3 3 0 0 0 0 6h5a3 3 0 0 1 0 6H7" {...common} /></>}
+    <svg viewBox="0 0 24 24" aria-hidden="true" style={{ transform: flip ? 'rotate(180deg)' : undefined }}>
+      {name === 'wallet' && <><path d="M4 7.5h14a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5.5A2.5 2.5 0 0 1 3 17.5v-11A2.5 2.5 0 0 1 5.5 4H17" {...common} /><path d="M16 13h4M16 13a1.5 1.5 0 0 0 0 3h4" {...common} /></>}
       {name === 'savings' && <><path d="M12 21s7-4 7-10V5l-7-3-7 3v6c0 6 7 10 7 10z" {...common} /></>}
-      {name === 'payments' && <><path d="M7 7h10M7 12h7M7 17h5" {...common} /><rect x="4" y="3" width="16" height="18" rx="2" {...common} /></>}
-      {name === 'business' && <><path d="M3 21h18M5 21V8l7-5 7 5v13" {...common} /><path d="M9 21v-7h6v7" {...common} /></>}
-      {name === 'settings' && <><circle cx="12" cy="12" r="3" {...common} /><path d="M19.4 13a7.97 7.97 0 0 0 0-2l2-1.2-2-3.4-2.3.7a8 8 0 0 0-1.7-1l-.3-2.4H9.9l-.3 2.4a8 8 0 0 0-1.7 1l-2.3-.7-2 3.4L5.6 11a7.97 7.97 0 0 0 0 2l-2 1.2 2 3.4 2.3-.7c.5.4 1.1.8 1.7 1l.3 2.4h4.2l.3-2.4c.6-.2 1.2-.6 1.7-1l2.3.7 2-3.4-2-1.2z" {...common} /></>}
-      {name === 'edit' && <><path d="M12 20h9" {...common} /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" {...common} /></>}
-      {name === 'plus' && <><path d="M12 5v14M5 12h14" {...common} /></>}
-      {name === 'reset' && <><path d="M3 12a9 9 0 1 0 3-6.7" {...common} /><path d="M3 4v6h6" {...common} /></>}
-      {name === 'check' && <><path d="M20 6 9 17l-5-5" {...common} /></>}
-      {name === 'calendar' && <><rect x="4" y="5" width="16" height="15" rx="2.5" {...common} /><path d="M8 3v4M16 3v4M4 10h16" {...common} /><path d="M8 14h3M14 14h2M8 17h2" {...common} /></>}
-      {name === 'due' && <><circle cx="12" cy="12" r="8.5" {...common} /><path d="M12 7v5l3 2M12 18h.01" {...common} /></>}
+      {name === 'budget' && <><path d="M12 3v18M17 7H9.5a3 3 0 0 0 0 6h5a3 3 0 0 1 0 6H7" {...common} /></>}
+      {name === 'due' && <><circle cx="12" cy="12" r="8.5" {...common} /><path d="M12 7v5l3 2" {...common} /></>}
       {name === 'paid' && <><circle cx="12" cy="12" r="8.5" {...common} /><path d="m8 12.5 2.6 2.6L16.5 9" {...common} /></>}
       {name === 'home' && <><path d="M3.5 11.5 12 4l8.5 7.5" {...common} /><path d="M5.5 10.5V20h13v-9.5" {...common} /><path d="M10 20v-5h4v5" {...common} /></>}
-      {name === 'transport' && <><rect x="4" y="7" width="16" height="9" rx="2" {...common} /><path d="M7 7l1.5-3h7L17 7M7 16v2M17 16v2M7.5 12h.01M16.5 12h.01" {...common} /></>}
+      {name === 'transport' && <><rect x="4" y="7" width="16" height="9" rx="2" {...common} /><path d="M7 7l1.5-3h7L17 7M7 16v2M17 16v2" {...common} /></>}
       {name === 'food' && <><path d="M7 3v8M4.5 3v5.5a2.5 2.5 0 0 0 5 0V3M7 11v10" {...common} /><path d="M15 3v18M15 3c3 1.3 4.5 3.7 4.5 7v1H15" {...common} /></>}
-      {name === 'entertainment' && <><path d="M7 15h10l1.8 2.2a2.2 2.2 0 0 0 3.6-2.2l-1.2-5.3A4 4 0 0 0 17.3 6H6.7a4 4 0 0 0-3.9 3.7L1.6 15a2.2 2.2 0 0 0 3.6 2.2L7 15z" {...common} /><path d="M7.5 10v3M6 11.5h3M15.5 11h.01M18 13h.01" {...common} /></>}
-      {name === 'health' && <><path d="M20.5 8.8c0 5-8.5 10-8.5 10s-8.5-5-8.5-10A4.6 4.6 0 0 1 12 6.2a4.6 4.6 0 0 1 8.5 2.6z" {...common} /><path d="M8 12h2l1-2.5 2 5 1-2.5h2" {...common} /></>}
-      {name === 'utilities' && <><path d="m13 2-8 12h6l-1 8 9-13h-6l0-7z" {...common} /></>}
+      {name === 'entertainment' && <><path d="M7 15h10l1.8 2.2a2.2 2.2 0 0 0 3.6-2.2l-1.2-5.3A4 4 0 0 0 17.3 6H6.7a4 4 0 0 0-3.9 3.7L1.6 15a2.2 2.2 0 0 0 3.6 2.2L7 15z" {...common} /></>}
+      {name === 'health' && <><path d="M20.5 8.8c0 5-8.5 10-8.5 10s-8.5-5-8.5-10A4.6 4.6 0 0 1 12 6.2a4.6 4.6 0 0 1 8.5 2.6z" {...common} /></>}
+      {name === 'business' && <><path d="M3 21h18M5 21V8l7-5 7 5v13" {...common} /><path d="M9 21v-7h6v7" {...common} /></>}
+      {name === 'car' && <><path d="M5 14h14l-1.5-5.5A3 3 0 0 0 14.6 6H9.4a3 3 0 0 0-2.9 2.5L5 14z" {...common} /><path d="M5 14v4M19 14v4M8 11h8" {...common} /></>}
       {name === 'phone' && <><path d="M6.5 4.5 9 3l2.5 4-1.8 1.3a12 12 0 0 0 6 6l1.3-1.8 4 2.5-1.5 2.5a3 3 0 0 1-3.4 1.3C10.8 17.2 6.8 13.2 5.2 7.9a3 3 0 0 1 1.3-3.4z" {...common} /></>}
-      {name === 'shield' && <><path d="M12 21s7-3.5 7-9.5V5l-7-3-7 3v6.5C5 17.5 12 21 12 21z" {...common} /><path d="M9 12l2 2 4-5" {...common} /></>}
-      {name === 'car' && <><path d="M5 14h14l-1.5-5.5A3 3 0 0 0 14.6 6H9.4a3 3 0 0 0-2.9 2.5L5 14z" {...common} /><path d="M5 14v4M19 14v4M7.5 18h.01M16.5 18h.01M8 11h8" {...common} /></>}
-      {name === 'travel' && <><path d="M4 12a8 8 0 0 1 16 0" {...common} /><path d="M4 12h16M8 12c0-4 4-8 4-8s4 4 4 8M12 12v8M9 20h6" {...common} /></>}
-      {name === 'cash' && <><rect x="3" y="6" width="18" height="12" rx="2" {...common} /><circle cx="12" cy="12" r="2.5" {...common} /><path d="M6.5 9.5v.01M17.5 14.5v.01" {...common} /></>}
+      {name === 'shield' && <><path d="M12 21s7-3.5 7-9.5V5l-7-3-7 3v6.5C5 17.5 12 21 12 21z" {...common} /></>}
+      {name === 'cash' && <><rect x="3" y="6" width="18" height="12" rx="2" {...common} /><circle cx="12" cy="12" r="2.5" {...common} /></>}
       {name === 'bank' && <><path d="M4 10h16M5 20h14M6 10v10M10 10v10M14 10v10M18 10v10M3.5 8 12 3l8.5 5" {...common} /></>}
-      {name === 'wallet' && <><path d="M4 7.5h14a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5.5A2.5 2.5 0 0 1 3 17.5v-11A2.5 2.5 0 0 1 5.5 4H17" {...common} /><path d="M16 13h4M16 13a1.5 1.5 0 0 0 0 3h4" {...common} /></>}
-      {name === 'other' && <><circle cx="12" cy="12" r="8" {...common} /><path d="M8 12h.01M12 12h.01M16 12h.01" {...common} /></>}
+      {name === 'plus' && <><path d="M12 5v14M5 12h14" {...common} /></>}
+      {name === 'edit' && <><path d="M12 20h9" {...common} /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z" {...common} /></>}
+      {name === 'trash' && <><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15M10 11v6M14 11v6" {...common} /></>}
+      {name === 'check' && <><path d="M20 6 9 17l-5-5" {...common} /></>}
+      {name === 'settings' && <><circle cx="12" cy="12" r="3" {...common} /><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.7a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.7a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2Z" {...common} /></>}
+      {name === 'history' && <><path d="M3 12a9 9 0 1 0 3-6.7" {...common} /><path d="M3 4v6h6M12 7v5l3 2" {...common} /></>}
+      {name === 'calendar' && <><rect x="4" y="5" width="16" height="15" rx="2.5" {...common} /><path d="M8 3v4M16 3v4M4 10h16" {...common} /></>}
+      {name === 'note' && <><path d="M5 4h11l3 3v13H5z" {...common} /><path d="M16 4v4h4M8 12h8M8 16h5" {...common} /></>}
+      {name === 'arrow' && <><path d="m9 18 6-6-6-6" {...common} /></>}
+      {name === 'close' && <><path d="M18 6 6 18M6 6l12 12" {...common} /></>}
+      {name === 'reset' && <><path d="M3 12a9 9 0 1 0 3-6.7M3 4v6h6" {...common} /></>}
     </svg>
   );
 }

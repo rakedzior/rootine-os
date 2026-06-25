@@ -8,16 +8,46 @@ import {
   updateMealItem,
   fetchTodayMeals,
   upsertMeal,
+  upsertMealForCategory,
+  fetchMealCategories,
+  restoreDefaultMealCategories,
+  insertMealCategory,
+  updateMealCategory,
+  reorderMealCategories,
+  deleteMealCategory,
+  countMealCategoryItems,
+  moveCategoryEntries,
+  deleteCategoryEntries,
   fetchFoodItems,
   insertFoodItem,
   updateFoodItem,
   deleteFoodItem,
+  fetchCustomMeals,
+  insertCustomMeal,
+  updateCustomMeal,
+  deleteCustomMeal,
+  fetchHydrationEntries,
+  insertHydrationEntry,
+  fetchNutritionTarget,
+  upsertNutritionTarget,
   searchFoodExternal,
   fetchNutritionDaily,
   upsertNutritionDaily,
   fetchNutritionDailyHistory,
 } from './api';
-import type { FoodItem, FoodSearchResult, MealItem, NewMealItemInput, NewFoodItemInput, NutritionDailyPatch } from './types';
+import type {
+  CustomMeal,
+  FoodItem,
+  FoodSearchResult,
+  MealCategory,
+  MealItem,
+  NewCustomMealInput,
+  NewFoodItemInput,
+  NewMealCategoryInput,
+  NewMealItemInput,
+  NutritionDailyPatch,
+  NutritionTargetPatch,
+} from './types';
 import { POLISH_FOODS } from './polishFoods';
 import { XL_FOODS } from './xlFoods';
 
@@ -69,6 +99,10 @@ function foodMatches(name: string, nameEn: string, rawQuery: string): boolean {
 const TODAY_ITEMS_KEY = ['meal_items', 'today'] as const;
 const TODAY_MEALS_KEY = ['meals', 'today'] as const;
 const FOOD_ITEMS_KEY = ['food_items'] as const;
+const MEAL_CATEGORIES_KEY = ['meal_categories'] as const;
+const CUSTOM_MEALS_KEY = ['custom_meals'] as const;
+const HYDRATION_KEY = ['hydration_entries'] as const;
+const NUTRITION_TARGET_KEY = ['nutrition_target'] as const;
 const NUTRITION_TODAY_KEY = ['nutrition_daily', 'today'] as const;
 const MEAL_ITEMS_HISTORY_KEY = ['meal_items', 'history'] as const;
 const NUTRITION_HISTORY_KEY = ['nutrition_daily', 'history'] as const;
@@ -85,6 +119,10 @@ function nutritionKey(date?: string) {
   return date ? ['nutrition_daily', date] as const : NUTRITION_TODAY_KEY;
 }
 
+function hydrationKey(date?: string) {
+  return date ? ['hydration_entries', date] as const : HYDRATION_KEY;
+}
+
 export function useTodayMealItems(date?: string) {
   return useQuery({ queryKey: mealItemsKey(date), queryFn: () => fetchTodayMealItems(date) });
 }
@@ -95,6 +133,22 @@ export function useTodayMeals(date?: string) {
 
 export function useFoodItems() {
   return useQuery({ queryKey: FOOD_ITEMS_KEY, queryFn: fetchFoodItems });
+}
+
+export function useMealCategories() {
+  return useQuery({ queryKey: MEAL_CATEGORIES_KEY, queryFn: fetchMealCategories });
+}
+
+export function useCustomMeals() {
+  return useQuery({ queryKey: CUSTOM_MEALS_KEY, queryFn: fetchCustomMeals });
+}
+
+export function useHydrationEntries(date?: string) {
+  return useQuery({ queryKey: hydrationKey(date), queryFn: () => fetchHydrationEntries(date) });
+}
+
+export function useNutritionTarget() {
+  return useQuery({ queryKey: NUTRITION_TARGET_KEY, queryFn: fetchNutritionTarget });
 }
 
 export function useMealItemsHistory() {
@@ -161,6 +215,92 @@ export function useUpsertMeal(date?: string) {
   });
 }
 
+export function useUpsertMealForCategory(date?: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (category: MealCategory) => upsertMealForCategory(category, date),
+    onSuccess: () => qc.invalidateQueries({ queryKey: mealsKey(date) }),
+  });
+}
+
+export function useCreateMealCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: NewMealCategoryInput) => insertMealCategory(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: MEAL_CATEGORIES_KEY }),
+  });
+}
+
+export function useRestoreDefaultMealCategories() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: restoreDefaultMealCategories,
+    onSuccess: (categories) => {
+      qc.setQueryData<MealCategory[]>(MEAL_CATEGORIES_KEY, categories);
+      qc.invalidateQueries({ queryKey: MEAL_CATEGORIES_KEY });
+      qc.invalidateQueries({ queryKey: TODAY_MEALS_KEY });
+    },
+  });
+}
+
+export function useUpdateMealCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<NewMealCategoryInput> }) => updateMealCategory(id, patch),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: MEAL_CATEGORIES_KEY });
+      qc.invalidateQueries({ queryKey: TODAY_MEALS_KEY });
+    },
+  });
+}
+
+export function useReorderMealCategories() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (rows: Pick<MealCategory, 'id' | 'sort_order'>[]) => reorderMealCategories(rows),
+    onSuccess: () => qc.invalidateQueries({ queryKey: MEAL_CATEGORIES_KEY }),
+  });
+}
+
+export function useDeleteMealCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteMealCategory(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: MEAL_CATEGORIES_KEY });
+      qc.invalidateQueries({ queryKey: TODAY_MEALS_KEY });
+      qc.invalidateQueries({ queryKey: MEAL_ITEMS_HISTORY_KEY });
+    },
+  });
+}
+
+export function useCountMealCategoryItems() {
+  return useMutation({ mutationFn: (categoryId: string) => countMealCategoryItems(categoryId) });
+}
+
+export function useMoveCategoryEntries() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ categoryId, targetCategoryId }: { categoryId: string; targetCategoryId: string }) => moveCategoryEntries(categoryId, targetCategoryId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: TODAY_MEALS_KEY });
+      qc.invalidateQueries({ queryKey: TODAY_ITEMS_KEY });
+      qc.invalidateQueries({ queryKey: MEAL_ITEMS_HISTORY_KEY });
+    },
+  });
+}
+
+export function useDeleteCategoryEntries() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (categoryId: string) => deleteCategoryEntries(categoryId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: TODAY_ITEMS_KEY });
+      qc.invalidateQueries({ queryKey: MEAL_ITEMS_HISTORY_KEY });
+    },
+  });
+}
+
 export function useInsertFoodItem() {
   const qc = useQueryClient();
   return useMutation({
@@ -189,6 +329,33 @@ export function useDeleteFoodItem() {
   });
 }
 
+export function useCreateCustomMeal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: NewCustomMealInput) => insertCustomMeal(input),
+    onSuccess: (item: CustomMeal) => {
+      qc.setQueryData<CustomMeal[]>(CUSTOM_MEALS_KEY, (old) => [item, ...(old ?? []).filter((m) => m.id !== item.id)]);
+      qc.invalidateQueries({ queryKey: CUSTOM_MEALS_KEY });
+    },
+  });
+}
+
+export function useUpdateCustomMeal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<NewCustomMealInput> }) => updateCustomMeal(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: CUSTOM_MEALS_KEY }),
+  });
+}
+
+export function useDeleteCustomMeal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteCustomMeal(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: CUSTOM_MEALS_KEY }),
+  });
+}
+
 export function useUpsertNutritionDaily(date?: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -203,15 +370,20 @@ export function useUpsertNutritionDaily(date?: string) {
 export function useAddWater(glassML = 250, date?: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async () => {
-      const current = await fetchNutritionDaily(date);
-      const curWater = current?.water_ml ?? 0;
-      return upsertNutritionDaily({ water_ml: curWater + glassML }, date);
-    },
+    mutationFn: () => insertHydrationEntry(glassML, date),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: nutritionKey(date) });
+      qc.invalidateQueries({ queryKey: hydrationKey(date) });
       qc.invalidateQueries({ queryKey: NUTRITION_HISTORY_KEY });
     },
+  });
+}
+
+export function useUpsertNutritionTarget() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: NutritionTargetPatch) => upsertNutritionTarget(patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: NUTRITION_TARGET_KEY }),
   });
 }
 
