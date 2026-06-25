@@ -7,7 +7,7 @@ type NoteIconName =
   | 'note' | 'pin' | 'tag' | 'clock' | 'calendar' | 'plus' | 'filter' | 'grid' | 'list' | 'settings'
   | 'idea' | 'project' | 'people' | 'user' | 'star' | 'book' | 'archive' | 'bold'
   | 'italic' | 'underline' | 'strike' | 'align' | 'check' | 'link' | 'image' | 'table'
-  | 'code' | 'undo' | 'redo' | 'more' | 'save' | 'document';
+  | 'code' | 'undo' | 'redo' | 'more' | 'save' | 'document' | 'expand';
 
 type NoteCategory = {
   id: string;
@@ -21,7 +21,7 @@ const NOTE_COLORS = ['#1b2b33', '#21333d', '#14222a', '#261b33', '#1b3330'];
 
 const CATEGORIES: NoteCategory[] = [
   { id: 'all', label: 'Wszystkie notatki', icon: 'note', tone: 'pink', matcher: () => true },
-  { id: 'ideas', label: 'Pomysły', icon: 'idea', tone: 'teal', matcher: (n) => matches(n, ['pomysł', 'pomysl', 'idea', 'inspir']) },
+  { id: 'ideas', label: 'Notatki', icon: 'idea', tone: 'teal', matcher: (n) => matches(n, ['pomysł', 'pomysl', 'idea', 'inspir']) },
   { id: 'projects', label: 'Projekty', icon: 'project', tone: 'blue', matcher: (n) => matches(n, ['projekt', 'aplikacja', 'product', 'mvp']) },
   { id: 'meetings', label: 'Spotkania', icon: 'people', tone: 'teal', matcher: (n) => matches(n, ['spotkan', 'zespół', 'zespol', 'meeting']) },
   { id: 'personal', label: 'Osobiste', icon: 'user', tone: 'violet', matcher: (n) => matches(n, ['osobiste', 'cele', 'plan']) },
@@ -73,6 +73,7 @@ export function NotesScreen() {
   const [showAdd, setShowAdd] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [view, setView] = useState<'cards' | 'list'>('cards');
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const activeCategory = CATEGORIES.find((cat) => cat.id === categoryId) ?? CATEGORIES[0];
   const visibleNotes = useMemo(() => {
@@ -80,6 +81,13 @@ export function NotesScreen() {
     return base.filter(activeCategory.matcher).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   }, [activeCategory, categoryId, notes]);
   const selected = notes.find((note) => note.id === selectedId) ?? visibleNotes[0] ?? notes.find((note) => !note.archived);
+  const noteCounts = useMemo(() => {
+    const map = new Map<string, number>();
+    CATEGORIES.forEach((cat) => {
+      map.set(cat.id, cat.id === 'all' ? notes.filter((note) => !note.archived).length : notes.filter(cat.matcher).length);
+    });
+    return map;
+  }, [notes]);
 
   useEffect(() => {
     if (!selectedId && selected) setSelectedId(selected.id);
@@ -95,70 +103,67 @@ export function NotesScreen() {
         actions={<>
           <button className="btn btn-primary" type="button" onClick={() => setShowAdd(true)}><NoteIcon name="plus" /> Nowa notatka</button>
           <div className="notes-view-toggle">
-            <button className={view === 'list' ? 'is-active' : ''} type="button" onClick={() => setView('list')} aria-label="Widok listy"><NoteIcon name="list" /></button>
             <button className={view === 'cards' ? 'is-active' : ''} type="button" onClick={() => setView('cards')} aria-label="Widok kafelków"><NoteIcon name="grid" /></button>
+            <button className={view === 'list' ? 'is-active' : ''} type="button" onClick={() => setView('list')} aria-label="Widok listy"><NoteIcon name="list" /></button>
           </div>
         </>}
       />
 
-      <section className="notes-layout notes-layout-3">
-        <aside className="notes-sidebar notes-card">
-          <div className="notes-card-head">
-            <h2>Kategorie</h2>
-            <button type="button" aria-label="Dodaj kategorię"><NoteIcon name="plus" /></button>
-          </div>
-          <div className="notes-category-list">
-            {CATEGORIES.map((cat) => {
-              const count = cat.id === 'all'
-                ? notes.filter((note) => !note.archived).length
-                : notes.filter(cat.matcher).length;
-              return (
-                <button key={cat.id} className={`notes-category notes-tone-${cat.tone} ${categoryId === cat.id ? 'is-active' : ''}`} type="button" onClick={() => setCategoryId(cat.id)}>
-                  <span><NoteIcon name={cat.icon} /></span>
-                  <strong>{cat.label}</strong>
-                  <em>{count}</em>
-                </button>
-              );
-            })}
-          </div>
-          <button className="notes-add-category" type="button"><NoteIcon name="plus" /> Dodaj kategorię</button>
+      <section className={`notes-workspace ${editorOpen ? 'is-editor' : 'is-overview'}`}>
+        <aside className="notes-left-panel">
+          <CategoryPanel
+            activeId={categoryId}
+            counts={noteCounts}
+            onSelect={(id) => { setCategoryId(id); setEditorOpen(false); }}
+          />
         </aside>
 
-        <section className="notes-card notes-list-col">
-          <div className="notes-card-head">
-            <h2>{activeCategory.label}</h2>
-            <span className="badge badge-gray">{visibleNotes.length}</span>
-          </div>
-          {visibleNotes.length === 0 ? (
-            <EmptyState title="Brak notatek w tej kategorii" cta="Nowa notatka" onCta={() => setShowAdd(true)} />
-          ) : view === 'cards' ? (
-            <div className="notes-card-grid">
-              {visibleNotes.map((note) => (
-                <NoteTile key={note.id} note={note} selected={selected?.id === note.id} onSelect={() => setSelectedId(note.id)} onPin={() => updateNote(note.id, { pinned: !note.pinned })} />
-              ))}
+        {editorOpen ? (
+          <main className="notes-full-editor">
+            {selected ? (
+              <EditorPanel note={selected} fullScreen onCloseFull={() => setEditorOpen(false)} onUpdate={(patch) => updateNote(selected.id, patch)} onDelete={() => setDeleteId(selected.id)} />
+            ) : (
+              <div className="notes-card notes-empty-center"><EmptyState title="Wybierz notatkę" desc="Kliknij notatkę z listy lub utwórz nową." cta="Nowa notatka" onCta={() => setShowAdd(true)} /></div>
+            )}
+          </main>
+        ) : (
+          <main className="notes-board-panel notes-card">
+            <div className="notes-board-title">
+              <h2>{activeCategory.label}</h2>
             </div>
-          ) : (
-            <div className="notes-list-rows">
-              {visibleNotes.map((note) => (
-                <button key={note.id} type="button" className={`notes-list-row ${selected?.id === note.id ? 'is-active' : ''}`} onClick={() => setSelectedId(note.id)}>
-                  <div className="notes-list-row-main">
-                    <strong>{note.pinned && <NoteIcon name="star" />}{note.title}</strong>
-                    <small>{notePreview(note)}</small>
-                  </div>
-                  <em>{relativeTime(note.updatedAt)}</em>
-                </button>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <main className="notes-editor-col">
-          {selected ? (
-            <EditorPanel note={selected} onUpdate={(patch) => updateNote(selected.id, patch)} onDelete={() => setDeleteId(selected.id)} />
-          ) : (
-            <div className="notes-card notes-empty-center"><EmptyState title="Wybierz notatkę" desc="Kliknij notatkę z listy lub utwórz nową." cta="Nowa notatka" onCta={() => setShowAdd(true)} /></div>
-          )}
-        </main>
+            {visibleNotes.length === 0 ? (
+              <EmptyState title="Brak notatek w tej kategorii" cta="Nowa notatka" onCta={() => setShowAdd(true)} />
+            ) : view === 'cards' ? (
+              <>
+                <div className="notes-card-grid">
+                  {visibleNotes.map((note) => (
+                    <NoteTile
+                      key={note.id}
+                      note={note}
+                      selected={selected?.id === note.id}
+                      onSelect={() => setSelectedId(note.id)}
+                      onOpen={() => { setSelectedId(note.id); setEditorOpen(true); }}
+                      onPin={() => updateNote(note.id, { pinned: !note.pinned })}
+                    />
+                  ))}
+                </div>
+                <span className="notes-board-count">{visibleNotes.length} notatek</span>
+              </>
+            ) : (
+              <div className="notes-list-rows">
+                {visibleNotes.map((note) => (
+                  <button key={note.id} type="button" className={`notes-list-row ${selected?.id === note.id ? 'is-active' : ''}`} onClick={() => setSelectedId(note.id)} onDoubleClick={() => { setSelectedId(note.id); setEditorOpen(true); }}>
+                    <div className="notes-list-row-main">
+                      <strong>{note.pinned && <NoteIcon name="star" />}{note.title}</strong>
+                      <small>{notePreview(note)}</small>
+                    </div>
+                    <em>{fmtTime(note.updatedAt)}</em>
+                  </button>
+                ))}
+              </div>
+            )}
+          </main>
+        )}
       </section>
 
       <NoteModal open={showAdd} onClose={() => setShowAdd(false)} onSave={(data) => { addNote(data); setShowAdd(false); }} />
@@ -167,7 +172,27 @@ export function NotesScreen() {
   );
 }
 
-function EditorPanel({ note, onUpdate, onDelete }: { note: Note; onUpdate: (patch: Partial<Note>) => void; onDelete: () => void }) {
+function CategoryPanel({ activeId, counts, onSelect }: { activeId: string; counts: Map<string, number>; onSelect: (id: string) => void }) {
+  return (
+    <section className="notes-card notes-sidebar">
+      <div className="notes-card-head">
+        <h2>Kategorie</h2>
+      </div>
+      <div className="notes-category-list">
+        {CATEGORIES.map((cat) => (
+          <button key={cat.id} className={`notes-category notes-tone-${cat.tone} ${activeId === cat.id ? 'is-active' : ''}`} type="button" onClick={() => onSelect(cat.id)}>
+            <span><NoteIcon name={cat.icon} /></span>
+            <strong>{cat.label}</strong>
+            <em>{counts.get(cat.id) ?? 0}</em>
+          </button>
+        ))}
+      </div>
+      <button className="notes-add-category" type="button"><NoteIcon name="plus" /> Dodaj kategorię</button>
+    </section>
+  );
+}
+
+function EditorPanel({ note, onUpdate, onDelete, fullScreen, onCloseFull }: { note: Note; onUpdate: (patch: Partial<Note>) => void; onDelete: () => void; fullScreen?: boolean; onCloseFull?: () => void }) {
   const [draft, setDraft] = useState(note.content);
 
   useEffect(() => {
@@ -181,7 +206,7 @@ function EditorPanel({ note, onUpdate, onDelete }: { note: Note; onUpdate: (patc
   const cat = categoryFor(note);
 
   return (
-    <section className="notes-card notes-editor">
+    <section className={`notes-card notes-editor ${fullScreen ? 'is-fullscreen' : ''}`}>
       <div className="notes-editor-head">
         <div>
           <h2>{note.title || 'Bez tytułu'} <button type="button" onClick={() => onUpdate({ pinned: !note.pinned })}><NoteIcon name="pin" /></button></h2>
@@ -192,10 +217,12 @@ function EditorPanel({ note, onUpdate, onDelete }: { note: Note; onUpdate: (patc
           </div>
         </div>
         <div className="notes-editor-meta">
-          <span>Zapisano {relativeTime(note.updatedAt)}</span>
-          <NoteIcon name="check" />
-          <span><NoteIcon name="calendar" /> {fmtDate(note.updatedAt)}, {fmtTime(note.updatedAt)}</span>
-          <button type="button" onClick={onDelete} aria-label="Usuń notatkę"><NoteIcon name="more" /></button>
+          {fullScreen && <button className="notes-star-btn" type="button" onClick={() => onUpdate({ pinned: !note.pinned })} aria-label="Ulubione"><NoteIcon name="star" /></button>}
+          {fullScreen && <button className="btn btn-secondary btn-sm" type="button" onClick={onCloseFull}><NoteIcon name="expand" /> Zamknij pełny ekran</button>}
+          {!fullScreen && <span>Zapisano {relativeTime(note.updatedAt)}</span>}
+          {!fullScreen && <NoteIcon name="check" />}
+          {!fullScreen && <span><NoteIcon name="calendar" /> {fmtDate(note.updatedAt)}, {fmtTime(note.updatedAt)}</span>}
+          {!fullScreen && <button type="button" onClick={onDelete} aria-label="Usuń notatkę"><NoteIcon name="more" /></button>}
         </div>
       </div>
 
@@ -226,18 +253,21 @@ function EditorPanel({ note, onUpdate, onDelete }: { note: Note; onUpdate: (patc
   );
 }
 
-function NoteTile({ note, selected, onSelect, onPin }: { note: Note; selected: boolean; onSelect: () => void; onPin: () => void }) {
+function NoteTile({ note, selected, onSelect, onOpen, onPin }: { note: Note; selected: boolean; onSelect: () => void; onOpen: () => void; onPin: () => void }) {
   const cat = categoryFor(note);
   return (
     <article className={`notes-tile ${selected ? 'is-selected' : ''}`}>
-      <button type="button" className="notes-tile-main" onClick={onSelect}>
-        <span className={`notes-tile-cat notes-tone-${cat.tone}`}>{cat.label === 'Wszystkie notatki' ? 'Pomysły' : cat.label}</span>
+      <button type="button" className="notes-tile-main" onClick={onSelect} onDoubleClick={onOpen}>
         <strong>{note.title}</strong>
+        <div className="notes-tile-tags">
+          <span className={`notes-tile-cat notes-tone-${cat.tone}`}>{cat.label === 'Wszystkie notatki' ? note.category : cat.label}</span>
+          {note.tags.slice(0, 1).map((tag) => <span key={tag}>{tag}</span>)}
+        </div>
         <p>{notePreview(note)}</p>
         <time>{fmtDate(note.updatedAt)}, {fmtTime(note.updatedAt)}</time>
-        <NoteIcon name="more" />
+        {note.type === 'full' && <NoteIcon name="document" />}
       </button>
-      <button type="button" onClick={onPin} className={`notes-tile-pin ${note.pinned ? 'is-pinned' : ''}`} aria-label="Przypnij"><NoteIcon name="pin" /></button>
+      <button type="button" onClick={onPin} className={`notes-tile-pin ${note.pinned ? 'is-pinned' : ''}`} aria-label="Przypnij"><NoteIcon name={note.pinned ? 'star' : 'pin'} /></button>
     </article>
   );
 }
@@ -355,6 +385,7 @@ function NoteIcon({ name }: { name: NoteIconName }) {
       {name === 'more' && <><path d="M12 7h.01M12 12h.01M12 17h.01" {...common} /></>}
       {name === 'save' && <><path d="M5 3h12l2 2v16H5V3z" {...common} /><path d="M8 3v6h8V3M8 21v-7h8v7" {...common} /></>}
       {name === 'document' && <><path d="M7 3h7l4 4v14H7V3zM14 3v5h5M10 13h6M10 17h4" {...common} /></>}
+      {name === 'expand' && <><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5" {...common} /><path d="M3 8l5-5M16 3l5 5M21 16l-5 5M8 21l-5-5" {...common} /></>}
     </svg>
   );
 }

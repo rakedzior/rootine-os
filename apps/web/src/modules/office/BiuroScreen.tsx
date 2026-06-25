@@ -1,45 +1,46 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PriorityBadge, StatusBadge, PageHeader, SubTabs, KpiCard, IcoTrash, IcoPlus, IcoCheck } from '@/components/common';
-import { useLocalStore, type OfficeTask, type Priority, type VacationEntry } from '@/store/localStore';
-
-const OFFICE_TABS = [
-  { id: 'sprawy', label: 'Sprawy' },
-  { id: 'dokumenty', label: 'Dokumenty' },
-];
+import { Modal, EmptyState, ConfirmDelete, Field, IcoTrash, IcoPlus, IcoCheck } from '@/components/common';
+import { useLocalStore, type OfficeDocument, type OfficeTask, type Priority, type VacationEntry } from '@/store/localStore';
 
 interface RecurringDeadline { id: string; label: string; sub: string; date: string; }
+
+type IconName =
+  | 'briefcase' | 'todo' | 'active' | 'calendar' | 'palm' | 'building'
+  | 'doc' | 'car' | 'shield' | 'folder' | 'all' | 'user' | 'wallet' | 'monitor';
 
 function fmtDate(d?: string) {
   if (!d) return '—';
   return new Date(`${d}T12:00:00`).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' });
 }
+
 function daysLeft(d?: string) {
   if (!d) return null;
   return Math.ceil((new Date(`${d}T12:00:00`).getTime() - Date.now()) / 86400000);
 }
+
 function currentMonthKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-type IconName = 'briefcase' | 'todo' | 'active' | 'calendar' | 'palm' | 'building' | 'doc' | 'car' | 'shield' | 'folder' | 'plus' | 'all';
-
 function OfficeIcon({ name }: { name: IconName }) {
   const c = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true">
       {name === 'briefcase' && <><rect x="3" y="7" width="18" height="13" rx="2" {...c} /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18" {...c} /></>}
       {name === 'todo' && <><path d="M9 11l3 3L22 4" {...c} /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" {...c} /></>}
-      {name === 'active' && <><circle cx="12" cy="12" r="8.5" {...c} /><path d="M12 7v5l3 2" {...c} /></>}
+      {name === 'active' && <><path d="M7 3h10M8 21h8M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9s8 4 8 9" {...c} /></>}
       {name === 'calendar' && <><rect x="4" y="5" width="16" height="15" rx="2.5" {...c} /><path d="M8 3v4M16 3v4M4 10h16" {...c} /></>}
-      {name === 'palm' && <><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" {...c} /></>}
-      {name === 'building' && <><path d="M9 11l3 3L22 4" {...c} /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" {...c} /></>}
-      {name === 'doc' && <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" {...c} /><polyline points="14 2 14 8 20 8" {...c} /></>}
-      {name === 'car' && <><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v9a2 2 0 0 1-2 2h-2" {...c} /><circle cx="9" cy="17" r="2" {...c} /><circle cx="17" cy="17" r="2" {...c} /></>}
+      {name === 'palm' && <><path d="M12 21v-8M5 12c2-5 7-7 7-7s5 2 7 7M12 5c-1 4-4 6-8 7M12 5c1 4 4 6 8 7" {...c} /></>}
+      {name === 'building' && <><path d="M4 21V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v16M8 7h1M12 7h1M8 11h1M12 11h1M8 15h1M12 15h1M3 21h18" {...c} /></>}
+      {name === 'doc' && <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" {...c} /><path d="M14 2v6h6M8 13h8M8 17h6" {...c} /></>}
+      {name === 'car' && <><path d="M5 17H3a2 2 0 0 1-2-2v-3l2-5h16l2 5v3a2 2 0 0 1-2 2h-2" {...c} /><circle cx="7" cy="17" r="2" {...c} /><circle cx="17" cy="17" r="2" {...c} /></>}
       {name === 'shield' && <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" {...c} /></>}
       {name === 'folder' && <><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" {...c} /></>}
-      {name === 'plus' && <><path d="M12 5v14M5 12h14" {...c} /></>}
       {name === 'all' && <><rect x="4" y="4" width="7" height="7" rx="1.5" {...c} /><rect x="13" y="4" width="7" height="7" rx="1.5" {...c} /><rect x="4" y="13" width="7" height="7" rx="1.5" {...c} /><rect x="13" y="13" width="7" height="7" rx="1.5" {...c} /></>}
+      {name === 'user' && <><path d="M20 21a8 8 0 0 0-16 0" {...c} /><circle cx="12" cy="7" r="4" {...c} /></>}
+      {name === 'wallet' && <><path d="M4 7h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h12" {...c} /><path d="M16 13h.01" {...c} /></>}
+      {name === 'monitor' && <><rect x="3" y="4" width="18" height="12" rx="2" {...c} /><path d="M8 20h8M12 16v4" {...c} /></>}
     </svg>
   );
 }
@@ -47,232 +48,15 @@ function OfficeIcon({ name }: { name: IconName }) {
 function categoryIcon(category: string): IconName {
   const n = category.toLowerCase();
   if (n.includes('dokument')) return 'doc';
-  if (n.includes('samoch') || n.includes('auto')) return 'car';
+  if (n.includes('samoch') || n.includes('auto') || n.includes('pojazd')) return 'car';
   if (n.includes('ubezp')) return 'shield';
   if (n.includes('urlop')) return 'palm';
-  if (n.includes('urząd') || n.includes('urzed')) return 'building';
+  if (n.includes('hr') || n.includes('kadr')) return 'user';
+  if (n.includes('finans') || n.includes('ksi')) return 'wallet';
+  if (n.includes('it') || n.includes('sprz')) return 'monitor';
+  if (n.includes('urz') || n.includes('admin')) return 'building';
   return 'folder';
 }
-
-function OfficeMetric({ icon, tone, label, value, note, onClick }: { icon: IconName; tone: 'pink' | 'blue' | 'teal' | 'violet'; label: string; value: string; note: string; onClick?: () => void }) {
-  const card = <KpiCard icon={<OfficeIcon name={icon} />} tone={tone} label={label} value={value} sub={note} />;
-  if (!onClick) return card;
-  return <button className="kpi-card-action" type="button" onClick={onClick}>{card}</button>;
-}
-
-export function BiuroScreen() {
-  const {
-    officeTasks, officeCategories, addOfficeTask, updateOfficeTask, deleteOfficeTask,
-    addOfficeCategory, deleteOfficeCategory, vacationBalance,
-    officeDocuments, cars, insurances,
-  } = useLocalStore();
-
-  const [tab, setTab] = useState('sprawy');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [statusTab, setStatusTab] = useState<'open' | 'all' | 'done'>('open');
-  const [showAdd, setShowAdd] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [showCategoryManager, setShowCategoryManager] = useState(false);
-  const [showVacation, setShowVacation] = useState(false);
-  const [showAllCompleted, setShowAllCompleted] = useState(false);
-  const [completedCollapsed, setCompletedCollapsed] = useState(false);
-
-  const active = useMemo(() => officeTasks.filter(t => !t.isArchived), [officeTasks]);
-  const monthKey = currentMonthKey();
-  const dueThisMonth = useMemo(() => active.filter(t => t.dueDate?.startsWith(monthKey)), [active, monthKey]);
-  const remaining = vacationBalance.yearlyLimit - vacationBalance.usedDays - vacationBalance.plannedDays;
-
-  const byCategory = useMemo(() => {
-    const map = new Map<string, OfficeTask[]>();
-    for (const t of active) {
-      const list = map.get(t.category) ?? [];
-      list.push(t);
-      map.set(t.category, list);
-    }
-    return map;
-  }, [active]);
-
-  function noteFor(list: OfficeTask[]) {
-    const pilne = list.filter(t => t.priority === 'high' && t.status !== 'done').length;
-    if (pilne > 0) return `${pilne} pilne`;
-    const trakcie = list.filter(t => t.status === 'active').length;
-    if (trakcie > 0) return `${trakcie} w trakcie`;
-    return 'OK';
-  }
-
-  const categoryFiltered = selectedCategory ? active.filter(t => t.category === selectedCategory) : active;
-  const openCount = categoryFiltered.filter(t => t.status !== 'done').length;
-  const doneCount = categoryFiltered.filter(t => t.status === 'done').length;
-  const tabFiltered = statusTab === 'open' ? categoryFiltered.filter(t => t.status !== 'done')
-    : statusTab === 'done' ? categoryFiltered.filter(t => t.status === 'done')
-    : categoryFiltered;
-  const sorted = [...tabFiltered].sort((a, b) => (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999'));
-
-  const completed = useMemo(
-    () => officeTasks.filter(t => t.status === 'done' && !t.isArchived).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
-    [officeTasks]
-  );
-
-  const recurringDeadlines = useMemo<RecurringDeadline[]>(() => {
-    const out: RecurringDeadline[] = [];
-    for (const c of cars) {
-      if (c.insuranceExpiry) out.push({ id: `car-oc-${c.id}`, label: `OC — ${c.name}`, sub: c.plateNumber, date: c.insuranceExpiry });
-      if (c.inspectionDate) out.push({ id: `car-pp-${c.id}`, label: `Przegląd — ${c.name}`, sub: c.plateNumber, date: c.inspectionDate });
-    }
-    for (const i of insurances) out.push({ id: `ins-${i.id}`, label: i.name, sub: i.insurer, date: i.expiryDate });
-    for (const d of officeDocuments) if (d.expiryDate && !d.isArchived) out.push({ id: `doc-${d.id}`, label: d.name, sub: d.category, date: d.expiryDate });
-    return out.filter(d => d.date).sort((a, b) => a.date.localeCompare(b.date));
-  }, [cars, insurances, officeDocuments]);
-
-  const visibleDocuments = officeDocuments.filter(d => !d.isArchived);
-
-  return (
-    <div className="module-page">
-      <PageHeader
-        icon={<OfficeIcon name="briefcase" />}
-        title="Biuro"
-        desc="Wszystkie sprawy, dokumenty i terminy w jednym miejscu."
-        actions={tab === 'sprawy' ? <button className="btn btn-primary btn-sm" type="button" onClick={() => setShowAdd(true)}><IcoPlus /> Nowe zadanie</button> : undefined}
-      />
-
-      <div className="office-shell">
-        <SubTabs tabs={OFFICE_TABS} active={tab} onChange={setTab} />
-
-        {tab === 'dokumenty' ? (
-          <OfficeDocuments documents={visibleDocuments} deadlines={recurringDeadlines} />
-        ) : (
-        <>
-        <div className="office-kpi-grid">
-          <OfficeMetric icon="todo" tone="pink" label="Do zrobienia" value={String(active.filter(t => t.status === 'todo').length)} note="wszystkie sprawy" />
-          <OfficeMetric icon="active" tone="blue" label="W trakcie" value={String(active.filter(t => t.status === 'active').length)} note="w realizacji" />
-          <OfficeMetric icon="calendar" tone="teal" label="Terminy w tym miesiącu" value={String(dueThisMonth.length)} note={`${dueThisMonth.filter(t => t.priority === 'high').length} pilne`} />
-          <OfficeMetric icon="palm" tone="violet" label="Urlop pozostały" value={`${remaining} dni`} note={`z ${vacationBalance.yearlyLimit} dni rocznie`} onClick={() => setShowVacation(true)} />
-        </div>
-
-        <div className="office-layout">
-          <div className="card office-sidebar">
-            <div className="card-head"><span className="card-title">Kategorie</span></div>
-            <div className="office-category-list">
-              <button type="button" className={`office-category-row${selectedCategory === null ? ' is-active' : ''}`} onClick={() => setSelectedCategory(null)}>
-                <span className="office-category-icon"><OfficeIcon name="all" /></span>
-                <span className="office-category-info">
-                  <strong>Wszystkie</strong>
-                  <span className="office-category-sub">{noteFor(active)}</span>
-                </span>
-                <span className="office-category-count">{active.length}</span>
-              </button>
-              {officeCategories.map(cat => {
-                const list = byCategory.get(cat) ?? [];
-                return (
-                  <button key={cat} type="button" className={`office-category-row${selectedCategory === cat ? ' is-active' : ''}`} onClick={() => setSelectedCategory(cat)}>
-                    <span className="office-category-icon"><OfficeIcon name={categoryIcon(cat)} /></span>
-                    <span className="office-category-info">
-                      <strong>{cat}</strong>
-                      <span className="office-category-sub">{noteFor(list)}</span>
-                    </span>
-                    <span className="office-category-count">{list.length}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <button className="office-add-category-btn" type="button" onClick={() => setShowCategoryManager(true)}><IcoPlus /> Dodaj kategorię</button>
-          </div>
-
-          <div className="office-main">
-            <div className="card">
-              <div className="card-head">
-                <span className="card-title">Moje sprawy</span>
-              </div>
-              <div className="office-tabs">
-                <button type="button" className={`office-tab${statusTab === 'open' ? ' is-active' : ''}`} onClick={() => setStatusTab('open')}>Aktywne {openCount}</button>
-                <button type="button" className={`office-tab${statusTab === 'all' ? ' is-active' : ''}`} onClick={() => setStatusTab('all')}>Wszystkie {categoryFiltered.length}</button>
-                <button type="button" className={`office-tab${statusTab === 'done' ? ' is-active' : ''}`} onClick={() => setStatusTab('done')}>Zrobione {doneCount}</button>
-              </div>
-
-              {sorted.length === 0
-                ? <EmptyState title="Brak spraw" cta="Dodaj zadanie" onCta={() => setShowAdd(true)} />
-                : (
-                  <div className="office-tasks-list">
-                    {sorted.map(task => {
-                      const dl = daysLeft(task.dueDate);
-                      return (
-                        <div key={task.id} className={`office-task-row${task.status === 'done' ? ' is-done' : ''}`}>
-                          <button className="office-task-check" type="button" onClick={() => updateOfficeTask(task.id, { status: task.status === 'done' ? 'todo' : 'done' })} aria-label="Zmień status">
-                            {task.status === 'done' && <IcoCheck />}
-                          </button>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div className="office-task-title">{task.title}</div>
-                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                              <span className="badge badge-gray">{task.category}</span>
-                              {task.institution && <span className="badge badge-gray">{task.institution}</span>}
-                              <PriorityBadge priority={task.priority} />
-                              <StatusBadge status={task.status} />
-                              {task.dueDate && <span style={{ fontSize: 11, color: dl !== null && dl < 3 ? 'var(--p-high)' : 'var(--ink-3)' }}>📅 {fmtDate(task.dueDate)}</span>}
-                            </div>
-                          </div>
-                          <button className="icon-btn" onClick={() => setDeleteId(task.id)}><IcoTrash /></button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )
-              }
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-head">
-            <button type="button" className="office-collapse-toggle" onClick={() => setCompletedCollapsed(v => !v)} aria-expanded={!completedCollapsed}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14, transform: completedCollapsed ? 'rotate(-90deg)' : 'none', transition: 'transform .15s' }}><path d="M6 9l6 6 6-6" /></svg>
-              <span className="card-title">Ukończone ostatnio</span>
-              <span className="badge badge-gray">{completed.length}</span>
-            </button>
-            {!completedCollapsed && completed.length > 4 && <button className="office-link-inline" type="button" onClick={() => setShowAllCompleted(true)}>Zobacz archiwum →</button>}
-          </div>
-          {!completedCollapsed && (completed.length === 0
-            ? <EmptyState title="Brak ukończonych spraw" desc="Ukończone zadania pojawią się tutaj." />
-            : (
-              <div className="office-completed-grid">
-                {completed.slice(0, 4).map(t => (
-                  <div key={t.id} className="office-completed-item">
-                    <span className="office-completed-check"><IcoCheck /></span>
-                    <div className="office-completed-info">
-                      <strong>{t.title}</strong>
-                      <small>{t.category} · {fmtDate(t.updatedAt.split('T')[0])}</small>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ))
-          }
-        </div>
-        </>
-        )}
-      </div>
-
-      <TaskFormModal
-        open={showAdd}
-        categories={officeCategories}
-        defaultCategory={selectedCategory ?? officeCategories[0]}
-        onClose={() => setShowAdd(false)}
-        onSave={(payload) => { addOfficeTask({ ...payload, status: 'todo', isArchived: false }); setShowAdd(false); }}
-      />
-      <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { if (deleteId) deleteOfficeTask(deleteId); setDeleteId(null); }} label="to zadanie" />
-      <CategoryManagerModal open={showCategoryManager} onClose={() => setShowCategoryManager(false)} categories={officeCategories} onAdd={addOfficeCategory} onDelete={deleteOfficeCategory} />
-      <VacationModal open={showVacation} onClose={() => setShowVacation(false)} />
-      <AllCompletedModal
-        open={showAllCompleted}
-        onClose={() => setShowAllCompleted(false)}
-        tasks={completed}
-        onReopen={(id) => updateOfficeTask(id, { status: 'todo' })}
-        onDelete={(id) => deleteOfficeTask(id)}
-      />
-    </div>
-  );
-}
-
-// ─── DOCUMENTS / RECURRING DEADLINES ────────────────────────────
 
 function deadlineStatus(date: string): { label: string; cls: string } {
   const days = daysLeft(date);
@@ -282,57 +66,274 @@ function deadlineStatus(date: string): { label: string; cls: string } {
   return { label: 'OK', cls: 'status-done' };
 }
 
-function OfficeDocuments({ documents, deadlines }: { documents: { id: string; name: string; category: string; documentNumber?: string; expiryDate?: string }[]; deadlines: RecurringDeadline[] }) {
+function noteFor(list: OfficeTask[]) {
+  const urgent = list.filter(t => t.priority === 'high' && t.status !== 'done').length;
+  if (urgent > 0) return `${urgent} pilne`;
+  const active = list.filter(t => t.status === 'active').length;
+  if (active > 0) return `${active} w trakcie`;
+  return 'OK';
+}
+
+function OfficeMetric({ icon, label, value, note, onClick }: { icon: IconName; label: string; value: string; note: string; onClick?: () => void }) {
+  const content = (
+    <>
+      <span className="office-metric-icon"><OfficeIcon name={icon} /></span>
+      <span className="office-metric-copy">
+        <span>{label}</span>
+        <strong>{value}</strong>
+        <small>{note}</small>
+      </span>
+      <span className="office-metric-arrow">›</span>
+    </>
+  );
+  if (!onClick) return <div className="office-metric">{content}</div>;
+  return <button className="office-metric office-metric-button" type="button" onClick={onClick}>{content}</button>;
+}
+
+export function BiuroScreen() {
+  const {
+    officeTasks, officeCategories, addOfficeTask, updateOfficeTask, deleteOfficeTask,
+    addOfficeCategory, deleteOfficeCategory, vacationBalance,
+    officeDocuments, cars, insurances,
+  } = useLocalStore();
+
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [showVacation, setShowVacation] = useState(false);
+  const [showDeadlines, setShowDeadlines] = useState(false);
+  const [showDocuments, setShowDocuments] = useState(false);
+  const [sortAsc, setSortAsc] = useState(true);
+
+  const active = useMemo(() => officeTasks.filter(t => !t.isArchived), [officeTasks]);
+  const monthKey = currentMonthKey();
+  const dueThisMonth = useMemo(() => active.filter(t => t.dueDate?.startsWith(monthKey)), [active, monthKey]);
+  const remaining = vacationBalance.yearlyLimit - vacationBalance.usedDays - vacationBalance.plannedDays;
+
+  const byCategory = useMemo(() => {
+    const map = new Map<string, OfficeTask[]>();
+    for (const task of active) {
+      const list = map.get(task.category) ?? [];
+      list.push(task);
+      map.set(task.category, list);
+    }
+    return map;
+  }, [active]);
+
+  const categoryFiltered = selectedCategory ? active.filter(t => t.category === selectedCategory) : active;
+  const sortedTasks = [...categoryFiltered].sort((a, b) => {
+    if ((a.status === 'done') !== (b.status === 'done')) return a.status === 'done' ? 1 : -1;
+    const dateCompare = (a.dueDate ?? '9999').localeCompare(b.dueDate ?? '9999');
+    return sortAsc ? dateCompare : -dateCompare;
+  });
+
+  const recurringDeadlines = useMemo<RecurringDeadline[]>(() => {
+    const out: RecurringDeadline[] = [];
+    for (const car of cars) {
+      if (car.insuranceExpiry) out.push({ id: `car-oc-${car.id}`, label: `OC — ${car.name}`, sub: car.plateNumber, date: car.insuranceExpiry });
+      if (car.inspectionDate) out.push({ id: `car-pp-${car.id}`, label: `Przegląd — ${car.name}`, sub: car.plateNumber, date: car.inspectionDate });
+    }
+    for (const insurance of insurances) out.push({ id: `ins-${insurance.id}`, label: insurance.name, sub: insurance.insurer, date: insurance.expiryDate });
+    for (const doc of officeDocuments) if (doc.expiryDate && !doc.isArchived) out.push({ id: `doc-${doc.id}`, label: doc.name, sub: doc.category, date: doc.expiryDate });
+    return out.filter(d => d.date).sort((a, b) => a.date.localeCompare(b.date));
+  }, [cars, insurances, officeDocuments]);
+
+  const visibleDocuments = officeDocuments.filter(d => !d.isArchived);
+
   return (
-    <div className="office-layout">
-      <div className="card" style={{ minWidth: 0 }}>
-        <div className="card-head"><span className="card-title">Terminy cykliczne</span></div>
-        <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: '0 0 12px' }}>OC, przegląd, ubezpieczenia, PIT, ZUS i inne powtarzalne terminy.</p>
-        {deadlines.length === 0 ? (
-          <EmptyState title="Brak terminów" desc="Dodaj auto, ubezpieczenie lub dokument z datą ważności." />
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {deadlines.map(d => {
-              const s = deadlineStatus(d.date);
-              return (
-                <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 'var(--r-mid)', border: '1px solid var(--border-soft)', background: 'var(--surface-inset)' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13 }}>{d.label}</div>
-                    <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{d.sub} · {fmtDate(d.date)}</div>
-                  </div>
-                  <span className={`badge ${s.cls}`}>{s.label}</span>
-                </div>
-              );
-            })}
+    <div className="module-page office-page">
+      <div className="office-shell office-dashboard-shell">
+        <div className="office-hero">
+          <div className="office-hero-main">
+            <span className="office-hero-icon"><OfficeIcon name="briefcase" /></span>
+            <div>
+              <h1>Biuro</h1>
+              <p>Zarządzaj sprawami, dokumentami i terminami w jednym miejscu.</p>
+            </div>
           </div>
-        )}
+          <button className="btn btn-primary btn-sm office-new-task-btn" type="button" onClick={() => setShowAdd(true)}><IcoPlus /> Nowe zadanie</button>
+        </div>
+
+        <div className="office-kpi-grid">
+          <OfficeMetric icon="todo" label="Do zrobienia" value={String(active.filter(t => t.status === 'todo').length)} note="aktywnych spraw" />
+          <OfficeMetric icon="active" label="W trakcie" value={String(active.filter(t => t.status === 'active').length)} note="w realizacji" />
+          <OfficeMetric icon="calendar" label="Terminy w tym miesiącu" value={String(dueThisMonth.length)} note={`${dueThisMonth.filter(t => t.priority === 'high').length} pilne`} />
+          <OfficeMetric icon="palm" label="Urlop" value={`${remaining} dni`} note={`z ${vacationBalance.yearlyLimit} dni rocznie`} onClick={() => setShowVacation(true)} />
+        </div>
+
+        <div className="office-dashboard-grid">
+          <aside className="card office-sidebar">
+            <div className="office-panel-title">Kategorie</div>
+            <div className="office-category-list">
+              <button type="button" className={`office-category-row${selectedCategory === null ? ' is-active' : ''}`} onClick={() => setSelectedCategory(null)}>
+                <span className="office-category-icon"><OfficeIcon name="all" /></span>
+                <span className="office-category-info">
+                  <strong>Wszystkie</strong>
+                  <span className="office-category-sub">{noteFor(active)}</span>
+                </span>
+                <span className="office-category-count">{active.length}</span>
+              </button>
+              {officeCategories.map(category => {
+                const list = byCategory.get(category) ?? [];
+                return (
+                  <button key={category} type="button" className={`office-category-row${selectedCategory === category ? ' is-active' : ''}`} onClick={() => setSelectedCategory(category)}>
+                    <span className="office-category-icon"><OfficeIcon name={categoryIcon(category)} /></span>
+                    <span className="office-category-info">
+                      <strong>{category}</strong>
+                      <span className="office-category-sub">{noteFor(list)}</span>
+                    </span>
+                    <span className="office-category-count">{list.length}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button className="office-add-category-btn" type="button" onClick={() => setShowCategoryManager(true)}><IcoPlus /> Dodaj kategorię</button>
+          </aside>
+
+          <main className="card office-cases-panel">
+            <div className="office-panel-head">
+              <div className="office-panel-title">Moje sprawy</div>
+              <button className="office-sort-btn" type="button" onClick={() => setSortAsc(v => !v)}>
+                Sortuj: Termin {sortAsc ? '↑' : '↓'}
+              </button>
+            </div>
+
+            {sortedTasks.length === 0 ? (
+              <EmptyState title="Brak spraw" cta="Dodaj zadanie" onCta={() => setShowAdd(true)} />
+            ) : (
+              <div className="office-case-list">
+                {sortedTasks.map(task => (
+                  <div key={task.id} className={`office-case-row${task.status === 'done' ? ' is-done' : ''}`}>
+                    <button className="office-case-check" type="button" onClick={() => updateOfficeTask(task.id, { status: task.status === 'done' ? 'todo' : 'done' })} aria-label="Zmień status">
+                      {task.status === 'done' && <IcoCheck />}
+                    </button>
+                    <div className="office-case-main">
+                      <strong>{task.title}</strong>
+                      <span>{task.category}</span>
+                    </div>
+                    <time>{fmtDate(task.dueDate)}</time>
+                    <span className="office-case-chevron">›</span>
+                    <button className="icon-btn office-case-delete" type="button" onClick={() => setDeleteId(task.id)} aria-label={`Usuń ${task.title}`}><IcoTrash /></button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {selectedCategory && (
+              <button className="office-panel-footer" type="button" onClick={() => setSelectedCategory(null)}>Zobacz wszystkie sprawy ›</button>
+            )}
+          </main>
+
+          <aside className="office-right-stack">
+            <section className="card office-mini-panel">
+              <div className="office-panel-head">
+                <div className="office-panel-title">Nadchodzące terminy</div>
+                <span className="office-panel-icon"><OfficeIcon name="calendar" /></span>
+              </div>
+              {recurringDeadlines.length === 0 ? (
+                <EmptyState title="Brak terminów" />
+              ) : (
+                <div className="office-deadline-list">
+                  {recurringDeadlines.slice(0, 5).map(deadline => (
+                    <div key={deadline.id} className="office-deadline-row">
+                      <span className="office-dot" />
+                      <span>
+                        <strong>{deadline.label}</strong>
+                        <small>{deadline.sub}</small>
+                      </span>
+                      <time>{fmtDate(deadline.date)}</time>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button className="office-panel-footer" type="button" onClick={() => setShowDeadlines(true)}>Zobacz wszystkie terminy ›</button>
+            </section>
+
+            <section className="card office-mini-panel">
+              <div className="office-panel-head">
+                <div className="office-panel-title">Dokumenty <span>{visibleDocuments.length}</span></div>
+                <span className="office-panel-icon"><OfficeIcon name="doc" /></span>
+              </div>
+              {visibleDocuments.length === 0 ? (
+                <EmptyState title="Brak dokumentów" />
+              ) : (
+                <div className="office-document-list">
+                  {visibleDocuments.slice(0, 3).map(doc => (
+                    <div key={doc.id} className="office-document-row">
+                      <span>{doc.name}</span>
+                      <time>{fmtDate(doc.expiryDate)}</time>
+                      <OfficeIcon name="calendar" />
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button className="office-panel-footer" type="button" onClick={() => setShowDocuments(true)}>Zobacz wszystkie dokumenty ›</button>
+            </section>
+          </aside>
+        </div>
       </div>
 
-      <div className="card" style={{ minWidth: 0 }}>
-        <div className="card-head"><span className="card-title">Dokumenty</span></div>
-        {documents.length === 0 ? (
-          <EmptyState title="Brak dokumentów" desc="Tu pojawią się dowody, polisy, umowy i inne dokumenty." />
-        ) : (
-          <table className="table">
-            <thead><tr><th>NAZWA</th><th>KATEGORIA</th><th>NUMER</th><th>WAŻNY DO</th></tr></thead>
-            <tbody>
-              {documents.map(d => (
-                <tr key={d.id}>
-                  <td style={{ fontWeight: 600 }}>{d.name}</td>
-                  <td style={{ color: 'var(--ink-3)', fontSize: 12.5 }}>{d.category}</td>
-                  <td style={{ color: 'var(--ink-3)', fontSize: 12.5 }}>{d.documentNumber ?? '—'}</td>
-                  <td>{d.expiryDate ? fmtDate(d.expiryDate) : '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <TaskFormModal
+        open={showAdd}
+        categories={officeCategories}
+        defaultCategory={selectedCategory ?? officeCategories[0] ?? 'Administracja'}
+        onClose={() => setShowAdd(false)}
+        onSave={(payload) => { addOfficeTask({ ...payload, status: 'todo', isArchived: false }); setShowAdd(false); }}
+      />
+      <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { if (deleteId) deleteOfficeTask(deleteId); setDeleteId(null); }} label="to zadanie" />
+      <CategoryManagerModal open={showCategoryManager} onClose={() => setShowCategoryManager(false)} categories={officeCategories} onAdd={addOfficeCategory} onDelete={deleteOfficeCategory} />
+      <VacationModal open={showVacation} onClose={() => setShowVacation(false)} />
+      <OfficeDeadlinesModal open={showDeadlines} onClose={() => setShowDeadlines(false)} deadlines={recurringDeadlines} />
+      <OfficeDocumentsModal open={showDocuments} onClose={() => setShowDocuments(false)} documents={visibleDocuments} />
     </div>
   );
 }
 
-// ─── TASK FORM MODAL ────────────────────────────────────────────
+function OfficeDeadlinesModal({ open, onClose, deadlines }: { open: boolean; onClose: () => void; deadlines: RecurringDeadline[] }) {
+  return (
+    <Modal open={open} onClose={onClose} title="Wszystkie terminy" size="lg">
+      {deadlines.length === 0 ? <EmptyState title="Brak terminów" /> : (
+        <div className="office-modal-list">
+          {deadlines.map(deadline => {
+            const status = deadlineStatus(deadline.date);
+            return (
+              <div key={deadline.id} className="office-modal-row">
+                <div>
+                  <strong>{deadline.label}</strong>
+                  <span>{deadline.sub} · {fmtDate(deadline.date)}</span>
+                </div>
+                <span className={`badge ${status.cls}`}>{status.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+function OfficeDocumentsModal({ open, onClose, documents }: { open: boolean; onClose: () => void; documents: OfficeDocument[] }) {
+  return (
+    <Modal open={open} onClose={onClose} title="Dokumenty" size="lg">
+      {documents.length === 0 ? <EmptyState title="Brak dokumentów" /> : (
+        <table className="table">
+          <thead><tr><th>Nazwa</th><th>Kategoria</th><th>Numer</th><th>Ważny do</th></tr></thead>
+          <tbody>
+            {documents.map(doc => (
+              <tr key={doc.id}>
+                <td style={{ fontWeight: 700 }}>{doc.name}</td>
+                <td>{doc.category}</td>
+                <td>{doc.documentNumber ?? '—'}</td>
+                <td>{fmtDate(doc.expiryDate)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </Modal>
+  );
+}
 
 function TaskFormModal({ open, categories, defaultCategory, onClose, onSave }: {
   open: boolean; categories: string[]; defaultCategory: string; onClose: () => void;
@@ -347,7 +348,12 @@ function TaskFormModal({ open, categories, defaultCategory, onClose, onSave }: {
 
   useEffect(() => {
     if (!open) return;
-    setTitle(''); setInstitution(''); setCategory(defaultCategory); setPriority('mid'); setDueDate(''); setNotes('');
+    setTitle('');
+    setInstitution('');
+    setCategory(defaultCategory);
+    setPriority('mid');
+    setDueDate('');
+    setNotes('');
   }, [open, defaultCategory]);
 
   return (
@@ -374,16 +380,14 @@ function TaskFormModal({ open, categories, defaultCategory, onClose, onSave }: {
   );
 }
 
-// ─── CATEGORY MANAGER ───────────────────────────────────────────
-
 function CategoryManagerModal({ open, onClose, categories, onAdd, onDelete }: { open: boolean; onClose: () => void; categories: string[]; onAdd: (name: string) => void; onDelete: (name: string) => void }) {
   const [name, setName] = useState('');
   return (
     <Modal open={open} onClose={onClose} title="Zarządzaj kategoriami" footer={<button className="btn btn-primary btn-sm" onClick={onClose}>Gotowe</button>}>
-      {categories.map(c => (
-        <div key={c} className="goals-category-row">
-          <span>{c}</span>
-          <button className="icon-btn" type="button" onClick={() => onDelete(c)} aria-label={`Usuń kategorię ${c}`}><IcoTrash /></button>
+      {categories.map(category => (
+        <div key={category} className="goals-category-row">
+          <span>{category}</span>
+          <button className="icon-btn" type="button" onClick={() => onDelete(category)} aria-label={`Usuń kategorię ${category}`}><IcoTrash /></button>
         </div>
       ))}
       <div className="goals-category-add-row">
@@ -394,8 +398,6 @@ function CategoryManagerModal({ open, onClose, categories, onAdd, onDelete }: { 
   );
 }
 
-// ─── VACATION MODAL ─────────────────────────────────────────────
-
 function VacationModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { vacations, vacationBalance, addVacation, updateVacation, deleteVacation } = useLocalStore();
   const [form, setForm] = useState<{ vacation: VacationEntry | null } | null>(null);
@@ -403,9 +405,7 @@ function VacationModal({ open, onClose }: { open: boolean; onClose: () => void }
   const remaining = vacationBalance.yearlyLimit - vacationBalance.usedDays - vacationBalance.plannedDays;
 
   return (
-    <Modal open={open} onClose={onClose} title="Urlopy" size="lg" footer={
-      <button className="btn btn-primary btn-sm" onClick={onClose}>Gotowe</button>
-    }>
+    <Modal open={open} onClose={onClose} title="Urlopy" size="lg" footer={<button className="btn btn-primary btn-sm" onClick={onClose}>Gotowe</button>}>
       <div className="office-vacation-stats">
         <div className="office-vacation-stat"><span>Limit roczny</span><strong>{vacationBalance.yearlyLimit} dni</strong></div>
         <div className="office-vacation-stat"><span>Wykorzystane</span><strong>{vacationBalance.usedDays} dni</strong></div>
@@ -418,31 +418,30 @@ function VacationModal({ open, onClose }: { open: boolean; onClose: () => void }
         <button className="btn btn-primary btn-sm" type="button" onClick={() => setForm({ vacation: null })}><IcoPlus /> Dodaj urlop</button>
       </div>
 
-      {vacations.length === 0
-        ? <EmptyState title="Brak wpisów urlopowych" cta="Dodaj urlop" onCta={() => setForm({ vacation: null })} />
-        : (
-          <table className="table">
-            <thead><tr><th>OD</th><th>DO</th><th>DNI</th><th>TYP</th><th>STATUS</th><th></th></tr></thead>
-            <tbody>
-              {vacations.map(v => (
-                <tr key={v.id}>
-                  <td>{fmtDate(v.startDate)}</td>
-                  <td>{fmtDate(v.endDate)}</td>
-                  <td style={{ fontWeight: 700 }}>{v.days}</td>
-                  <td><span className="badge badge-gray">{v.type}</span></td>
-                  <td><span className={`badge ${v.status === 'approved' ? 'badge-green' : 'badge-gray'}`}>{v.status === 'approved' ? 'Zatwierdzone' : v.status === 'planned' ? 'Planowane' : v.status}</span></td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button className="icon-btn" type="button" onClick={() => setForm({ vacation: v })} aria-label="Edytuj urlop">✎</button>
-                      <button className="icon-btn" type="button" onClick={() => setDeleteTarget(v)} aria-label="Usuń urlop"><IcoTrash /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )
-      }
+      {vacations.length === 0 ? (
+        <EmptyState title="Brak wpisów urlopowych" cta="Dodaj urlop" onCta={() => setForm({ vacation: null })} />
+      ) : (
+        <table className="table">
+          <thead><tr><th>Od</th><th>Do</th><th>Dni</th><th>Typ</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {vacations.map(vacation => (
+              <tr key={vacation.id}>
+                <td>{fmtDate(vacation.startDate)}</td>
+                <td>{fmtDate(vacation.endDate)}</td>
+                <td style={{ fontWeight: 700 }}>{vacation.days}</td>
+                <td><span className="badge badge-gray">{vacation.type}</span></td>
+                <td><span className={`badge ${vacation.status === 'approved' ? 'badge-green' : 'badge-gray'}`}>{vacation.status === 'approved' ? 'Zatwierdzone' : vacation.status === 'planned' ? 'Planowane' : vacation.status}</span></td>
+                <td>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button className="icon-btn" type="button" onClick={() => setForm({ vacation })} aria-label="Edytuj urlop">✎</button>
+                    <button className="icon-btn" type="button" onClick={() => setDeleteTarget(vacation)} aria-label="Usuń urlop"><IcoTrash /></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       <VacationFormModal
         open={!!form}
@@ -507,31 +506,6 @@ function VacationFormModal({ open, vacation, onClose, onSave }: {
         </Field>
       </div>
       <Field label="Notatki"><input className="input" value={notes} onChange={e => setNotes(e.target.value)} /></Field>
-    </Modal>
-  );
-}
-
-// ─── ALL COMPLETED MODAL ────────────────────────────────────────
-
-function AllCompletedModal({ open, onClose, tasks, onReopen, onDelete }: { open: boolean; onClose: () => void; tasks: OfficeTask[]; onReopen: (id: string) => void; onDelete: (id: string) => void }) {
-  return (
-    <Modal open={open} onClose={onClose} title="Wszystkie ukończone sprawy" size="lg">
-      <div className="goals-modal-list">
-        {tasks.length === 0
-          ? <EmptyState title="Brak ukończonych spraw" />
-          : tasks.map(t => (
-            <div key={t.id} className="office-completed-item" style={{ background: 'var(--surface)' }}>
-              <span className="office-completed-check"><IcoCheck /></span>
-              <div className="office-completed-info">
-                <strong>{t.title}</strong>
-                <small>{t.category} · Ukończono {fmtDate(t.updatedAt.split('T')[0])}</small>
-              </div>
-              <button className="btn btn-secondary btn-sm" type="button" onClick={() => onReopen(t.id)}>Wznów</button>
-              <button className="icon-btn" type="button" onClick={() => onDelete(t.id)} aria-label={`Usuń ${t.title}`}><IcoTrash /></button>
-            </div>
-          ))
-        }
-      </div>
     </Modal>
   );
 }

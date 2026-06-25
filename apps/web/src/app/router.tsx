@@ -22,7 +22,7 @@ const SettingsScreen = lazy(() => import('@/features/settings/SettingsScreen').t
 function RouteFallback() {
   return (
     <div className="module-page">
-      <div style={{ padding: 'var(--gap)', maxWidth: 1640, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
+      <div style={{ padding: 'var(--gap) var(--page-pad)', width: '100%', boxSizing: 'border-box' }}>
         <div className="skeleton" style={{ height: 160, borderRadius: 12 }} />
       </div>
     </div>
