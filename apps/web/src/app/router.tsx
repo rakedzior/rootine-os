@@ -10,7 +10,7 @@ const ResetPassword = lazy(() => import('@/features/auth/ResetPassword').then((m
 const ConfirmEmail = lazy(() => import('@/features/auth/ConfirmEmail').then((m) => ({ default: m.ConfirmEmail })));
 const StartScreen = lazy(() => import('@/modules/start/StartScreen').then((m) => ({ default: m.StartScreen })));
 const SportScreen = lazy(() => import('@/modules/sport/SportScreen').then((m) => ({ default: m.SportScreen })));
-const DietScreen = lazy(() => import('@/modules/diet/DietScreen').then((m) => ({ default: m.DietScreen })));
+const DietScreen = lazy(() => import('@/modules/diet/DietScreenV2').then((m) => ({ default: m.DietScreen })));
 const FinanceScreen = lazy(() => import('@/modules/finance/FinanceScreen').then((m) => ({ default: m.FinanceScreen })));
 const GoalsScreen = lazy(() => import('@/modules/goals/GoalsScreen').then((m) => ({ default: m.GoalsScreen })));
 const BiuroScreen = lazy(() => import('@/modules/office/BiuroScreen').then((m) => ({ default: m.BiuroScreen })));

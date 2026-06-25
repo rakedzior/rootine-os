@@ -128,7 +128,7 @@ function toneForSavings(goal: SavingsGoal): FinanceTone {
 }
 
 export function FinanceScreen() {
-  const [tab, setTab] = useState<FinanceTab>('przeglad');
+  const [tab, setTab] = useState<FinanceTab>('miesieczne');
   const [month, setMonth] = useState(currentYearMonth());
 
   return (

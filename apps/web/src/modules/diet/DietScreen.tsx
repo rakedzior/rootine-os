@@ -27,6 +27,14 @@ const DEFAULTS = { kcal: 2500, protein: 180, carb: 240, fat: 70, water: 2500 };
 const DIET_CONFIG_KEY = 'rootine.diet.config';
 const MEAL_TEMPLATES_KEY = 'rootine.diet.mealTemplates';
 const FOOD_META_KEY = 'rootine.diet.foodMeta';
+const MEAL_LABELS: Record<string, string> = {
+  sniadanie: 'Śniadanie',
+  śniadanie: 'Śniadanie',
+  obiad: 'Obiad',
+  kolacja: 'Kolacja',
+  przekaska: 'Przekąska',
+  przekąska: 'Przekąska',
+};
 
 type DietViewMode = 'day' | 'week' | 'month';
 type SearchEntry =
@@ -52,6 +60,9 @@ function loadJson<T>(key: string, fallback: T): T { try { return JSON.parse(loca
 function uid(prefix: string) { return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`; }
 function computeTotals(items: Pick<MealItem, 'kcal' | 'protein' | 'carb' | 'fat'>[]) {
   return items.reduce((acc, e) => ({ kcal: acc.kcal + e.kcal, protein: acc.protein + e.protein, carb: acc.carb + e.carb, fat: acc.fat + e.fat }), { kcal: 0, protein: 0, carb: 0, fat: 0 });
+}
+function mealLabel(name: string) {
+  return MEAL_LABELS[name.trim().toLowerCase()] ?? name;
 }
 
 function MacroBadge({ kcal, protein, carb, fat }: { kcal: number; protein: number; carb: number; fat: number }) {
@@ -279,7 +290,7 @@ function DateToolbar({ selectedDate, onPrev, onNext, onToday, onPick }: { select
 }
 
 function MealCard({ mealName, entries, totals, onAdd, onCopy, onSaveTemplate, onClear, onDelete, onAmount }: { mealName: string; entries: MealItem[]; totals: ReturnType<typeof computeTotals>; onAdd: () => void; onCopy: () => void; onSaveTemplate: () => void; onClear: () => void; onDelete: (id: string) => void; onAmount: (entry: MealItem, amount: number) => void }) {
-  return <div className="card"><div className="card-head" style={{ flexWrap: 'wrap', gap: 10 }}><span className="card-title">{mealName}</span><div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}><div style={{ display: 'flex', gap: 9, fontSize: 12, fontFamily: 'var(--mono)' }}><span style={{ fontWeight: 800, color: 'var(--ink)' }}>{Math.round(totals.kcal)} kcal</span><span style={{ color: 'var(--tone-blue)' }}>B {totals.protein.toFixed(0)}g</span><span style={{ color: 'var(--tone-amber)' }}>W {totals.carb.toFixed(0)}g</span><span style={{ color: 'var(--tone-pink)' }}>T {totals.fat.toFixed(0)}g</span></div><div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><button className="btn btn-primary btn-sm" onClick={onAdd}>+ Dodaj</button><MoreMenu items={[{ label: 'Kopiuj posiłek', onClick: onCopy, disabled: !entries.length }, { label: 'Zapisz jako szablon', onClick: onSaveTemplate, disabled: !entries.length }, { label: 'Wyczyść posiłek', onClick: onClear, danger: true, disabled: !entries.length }]} /></div></div></div>{!entries.length ? <div style={{ fontSize: 13, color: 'var(--ink-3)', padding: '10px 0', textAlign: 'center' }}>Brak wpisów</div> : <table className="table"><thead><tr><th></th><th>PRODUKT</th><th style={{ textAlign: 'right' }}>ILOŚĆ</th><th style={{ textAlign: 'right' }}>KCAL</th><th style={{ textAlign: 'right' }}>B</th><th style={{ textAlign: 'right' }}>W</th><th style={{ textAlign: 'right', paddingRight: 0 }}>T</th></tr></thead><tbody>{entries.map(e => <tr key={e.id}><td style={{ width: 30 }}><button className="icon-btn" style={{ fontSize: 12 }} onClick={() => onDelete(e.id)}>x</button></td><td style={{ fontWeight: 600 }}>{e.name}</td><td style={{ textAlign: 'right' }}><input className="input" type="number" defaultValue={Math.round(e.amount)} onBlur={(ev) => onAmount(e, +ev.currentTarget.value)} style={{ width: 76, height: 30, textAlign: 'right', padding: '4px 8px' }} /></td><td style={{ textAlign: 'right', fontWeight: 700 }}>{Math.round(e.kcal)}</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12 }}>{e.protein.toFixed(1)}g</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12 }}>{e.carb.toFixed(1)}g</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12, paddingRight: 0 }}>{e.fat.toFixed(1)}g</td></tr>)}</tbody></table>}</div>;
+  return <div className="card"><div className="card-head" style={{ flexWrap: 'wrap', gap: 10 }}><span className="card-title">{mealLabel(mealName)}</span><div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}><div style={{ display: 'flex', gap: 9, fontSize: 12, fontFamily: 'var(--mono)' }}><span style={{ fontWeight: 800, color: 'var(--ink)' }}>{Math.round(totals.kcal)} kcal</span><span style={{ color: 'var(--tone-blue)' }}>B {totals.protein.toFixed(0)}g</span><span style={{ color: 'var(--tone-amber)' }}>W {totals.carb.toFixed(0)}g</span><span style={{ color: 'var(--tone-pink)' }}>T {totals.fat.toFixed(0)}g</span></div><div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}><button className="btn btn-primary btn-sm" onClick={onAdd}>+ Dodaj</button><MoreMenu items={[{ label: 'Kopiuj posiłek', onClick: onCopy, disabled: !entries.length }, { label: 'Zapisz jako szablon', onClick: onSaveTemplate, disabled: !entries.length }, { label: 'Wyczyść posiłek', onClick: onClear, danger: true, disabled: !entries.length }]} /></div></div></div>{!entries.length ? <div style={{ fontSize: 13, color: 'var(--ink-3)', padding: '10px 0', textAlign: 'center' }}>Brak wpisów</div> : <table className="table"><thead><tr><th></th><th>PRODUKT</th><th style={{ textAlign: 'right' }}>ILOŚĆ</th><th style={{ textAlign: 'right' }}>KCAL</th><th style={{ textAlign: 'right' }}>B</th><th style={{ textAlign: 'right' }}>W</th><th style={{ textAlign: 'right', paddingRight: 0 }}>T</th></tr></thead><tbody>{entries.map(e => <tr key={e.id}><td style={{ width: 30 }}><button className="icon-btn" style={{ fontSize: 12 }} onClick={() => onDelete(e.id)}>x</button></td><td style={{ fontWeight: 600 }}>{e.name}</td><td style={{ textAlign: 'right' }}><input className="input" type="number" min="1" defaultValue={Math.round(e.amount)} onBlur={(ev) => onAmount(e, +ev.currentTarget.value)} style={{ width: 76, height: 30, textAlign: 'right', padding: '4px 8px' }} /></td><td style={{ textAlign: 'right', fontWeight: 700 }}>{Math.round(e.kcal)}</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12 }}>{e.protein.toFixed(1)}g</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12 }}>{e.carb.toFixed(1)}g</td><td style={{ textAlign: 'right', color: 'var(--ink-3)', fontSize: 12, paddingRight: 0 }}>{e.fat.toFixed(1)}g</td></tr>)}</tbody></table>}</div>;
 }
 
 function SummaryCard({ totals, targets, waterMl, onSettings }: { totals: ReturnType<typeof computeTotals>; targets: typeof DEFAULTS; waterMl: number; onSettings: () => void }) {
@@ -436,7 +447,7 @@ function AddMealModal({ open, date, defaultMeal, mealNames, templates, onClose }
         <div className="col">
           <Field label="Posiłek">
             <select className="input" value={mealName} onChange={e => setMealName(e.target.value)}>
-              {mealNames.map(name => <option key={name} value={name}>{name}</option>)}
+              {mealNames.map(name => <option key={name} value={name}>{mealLabel(name)}</option>)}
             </select>
           </Field>
           <div style={{ display: 'grid', gap: 8 }}>

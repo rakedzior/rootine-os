@@ -2235,8 +2235,7 @@ export function StartScreen() {
                 tasks={tasks}
                 isLoading={tasksLoading}
                 isSaving={taskMutationPending}
-                onAddTask={(prefillTitle = '', prefillTags = [], anchor) =>
-                  openTaskOptions(anchor ?? { x: window.innerWidth - 320, y: window.innerHeight - 170 }, prefillTitle, prefillTags, todayStr)}
+                onAddTask={(prefillTitle = '', prefillTags = []) => openForToday(prefillTitle, prefillTags)}
                 onQuickAddTask={handleQuickAddTask}
                 onTaskClick={openTask}
                 onToggleTask={(id, done) => toggleTask.mutate({ id, done })}
