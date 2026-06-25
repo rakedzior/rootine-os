@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ConfirmDelete, Field } from '@/components/common';
+import { ConfirmDelete, Field, PageHeader } from '@/components/common';
 import {
   useLocalStore,
   type Account,
@@ -237,17 +237,18 @@ export function FinanceScreen() {
 
   return (
     <div className="module-page finance-os">
-      <header className="finance-os-header">
-        <div>
-          <h1>Finanse</h1>
-          <p>Przegląd finansów, budżetu i płatności w jednym miejscu.</p>
-        </div>
-        <div className="finance-month-control">
-          <button className="icon-btn" type="button" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Poprzedni miesiąc"><Icon name="arrow" flip /></button>
-          <input className="input finance-month-input" type="month" value={month} onChange={(event) => setMonth(event.target.value || currentYearMonth())} />
-          <button className="icon-btn" type="button" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Następny miesiąc"><Icon name="arrow" /></button>
-        </div>
-      </header>
+      <PageHeader
+        icon={<Icon name="wallet" />}
+        title="Finanse"
+        desc="Przegląd finansów, budżetu i płatności w jednym miejscu."
+        actions={(
+          <div className="finance-month-control">
+            <button className="icon-btn" type="button" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Poprzedni miesiąc"><Icon name="arrow" flip /></button>
+            <input className="input finance-month-input" type="month" value={month} onChange={(event) => setMonth(event.target.value || currentYearMonth())} />
+            <button className="icon-btn" type="button" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Następny miesiąc"><Icon name="arrow" /></button>
+          </div>
+        )}
+      />
 
       <section className="finance-summary-strip">
         <SummaryTile active={activeSummary === 'accounts'} label="Środki" value={fmtMoney(totals.funds)} note={`${activeAccounts.length} aktywnych źródeł`} onClick={() => openSummary('accounts')} />

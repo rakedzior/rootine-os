@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
-import { Modal, ProgressBar, SubTabs } from '@/components/common';
+import { Modal, PageHeader, ProgressBar, SubTabs } from '@/components/common';
 import { toast } from '@/lib/toast';
 import {
   useAddMealItem,
@@ -320,12 +320,20 @@ export function DietScreen() {
 
   return (
     <div className="diet-os">
+      <PageHeader
+        icon={<Utensils size={24} />}
+        title="Dieta"
+        desc="Dziennik posiłków, makroskładniki i nawodnienie w jednym miejscu."
+        actions={<>
+          <button className="btn btn-secondary btn-sm" disabled={categoriesLoading || itemsLoading} onClick={() => { setCustomMealTarget(null); setCustomMealsOpen(true); }}><Book size={15} /> Własne posiłki</button>
+          <button className="btn btn-secondary btn-sm" disabled={categoriesLoading || itemsLoading} onClick={() => setSettingsOpen(true)}><Settings size={15} /> Ustawienia</button>
+        </>}
+      />
+
       <DateBar
         date={selectedDate}
         loading={categoriesLoading || itemsLoading}
         onChange={setSelectedDate}
-        onManageMeals={() => { setCustomMealTarget(null); setCustomMealsOpen(true); }}
-        onSettings={() => setSettingsOpen(true)}
       />
 
       <div className="diet-shell">
@@ -435,7 +443,7 @@ export function DietScreen() {
   );
 }
 
-function DateBar({ date, loading, onChange, onManageMeals, onSettings }: { date: string; loading: boolean; onChange: (date: string) => void; onManageMeals: () => void; onSettings: () => void }) {
+function DateBar({ date, loading, onChange }: { date: string; loading: boolean; onChange: (date: string) => void }) {
   return (
     <div className="diet-datebar">
       <div className="diet-datebar-nav">
@@ -453,10 +461,6 @@ function DateBar({ date, loading, onChange, onManageMeals, onSettings }: { date:
           <Calendar size={15} />
           <input id="diet-date-picker" type="date" value={date} disabled={loading} onChange={(event) => onChange(event.target.value)} />
         </label>
-      </div>
-      <div className="diet-datebar-actions">
-        <button className="btn btn-secondary btn-sm" disabled={loading} onClick={onManageMeals}><Book size={15} /> Własne posiłki</button>
-        <button className="btn btn-secondary btn-sm" disabled={loading} onClick={onSettings}><Settings size={15} /> Ustawienia</button>
       </div>
     </div>
   );

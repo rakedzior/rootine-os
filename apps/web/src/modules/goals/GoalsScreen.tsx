@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, ProgressBar, PriorityBadge, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, ProgressBar, PriorityBadge, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore } from '@/components/common';
 import { useCreateTask } from '@/features/tasks/hooks';
 import { useLocalStore, type Goal, type GoalTask, type GoalType, type Priority } from '@/store/localStore';
 
@@ -136,19 +136,18 @@ export function GoalsScreen() {
 
   return (
     <div className="module-page">
+      <PageHeader
+        icon={<GoalIcon name="target" />}
+        title="Cele"
+        desc="Roadmapy, kamienie milowe i działania na dziś w jednym widoku."
+        actions={<>
+          <button className="btn btn-primary btn-sm" type="button" onClick={() => setGoalModal({ goal: null })}><IcoPlus /> Dodaj cel</button>
+          <button className="icon-btn" type="button" onClick={() => setShowCategoryManager(true)} aria-label="Kategorie"><GoalIcon name="gear" /></button>
+        </>}
+      />
+
       <div className="goals-os">
         <section className="card goals-command-panel">
-          <div className="goals-command-head">
-            <div>
-              <h1>Cele</h1>
-              <p>Roadmapy, kamienie milowe i działania na dziś w jednym widoku.</p>
-            </div>
-            <div className="goals-command-actions">
-              <button className="btn btn-primary btn-sm" type="button" onClick={() => setGoalModal({ goal: null })}><IcoPlus /> Dodaj cel</button>
-              <button className="icon-btn" type="button" onClick={() => setShowCategoryManager(true)} aria-label="Kategorie"><GoalIcon name="gear" /></button>
-            </div>
-          </div>
-
           <div className="goals-folder-list">
             {activeGoals.length === 0 ? (
               <EmptyState title="Brak celów" desc="Dodaj pierwszy cel, aby zacząć rozbijać go na działania." />
@@ -166,40 +165,20 @@ export function GoalsScreen() {
             ))}
           </div>
 
-          {selected && (
-            <div className="goals-tree-panel">
-              <div className="goals-tree-head">
-                <div>
-                  <span className="eyebrow">Folder celu</span>
-                  <h2>{selected.title}</h2>
-                </div>
-                <MoreMenu actions={[
-                  { label: 'Edytuj cel', onClick: () => setGoalModal({ goal: selected }) },
-                  { label: selected.completedAt ? 'Otwórz ponownie' : 'Oznacz jako ukończony', onClick: () => updateGoal(selected.id, selected.completedAt ? { completedAt: undefined, progress: Math.min(selected.progress, 99) } : { completedAt: new Date().toISOString(), progress: 100 }) },
-                  { label: 'Usuń cel', onClick: () => setDeleteGoalId(selected.id), danger: true },
-                ]} />
-              </div>
-              <p className="goals-tree-desc">{selected.description || 'Rozbij cel na małe, powtarzalne kroki.'}</p>
-              <div className="goals-tree-meta">
-                <span><GoalIcon name="target" /> {goalStatus(selected).label}</span>
-                <span><GoalIcon name="calendar" /> {relativeDateLabel(selected.deadline)}</span>
-                <span><GoalIcon name="flame" /> {selected.streak ?? 0} dni</span>
-              </div>
-              <GoalTaskTree
-                tasks={selected.tasks}
-                goalId={selected.id}
-                onUpdate={(taskId, patch) => updateGoalTask(selected.id, taskId, patch)}
-                onDelete={(taskId) => deleteGoalTask(selected.id, taskId)}
-                onPlanner={(task) => addPlanner(task.title, task.dueDate, task.priority)}
-              />
-              <NewGoalTaskForm onAdd={(payload) => addGoalTask(selected.id, payload)} />
-            </div>
-          )}
+          <button className="goals-archive-link" type="button">
+            <GoalIcon name="calendar" /> Archiwalne cele <IcoChevRight />
+          </button>
         </section>
 
         <main className="goals-main-stage">
           {selected ? (
             <>
+              <GoalDetailHeader
+                goal={selected}
+                onEdit={() => setGoalModal({ goal: selected })}
+                onToggleDone={() => updateGoal(selected.id, selected.completedAt ? { completedAt: undefined, progress: Math.min(selected.progress, 99) } : { completedAt: new Date().toISOString(), progress: 100 })}
+                onDelete={() => setDeleteGoalId(selected.id)}
+              />
               <GoalRoadmap goal={selected} />
               <GoalWeekPlan
                 goal={selected}
@@ -207,6 +186,13 @@ export function GoalsScreen() {
                 todayTasks={todayTasks}
                 onToggle={(task) => updateGoalTask(selected.id, task.id, { status: task.status === 'done' ? 'todo' : 'done' })}
                 onPlanner={(task) => addPlanner(task.title, task.dueDate, task.priority)}
+              />
+              <GoalActionsPanel
+                goal={selected}
+                onUpdate={(taskId, patch) => updateGoalTask(selected.id, taskId, patch)}
+                onDelete={(taskId) => deleteGoalTask(selected.id, taskId)}
+                onPlanner={(task) => addPlanner(task.title, task.dueDate, task.priority)}
+                onAdd={(payload) => addGoalTask(selected.id, payload)}
               />
             </>
           ) : (
@@ -264,6 +250,60 @@ function GoalTaskTree({ tasks, goalId, onUpdate, onDelete, onPlanner, depth = 0 
   );
 }
 
+function GoalDetailHeader({ goal, onEdit, onToggleDone, onDelete }: { goal: Goal; onEdit: () => void; onToggleDone: () => void; onDelete: () => void }) {
+  return (
+    <header className="goals-detail-header">
+      <div>
+        <h2>{goal.title}</h2>
+        <p>{goal.description || 'Rozbij cel na małe, powtarzalne kroki.'}</p>
+        <div className="goals-tree-meta">
+          <span><GoalIcon name="target" /> {goalStatus(goal).label}</span>
+          <span><GoalIcon name="calendar" /> {relativeDateLabel(goal.deadline)}</span>
+          <span><GoalIcon name="flame" /> {goal.streak ?? 0} dni</span>
+        </div>
+      </div>
+      <div className="goals-detail-actions">
+        <button className="btn btn-secondary btn-sm" type="button" onClick={onEdit}>Edytuj cel</button>
+        <button className="btn btn-secondary btn-sm goals-delete-goal" type="button" onClick={onDelete}><IcoTrash /> Usuń cel</button>
+        <MoreMenu actions={[
+          { label: goal.completedAt ? 'Otwórz ponownie' : 'Oznacz jako ukończony', onClick: onToggleDone },
+          { label: 'Usuń cel', onClick: onDelete, danger: true },
+        ]} />
+      </div>
+    </header>
+  );
+}
+
+function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onAdd }: {
+  goal: Goal;
+  onUpdate: (taskId: string, patch: Partial<GoalTask>) => void;
+  onDelete: (taskId: string) => void;
+  onPlanner: (task: GoalTask) => void;
+  onAdd: (payload: Omit<GoalTask, 'id' | 'goalId' | 'subtasks' | 'progress'>) => void;
+}) {
+  const tasks = collectTasks(goal.tasks);
+  const openTasks = tasks.filter((task) => task.status !== 'done').length;
+
+  return (
+    <section className="card goals-actions-card">
+      <div className="card-head">
+        <div>
+          <span className="card-title">Działania celu</span>
+          <span className="goals-collapsed-summary">{openTasks} otwarte · {tasks.length} wszystkich</span>
+        </div>
+      </div>
+      <GoalTaskTree
+        tasks={goal.tasks}
+        goalId={goal.id}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+        onPlanner={onPlanner}
+      />
+      <NewGoalTaskForm onAdd={onAdd} />
+    </section>
+  );
+}
+
 function NewGoalTaskForm({ onAdd }: { onAdd: (payload: Omit<GoalTask, 'id' | 'goalId' | 'subtasks' | 'progress'>) => void }) {
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -294,6 +334,7 @@ function NewGoalTaskForm({ onAdd }: { onAdd: (payload: Omit<GoalTask, 'id' | 'go
 }
 
 function GoalRoadmap({ goal }: { goal: Goal }) {
+  const [expanded, setExpanded] = useState(false);
   const fallback = [
     { title: 'Start', dueDate: goal.createdAt.split('T')[0], progress: 100, completed: true },
     { title: goalNextStep(goal) ?? 'Następny krok', dueDate: todayStr(), progress: goal.progress, completed: false },
@@ -303,14 +344,22 @@ function GoalRoadmap({ goal }: { goal: Goal }) {
   const milestones = goal.milestones.length > 0
     ? goal.milestones.map((milestone) => ({ title: milestone.title, dueDate: milestone.dueDate, progress: milestone.progress, completed: milestone.completed }))
     : fallback;
+  const doneCount = milestones.filter((milestone) => milestone.completed).length;
+
+  useEffect(() => setExpanded(false), [goal.id]);
 
   return (
-    <section className="card goals-roadmap-card">
+    <section className={`card goals-roadmap-card ${expanded ? 'is-expanded' : 'is-collapsed'}`}>
       <div className="card-head">
-        <span className="card-title">Roadmapa celu</span>
-        <span className={`status-pill ${goalStatus(goal).cls}`}>{goalStatus(goal).label}</span>
+        <div>
+          <span className="card-title">Roadmapa celu</span>
+          <span className="goals-collapsed-summary">{doneCount}/{milestones.length} kamieni milowych · {goalStatus(goal).label}</span>
+        </div>
+        <button className="goals-collapse-btn" type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>
+          {expanded ? 'Zwiń' : 'Rozwiń'} <IcoChevRight />
+        </button>
       </div>
-      <div className="goals-roadmap-track">
+      {expanded && <div className="goals-roadmap-track">
         {milestones.map((milestone, index) => (
           <div key={`${milestone.title}-${index}`} className={`goals-roadmap-node${milestone.completed ? ' is-done' : ''}${index === 1 && !milestone.completed ? ' is-active' : ''}`}>
             <div className="goals-roadmap-dot">{milestone.completed ? <IcoCheck /> : index + 1}</div>
@@ -321,7 +370,7 @@ function GoalRoadmap({ goal }: { goal: Goal }) {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
     </section>
   );
 }
@@ -333,47 +382,61 @@ function GoalWeekPlan({ goal, tasks, todayTasks, onToggle, onPlanner }: {
   onToggle: (task: GoalTask) => void;
   onPlanner: (task: GoalTask) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const start = mondayOf(todayStr());
   const days = Array.from({ length: 7 }, (_, index) => addDays(start, index));
   const weekTasks = tasks.filter((task) => task.dueDate && task.dueDate >= days[0] && task.dueDate <= days[6]);
   const fallbackTasks = tasks.filter((task) => task.status !== 'done').slice(0, 7);
+  const plannedCount = weekTasks.length || fallbackTasks.length;
+  const activeTodayCount = todayTasks.filter((task) => task.status !== 'done').length;
+
+  useEffect(() => setExpanded(false), [goal.id]);
 
   return (
-    <section className="card goals-week-card">
+    <section className={`card goals-week-card ${expanded ? 'is-expanded' : 'is-collapsed'}`}>
       <div className="card-head">
-        <span className="card-title">Plan na ten tydzień</span>
-        <span className="goals-week-total">{weekTasks.length || fallbackTasks.length} działań</span>
-      </div>
-      <div className="goals-week-grid">
-        {days.map((date, index) => {
-          const dayTasks = weekTasks.filter((task) => task.dueDate === date);
-          const suggested = dayTasks.length ? dayTasks : (fallbackTasks[index] ? [fallbackTasks[index]] : []);
-          return (
-            <div key={date} className={`goals-week-day${date === todayStr() ? ' is-today' : ''}`}>
-              <div className="goals-week-day-head">
-                <strong>{weekday(date)}</strong>
-                <span>{shortDate(date)}</span>
-              </div>
-              {suggested.length === 0 ? (
-                <div className="goals-week-empty">Wolne</div>
-              ) : suggested.map((task) => (
-                <button key={task.id} type="button" className={`goals-week-task${task.status === 'done' ? ' is-done' : ''}`} onClick={() => onToggle(task)}>
-                  <span>{task.title}</span>
-                  <small>{task.dueDate ? relativeDateLabel(task.dueDate) : goal.category}</small>
-                </button>
-              ))}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="goals-week-footer">
         <div>
-          <span className="eyebrow">Dziś</span>
-          <strong>{todayTasks.filter((task) => task.status !== 'done').length} aktywne działania</strong>
+          <span className="card-title">Plan na ten tydzień</span>
+          <span className="goals-collapsed-summary">{plannedCount} działań · dzisiaj {activeTodayCount} aktywne</span>
         </div>
-        {todayTasks[0] && <button className="btn btn-secondary btn-sm" type="button" onClick={() => onPlanner(todayTasks[0])}><GoalIcon name="calendar" /> Dodaj do Planera</button>}
+        <button className="goals-collapse-btn" type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>
+          {expanded ? 'Zwiń' : 'Rozwiń'} <IcoChevRight />
+        </button>
       </div>
+      {expanded && (
+        <>
+          <div className="goals-week-grid">
+            {days.map((date, index) => {
+              const dayTasks = weekTasks.filter((task) => task.dueDate === date);
+              const suggested = dayTasks.length ? dayTasks : (fallbackTasks[index] ? [fallbackTasks[index]] : []);
+              return (
+                <div key={date} className={`goals-week-day${date === todayStr() ? ' is-today' : ''}`}>
+                  <div className="goals-week-day-head">
+                    <strong>{weekday(date)}</strong>
+                    <span>{shortDate(date)}</span>
+                  </div>
+                  {suggested.length === 0 ? (
+                    <div className="goals-week-empty">Wolne</div>
+                  ) : suggested.map((task) => (
+                    <button key={task.id} type="button" className={`goals-week-task${task.status === 'done' ? ' is-done' : ''}`} onClick={() => onToggle(task)}>
+                      <span>{task.title}</span>
+                      <small>{task.dueDate ? relativeDateLabel(task.dueDate) : goal.category}</small>
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="goals-week-footer">
+            <div>
+              <span className="eyebrow">Dziś</span>
+              <strong>{activeTodayCount} aktywne działania</strong>
+            </div>
+            {todayTasks[0] && <button className="btn btn-secondary btn-sm" type="button" onClick={() => onPlanner(todayTasks[0])}><GoalIcon name="calendar" /> Dodaj do Planera</button>}
+          </div>
+        </>
+      )}
     </section>
   );
 }

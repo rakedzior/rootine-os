@@ -2221,13 +2221,14 @@ export function StartScreen() {
   }
   return (
     <div className="module-page">
+      <PageHeader
+        icon={<PlannerHeaderIcon />}
+        title="Planer"
+        desc={'Zaplanuj dzień, zadania, nawyki i cele w jednym miejscu.'}
+        actions={<button className="btn btn-primary btn-sm" type="button" onClick={() => openForToday()}>+ Nowe zadanie</button>}
+      />
+
       <div className="planner-shell">
-        <PageHeader
-          icon={<PlannerHeaderIcon />}
-          title="Planer"
-          desc={'Zaplanuj dzie\u0144, zadania, nawyki i cele w jednym miejscu.'}
-          actions={<button className="btn btn-primary btn-sm" type="button" onClick={() => openForToday()}>+ Nowe zadanie</button>}
-        />
         <div className="planner-layout">
           <aside className="planner-sidebar">
             <div className="card planner-tasks-card">

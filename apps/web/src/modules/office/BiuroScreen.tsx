@@ -128,14 +128,14 @@ export function BiuroScreen() {
 
   return (
     <div className="module-page">
-      <div className="office-shell">
-        <PageHeader
-          icon={<OfficeIcon name="briefcase" />}
-          title="Biuro"
-          desc="Wszystkie sprawy, dokumenty i terminy w jednym miejscu."
-          actions={tab === 'sprawy' ? <button className="btn btn-primary btn-sm" type="button" onClick={() => setShowAdd(true)}><IcoPlus /> Nowe zadanie</button> : undefined}
-        />
+      <PageHeader
+        icon={<OfficeIcon name="briefcase" />}
+        title="Biuro"
+        desc="Wszystkie sprawy, dokumenty i terminy w jednym miejscu."
+        actions={tab === 'sprawy' ? <button className="btn btn-primary btn-sm" type="button" onClick={() => setShowAdd(true)}><IcoPlus /> Nowe zadanie</button> : undefined}
+      />
 
+      <div className="office-shell">
         <SubTabs tabs={OFFICE_TABS} active={tab} onChange={setTab} />
 
         {tab === 'dokumenty' ? (
