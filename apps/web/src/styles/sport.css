@@ -198,7 +198,7 @@
 }
 
 /* Graphite Cool Ice alignment: let lower modules fill available height. */
-.sport-os > .lay-page {
+.sport-os > .page-body > .lay-page {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;

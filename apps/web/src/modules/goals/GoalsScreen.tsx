@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, ProgressBar, PriorityBadge, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore } from '@/components/common';
+import { PageLayout } from '@/components/layout/primitives';
 import { useCreateTask } from '@/features/tasks/hooks';
 import { useLocalStore, type Goal, type GoalTask, type GoalType, type Priority } from '@/store/localStore';
 
@@ -135,8 +136,9 @@ export function GoalsScreen() {
   }, [activeGoals, selectedId]);
 
   return (
-    <div className="module-page">
-      <PageHeader
+    <PageLayout
+      className="goals-page"
+      header={<PageHeader
         icon={<GoalIcon name="target" />}
         title="Cele"
         desc="Roadmapy, kamienie milowe i działania na dziś w jednym widoku."
@@ -144,7 +146,8 @@ export function GoalsScreen() {
           <button className="btn btn-primary btn-sm" type="button" onClick={() => setGoalModal({ goal: null })}><IcoPlus /> Dodaj cel</button>
           <button className="icon-btn" type="button" onClick={() => setShowCategoryManager(true)} aria-label="Kategorie"><GoalIcon name="gear" /></button>
         </>}
-      />
+      />}
+    >
 
       <div className="goals-os">
         <section className="card goals-command-panel">
@@ -214,7 +217,7 @@ export function GoalsScreen() {
       />
       <ConfirmDelete open={!!deleteGoalId} onClose={() => setDeleteGoalId(null)} onConfirm={() => { if (deleteGoalId) deleteGoal(deleteGoalId); setDeleteGoalId(null); }} label="ten cel" />
       <CategoryManagerModal open={showCategoryManager} onClose={() => setShowCategoryManager(false)} categories={goalCategories} onAdd={addGoalCategory} onDelete={deleteGoalCategory} />
-    </div>
+    </PageLayout>
   );
 }
 

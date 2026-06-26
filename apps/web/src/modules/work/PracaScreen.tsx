@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, DetailPanel, ProgressBar, PriorityBadge, StatusBadge } from '@/components/common';
+import { PageLayout } from '@/components/layout/primitives';
 import { useLocalStore, type Priority, type TaskStatus, type WorkContext, type WorkProject, type WorkTask } from '@/store/localStore';
 import '@/styles/work.css';
 
@@ -122,12 +123,14 @@ export function PracaScreen() {
   const deadlines = buildDeadlines(contextTasks, contextProjects);
 
   return (
-    <div className="module-page work-os">
-      <PageHeader
+    <PageLayout
+      className="work-os"
+      header={<PageHeader
         icon={<WorkIcon name="briefcase" />}
         title="Praca"
         desc="Wszystkie firmy, projekty, zadania i notatki w jednym miejscu."
-      />
+      />}
+    >
 
       <section className="work-shell">
         <main className="work-main">
@@ -259,7 +262,7 @@ export function PracaScreen() {
         if (deleteProjectId) deleteWorkProject(deleteProjectId);
         setDeleteProjectId(null);
       }} label="ten projekt" />
-    </div>
+    </PageLayout>
   );
 }
 

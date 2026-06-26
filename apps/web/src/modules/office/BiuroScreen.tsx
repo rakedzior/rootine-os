@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, IcoTrash, IcoPlus, IcoCheck } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash, IcoPlus, IcoCheck } from '@/components/common';
+import { PageLayout } from '@/components/layout/primitives';
 import { useLocalStore, type OfficeDocument, type OfficeTask, type Priority, type VacationEntry } from '@/store/localStore';
 
 interface RecurringDeadline { id: string; label: string; sub: string; date: string; }
@@ -142,19 +143,16 @@ export function BiuroScreen() {
   const visibleDocuments = officeDocuments.filter(d => !d.isArchived);
 
   return (
-    <div className="module-page office-page">
+    <PageLayout
+      className="office-page"
+      header={<PageHeader
+        icon={<OfficeIcon name="briefcase" />}
+        title="Biuro"
+        desc="Sprawy, dokumenty i terminy w jednym miejscu."
+        actions={<button className="btn btn-primary btn-sm office-new-task-btn" type="button" onClick={() => setShowAdd(true)}><IcoPlus /> Nowe zadanie</button>}
+      />}
+    >
       <div className="office-shell office-dashboard-shell">
-        <div className="office-hero">
-          <div className="office-hero-main">
-            <span className="office-hero-icon"><OfficeIcon name="briefcase" /></span>
-            <div>
-              <h1>Biuro</h1>
-              <p>Zarządzaj sprawami, dokumentami i terminami w jednym miejscu.</p>
-            </div>
-          </div>
-          <button className="btn btn-primary btn-sm office-new-task-btn" type="button" onClick={() => setShowAdd(true)}><IcoPlus /> Nowe zadanie</button>
-        </div>
-
         <div className="office-kpi-grid">
           <OfficeMetric icon="todo" label="Do zrobienia" value={String(active.filter(t => t.status === 'todo').length)} note="aktywnych spraw" />
           <OfficeMetric icon="active" label="W trakcie" value={String(active.filter(t => t.status === 'active').length)} note="w realizacji" />
@@ -286,7 +284,7 @@ export function BiuroScreen() {
       <VacationModal open={showVacation} onClose={() => setShowVacation(false)} />
       <OfficeDeadlinesModal open={showDeadlines} onClose={() => setShowDeadlines(false)} deadlines={recurringDeadlines} />
       <OfficeDocumentsModal open={showDocuments} onClose={() => setShowDocuments(false)} documents={visibleDocuments} />
-    </div>
+    </PageLayout>
   );
 }
 

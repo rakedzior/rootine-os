@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef, type MouseEvent as ReactMouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { ConfirmDelete, Field, Modal, PageHeader } from '@/components/common';
+import { PageLayout } from '@/components/layout/primitives';
 import { useHabits, useHabitLogs, useToggleHabitLog } from '@/features/habits/hooks';
 import { habitOccursOn, habitScheduleLabel, habitStats, todayStr as habitsTodayStr } from '@/features/habits/dates';
 import type { HabitLog } from '@/features/habits/types';
@@ -2220,13 +2221,15 @@ export function StartScreen() {
     closeTaskModal();
   }
   return (
-    <div className="module-page">
-      <PageHeader
+    <PageLayout
+      className="planner-page"
+      header={<PageHeader
         icon={<PlannerHeaderIcon />}
         title="Planer"
         desc={'Zaplanuj dzień, zadania, nawyki i cele w jednym miejscu.'}
         actions={<button className="btn btn-primary btn-sm" type="button" onClick={() => openForToday()}>+ Nowe zadanie</button>}
-      />
+      />}
+    >
 
       <div className="planner-shell">
         <div className="planner-layout">
@@ -2299,6 +2302,6 @@ export function StartScreen() {
         onConfirm={() => seriesDeleteTarget && handleDeleteSeries(seriesDeleteTarget)}
         label="cały cykl zadań"
       />
-    </div>
+    </PageLayout>
   );
 }

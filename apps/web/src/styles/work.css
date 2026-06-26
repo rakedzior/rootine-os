@@ -1155,3 +1155,61 @@
 .work-status.is-waiting { color: var(--ink-3); background: color-mix(in srgb, var(--surface-2) 70%, transparent); border-color: var(--border-soft); }
 .work-status.is-done { color: var(--success-ink); background: rgba(52, 211, 153, .10); border-color: rgba(52, 211, 153, .22); }
 .work-status.is-blocked { color: var(--warn-ink); background: rgba(251, 191, 36, .10); border-color: rgba(251, 191, 36, .20); }
+
+/* Final full-height pass under shared PageLayout. */
+.work-os,
+.work-os > .page-body {
+  overflow: hidden;
+}
+
+.work-shell {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.work-main,
+.work-side,
+.work-task-table {
+  max-height: none;
+  min-height: 0;
+}
+
+.work-side {
+  overflow: hidden;
+}
+
+.work-panel {
+  min-height: 0;
+  border-color: var(--border-soft);
+  border-radius: var(--r-card);
+}
+
+.work-project-card,
+.work-new-project {
+  border-radius: var(--r-mid);
+}
+
+.work-project-card.is-selected {
+  border-color: var(--acc-line);
+  background: color-mix(in srgb, var(--acc-soft) 58%, transparent);
+  box-shadow: inset 2px 0 0 var(--accent-ice);
+}
+
+/* UI audit v6: right rail and task table use internal scrolling, matching other modules. */
+.work-side {
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.work-side .work-panel:first-child {
+  max-height: none;
+}
+
+.work-task-table {
+  overflow: auto;
+}
+
+.work-task-row {
+  min-height: 52px;
+}

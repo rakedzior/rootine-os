@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ConfirmDelete, Field, PageHeader } from '@/components/common';
+import { PageLayout } from '@/components/layout/primitives';
 import {
   useLocalStore,
   type Account,
@@ -236,8 +237,9 @@ export function FinanceScreen() {
   };
 
   return (
-    <div className="module-page finance-os">
-      <PageHeader
+    <PageLayout
+      className="finance-os"
+      header={<PageHeader
         icon={<Icon name="wallet" />}
         title="Finanse"
         desc="Przegląd finansów, budżetu i płatności w jednym miejscu."
@@ -248,7 +250,8 @@ export function FinanceScreen() {
             <button className="icon-btn" type="button" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Następny miesiąc"><Icon name="arrow" /></button>
           </div>
         )}
-      />
+      />}
+    >
 
       <section className="finance-summary-strip">
         <SummaryTile active={activeSummary === 'accounts'} label="Środki" value={fmtMoney(totals.funds)} note={`${activeAccounts.length} aktywnych źródeł`} onClick={() => openSummary('accounts')} />
@@ -284,7 +287,7 @@ export function FinanceScreen() {
       <BudgetDrawer open={budgetDrawer.open} category={budgetDrawer.category ?? null} month={month} onClose={() => setBudgetDrawer({ open: false })} />
       <SavingsDrawer open={savingsDrawer.open} goal={savingsDrawer.goal ?? null} onClose={() => setSavingsDrawer({ open: false })} />
       <JdgDrawer open={jdgDrawer.open} item={jdgDrawer.item ?? null} month={month} onClose={() => setJdgDrawer({ open: false })} />
-    </div>
+    </PageLayout>
   );
 }
 

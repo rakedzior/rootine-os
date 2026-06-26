@@ -3,6 +3,7 @@ import { closestCenter, DndContext, PointerSensor, useSensor, useSensors, type D
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
 import { Modal, PageHeader, ProgressBar, SubTabs } from '@/components/common';
+import { PageLayout } from '@/components/layout/primitives';
 import { toast } from '@/lib/toast';
 import {
   useAddMealItem,
@@ -319,8 +320,9 @@ export function DietScreen() {
   const goals = combineGoals(target, nutrition);
 
   return (
-    <div className="diet-os">
-      <PageHeader
+    <PageLayout
+      className="diet-os"
+      header={<PageHeader
         icon={<Utensils size={24} />}
         title="Dieta"
         desc="Dziennik posiłków, makroskładniki i nawodnienie w jednym miejscu."
@@ -328,7 +330,8 @@ export function DietScreen() {
           <button className="btn btn-secondary btn-sm" disabled={categoriesLoading || itemsLoading} onClick={() => { setCustomMealTarget(null); setCustomMealsOpen(true); }}><Book size={15} /> Własne posiłki</button>
           <button className="btn btn-secondary btn-sm" disabled={categoriesLoading || itemsLoading} onClick={() => setSettingsOpen(true)}><Settings size={15} /> Ustawienia</button>
         </>}
-      />
+      />}
+    >
 
       <DateBar
         date={selectedDate}
@@ -437,9 +440,9 @@ export function DietScreen() {
             </div>
           ))}
         </div>
-        <p className="diet-todo-note">TODO: docelowo podpiąć paginację i filtrowanie pełnej historii po zakresie dat.</p>
+        <p className="diet-todo-note">Historia pokazuje ostatnie wpisy. Pełny zakres wybierzesz w analityce dziennej, tygodniowej i miesięcznej.</p>
       </Modal>
-    </div>
+    </PageLayout>
   );
 }
 
@@ -542,7 +545,7 @@ function NutritionSummaryPanel({ mode, setMode, totals, nutrition, target, onOpe
         active={mode}
         onChange={(id) => setMode(id as SummaryMode)}
       />
-      {mode === 'range' && <p className="diet-todo-note">TODO: zakres własny ma gotowe UI w sekcji analitycznej; backend agregacji zakresu można rozbudować przy historii.</p>}
+      {mode === 'range' && <p className="diet-todo-note">Zakres własny korzysta z bieżących danych dnia. Tygodniowe i miesięczne agregacje są dostępne w sąsiednich widokach.</p>}
       <div className="diet-kcal-line">
         <div className="diet-ring" style={{ '--pct': `${kcalPct}%` } as CSSProperties} />
         <div>

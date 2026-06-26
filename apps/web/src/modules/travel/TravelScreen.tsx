@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash } from '@/components/common';
+import { PageLayout } from '@/components/layout/primitives';
 import { useLocalStore, type Trip } from '@/store/localStore';
 import '@/styles/travel.css';
 
@@ -27,12 +28,12 @@ const FILTER_LABELS: Record<TravelStatusFilter, string> = {
 };
 
 const PACKING_ITEMS = [
-  { id: 'passport', label: 'Paszport', packed: true },
-  { id: 'adapter', label: 'Adapter podróżny', packed: true },
-  { id: 'spf', label: 'Krem z filtrem', packed: true },
-  { id: 'slides', label: 'Klapki', packed: false },
-  { id: 'meds', label: 'Leki podstawowe', packed: false },
-  { id: 'powerbank', label: 'Powerbank', packed: false },
+  { id: 'passport', label: 'Paszport', category: 'Dokumenty', packed: true },
+  { id: 'adapter', label: 'Adapter podróżny', category: 'Elektronika', packed: true },
+  { id: 'spf', label: 'Krem z filtrem', category: 'Kosmetyki', packed: true },
+  { id: 'slides', label: 'Klapki', category: 'Ubrania', packed: false },
+  { id: 'meds', label: 'Leki podstawowe', category: 'Zdrowie', packed: false },
+  { id: 'powerbank', label: 'Powerbank', category: 'Elektronika', packed: false },
 ];
 
 const PREP_ITEMS = [
@@ -91,10 +92,18 @@ function statusClass(status: Trip['status']) {
   return 'is-planned';
 }
 
-function tripAccent(trip: Trip, index: number) {
-  if (trip.status === 'completed') return 'green';
-  if (trip.status === 'active') return 'blue';
-  return ['blue', 'violet', 'orange', 'green'][index % 4];
+function addLabelForTab(tab: TravelTab) {
+  const labels: Record<TravelTab, string> = {
+    overview: 'Dodaj',
+    plan: 'Dodaj punkt planu',
+    lodging: 'Dodaj nocleg',
+    transport: 'Dodaj transport',
+    packing: 'Dodaj rzecz',
+    documents: 'Dodaj dokument',
+    budget: 'Dodaj wydatek',
+    notes: 'Dodaj notatkę',
+  };
+  return labels[tab];
 }
 
 function pickNextTrip(trips: Trip[]) {
@@ -136,7 +145,7 @@ function buildStay(trip: Trip | null) {
 export function TravelScreen() {
   const { trips, addTrip, deleteTrip } = useLocalStore();
   const [selectedId, setSelectedId] = useState<string | null>(pickNextTrip(trips)?.id ?? null);
-  const [filter, setFilter] = useState<TravelStatusFilter>('all');
+  const [filter, setFilter] = useState<TravelStatusFilter>('planned');
   const [activeTab, setActiveTab] = useState<TravelTab>('overview');
   const [showAdd, setShowAdd] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -149,23 +158,23 @@ export function TravelScreen() {
     return [...filtered].sort((a, b) => a.startDate.localeCompare(b.startDate));
   }, [filter, trips]);
 
-  const activeTrips = trips.filter((trip) => trip.status !== 'archived');
-  const plannedTrips = activeTrips.filter((trip) => trip.status === 'planned' || trip.status === 'active');
-  const selected = trips.find((trip) => trip.id === selectedId) ?? visibleTrips[0] ?? pickNextTrip(trips);
-  const nextTrip = pickNextTrip(trips);
+  const selected = visibleTrips.find((trip) => trip.id === selectedId) ?? visibleTrips[0] ?? null;
 
   useEffect(() => {
     if (!selectedId && selected) setSelectedId(selected.id);
+    if (selectedId && visibleTrips.length > 0 && !visibleTrips.some((trip) => trip.id === selectedId)) setSelectedId(visibleTrips[0].id);
+    if (selectedId && visibleTrips.length === 0) setSelectedId(null);
     if (selectedId && !trips.some((trip) => trip.id === selectedId)) setSelectedId(pickNextTrip(trips)?.id ?? null);
-  }, [selectedId, selected, trips]);
+  }, [selectedId, selected, trips, visibleTrips]);
 
   function togglePacking(id: string, fallback: boolean) {
     setPackingState((state) => ({ ...state, [id]: !(state[id] ?? fallback) }));
   }
 
   return (
-    <div className="module-page travel-page">
-      <PageHeader
+    <PageLayout
+      className="travel-page"
+      header={<PageHeader
         icon={<TravelIcon name="plane" />}
         title="Podróże"
         desc="Wszystkie wyjazdy i szczegóły podróży w jednym miejscu."
@@ -182,23 +191,8 @@ export function TravelScreen() {
             </select>
           </label>
         </>}
-      />
-
-      <section className="travel-kpis">
-        <TravelKpi icon="calendar" label="Planowane podróże" value={String(plannedTrips.length)} />
-        <TravelKpi
-          icon="plane"
-          label="Najbliższy wyjazd"
-          value={nextTrip ? locationLabel(nextTrip) : 'Brak planów'}
-          note={nextTrip ? fmtDate(nextTrip.startDate) : 'Dodaj pierwszy termin'}
-          badge={nextTrip ? `za ${Math.max(0, daysUntil(nextTrip.startDate))} dni` : undefined}
-          wide
-        />
-        <TravelTopAction icon="calendar" label="Rezerwacja" onClick={() => setActiveTab('lodging')} />
-        <TravelTopAction icon="bus" label="Transport" onClick={() => setActiveTab('transport')} />
-        <TravelTopAction icon="document" label="Dokument" onClick={() => setActiveTab('documents')} />
-        <TravelTopAction icon="wallet" label="Wydatek" onClick={() => setActiveTab('budget')} />
-      </section>
+      />}
+    >
 
       <section className="travel-dashboard">
         <TripsRail
@@ -235,31 +229,7 @@ export function TravelScreen() {
         }}
         label="tę podróż"
       />
-    </div>
-  );
-}
-
-function TravelKpi({ icon, label, value, note, badge, wide = false }: { icon: TravelIconName; label: string; value: string; note?: string; badge?: string; wide?: boolean }) {
-  return (
-    <article className={`travel-kpi${wide ? ' is-wide' : ''}`}>
-      <span className="travel-kpi-icon"><TravelIcon name={icon} /></span>
-      <div>
-        <span>{label}</span>
-        <strong>{value}</strong>
-        {note && <small>{note}</small>}
-      </div>
-      {badge && <em>{badge}</em>}
-    </article>
-  );
-}
-
-function TravelTopAction({ icon, label, onClick }: { icon: TravelIconName; label: string; onClick: () => void }) {
-  return (
-    <button className="travel-top-action" type="button" onClick={onClick}>
-      <TravelIcon name="plus" />
-      <span>{label}</span>
-      <small><TravelIcon name={icon} /></small>
-    </button>
+    </PageLayout>
   );
 }
 
@@ -280,17 +250,17 @@ function TripsRail({ trips, selectedId, filter, onFilter, onSelect, onAdd }: {
       </div>
 
       {trips.length === 0 ? (
-        <EmptyState title="Brak podróży" cta="Dodaj podróż" onCta={onAdd} />
+        <EmptyState title="Brak podróży w tej kategorii" cta="Dodaj podróż" onCta={onAdd} />
       ) : (
         <div className="travel-trip-list">
-          {trips.map((trip, index) => (
+          {trips.map((trip) => (
             <button
               key={trip.id}
               className={`travel-trip-item ${selectedId === trip.id ? 'is-selected' : ''}`}
               type="button"
               onClick={() => onSelect(trip.id)}
             >
-              <span className={`travel-trip-icon is-${tripAccent(trip, index)}`}><TravelIcon name="plane" /></span>
+              <span className="travel-trip-icon"><TravelIcon name="plane" /></span>
               <span className="travel-trip-copy">
                 <strong>{trip.title}</strong>
                 <small>{fmtDate(trip.startDate)} - {fmtDate(trip.endDate)}</small>
@@ -301,8 +271,7 @@ function TripsRail({ trips, selectedId, filter, onFilter, onSelect, onAdd }: {
         </div>
       )}
 
-      <div className="travel-rail-filters">
-        <span>Pokaż:</span>
+      <div className="travel-rail-filters" aria-label="Filtr statusu podróży">
         {chips.map((chip) => (
           <button key={chip} type="button" className={filter === chip ? 'is-active' : ''} onClick={() => onFilter(chip)}>
             {FILTER_LABELS[chip]}
@@ -340,6 +309,13 @@ function TripWorkspace({ trip, activeTab, packingState, onTabChange, onTogglePac
   return (
     <main className="travel-central">
       <section className="travel-card travel-main-trip">
+        <div className="travel-module-topbar">
+          <TravelTabs active={activeTab} onChange={onTabChange} />
+          <button className="btn btn-primary btn-sm travel-tab-add" type="button" aria-label={addLabelForTab(activeTab)} title={addLabelForTab(activeTab)}>
+            <TravelIcon name="plus" /> Dodaj
+          </button>
+        </div>
+
         <div className="travel-trip-top">
           <div className="travel-trip-title-block">
             <div className="travel-main-head">
@@ -349,27 +325,9 @@ function TripWorkspace({ trip, activeTab, packingState, onTabChange, onTogglePac
               </div>
               <button className="icon-btn" type="button" aria-label="Usuń podróż" onClick={onDelete}><IcoTrash /></button>
             </div>
-
-            <div className="travel-trip-chips">
-              <span><TravelIcon name="calendar" /> {Math.max(1, travelDays - 1)} noce</span>
-              <span><TravelIcon name="wallet" /> IDR</span>
-              <span><TravelIcon name="info" /> 27°C</span>
-              <span className="is-ok"><TravelIcon name="check" /> Dokumenty OK</span>
-            </div>
           </div>
 
-          <div className="travel-next-step">
-            <span className="travel-trip-icon is-blue"><TravelIcon name="plane" /></span>
-            <div>
-              <strong>Następny krok</strong>
-              <p>Wylot do {trip.city || trip.country} · {fmtDate(trip.startDate)}, za {Math.max(0, daysUntil(trip.startDate))} dni</p>
-              <small>Uzupełnij dokumenty podróży i potwierdź transfer z lotniska.</small>
-            </div>
-            <button className="btn btn-primary btn-sm" type="button" onClick={() => onTabChange('documents')}>Zobacz szczegóły ›</button>
-          </div>
         </div>
-
-        <TravelTabs active={activeTab} onChange={onTabChange} />
 
         <div className={`travel-main-grid is-${activeTab}`}>
           {activeTab === 'overview' && (
@@ -533,9 +491,16 @@ function BudgetCard({ budget, onShowBudget }: { budget: ReturnType<typeof buildB
 }
 
 function PackingCard({ packingState, onToggle, onOpen, compact = false }: { packingState: Record<string, boolean>; onToggle: (id: string, fallback: boolean) => void; onOpen: () => void; compact?: boolean }) {
+  const [activeCategory, setActiveCategory] = useState<string>('all');
   const packed = PACKING_ITEMS.filter((item) => packingState[item.id] ?? item.packed).length;
   const pct = Math.round((packed / PACKING_ITEMS.length) * 100);
-  const visibleItems = compact ? PACKING_ITEMS.slice(0, 4) : PACKING_ITEMS;
+  const categories = Array.from(new Set(PACKING_ITEMS.map((item) => item.category)));
+  const scopedItems = activeCategory === 'all' ? PACKING_ITEMS : PACKING_ITEMS.filter((item) => item.category === activeCategory);
+  const visibleItems = compact ? scopedItems.slice(0, 4) : scopedItems;
+  const groups = visibleItems.reduce<Record<string, typeof visibleItems>>((acc, item) => {
+    acc[item.category] = [...(acc[item.category] ?? []), item];
+    return acc;
+  }, {});
   return (
     <section className="travel-card travel-packing-card">
       <div className="travel-card-head">
@@ -543,15 +508,28 @@ function PackingCard({ packingState, onToggle, onOpen, compact = false }: { pack
         <span>{packed} / {PACKING_ITEMS.length} ({pct}%)</span>
       </div>
       <div className="travel-progress"><i style={{ width: `${pct}%` }} /></div>
+      <div className="travel-pack-categories" aria-label="Kategorie pakowania">
+        <button type="button" className={activeCategory === 'all' ? 'is-active' : ''} onClick={() => setActiveCategory('all')}>Wszystkie</button>
+        {categories.map((category) => (
+          <button key={category} type="button" className={activeCategory === category ? 'is-active' : ''} onClick={() => setActiveCategory(category)}>
+            {category}
+          </button>
+        ))}
+      </div>
       <div className="travel-pack-list">
-        {visibleItems.map((item) => {
-          const checked = packingState[item.id] ?? item.packed;
-          return (
-            <button key={item.id} className={checked ? 'is-done' : ''} type="button" onClick={() => onToggle(item.id, item.packed)}>
-              <span>{checked && <TravelIcon name="check" />}</span>{item.label}
-            </button>
-          );
-        })}
+        {Object.entries(groups).map(([category, items]) => (
+          <div className="travel-pack-category" key={category}>
+            <span>{category}</span>
+            {items.map((item) => {
+              const checked = packingState[item.id] ?? item.packed;
+              return (
+                <button key={item.id} className={checked ? 'is-done' : ''} type="button" onClick={() => onToggle(item.id, item.packed)}>
+                  <span>{checked && <TravelIcon name="check" />}</span>{item.label}
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </div>
       {compact && <button className="travel-panel-link" type="button" onClick={onOpen}>Zobacz całą listę ›</button>}
     </section>

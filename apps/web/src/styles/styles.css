@@ -114,6 +114,33 @@
   --radius-lg: 16px;
   --radius-xl: var(--r-card);
   --radius-2xl: 24px;
+
+  /* Graphite Cool Ice v3 cross-module contract */
+  --app-header-height: 74px;
+  --bgApp: var(--surface-base);
+  --bgSurface: var(--surface-raised);
+  --bgSurfaceElevated: var(--surface-elevated);
+  --bgSurfaceActive: var(--surface-overlay);
+  --borderSubtle: var(--border-soft);
+  --borderDefault: var(--border-subtle);
+  --borderActive: var(--border-active);
+  --textPrimary: var(--text-primary);
+  --textSecondary: var(--text-secondary);
+  --textMuted: var(--text-muted);
+  --accentIce: var(--accent-ice);
+  --accentIceSoft: var(--acc-soft);
+  --radius-xs: var(--r-xs);
+  --space-xs: var(--space-1);
+  --space-sm: var(--space-2);
+  --space-md: var(--space-3);
+  --space-lg: var(--space-4);
+  --space-xl: var(--space-5);
+  --space-xxl: var(--space-6);
+  --space-section: var(--space-8);
+  --shadow-none: none;
+  --shadow-subtle: var(--sh-1);
+  --shadow-selected: var(--ring);
+  --shadow-modal: var(--sh-pop);
 }
 
 /* ============================================================ THEME — Graphite Cool Ice v3 (dark control-center) */
@@ -1336,7 +1363,9 @@ a:focus-visible, button:focus-visible { outline-offset: 3px; }
   inset: 0;
   z-index: 80;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
   background: rgba(3, 8, 13, 0.58);
   backdrop-filter: blur(8px);
 }
@@ -1389,13 +1418,16 @@ a:focus-visible, button:focus-visible { outline-offset: 3px; }
 
 .diet-drawer {
   width: min(var(--drawer-width, 920px), calc(100vw - 32px));
-  height: 100%;
+  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
   display: grid;
   grid-template-rows: auto auto 1fr auto;
   padding: 18px;
-  border-left: 1px solid rgba(125, 211, 252, 0.26);
+  border: 1px solid rgba(125, 211, 252, 0.26);
+  border-radius: var(--r-card);
   background: linear-gradient(180deg, #111A24, #0D131B);
-  box-shadow: -28px 0 60px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--sh-pop);
+  overflow: hidden;
 }
 
 .diet-drawer-head {
@@ -1945,12 +1977,23 @@ a:focus-visible, button:focus-visible { outline-offset: 3px; }
   flex: 1 1 auto;
   min-height: 0;
   height: 100%;
-  overflow-y: auto;
+  overflow: hidden;
   overflow-x: hidden;
   scrollbar-gutter: stable;
   width: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.page-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: calc(100vh - var(--app-header-height));
+  height: calc(100dvh - var(--app-header-height));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 /* ---- MODULE HEADER ---- */
@@ -2058,7 +2101,11 @@ button.active .sub-tab-icon { opacity: 1; }
 
 .module-page > div:not(.module-header):not(.modal-overlay):not(.task-options-pop):not(.task-quick-pop):not(.task-options-subpop),
 .module-page > section:not(.module-header),
-.module-page > header {
+.module-page > header,
+.page-body > div:not(.modal-overlay):not(.diet-summary-overlay):not(.task-options-pop):not(.task-quick-pop):not(.task-options-subpop):not(.lay-page),
+.page-body > section:not(.lay-page),
+.page-body > main:not(.lay-page),
+.page-body > aside:not(.lay-page) {
   padding: var(--gap) var(--page-pad);
   width: 100%;
   box-sizing: border-box;
@@ -2069,7 +2116,10 @@ button.active .sub-tab-icon { opacity: 1; }
   flex: 0 0 auto;
 }
 .module-page > div:not(.module-header):not(.module-head-wrap):not(.modal-overlay):not(.task-options-pop):not(.task-quick-pop):not(.task-options-subpop):last-child,
-.module-page > section:not(.module-header):last-child {
+.module-page > section:not(.module-header):last-child,
+.page-body > div:not(.modal-overlay):not(.diet-summary-overlay):not(.task-options-pop):not(.task-quick-pop):not(.task-options-subpop):last-child,
+.page-body > section:last-child,
+.page-body > main:last-child {
   flex: 1 1 auto;
 }
 /* PageHeader as a direct module-page child: full-width module masthead. */
@@ -3570,7 +3620,7 @@ button.task-tag-badge {
 .office-page {
   min-height: 100%;
 }
-.module-page.office-page > .office-dashboard-shell {
+.module-page.office-page > .page-body > .office-dashboard-shell {
   flex: 1 1 auto;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
@@ -3585,29 +3635,6 @@ button.task-tag-badge {
     linear-gradient(180deg, rgba(21, 34, 47, .88), rgba(11, 20, 30, .92));
   box-shadow: 0 24px 80px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.03);
 }
-.office-hero {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid rgba(132, 173, 206, .16);
-}
-.office-hero-main { display: flex; align-items: center; gap: 18px; min-width: 0; }
-.office-hero-icon {
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-  border-radius: 13px;
-  display: grid;
-  place-items: center;
-  color: var(--accent-ice);
-  background: linear-gradient(180deg, rgba(115, 158, 196, .18), rgba(63, 97, 128, .08));
-  border: 1px solid rgba(132, 196, 241, .26);
-}
-.office-hero-icon svg { width: 23px; height: 23px; }
-.office-hero h1 { margin: 0; color: var(--ink); font-size: 32px; line-height: 1.05; letter-spacing: 0; }
-.office-hero p { margin: 8px 0 0; color: var(--ink-3); font-size: 16px; }
 .office-new-task-btn {
   min-height: 38px;
   white-space: nowrap;
@@ -3812,7 +3839,6 @@ button.task-tag-badge {
 }
 @media (max-width: 780px) {
   .office-dashboard-shell { padding: 18px; border-radius: 20px; }
-  .office-hero { flex-direction: column; }
   .office-new-task-btn { width: 100%; }
   .office-dashboard-shell .office-kpi-grid,
   .office-dashboard-grid,
@@ -3956,7 +3982,7 @@ button.task-tag-badge {
 }
 
 /* Finance: rebuild top summary into true KPI cards. */
-.finance-os > .finance-summary-strip {
+.module-page.finance-os > .page-body > .finance-summary-strip {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--gap);
   min-height: 0;
@@ -4180,10 +4206,11 @@ button.task-tag-badge {
 /* ============================================================ APP SHELL — sidebar layout */
 .app-shell {
   display: flex;
+  min-height: 100vh;
+  height: 100vh;
   height: 100dvh;
   width: 100%;
   overflow: hidden;
-  min-height: 0;
 }
 .sidebar-spacer {
   flex: 0 0 var(--sb-w, 252px);
@@ -4193,6 +4220,8 @@ button.task-tag-badge {
 .app-main {
   flex: 1 1 auto;
   min-width: 0;
+  height: 100vh;
+  height: 100dvh;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -4417,6 +4446,12 @@ button.task-tag-badge {
    window (global rule — see Sport's reference build-out). Grids below are auto-fit/auto-fill
    so they reflow into more columns on wide screens instead of leaving dead space. */
 .lay-page { width: 100%; padding: var(--page-pad); display: flex; flex-direction: column; gap: var(--gap); box-sizing: border-box; min-height: 0; }
+.page-body > .lay-page {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
 .lay-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--lay-col-min, 280px)), 1fr)); gap: var(--gap); align-items: start; }
 .lay-cols { display: grid; grid-template-columns: var(--lay-cols, 1fr); gap: var(--gap); align-items: stretch; min-height: 0; }
 @media (max-width: 900px) { .lay-cols { grid-template-columns: 1fr; } }
@@ -4433,6 +4468,178 @@ button.task-tag-badge {
 .lay-empty-title { font-size: 15px; font-weight: 600; color: var(--ink-2); }
 .lay-empty-desc { font-size: 13px; color: var(--ink-3); max-width: 44ch; margin: 0; }
 .lay-empty-action { margin-top: 6px; }
+
+/* ============================================================ FULL-HEIGHT PAGE CONTRACT */
+.page-body > .planner-shell,
+.page-body > .goals-os,
+.page-body > .finance-workspace,
+.page-body > .travel-dashboard,
+.page-body > .notes-workspace,
+.page-body > .work-shell,
+.page-body > .office-dashboard-shell,
+.page-body > .diet-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.page-body > .finance-workspace,
+.page-body > .travel-dashboard,
+.page-body > .notes-workspace,
+.page-body > .work-shell,
+.page-body > .diet-shell {
+  overflow: hidden;
+}
+
+.module-page.diet-os {
+  padding: 0;
+  gap: 0;
+  margin: 0;
+  max-width: none;
+  overflow: hidden;
+}
+.module-page.diet-os > .page-head {
+  min-height: var(--app-header-height);
+  padding: 14px var(--page-pad);
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.module-page.diet-os > .page-body > .diet-datebar,
+.module-page.diet-os > .page-body > .diet-shell {
+  padding-left: var(--page-pad);
+  padding-right: var(--page-pad);
+}
+.module-page.diet-os > .page-body > .diet-datebar {
+  flex: 0 0 auto;
+  padding-top: var(--gap);
+  padding-bottom: 0;
+}
+.module-page.diet-os > .page-body > .diet-shell {
+  padding-top: var(--gap);
+  padding-bottom: var(--page-pad);
+}
+
+.page-body > .office-dashboard-shell {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+/* ============================================================ SHARED COMPONENT NORMALIZATION */
+.sub-tabs,
+.subtabs,
+.finance-segment-tabs,
+.work-view-tabs,
+.travel-tabs,
+.notes-view-toggle {
+  min-height: 44px;
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-mid);
+  background: color-mix(in srgb, var(--surface-base) 72%, transparent);
+  box-shadow: none;
+}
+
+.sub-tabs button,
+.subtabs button,
+.finance-segment-tabs button,
+.work-view-tabs button,
+.travel-tabs button,
+.notes-view-toggle button {
+  min-height: 34px;
+  border-radius: calc(var(--r-sm) + 2px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-3);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  transition: var(--t-fast);
+}
+
+.sub-tabs button:hover,
+.subtabs button:hover,
+.finance-segment-tabs button:hover,
+.work-view-tabs button:hover,
+.travel-tabs button:hover,
+.notes-view-toggle button:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+}
+
+.sub-tabs button.active,
+.subtabs button.active,
+.finance-segment-tabs button.is-active,
+.work-view-tabs button.is-active,
+.travel-tabs button.is-active,
+.notes-view-toggle button.is-active {
+  color: var(--acc-ink);
+  background: var(--acc-soft);
+  border-color: var(--acc-line);
+  box-shadow: none;
+}
+
+.card,
+.lay-card,
+.kpi-card,
+.finance-summary-tile,
+.office-metric,
+.travel-kpi,
+.travel-top-action,
+.travel-card,
+.notes-card,
+.work-context-panel,
+.work-task-board,
+.work-detail-panel {
+  border-color: var(--border-soft);
+  border-radius: var(--r-card);
+  background:
+    radial-gradient(circle at 14% 0%, color-mix(in srgb, var(--accent-ice) 5%, transparent), transparent 38%),
+    color-mix(in srgb, var(--surface-raised) 92%, transparent);
+  box-shadow: var(--sh-1);
+}
+
+.card.is-selected,
+.card.is-active,
+.finance-summary-tile.is-active,
+.notes-category.is-active,
+.notes-note-card.is-selected,
+.work-project-card.is-selected,
+.travel-trip-item.is-selected,
+.office-category-row.is-active,
+.goals-folder-row.is-active {
+  border-color: var(--acc-line);
+  background: color-mix(in srgb, var(--acc-soft) 62%, var(--surface-raised));
+  box-shadow: inset 3px 0 0 var(--accent-ice);
+}
+
+.btn svg,
+.icon-btn svg {
+  flex-shrink: 0;
+}
+
+.btn-danger,
+.btn.btn-danger {
+  background: color-mix(in srgb, var(--danger-soft) 78%, transparent);
+  color: var(--danger-ink);
+  border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+}
+
+input[type="checkbox"],
+.goals-task-check,
+.goals-habit-dot,
+.office-case-check,
+.work-task-check,
+.travel-pack-check,
+.finance-toggle input {
+  accent-color: var(--accent-ice);
+}
+
+.goals-task-check,
+.office-case-check,
+.work-task-check,
+.travel-pack-check {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--surface-inset) 82%, transparent);
+}
 
 /* ============================================================ GOALS OS */
 .goals-os { display: grid; grid-template-columns: minmax(340px, 430px) minmax(0, 1fr); gap: var(--gap); width: 100%; height: 100%; min-height: 0; flex: 1 1 auto; align-items: stretch; }
@@ -5577,21 +5784,24 @@ button.task-tag-badge {
   inset: 0;
   z-index: 1000;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
   background: rgba(4, 10, 18, .48);
   backdrop-filter: blur(8px);
 }
 
 .finance-drawer {
-  width: min(520px, calc(100vw - 24px));
-  max-height: calc(100vh - 24px);
-  margin: 12px;
+  width: min(680px, calc(100vw - 40px));
+  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
+  margin: 0;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--finance-line);
-  border-radius: 18px;
+  border-radius: var(--r-card);
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, transparent), color-mix(in srgb, var(--surface-inset) 96%, transparent));
-  box-shadow: 0 24px 80px rgba(0, 0, 0, .42);
+  box-shadow: var(--sh-pop);
   overflow: hidden;
 }
 
@@ -5685,7 +5895,7 @@ button.task-tag-badge {
 }
 
 /* Final finance alignment override: this sits after legacy finance rules. */
-.finance-os > .finance-summary-strip {
+.module-page.finance-os > .page-body > .finance-summary-strip {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--gap);
   min-height: 0;
@@ -5765,7 +5975,7 @@ button.task-tag-badge {
 }
 
 @media (max-width: 860px) {
-  .finance-os > .finance-summary-strip { grid-template-columns: 1fr; }
+  .module-page.finance-os > .page-body > .finance-summary-strip { grid-template-columns: 1fr; }
 }
 
 /* Final cross-module surface alignment. */
@@ -5843,4 +6053,649 @@ button.task-tag-badge {
 .goals-actions-card .goals-task-tree {
   flex: 1 1 auto;
   max-height: none;
+}
+
+/* Final viewport contract guard for routes whose legacy responsive rules loosened overflow. */
+.module-page.finance-os,
+.module-page.goals-page,
+.module-page.planner-page {
+  overflow: hidden;
+}
+
+.module-page.finance-os > .page-body,
+.module-page.goals-page > .page-body,
+.module-page.planner-page > .page-body {
+  overflow: hidden;
+}
+
+.page-body > .finance-summary-strip {
+  flex: 0 0 auto;
+}
+
+.page-body > .finance-workspace {
+  height: 100%;
+}
+
+.page-body > .planner-shell {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Final local component contract: sidebars, rows and checkbox-like controls. */
+.office-sidebar,
+.notes-sidebar,
+.travel-list-card,
+.work-side,
+.planner-sidebar,
+.goals-command-panel {
+  min-width: 0;
+  min-height: 0;
+}
+
+.office-sidebar,
+.notes-sidebar,
+.travel-list-card,
+.goals-command-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.notes-category,
+.travel-trip-item,
+.work-project-card,
+.goals-folder-row {
+  min-height: 48px;
+  border-radius: var(--r-mid);
+  border-color: var(--border-soft);
+}
+
+.notes-category:hover,
+.notes-category.is-active,
+.travel-trip-item:hover,
+.travel-trip-item.is-selected,
+.work-project-card:hover,
+.work-project-card.is-selected,
+.goals-folder-row:hover,
+.goals-folder-row.is-active {
+  border-color: var(--acc-line);
+  background: color-mix(in srgb, var(--acc-soft) 64%, transparent);
+}
+
+.office-case-row,
+.office-deadline-row,
+.office-document-row,
+.finance-payment-line,
+.finance-budget-row:not(.is-head),
+.finance-history-table-row,
+.work-task-row,
+.travel-warning-row {
+  border-color: var(--border-soft);
+}
+
+.office-case-row,
+.finance-payment-line,
+.work-task-row,
+.travel-warning-row {
+  min-height: 56px;
+}
+
+.office-case-row:hover,
+.office-deadline-row:hover,
+.office-document-row:hover,
+.finance-budget-row:not(.is-head):hover,
+.finance-history-table-row:hover,
+.travel-warning-row:hover {
+  background: color-mix(in srgb, var(--surface-2) 64%, transparent);
+}
+
+.finance-check,
+.goals-task-check {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-sm);
+  border-color: color-mix(in srgb, var(--accent-ice) 34%, var(--border-strong));
+  background: color-mix(in srgb, var(--surface-base) 74%, transparent);
+}
+
+.is-paid .finance-check,
+.goals-task-row.is-done .goals-task-check,
+.goals-today-row.is-done .goals-task-check {
+  color: #07111a;
+  background: var(--accent-ice);
+  border-color: var(--accent-ice);
+}
+
+.planner-sidebar,
+.office-right-stack,
+.work-side {
+  overflow: hidden;
+}
+
+.planner-tasks-card,
+.planner-habits-card,
+.planner-calendar-card,
+.office-mini-panel,
+.work-panel {
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ============================================================ UI AUDIT FIXES v5
+   Final unification layer for the 9 main modules. */
+:root {
+  --ui-card-radius: 16px;
+  --ui-row-radius: 12px;
+  --ui-control-radius: 10px;
+  --ui-btn-h-sm: 36px;
+  --ui-btn-h-md: 40px;
+  --ui-icon-box: 36px;
+  --ui-kpi-h: 96px;
+  --ui-row-h: 56px;
+  --ui-panel-bg:
+    radial-gradient(circle at 14% 0%, color-mix(in srgb, var(--accent-ice) 4%, transparent), transparent 38%),
+    color-mix(in srgb, var(--surface-raised) 92%, transparent);
+}
+
+.module-page > .page-head {
+  min-height: var(--app-header-height);
+  padding: 14px var(--page-pad);
+}
+
+.page-head .btn,
+.page-head .btn-sm,
+.page-head .icon-btn,
+.page-head .finance-month-control,
+.page-head .travel-filter,
+.page-head .notes-view-toggle {
+  min-height: var(--ui-btn-h-md);
+}
+
+.page-head .btn-primary,
+.page-head .btn.btn-primary {
+  height: var(--ui-btn-h-md);
+  border-radius: var(--ui-control-radius);
+  padding-inline: 16px;
+  box-shadow: none;
+}
+
+.page-head .icon-btn {
+  width: var(--ui-btn-h-md);
+  height: var(--ui-btn-h-md);
+  border-radius: var(--ui-control-radius);
+}
+
+:where(.finance-summary-tile, .office-metric, .travel-kpi, .travel-top-action, .work-project-card, .notes-note-card, .notes-tile, .kpi-card) {
+  min-height: var(--ui-kpi-h);
+  border-radius: var(--ui-card-radius);
+  border-color: var(--border-soft);
+  background: var(--ui-panel-bg);
+  box-shadow: var(--sh-1);
+}
+
+:where(.finance-summary-tile strong, .office-metric-copy strong, .travel-kpi strong, .notes-kpi strong, .kpi-card strong) {
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1.05;
+  font-weight: 780;
+  letter-spacing: 0;
+}
+
+:where(.finance-summary-tile span, .office-metric-copy span, .travel-kpi span, .notes-kpi small, .kpi-card span) {
+  color: var(--ink-3);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+:where(.finance-segment-tabs, .work-view-tabs, .travel-tabs, .notes-view-toggle, .sub-tabs, .subtabs) {
+  min-height: 44px;
+  padding: 4px;
+  gap: 4px;
+  border-radius: var(--ui-control-radius);
+  border: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--surface-base) 72%, transparent);
+}
+
+:where(.finance-segment-tabs button, .work-view-tabs button, .travel-tabs button, .notes-view-toggle button, .sub-tabs button, .subtabs button) {
+  min-height: 34px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding-inline: 13px;
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0;
+  box-shadow: none;
+}
+
+:where(.finance-segment-tabs button.is-active, .work-view-tabs button.is-active, .travel-tabs button.is-active, .notes-view-toggle button.is-active, .sub-tabs button.active, .subtabs button.active) {
+  color: var(--acc-ink);
+  background: var(--acc-soft);
+  border-color: var(--acc-line);
+  box-shadow: none;
+}
+
+:where(.notes-category, .office-category-row, .goals-folder-row, .travel-trip-item) {
+  min-height: 52px;
+  border-radius: var(--ui-row-radius);
+  border: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--surface-base) 58%, transparent);
+  box-shadow: none;
+}
+
+:where(.notes-category span, .office-category-icon, .goals-folder-emoji, .travel-trip-icon) {
+  width: var(--ui-icon-box);
+  height: var(--ui-icon-box);
+  border-radius: var(--ui-control-radius);
+  color: var(--accent-ice);
+  border: 1px solid color-mix(in srgb, var(--accent-ice) 24%, transparent);
+  background: color-mix(in srgb, var(--accent-ice) 9%, transparent);
+}
+
+:where(.notes-category.is-active, .office-category-row.is-active, .goals-folder-row.is-active, .travel-trip-item.is-selected) {
+  border-color: var(--acc-line);
+  background: color-mix(in srgb, var(--acc-soft) 62%, transparent);
+  box-shadow: inset 3px 0 0 var(--accent-ice);
+}
+
+:where(.finance-payment-line, .finance-budget-row:not(.is-head), .finance-history-table-row, .work-task-row, .office-case-row, .travel-warning-row) {
+  min-height: var(--ui-row-h);
+  border-color: var(--border-soft);
+  background: color-mix(in srgb, var(--surface-base) 38%, transparent);
+}
+
+:where(.finance-payment-line:hover, .finance-budget-row:not(.is-head):hover, .finance-history-table-row:hover, .work-task-row:hover, .office-case-row:hover, .travel-warning-row:hover) {
+  background: color-mix(in srgb, var(--surface-2) 62%, transparent);
+}
+
+:where(.finance-check, .goals-task-check, .work-check, .office-case-check, .travel-pack-check, .sport-set-check, .tsk-check, .tsk-check-sm, .todo-check, .habit-check) {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  border-radius: 7px;
+  border: 1.5px solid color-mix(in srgb, var(--accent-ice) 36%, var(--border-strong));
+  background: color-mix(in srgb, var(--surface-base) 74%, transparent);
+  color: transparent;
+}
+
+:where(.is-paid .finance-check, .goals-task-row.is-done .goals-task-check, .goals-today-row.is-done .goals-task-check, .work-check.is-done, .office-case-row.is-done .office-case-check, .sport-set-check.is-checked, .tsk-check.is-done, .tsk-check-sm.is-done, .todo-item.done .todo-check, .habit-row.done .habit-check) {
+  color: #07111a;
+  background: var(--accent-ice);
+  border-color: var(--accent-ice);
+}
+
+:where(.finance-badge, .badge, .work-priority, .work-status, .travel-status, [class*="status-"]) {
+  min-height: 22px;
+  border-radius: var(--r-pill);
+  border: 1px solid transparent;
+  padding: 3px 9px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.status-overdue,
+.is-danger,
+.finance-badge.is-danger,
+.work-priority.is-high {
+  color: var(--danger-ink);
+  background: color-mix(in srgb, var(--danger-soft) 58%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 22%, transparent);
+}
+
+.status-warn,
+.work-priority.is-mid,
+.work-status.is-blocked,
+.travel-status.is-active {
+  color: var(--warn-ink);
+  background: color-mix(in srgb, var(--warn-soft) 58%, transparent);
+  border-color: color-mix(in srgb, var(--warn) 22%, transparent);
+}
+
+.status-done,
+.finance-badge.is-success,
+.work-status.is-done,
+.travel-status.is-complete {
+  color: var(--success-ink);
+  background: color-mix(in srgb, var(--success-soft) 62%, transparent);
+  border-color: color-mix(in srgb, var(--success) 22%, transparent);
+}
+
+.module-page.office-page > .page-body > .office-dashboard-shell {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.office-dashboard-shell .office-kpi-grid {
+  gap: var(--gap);
+  margin: 0 0 var(--gap);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.office-metric {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--ui-card-radius);
+  padding: 16px 18px;
+}
+
+.office-metric:last-child {
+  border-right: 1px solid var(--border-soft);
+}
+
+.office-dashboard-grid {
+  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr) minmax(300px, 340px);
+  gap: var(--gap);
+}
+
+.office-case-row {
+  min-height: var(--ui-row-h);
+}
+
+.module-page.finance-os > .page-body > .finance-summary-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--gap);
+}
+
+.finance-month-panel {
+  border-radius: var(--ui-card-radius);
+  padding: 0 18px 18px;
+}
+
+.finance-segment-toolbar {
+  min-height: 64px;
+  flex-basis: 64px;
+}
+
+.finance-segment-tabs button,
+.finance-history-filters button {
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0 16px;
+}
+
+.finance-mini-kpi {
+  width: 108px;
+  min-width: 108px;
+  border-left-color: var(--border-soft);
+}
+
+.finance-payment-line,
+.finance-budget-row:not(.is-head),
+.finance-history-table-row {
+  font-size: 13px;
+}
+
+.finance-payment-line [class*="status-"],
+.finance-payment-line .finance-badge,
+.finance-budget-row .finance-badge {
+  min-width: 86px;
+  justify-content: center;
+}
+
+.diet-side-col,
+.diet-summary-panel,
+.diet-side-card {
+  min-width: 0;
+}
+
+.diet-side-col {
+  overflow: auto;
+}
+
+.diet-meal-card.is-active {
+  border-color: color-mix(in srgb, var(--accent-ice) 34%, var(--border-soft));
+  background: var(--ui-panel-bg);
+  box-shadow: inset 3px 0 0 var(--accent-ice), var(--sh-1);
+}
+
+.goals-os {
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+}
+
+.goals-main-stage {
+  align-content: stretch;
+}
+
+.goals-delete-goal {
+  min-width: 40px;
+  width: 40px;
+  padding: 0;
+  color: var(--danger-ink);
+}
+
+.notes-board-panel .notes-card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-auto-rows: minmax(205px, 1fr);
+  align-content: stretch;
+}
+
+.notes-note-card,
+.notes-tile {
+  min-height: 205px;
+}
+
+.planner-shell {
+  grid-template-columns: minmax(310px, 360px) minmax(0, 1fr);
+}
+
+.planner-calendar-card {
+  min-height: 0;
+}
+
+.sport-bottom-grid {
+  grid-auto-rows: minmax(210px, 1fr);
+}
+
+@media (max-width: 1180px) {
+  .office-dashboard-grid,
+  .goals-os,
+  .planner-shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .module-page.finance-os > .page-body > .finance-summary-strip,
+  .office-dashboard-shell .office-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-segment-toolbar,
+  .page-head .finance-month-control {
+    min-height: 0;
+  }
+}
+
+/* UI AUDIT FIXES v6: keep dense modules inside the shared viewport rhythm. */
+.finance-os,
+.finance-os > .page-body,
+.diet-os,
+.diet-os > .page-body,
+.sport-os,
+.sport-os > .page-body {
+  overflow: hidden;
+}
+
+.finance-month-panel {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.finance-segment-body,
+.finance-payments-section,
+.finance-budget-section,
+.finance-history-section {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.finance-payments-section,
+.finance-budget-section,
+.finance-history-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.finance-month-panel > :last-child {
+  min-height: 0;
+}
+
+.finance-payment-list,
+.finance-budget-list,
+.finance-history-table,
+.finance-payments-table,
+.finance-budget-table,
+.finance-jdg-table,
+.finance-history-list {
+  min-height: 0;
+  overflow: auto;
+}
+
+.finance-payments-table,
+.finance-budget-table,
+.finance-jdg-table,
+.finance-history-table {
+  max-height: 100%;
+}
+
+.finance-payment-line {
+  min-height: 50px;
+}
+
+.finance-total-line {
+  flex: 0 0 auto;
+  min-height: 28px;
+}
+
+.diet-os .diet-layout {
+  min-height: 0;
+}
+
+.diet-side-col {
+  gap: 10px;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.diet-summary-card,
+.diet-side-card {
+  padding: 12px;
+}
+
+.diet-summary-card {
+  gap: 10px;
+  flex: 0 1 46%;
+  min-height: 0;
+}
+
+.diet-summary-card .sub-tabs {
+  min-height: 32px;
+}
+
+.diet-summary-card .sub-tabs button {
+  min-height: 28px;
+  padding-inline: 9px;
+}
+
+.diet-summary-card .ring-wrap {
+  width: 88px;
+  height: 88px;
+}
+
+.diet-summary-card .ring {
+  width: 88px;
+  height: 88px;
+}
+
+.diet-kcal-line {
+  gap: 10px;
+  min-height: 84px;
+  padding: 10px;
+}
+
+.diet-ring {
+  width: 78px;
+  height: 78px;
+}
+
+.diet-kcal-main strong {
+  font-size: 22px;
+}
+
+.diet-summary-card .macro-list {
+  gap: 7px;
+}
+
+.diet-macro-progress {
+  gap: 6px;
+}
+
+.diet-summary-card .macro-row {
+  min-height: 25px;
+}
+
+.diet-side-card .diet-panel-head {
+  min-height: 26px;
+}
+
+.diet-water-value {
+  font-size: 13px;
+}
+
+.diet-water-value strong {
+  font-size: 26px;
+}
+
+.diet-water-actions {
+  gap: 6px;
+}
+
+.diet-water-actions .btn {
+  min-height: 30px;
+  padding-inline: 8px;
+}
+
+.diet-side-col > .diet-side-card:not(.diet-summary-card):not(.diet-rhythm-card) {
+  flex: 0 0 auto;
+}
+
+.diet-summary-details {
+  min-height: 34px;
+}
+
+.diet-rhythm-card {
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.diet-rhythm-card .section-head {
+  margin-bottom: 0;
+}
+
+.diet-rhythm-progress,
+.diet-rhythm-focus,
+.diet-rhythm-hint {
+  padding: 9px;
+}
+
+.diet-rhythm-focus,
+.diet-rhythm-hint {
+  min-height: 0;
+}
+
+.sport-panel .empty-state {
+  min-height: 0;
+  flex: 1 1 auto;
+  justify-content: center;
+  padding-block: 26px;
 }

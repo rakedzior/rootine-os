@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash } from '@/components/common';
+import { PageLayout } from '@/components/layout/primitives';
 import { useLocalStore, type ChecklistItem, type Note, type NoteType } from '@/store/localStore';
 import '@/styles/notes.css';
 
@@ -95,8 +96,9 @@ export function NotesScreen() {
   }, [notes, selected, selectedId, visibleNotes]);
 
   return (
-    <div className="module-page notes-os">
-      <PageHeader
+    <PageLayout
+      className="notes-os"
+      header={<PageHeader
         icon={<NoteIcon name="note" />}
         title="Notatki"
         desc="Wszystkie notatki, pomysły i szybkie zapisy w jednym miejscu."
@@ -107,7 +109,8 @@ export function NotesScreen() {
             <button className={view === 'list' ? 'is-active' : ''} type="button" onClick={() => setView('list')} aria-label="Widok listy"><NoteIcon name="list" /></button>
           </div>
         </>}
-      />
+      />}
+    >
 
       <section className={`notes-workspace ${editorOpen ? 'is-editor' : 'is-overview'}`}>
         <aside className="notes-left-panel">
@@ -168,7 +171,7 @@ export function NotesScreen() {
 
       <NoteModal open={showAdd} onClose={() => setShowAdd(false)} onSave={(data) => { addNote(data); setShowAdd(false); }} />
       <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { if (deleteId) deleteNote(deleteId); setDeleteId(null); }} label="tę notatkę" />
-    </div>
+    </PageLayout>
   );
 }
 
