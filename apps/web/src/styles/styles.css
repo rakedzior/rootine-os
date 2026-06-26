@@ -3837,6 +3837,173 @@ button.task-tag-badge {
 .btn-danger { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: rgba(248, 113, 113, 0.12); color: var(--status-danger); border: 1px solid rgba(248, 113, 113, 0.35); border-radius: var(--r-mid); padding: 9px 16px; font-family: var(--font-sans); font-size: 13px; letter-spacing: -.01em; font-weight: 600; cursor: pointer; transition: var(--t); }
 .btn-danger:hover { filter: brightness(1.05); transform: translateY(-1px); }
 
+/* ============================================================ UI SYSTEM ALIGNMENT v4
+   Compatibility layer for legacy module classes. Keeps business logic intact while
+   moving screens toward one Graphite Cool Ice component language. */
+.module-card,
+:where(.finance-card, .finance-month-panel, .finance-context-card, .diet-meal-card, .diet-side-card, .diet-analytics, .diet-chart-card, .planner-tasks-card, .planner-habits-card, .planner-calendar-card) {
+  border-radius: var(--r-card);
+  border: 1px solid var(--border-soft);
+  background:
+    radial-gradient(circle at 14% 0%, color-mix(in srgb, var(--accent-ice) 7%, transparent), transparent 38%),
+    color-mix(in srgb, var(--surface-raised) 92%, transparent);
+  box-shadow: var(--sh-1);
+}
+
+.module-card:hover,
+:where(.finance-card, .diet-meal-card, .planner-calendar-card):hover {
+  border-color: color-mix(in srgb, var(--accent-ice) 26%, var(--border-soft));
+}
+
+.ui-segment-tabs,
+:where(.finance-segment-tabs, .diet-analytics-tabs) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 4px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-mid);
+  background: color-mix(in srgb, var(--surface-base) 72%, transparent);
+}
+
+.ui-segment-tabs button,
+:where(.finance-segment-tabs, .diet-analytics-tabs) button {
+  min-height: 36px;
+  border: 1px solid transparent;
+  border-radius: calc(var(--r-sm) + 2px);
+  background: transparent;
+  color: var(--ink-3);
+  padding: 0 14px;
+  font: 650 13px/1 var(--font-sans);
+  letter-spacing: 0;
+  cursor: pointer;
+  transition: var(--t);
+  white-space: nowrap;
+}
+
+.ui-segment-tabs button:hover,
+:where(.finance-segment-tabs, .diet-analytics-tabs) button:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+}
+
+.ui-segment-tabs button.is-active,
+.ui-segment-tabs button.active,
+:where(.finance-segment-tabs, .diet-analytics-tabs) button.is-active,
+:where(.finance-segment-tabs, .diet-analytics-tabs) button.active {
+  color: var(--acc-ink);
+  background: var(--acc-soft);
+  border-color: var(--acc-line);
+  box-shadow: none;
+}
+
+.status-chip,
+:where(.work-status, .travel-status, .badge, .status-todo, .status-active, .status-waiting, .status-done, .status-overdue, .status-warn, .status-cancelled, .status-blocked) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 22px;
+  border-radius: var(--r-pill);
+  border: 1px solid transparent;
+  padding: 3px 9px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.data-table,
+:where(.finance-payments-table, .work-task-table) {
+  min-width: 0;
+  border-radius: var(--r-mid);
+  border: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--surface-base) 52%, transparent);
+  overflow: hidden;
+}
+
+.data-table-row,
+:where(.finance-payment-line, .work-task-row) {
+  min-height: 56px;
+  border-top: 1px solid var(--border-soft);
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+
+.data-table-row:hover,
+:where(.finance-payment-line, .work-task-row):hover {
+  background: color-mix(in srgb, var(--surface-2) 64%, transparent);
+}
+
+.ui-check,
+:where(.work-check, .office-case-check, .tsk-check, .tsk-check-sm, .todo-check, .habit-check) {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid color-mix(in srgb, var(--accent-ice) 34%, var(--border-strong));
+  background: transparent;
+  color: transparent;
+  display: grid;
+  place-items: center;
+  transition: var(--t);
+}
+
+:where(.work-check.is-done, .office-case-row.is-done .office-case-check, .tsk-check.is-done, .tsk-check-sm.is-done, .todo-item.done .todo-check, .habit-row.done .habit-check) {
+  color: #07111a;
+  background: var(--accent-ice);
+  border-color: var(--accent-ice);
+}
+
+/* Finance: rebuild top summary into true KPI cards. */
+.finance-os > .finance-summary-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--gap);
+  min-height: 0;
+  flex: 0 0 auto;
+  padding: var(--gap) var(--page-pad);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.finance-summary-tile {
+  min-height: 112px;
+  height: auto;
+  padding: 18px 20px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-card);
+  background:
+    radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--accent-ice) 8%, transparent), transparent 40%),
+    color-mix(in srgb, var(--surface-raised) 92%, transparent);
+  box-shadow: var(--sh-1);
+}
+
+.finance-summary-tile + .finance-summary-tile::before { display: none; }
+.finance-summary-tile span { color: var(--ink-2); font-size: 13px; }
+.finance-summary-tile strong { font-size: 26px; letter-spacing: 0; }
+.finance-summary-tile small { color: var(--ink-3); }
+.finance-summary-tile:hover,
+.finance-summary-tile:focus-visible,
+.finance-summary-tile.is-active {
+  border-color: color-mix(in srgb, var(--accent-ice) 42%, var(--border-soft));
+  background:
+    radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--accent-ice) 12%, transparent), transparent 42%),
+    color-mix(in srgb, var(--surface-elevated) 88%, transparent);
+  box-shadow: var(--sh-2);
+}
+
+.finance-month-panel {
+  border-radius: var(--r-card);
+}
+
+.finance-payment-line .badge,
+.finance-payment-line [class*="status-"] {
+  min-width: 94px;
+  justify-content: center;
+}
+
 /* ============================================================ RESPONSIVE */
 @media (max-width: 1200px) { .main-grid { grid-template-columns: 280px minmax(0, 1fr) 300px; } }
 @media (max-width: 1000px) { .main-grid { grid-template-columns: 1fr; } .form-grid { grid-template-columns: 1fr; } }
@@ -4144,12 +4311,46 @@ button.task-tag-badge {
 .sb-lock:hover,
 .sb-lock:focus { box-shadow: none; }
 .sb-lock:focus-visible { outline: none; box-shadow: var(--ring); }
+.sb-lock:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+}
 .sb-lock.is-on {
   color: var(--accent-ice);
   background: color-mix(in srgb, var(--accent-ice) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent-ice) 30%, transparent);
 }
-.sb-lock.is-on .sb-item-ic { color: var(--accent-ice); }
+.sb-lock .sb-item-label {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ink-2);
+}
+.sb-lock:hover .sb-item-label,
+.sb-lock.is-on .sb-item-label {
+  color: var(--ink);
+}
+.sb-lock .sb-lock-ic {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--accent-ice);
+  border: 1px solid color-mix(in srgb, var(--accent-ice) 34%, transparent);
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--accent-ice) 17%, transparent), transparent 58%),
+    color-mix(in srgb, var(--surface-elevated) 86%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent-ice) 9%, transparent),
+    0 10px 22px -16px color-mix(in srgb, var(--accent-ice) 72%, transparent);
+}
+.sb-lock.is-on .sb-lock-ic {
+  color: var(--accent-ice);
+  border-color: color-mix(in srgb, var(--accent-ice) 48%, transparent);
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--accent-ice) 22%, transparent), transparent 60%),
+    color-mix(in srgb, var(--accent-ice) 12%, var(--surface-elevated));
+}
 .sb-lock .sb-item-ic,
 .sidebar[data-collapsed="true"] .sb-lock .sb-item-ic,
 .sidebar[data-collapsed="true"] .sb-weather-ic,
@@ -4160,12 +4361,22 @@ button.task-tag-badge {
   place-items: center;
   margin: 0;
 }
+.sb-lock .sb-lock-ic,
+.sidebar[data-collapsed="true"] .sb-lock .sb-lock-ic {
+  width: 32px;
+  height: 32px;
+}
 .sb-lock .sb-item-ic svg,
 .sidebar[data-collapsed="true"] .sb-weather-ic svg,
 .sidebar[data-collapsed="true"] .sb-time-ic svg {
   width: 18px !important;
   height: 18px !important;
   transform: none !important;
+}
+.sb-lock .sb-lock-ic svg {
+  width: 19px !important;
+  height: 19px !important;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent-ice) 34%, transparent));
 }
 
 /* collapsed-state tooltip (shown when sidebar is pinned collapsed) */
@@ -5471,4 +5682,165 @@ button.task-tag-badge {
   .finance-month-control strong { min-width: 0; text-align: left; }
   .finance-drawer-overlay { justify-content: center; align-items: center; padding: 10px; }
   .finance-drawer { width: min(680px, 100%); margin: 0; max-height: calc(100vh - 20px); }
+}
+
+/* Final finance alignment override: this sits after legacy finance rules. */
+.finance-os > .finance-summary-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--gap);
+  min-height: 0;
+  flex: 0 0 auto;
+  padding: var(--gap) var(--page-pad);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+.finance-summary-tile {
+  min-height: 112px;
+  height: auto;
+  padding: 18px 20px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-card);
+  background:
+    radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--accent-ice) 8%, transparent), transparent 40%),
+    color-mix(in srgb, var(--surface-raised) 92%, transparent);
+  box-shadow: var(--sh-1);
+}
+
+.finance-summary-tile + .finance-summary-tile::before { display: none; }
+.finance-summary-tile span { color: var(--ink-2); font-size: 13px; }
+.finance-summary-tile strong { font-size: 26px; letter-spacing: 0; }
+.finance-summary-tile small { color: var(--ink-3); }
+.finance-summary-tile:hover,
+.finance-summary-tile:focus-visible,
+.finance-summary-tile.is-active {
+  border-color: color-mix(in srgb, var(--accent-ice) 42%, var(--border-soft));
+  background:
+    radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--accent-ice) 12%, transparent), transparent 42%),
+    color-mix(in srgb, var(--surface-elevated) 88%, transparent);
+  box-shadow: var(--sh-2);
+}
+
+.finance-segment-tabs {
+  padding: 4px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-mid);
+  background: color-mix(in srgb, var(--surface-base) 72%, transparent);
+}
+
+.finance-segment-tabs button {
+  min-height: 36px;
+  border-radius: calc(var(--r-sm) + 2px);
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+
+.finance-segment-tabs button.is-active {
+  color: var(--acc-ink);
+  background: var(--acc-soft);
+  border-color: var(--acc-line);
+}
+
+.finance-payments-table {
+  border-radius: var(--r-mid);
+  border: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--surface-base) 52%, transparent);
+}
+
+.finance-payment-line {
+  min-height: 56px;
+}
+
+.finance-payment-line:hover,
+.finance-payment-line:focus-visible {
+  background: color-mix(in srgb, var(--surface-2) 64%, transparent);
+}
+
+.finance-payment-line .badge,
+.finance-payment-line [class*="status-"] {
+  min-width: 94px;
+  justify-content: center;
+}
+
+@media (max-width: 860px) {
+  .finance-os > .finance-summary-strip { grid-template-columns: 1fr; }
+}
+
+/* Final cross-module surface alignment. */
+.diet-meal-card,
+.diet-side-card,
+.diet-analytics,
+.diet-chart-card {
+  border-radius: var(--r-card);
+  border-color: var(--border-soft);
+  background:
+    radial-gradient(circle at 14% 0%, color-mix(in srgb, var(--accent-ice) 5%, transparent), transparent 38%),
+    color-mix(in srgb, var(--surface-raised) 92%, transparent);
+  box-shadow: var(--sh-1);
+}
+
+.diet-meal-card.is-active {
+  border-color: var(--acc-line);
+  background:
+    radial-gradient(circle at 14% 0%, color-mix(in srgb, var(--accent-ice) 9%, transparent), transparent 40%),
+    color-mix(in srgb, var(--surface-elevated) 90%, transparent);
+}
+
+.planner-calendar-card,
+.planner-tasks-card,
+.planner-habits-card,
+.cal-cell,
+.day-cell {
+  border-radius: var(--r-card);
+  border-color: var(--border-soft);
+}
+
+.cal-cell,
+.day-cell {
+  background: color-mix(in srgb, var(--surface-calendar) 88%, transparent);
+}
+
+.goals-os {
+  min-height: 0;
+  align-items: stretch;
+}
+
+.goals-command-panel,
+.goals-roadmap-card,
+.goals-week-card,
+.goals-actions-card,
+.goals-empty-detail {
+  border-radius: var(--r-card);
+  border-color: var(--border-soft);
+  background:
+    radial-gradient(circle at 14% 0%, color-mix(in srgb, var(--accent-ice) 5%, transparent), transparent 38%),
+    color-mix(in srgb, var(--surface-raised) 92%, transparent);
+  box-shadow: var(--sh-1);
+}
+
+.goals-folder-row.is-active {
+  border-color: color-mix(in srgb, var(--accent-ice) 34%, var(--border-soft));
+  background: color-mix(in srgb, var(--acc-soft) 72%, transparent);
+  box-shadow: inset 2px 0 0 var(--accent-ice);
+}
+
+.goals-delete-goal {
+  color: var(--danger-ink);
+  background: color-mix(in srgb, var(--danger-soft) 42%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 20%, var(--border-soft));
+}
+
+.goals-main-stage {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.goals-actions-card {
+  min-height: 0;
+}
+
+.goals-actions-card .goals-task-tree {
+  flex: 1 1 auto;
+  max-height: none;
 }

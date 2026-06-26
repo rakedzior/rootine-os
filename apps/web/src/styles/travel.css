@@ -1140,3 +1140,106 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Graphite Cool Ice alignment: shared KPI, quick-action, tabs and status language. */
+.travel-page > .travel-kpis { gap: var(--gap); }
+
+.travel-kpi {
+  border-color: var(--border-soft);
+  border-radius: var(--r-card);
+  background:
+    radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--accent-ice) 7%, transparent), transparent 40%),
+    color-mix(in srgb, var(--surface-raised) 92%, transparent);
+  box-shadow: var(--sh-1);
+}
+
+.travel-kpi:hover { border-color: color-mix(in srgb, var(--accent-ice) 28%, var(--border-soft)); }
+
+.travel-top-action {
+  min-height: 94px;
+  border-color: var(--border-soft);
+  border-radius: var(--r-card);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-raised) 86%, transparent), color-mix(in srgb, var(--surface-base) 82%, transparent));
+  box-shadow: var(--sh-1);
+  color: var(--ink-2);
+}
+
+.travel-top-action:hover,
+.travel-top-action:focus-visible {
+  color: var(--accent-ice);
+  border-color: color-mix(in srgb, var(--accent-ice) 34%, var(--border-soft));
+  background: color-mix(in srgb, var(--surface-elevated) 88%, transparent);
+  box-shadow: var(--sh-2);
+}
+
+.travel-card,
+.travel-plan-card,
+.travel-stay-card,
+.travel-budget-card,
+.travel-packing-card,
+.travel-notes-card,
+.travel-documents-card,
+.travel-transport-card,
+.travel-prep-card,
+.travel-alert-card,
+.travel-actions-card {
+  border-color: var(--border-soft);
+  border-radius: var(--r-card);
+  background:
+    radial-gradient(circle at 14% 0%, color-mix(in srgb, var(--accent-ice) 5%, transparent), transparent 38%),
+    color-mix(in srgb, var(--surface-raised) 92%, transparent);
+  box-shadow: var(--sh-1);
+}
+
+.travel-tabs {
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-mid);
+  background: color-mix(in srgb, var(--surface-base) 72%, transparent);
+}
+
+.travel-tabs button {
+  min-height: 36px;
+  border-radius: calc(var(--r-sm) + 2px);
+  border: 1px solid transparent;
+  color: var(--ink-3);
+  padding: 0 13px;
+}
+
+.travel-tabs button:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+}
+
+.travel-tabs button.is-active {
+  color: var(--acc-ink);
+  background: var(--acc-soft);
+  border-color: var(--acc-line);
+  box-shadow: none;
+}
+
+.travel-status {
+  min-height: 22px;
+  border-radius: var(--r-pill);
+  border: 1px solid transparent;
+  padding: 3px 9px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.travel-status.is-planned { color: var(--accent-ice); background: rgba(125, 211, 252, .10); border-color: rgba(125, 211, 252, .24); }
+.travel-status.is-active { color: var(--warn-ink); background: rgba(251, 191, 36, .10); border-color: rgba(251, 191, 36, .20); }
+.travel-status.is-complete { color: var(--success-ink); background: rgba(52, 211, 153, .10); border-color: rgba(52, 211, 153, .22); }
+.travel-status.is-archived { color: var(--ink-3); background: color-mix(in srgb, var(--surface-2) 70%, transparent); border-color: var(--border-soft); }
+
+.travel-alert-card {
+  border-color: color-mix(in srgb, var(--danger) 28%, var(--border-soft));
+  background:
+    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--danger) 8%, transparent), transparent 42%),
+    color-mix(in srgb, var(--surface-raised) 92%, transparent);
+}

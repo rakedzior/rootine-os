@@ -1146,3 +1146,115 @@
     justify-content: center;
   }
 }
+
+/* Graphite Cool Ice alignment: tighter workspace and shared category/card language. */
+.notes-workspace,
+.notes-workspace.is-editor {
+  grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
+  gap: var(--gap);
+}
+
+.notes-left-panel {
+  gap: 0;
+}
+
+.notes-left-panel .notes-sidebar {
+  min-height: 0;
+  height: 100%;
+}
+
+.notes-card,
+.notes-sidebar,
+.notes-board-panel,
+.notes-editor {
+  border-color: var(--border-soft);
+  border-radius: var(--r-card);
+  background:
+    radial-gradient(circle at 14% 0%, color-mix(in srgb, var(--accent-ice) 5%, transparent), transparent 38%),
+    color-mix(in srgb, var(--surface-raised) 92%, transparent);
+  box-shadow: var(--sh-1);
+}
+
+.notes-category-list {
+  gap: 8px;
+}
+
+.notes-category-row {
+  min-height: 48px;
+  border-radius: var(--r-mid);
+}
+
+.notes-category-row.is-active {
+  border-color: var(--acc-line);
+  background: var(--acc-soft);
+}
+
+.notes-board-panel {
+  padding: 26px 28px 18px;
+}
+
+.notes-board-panel .notes-card-grid {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--gap);
+  align-content: start;
+}
+
+.notes-tile,
+.notes-note-card {
+  border-radius: var(--r-card);
+  border-color: var(--border-soft);
+}
+
+.notes-view-toggle {
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--r-mid);
+  border: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--surface-base) 72%, transparent);
+}
+
+.notes-view-toggle button {
+  width: 34px;
+  height: 34px;
+  border-radius: calc(var(--r-sm) + 2px);
+}
+
+.notes-view-toggle button.is-active {
+  color: var(--acc-ink);
+  background: var(--acc-soft);
+  box-shadow: none;
+}
+
+@media (max-width: 1100px) {
+  .notes-workspace,
+  .notes-workspace.is-editor {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Notes spacing polish: keep categories and board visually connected. */
+.notes-workspace,
+.notes-workspace.is-editor {
+  grid-template-columns: minmax(300px, 320px) minmax(0, 1fr);
+  column-gap: 18px;
+}
+
+.notes-left-panel {
+  width: 100%;
+}
+
+.notes-left-panel .notes-sidebar {
+  width: 100%;
+  align-self: stretch;
+}
+
+.notes-board-panel {
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .notes-workspace,
+  .notes-workspace.is-editor {
+    grid-template-columns: 1fr;
+  }
+}
