@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash, IcoPlus, IcoCheck } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
+import { logAudit } from '@/lib/audit';
 import {
   useOfficeTasks, useAddOfficeTask, useUpdateOfficeTask, useDeleteOfficeTask,
   useOfficeCategories, useAddOfficeCategory, useDeleteOfficeCategory,
   useOfficeDocs, useVehicles, useInsurancePolicies,
   useEmployment, useVacations, useAddVacation, useUpdateVacation, useDeleteVacation,
+  useUploadOfficeDocFile, useCreateOfficeDocFileUrl, useRemoveOfficeDocFile,
 } from '@/features/office/hooks';
+import { needsMfaStepUp } from '@/features/auth/mfa';
 import type {
   Document as OfficeDocumentRow,
   InsurancePolicy,
@@ -31,6 +34,7 @@ interface OfficeDocument {
   name: string; category: string; documentNumber?: string;
   issueDate?: string; expiryDate?: string;
   reminderEnabled: boolean; notes: string; isArchived: boolean;
+  filePath?: string;
 }
 
 interface Car {
@@ -105,6 +109,7 @@ function mapDocument(row: OfficeDocumentRow): OfficeDocument {
     reminderEnabled: row.reminder_enabled,
     notes: row.notes,
     isArchived: row.is_archived,
+    filePath: row.file_path ?? undefined,
   };
 }
 
@@ -491,11 +496,31 @@ function OfficeDeadlinesModal({ open, onClose, deadlines }: { open: boolean; onC
 }
 
 function OfficeDocumentsModal({ open, onClose, documents }: { open: boolean; onClose: () => void; documents: OfficeDocument[] }) {
+  const uploadFile = useUploadOfficeDocFile();
+  const createFileUrl = useCreateOfficeDocFileUrl();
+  const removeFile = useRemoveOfficeDocFile();
+
+  useEffect(() => {
+    if (!open) return;
+    void logAudit('document_access', { entity: 'office.documents', metadata: { count: documents.length } });
+  }, [documents.length, open]);
+
+  const openFile = async (doc: OfficeDocument) => {
+    if (!doc.filePath) return;
+    if (await needsMfaStepUp()) {
+      window.alert('Wymagana jest ponowna weryfikacja MFA przed otwarciem dokumentu.');
+      return;
+    }
+    const url = await createFileUrl.mutateAsync(doc.filePath);
+    void logAudit('document_access', { entity: `office.documents.${doc.id}`, metadata: { action: 'open_file' } });
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <Modal open={open} onClose={onClose} title="Dokumenty" size="lg">
       {documents.length === 0 ? <EmptyState title="Brak dokumentów" /> : (
         <table className="table">
-          <thead><tr><th>Nazwa</th><th>Kategoria</th><th>Numer</th><th>Ważny do</th></tr></thead>
+          <thead><tr><th>Nazwa</th><th>Kategoria</th><th>Numer</th><th>Ważny do</th><th>Plik</th></tr></thead>
           <tbody>
             {documents.map(doc => (
               <tr key={doc.id}>
@@ -503,6 +528,31 @@ function OfficeDocumentsModal({ open, onClose, documents }: { open: boolean; onC
                 <td>{doc.category}</td>
                 <td>{doc.documentNumber ?? '—'}</td>
                 <td>{fmtDate(doc.expiryDate)}</td>
+                <td>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {doc.filePath ? (
+                      <>
+                        <button className="btn btn-secondary btn-sm" type="button" disabled={createFileUrl.isPending} onClick={() => void openFile(doc)}>Otwórz</button>
+                        <button className="btn btn-secondary btn-sm" type="button" disabled={removeFile.isPending} onClick={() => removeFile.mutate({ documentId: doc.id, path: doc.filePath! })}>Usuń plik</button>
+                      </>
+                    ) : (
+                      <label className="btn btn-secondary btn-sm">
+                        Dodaj plik
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,image/jpeg,image/png,image/webp"
+                          style={{ display: 'none' }}
+                          disabled={uploadFile.isPending}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            event.currentTarget.value = '';
+                            if (file) uploadFile.mutate({ documentId: doc.id, file });
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

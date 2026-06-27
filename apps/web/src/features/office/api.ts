@@ -17,6 +17,15 @@ function today() {
   return new Date().toISOString().split('T')[0];
 }
 
+function safeFilename(name: string) {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 120) || 'document';
+}
+
 // ── documents ─────────────────────────────────────────────────────────────────
 
 export async function fetchDocuments(): Promise<Document[]> {
@@ -42,6 +51,7 @@ export async function insertDocument(input: NewDocumentInput): Promise<Document>
       expires_on: input.expires_on ?? null,
       reminder_enabled: input.reminder_enabled ?? false,
       notes: input.notes ?? '',
+      file_path: input.file_path ?? null,
     })
     .select('*')
     .single();
@@ -49,9 +59,35 @@ export async function insertDocument(input: NewDocumentInput): Promise<Document>
   return data as Document;
 }
 
+export async function patchDocument(id: string, patch: Partial<Document>): Promise<Document> {
+  const { data, error } = await supabase.from('documents').update(patch).eq('id', id).select('*').single();
+  if (error) throw error;
+  return data as Document;
+}
+
 export async function deleteDocument(id: string): Promise<void> {
   const { error } = await supabase.from('documents').delete().eq('id', id);
   if (error) throw error;
+}
+
+export async function uploadDocumentFile(documentId: string, file: File): Promise<Document> {
+  const userId = await uid();
+  const path = `${userId}/${documentId}/${Date.now()}-${safeFilename(file.name)}`;
+  const { error: uploadError } = await supabase.storage.from('documents').upload(path, file, { upsert: false });
+  if (uploadError) throw uploadError;
+  return patchDocument(documentId, { file_path: path });
+}
+
+export async function createDocumentFileUrl(path: string): Promise<string> {
+  const { data, error } = await supabase.storage.from('documents').createSignedUrl(path, 60);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export async function removeDocumentFile(documentId: string, path: string): Promise<Document> {
+  const { error } = await supabase.storage.from('documents').remove([path]);
+  if (error) throw error;
+  return patchDocument(documentId, { file_path: null });
 }
 
 // ── insurance_policies ────────────────────────────────────────────────────────

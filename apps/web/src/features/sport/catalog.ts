@@ -8,11 +8,9 @@
  */
 
 /**
- * Sport categories used to be a fixed union of 5 disciplines. The live list of
- * categories is now user-editable and lives in `useLocalStore().sportCategories`
- * (see store/localStore.ts) — `SportKey` stays a plain string so every existing
- * annotation keeps compiling, and `SPORTS`/`SPORT_KEYS` below are kept only as
- * the one-time seed data for that store list, not as a live source for the UI.
+ * Sport categories used to be a fixed union of 5 disciplines. The live list now
+ * comes from Supabase and is seeded from `SPORTS`; `SportKey` stays a plain
+ * string so existing annotations keep compiling while users can extend the list.
  */
 export type SportKey = string;
 

@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { logAudit } from '@/lib/audit';
 import {
   fetchDocuments, insertDocument, deleteDocument,
+  uploadDocumentFile, createDocumentFileUrl, removeDocumentFile,
   fetchInsurancePolicies, insertInsurancePolicy, patchInsurancePolicy, deleteInsurancePolicy,
   fetchVehicles, insertVehicle, deleteVehicle,
   fetchVehicleServices, insertVehicleService, deleteVehicleService,
@@ -43,6 +45,32 @@ export function useDeleteOfficeDoc() {
   return useMutation({
     mutationFn: (id: string) => deleteDocument(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: DOCS_KEY }),
+  });
+}
+
+export function useUploadOfficeDocFile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ documentId, file }: { documentId: string; file: File }) => uploadDocumentFile(documentId, file),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: DOCS_KEY });
+      void logAudit('document_access', { entity: `office.documents.${vars.documentId}`, metadata: { action: 'upload_file' } });
+    },
+  });
+}
+
+export function useCreateOfficeDocFileUrl() {
+  return useMutation({ mutationFn: (path: string) => createDocumentFileUrl(path) });
+}
+
+export function useRemoveOfficeDocFile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ documentId, path }: { documentId: string; path: string }) => removeDocumentFile(documentId, path),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: DOCS_KEY });
+      void logAudit('document_access', { entity: `office.documents.${vars.documentId}`, metadata: { action: 'remove_file' } });
+    },
   });
 }
 

@@ -130,6 +130,7 @@ export interface NewDocumentInput {
   expires_on?: string | null;
   reminder_enabled?: boolean;
   notes?: string;
+  file_path?: string | null;
 }
 
 export interface NewInsurancePolicyInput {

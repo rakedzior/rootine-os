@@ -155,6 +155,14 @@ Deno.serve(async (req) => {
     if (!error && data) result[table.name] = data;
   }
 
+  const { data: documentObjects } = await admin
+    .schema('storage')
+    .from('objects')
+    .select('id, bucket_id, name, owner, metadata, created_at, updated_at, last_accessed_at')
+    .eq('bucket_id', 'documents')
+    .like('name', `${userId}/%`);
+  result.document_storage_objects = documentObjects ?? [];
+
   const payload = JSON.stringify({
     exported_at: new Date().toISOString(),
     user_id: userId,

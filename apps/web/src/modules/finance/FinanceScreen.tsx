@@ -2,14 +2,30 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ConfirmDelete, Field, PageHeader } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import {
-  useLocalStore,
   type Account,
   type BudgetCategory,
   type FinancialReminder,
   type JdgItem,
   type RecurringExpense,
   type SavingsGoal,
-} from '@/store/localStore';
+} from '@/features/finance/types';
+import {
+  useDeleteFinanceAccount,
+  useDeleteFinanceBudgetCategory,
+  useDeleteFinanceRecurringExpense,
+  useDeleteFinanceReminder,
+  useDeleteFinanceSavingsGoal,
+  useFinanceDashboard,
+  useSaveAccount,
+  useSaveBudgetCategory,
+  useSaveFinancialReminder,
+  useSaveJdgItem,
+  useSaveRecurringExpense,
+  useSaveSavingsGoal,
+  useSetJdgMonth,
+  useSetRecurringPaid,
+  useToggleFinanceReminder,
+} from '@/features/finance/hooks';
 
 type FinanceSegment = 'accounts' | 'due' | 'budget' | 'savings' | 'jdg' | 'history';
 type SummaryKey = 'accounts' | 'savings' | 'budget' | 'due';
@@ -64,6 +80,15 @@ const PAYMENT_TYPES = [
   { value: 'custom_recurring', label: 'własna' },
 ];
 const MONTHS = ['styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec', 'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień'];
+const EMPTY_FINANCE = {
+  accounts: [],
+  recurringExpenses: [],
+  financialReminders: [],
+  budgetCategories: [],
+  savingsGoals: [],
+  jdgItems: [],
+  jdgMonths: [],
+};
 
 function currentYearMonth() {
   const d = new Date();
@@ -198,10 +223,11 @@ export function FinanceScreen() {
   const [savingsDrawer, setSavingsDrawer] = useState<{ open: boolean; goal?: SavingsGoal | null }>({ open: false });
   const [jdgDrawer, setJdgDrawer] = useState<{ open: boolean; item?: JdgItem | null }>({ open: false });
 
-  const store = useLocalStore();
-  const activeAccounts = store.accounts.filter((account) => !account.archived);
-  const monthBudget = store.budgetCategories.filter((category) => category.month === month);
-  const payments = useMemo(() => toPaymentRows(store.recurringExpenses, store.financialReminders, month), [store.recurringExpenses, store.financialReminders, month]);
+  const financeQuery = useFinanceDashboard(month);
+  const finance = financeQuery.data ?? EMPTY_FINANCE;
+  const activeAccounts = finance.accounts.filter((account) => !account.archived);
+  const monthBudget = finance.budgetCategories.filter((category) => category.month === month);
+  const payments = useMemo(() => toPaymentRows(finance.recurringExpenses, finance.financialReminders, month), [finance.recurringExpenses, finance.financialReminders, month]);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     params.set('month', month);
@@ -210,14 +236,14 @@ export function FinanceScreen() {
 
   const totals = useMemo(() => {
     const funds = activeAccounts.reduce((sum, account) => sum + account.balance, 0);
-    const savings = store.savingsGoals.reduce((sum, goal) => sum + goal.currentAmount, 0);
+    const savings = finance.savingsGoals.reduce((sum, goal) => sum + goal.currentAmount, 0);
     const due = payments.filter((row) => !row.paid).reduce((sum, row) => sum + row.amount, 0);
     const paid = payments.filter((row) => row.paid).reduce((sum, row) => sum + row.amount, 0);
     const planned = monthBudget.reduce((sum, category) => sum + category.plannedAmount, 0);
     const spent = monthBudget.reduce((sum, category) => sum + category.actualAmount, 0);
     const budgetPct = clampPct((spent / Math.max(planned, 1)) * 100);
     return { funds, savings, due, paid, planned, spent, budgetPct };
-  }, [activeAccounts, monthBudget, payments, store.savingsGoals]);
+  }, [activeAccounts, monthBudget, payments, finance.savingsGoals]);
 
   const openSummary = (key: SummaryKey) => {
     setActiveSummary(key);
@@ -255,7 +281,7 @@ export function FinanceScreen() {
 
       <section className="finance-summary-strip">
         <SummaryTile active={activeSummary === 'accounts'} label="Środki" value={fmtMoney(totals.funds)} note={`${activeAccounts.length} aktywnych źródeł`} onClick={() => openSummary('accounts')} />
-        <SummaryTile active={activeSummary === 'savings'} label="Oszczędności" value={fmtMoney(totals.savings)} note={`${store.savingsGoals.length} cele oszczędnościowe`} onClick={() => openSummary('savings')} />
+        <SummaryTile active={activeSummary === 'savings'} label="Oszczędności" value={fmtMoney(totals.savings)} note={`${finance.savingsGoals.length} cele oszczędnościowe`} onClick={() => openSummary('savings')} />
         <SummaryTile active={activeSummary === 'budget'} label="Budżet" value={`${fmtNumber(totals.budgetPct)}%`} note={`${fmtMoney(totals.spent)} wydane z ${fmtMoney(totals.planned)}`} onClick={() => openSummary('budget')} />
         <SummaryTile active={activeSummary === 'due'} label="Płatności" value={fmtMoney(totals.due)} note={`Pozostało w ${monthLabel(month)}`} onClick={() => openSummary('due')} />
       </section>
@@ -267,16 +293,18 @@ export function FinanceScreen() {
               {SEGMENTS.map((item) => <button key={item.id} className={segment === item.id ? 'is-active' : ''} type="button" onClick={() => setSegment(item.id)}>{item.label}</button>)}
             </nav>
             <div className="finance-segment-side">
-              <SegmentKpiRail segment={segment} month={month} accounts={activeAccounts} payments={payments} goals={store.savingsGoals} totals={totals} jdgItems={store.jdgItems} jdgMonths={store.jdgMonths} />
+              <SegmentKpiRail segment={segment} month={month} accounts={activeAccounts} payments={payments} goals={finance.savingsGoals} totals={totals} jdgItems={finance.jdgItems} jdgMonths={finance.jdgMonths} />
               <button className="btn btn-primary btn-sm finance-segment-cta" type="button" onClick={addForSegment}>{ctaLabel(segment)}</button>
             </div>
           </div>
           <div className="finance-segment-body">
-            {segment === 'accounts' && <AccountsSegment editorToken={accountEditorToken} />}
+            {financeQuery.isLoading && <FinanceEmpty title="Ładuję finanse..." desc="Pobieram dane z Supabase." />}
+            {financeQuery.isError && <FinanceEmpty title="Nie udało się pobrać finansów." desc={financeQuery.error instanceof Error ? financeQuery.error.message : 'Spróbuj ponownie za chwilę.'} />}
+            {!financeQuery.isLoading && !financeQuery.isError && segment === 'accounts' && <AccountsSegment editorToken={accountEditorToken} accounts={finance.accounts} />}
             {segment === 'due' && <PaymentsSegment month={month} payments={payments} onEdit={(row) => setPaymentDrawer({ open: true, row })} />}
             {segment === 'budget' && <BudgetSegment categories={monthBudget} onEdit={(category) => setBudgetDrawer({ open: true, category })} />}
-            {segment === 'savings' && <SavingsSegment goals={store.savingsGoals} onEdit={(goal) => setSavingsDrawer({ open: true, goal })} />}
-            {segment === 'jdg' && <JdgSegment month={month} onEdit={(item) => setJdgDrawer({ open: true, item })} />}
+            {segment === 'savings' && <SavingsSegment goals={finance.savingsGoals} onEdit={(goal) => setSavingsDrawer({ open: true, goal })} />}
+            {segment === 'jdg' && <JdgSegment month={month} jdgItems={finance.jdgItems} jdgMonths={finance.jdgMonths} onEdit={(item) => setJdgDrawer({ open: true, item })} />}
             {segment === 'history' && <HistorySegment month={month} payments={payments} />}
           </div>
         </main>
@@ -401,13 +429,16 @@ function MiniKpi({ label, value, danger }: { label: string; value: string; dange
 }
 
 function PaymentsSegment({ month, payments, onEdit }: { month: string; payments: PaymentRow[]; onEdit: (row: PaymentRow) => void }) {
-  const { updateRecurringExpense, toggleFinancialReminder, deleteRecurringExpense, deleteFinancialReminder } = useLocalStore();
+  const setRecurringPaid = useSetRecurringPaid();
+  const toggleReminder = useToggleFinanceReminder();
+  const deleteRecurring = useDeleteFinanceRecurringExpense();
+  const deleteReminder = useDeleteFinanceReminder();
   const [deleteTarget, setDeleteTarget] = useState<PaymentRow | null>(null);
   const total = payments.reduce((sum, row) => sum + row.amount, 0);
 
   const toggle = (row: PaymentRow) => {
-    if (row.source === 'recurring') updateRecurringExpense((row.raw as RecurringExpense).id, { paidThisMonth: !row.paid });
-    else toggleFinancialReminder((row.raw as FinancialReminder).id);
+    if (row.source === 'recurring') setRecurringPaid.mutate({ payment: row.raw as RecurringExpense, month, paid: !row.paid });
+    else toggleReminder.mutate({ id: (row.raw as FinancialReminder).id, completed: !row.paid });
   };
 
   return (
@@ -444,8 +475,8 @@ function PaymentsSegment({ month, payments, onEdit }: { month: string; payments:
         label={deleteTarget?.name ?? 'płatność'}
         onConfirm={() => {
           if (!deleteTarget) return;
-          if (deleteTarget.source === 'recurring') deleteRecurringExpense((deleteTarget.raw as RecurringExpense).id);
-          else deleteFinancialReminder((deleteTarget.raw as FinancialReminder).id);
+          if (deleteTarget.source === 'recurring') deleteRecurring.mutate((deleteTarget.raw as RecurringExpense).id);
+          else deleteReminder.mutate((deleteTarget.raw as FinancialReminder).id);
           setDeleteTarget(null);
         }}
       />
@@ -455,7 +486,7 @@ function PaymentsSegment({ month, payments, onEdit }: { month: string; payments:
 }
 
 function BudgetSegment({ categories, onEdit }: { categories: BudgetCategory[]; onEdit: (category: BudgetCategory) => void }) {
-  const { deleteBudgetCategory } = useLocalStore();
+  const deleteBudgetCategory = useDeleteFinanceBudgetCategory();
   const [deleteTarget, setDeleteTarget] = useState<BudgetCategory | null>(null);
 
   return (
@@ -483,13 +514,13 @@ function BudgetSegment({ categories, onEdit }: { categories: BudgetCategory[]; o
           })}
         </div>
       )}
-      <ConfirmDelete open={!!deleteTarget} onClose={() => setDeleteTarget(null)} label={deleteTarget?.name ?? 'kategorię'} onConfirm={() => { if (deleteTarget) deleteBudgetCategory(deleteTarget.id); setDeleteTarget(null); }} />
+      <ConfirmDelete open={!!deleteTarget} onClose={() => setDeleteTarget(null)} label={deleteTarget?.name ?? 'kategorię'} onConfirm={() => { if (deleteTarget) deleteBudgetCategory.mutate(deleteTarget.id); setDeleteTarget(null); }} />
     </>
   );
 }
 
 function SavingsSegment({ goals, onEdit }: { goals: SavingsGoal[]; onEdit: (goal: SavingsGoal) => void }) {
-  const { deleteSavingsGoal } = useLocalStore();
+  const deleteSavingsGoal = useDeleteFinanceSavingsGoal();
   const [deleteTarget, setDeleteTarget] = useState<SavingsGoal | null>(null);
 
   return (
@@ -512,25 +543,19 @@ function SavingsSegment({ goals, onEdit }: { goals: SavingsGoal[]; onEdit: (goal
           })}
         </div>
       )}
-      <ConfirmDelete open={!!deleteTarget} onClose={() => setDeleteTarget(null)} label={deleteTarget?.name ?? 'cel'} onConfirm={() => { if (deleteTarget) deleteSavingsGoal(deleteTarget.id); setDeleteTarget(null); }} />
+      <ConfirmDelete open={!!deleteTarget} onClose={() => setDeleteTarget(null)} label={deleteTarget?.name ?? 'cel'} onConfirm={() => { if (deleteTarget) deleteSavingsGoal.mutate(deleteTarget.id); setDeleteTarget(null); }} />
     </>
   );
 }
 
-function JdgSegment({ month, onEdit }: { month: string; onEdit: (item: JdgItem) => void }) {
-  const { jdgItems, jdgMonths, updateJdgMonth, addJdgMonth } = useLocalStore();
+function JdgSegment({ month, jdgItems, jdgMonths, onEdit }: { month: string; jdgItems: JdgItem[]; jdgMonths: { month: string; completed: string[] }[]; onEdit: (item: JdgItem) => void }) {
+  const setJdgMonth = useSetJdgMonth();
   const current = jdgMonths.find((item) => item.month === month);
   const completed = current?.completed ?? [];
 
-  useEffect(() => {
-    if (!current) addJdgMonth(month);
-  }, [addJdgMonth, current, month]);
-
   const toggle = (item: JdgItem) => {
-    const monthRow = jdgMonths.find((row) => row.month === month);
-    if (!monthRow) return;
     const next = completed.includes(item.id) ? completed.filter((id) => id !== item.id) : [...completed, item.id];
-    updateJdgMonth(monthRow.id, { completed: next });
+    setJdgMonth.mutate({ month: current ?? { month, completed }, itemIds: next });
   };
 
   return (
@@ -593,8 +618,9 @@ function blankAccount(): Account {
   return { id: '', createdAt: '', name: '', type: 'main_account', balance: 0, currency: 'PLN', archived: false, color: '#3B82F6' };
 }
 
-function AccountsSegment({ editorToken }: { editorToken: number }) {
-  const { accounts, addAccount, updateAccount, deleteAccount } = useLocalStore();
+function AccountsSegment({ editorToken, accounts }: { editorToken: number; accounts: Account[] }) {
+  const saveAccount = useSaveAccount();
+  const deleteAccount = useDeleteFinanceAccount();
   const [editing, setEditing] = useState<Account | null>(null);
   const active = accounts.filter((account) => !account.archived);
   const total = active.reduce((sum, account) => sum + account.balance, 0);
@@ -614,15 +640,14 @@ function AccountsSegment({ editorToken }: { editorToken: number }) {
             <b>{fmtMoney(account.balance, account.currency)}</b>
             <span className="finance-line-actions">
               <span className="icon-btn"><Icon name="edit" /></span>
-              <span className="icon-btn" onClick={(event) => { event.stopPropagation(); deleteAccount(account.id); }}><Icon name="trash" /></span>
+              <span className="icon-btn" onClick={(event) => { event.stopPropagation(); deleteAccount.mutate(account.id); }}><Icon name="trash" /></span>
             </span>
           </button>
         ))}
       </div>
       <button className="btn btn-secondary finance-inline-add" type="button" onClick={() => setEditing(blankAccount())}>+ Dodaj źródło</button>
       <AccountEditor account={editing} onClose={() => setEditing(null)} onSave={(payload) => {
-        if (editing?.id) updateAccount(editing.id, payload);
-        else addAccount(payload);
+        saveAccount.mutate({ id: editing?.id || undefined, input: payload });
         setEditing(null);
       }} />
     </div>
@@ -630,7 +655,8 @@ function AccountsSegment({ editorToken }: { editorToken: number }) {
 }
 
 function PaymentDrawer({ open, row, month, onClose }: { open: boolean; row: PaymentRow | null; month: string; onClose: () => void }) {
-  const { addRecurringExpense, updateRecurringExpense, addFinancialReminder, updateFinancialReminder } = useLocalStore();
+  const saveRecurring = useSaveRecurringExpense();
+  const saveReminder = useSaveFinancialReminder();
   const initial = row ? {
     name: row.name,
     amount: String(row.amount),
@@ -660,21 +686,19 @@ function PaymentDrawer({ open, row, month, onClose }: { open: boolean; row: Paym
     const amount = num(form.amount);
     if (form.paymentType === 'one_time') {
       const payload = { title: form.name.trim(), amount, dueDate: form.dueDate, category: form.category, completed: form.status === 'paid' };
-      if (row?.source === 'reminder') updateFinancialReminder((row.raw as FinancialReminder).id, payload);
-      else addFinancialReminder(payload);
+      saveReminder.mutate({ id: row?.source === 'reminder' ? (row.raw as FinancialReminder).id : undefined, input: payload });
     } else {
       const payload = {
         name: form.name.trim(),
         amount,
         category: form.category,
         dueDay: Number(form.dueDate.slice(-2)),
-        frequency: form.paymentType === 'jdg' ? 'jdg' : form.paymentType === 'yearly' ? 'yearly' : 'monthly',
+        frequency: (form.paymentType === 'jdg' ? 'jdg' : form.paymentType === 'yearly' ? 'yearly' : 'monthly') as RecurringExpense['frequency'],
         reminderEnabled: form.reminder,
         paidThisMonth: form.status === 'paid',
         folderId: undefined,
       };
-      if (row?.source === 'recurring') updateRecurringExpense((row.raw as RecurringExpense).id, payload);
-      else addRecurringExpense(payload);
+      saveRecurring.mutate({ id: row?.source === 'recurring' ? (row.raw as RecurringExpense).id : undefined, input: payload });
     }
     onClose();
   };
@@ -697,14 +721,13 @@ function PaymentDrawer({ open, row, month, onClose }: { open: boolean; row: Paym
 }
 
 function BudgetDrawer({ open, category, month, onClose }: { open: boolean; category: BudgetCategory | null; month: string; onClose: () => void }) {
-  const { addBudgetCategory, updateBudgetCategory } = useLocalStore();
+  const saveBudgetCategory = useSaveBudgetCategory();
   const [form, setForm] = useState({ name: '', planned: '0', spent: '0', color: BUDGET_COLORS[0], note: '' });
   useEffect(() => setForm({ name: category?.name ?? '', planned: String(category?.plannedAmount ?? 0), spent: String(category?.actualAmount ?? 0), color: category?.color ?? BUDGET_COLORS[0], note: '' }), [category, open]);
   const save = () => {
     if (!form.name.trim()) return;
     const payload = { name: form.name.trim(), plannedAmount: num(form.planned), actualAmount: num(form.spent), month, color: form.color };
-    if (category) updateBudgetCategory(category.id, payload);
-    else addBudgetCategory(payload);
+    saveBudgetCategory.mutate({ id: category?.id, input: payload });
     onClose();
   };
   return (
@@ -721,15 +744,14 @@ function BudgetDrawer({ open, category, month, onClose }: { open: boolean; categ
 }
 
 function SavingsDrawer({ open, goal, onClose }: { open: boolean; goal: SavingsGoal | null; onClose: () => void }) {
-  const { addSavingsGoal, updateSavingsGoal } = useLocalStore();
+  const saveSavingsGoal = useSaveSavingsGoal();
   const [form, setForm] = useState({ name: '', current: '0', target: '10000', deadline: '', notes: '', contribution: '' });
   useEffect(() => setForm({ name: goal?.name ?? '', current: String(goal?.currentAmount ?? 0), target: String(goal?.targetAmount ?? 10000), deadline: goal?.deadline ?? '', notes: goal?.notes ?? '', contribution: '' }), [goal, open]);
   const save = () => {
     if (!form.name.trim()) return;
     const current = num(form.current) + num(form.contribution);
     const payload = { name: form.name.trim(), currentAmount: current, targetAmount: num(form.target), deadline: form.deadline || undefined, notes: form.notes, emoji: goal?.emoji ?? '$' };
-    if (goal) updateSavingsGoal(goal.id, payload);
-    else addSavingsGoal(payload);
+    saveSavingsGoal.mutate({ id: goal?.id, input: payload });
     onClose();
   };
   return (
@@ -747,14 +769,13 @@ function SavingsDrawer({ open, goal, onClose }: { open: boolean; goal: SavingsGo
 }
 
 function JdgDrawer({ open, item, month, onClose }: { open: boolean; item: JdgItem | null; month: string; onClose: () => void }) {
-  const { addJdgItem, updateJdgItem } = useLocalStore();
+  const saveJdgItem = useSaveJdgItem();
   const [form, setForm] = useState({ title: '', dueDay: '', description: '', planner: false });
   useEffect(() => setForm({ title: item?.label ?? '', dueDay: item?.dueDay ? String(item.dueDay) : '', description: '', planner: false }), [item, open]);
   const save = () => {
     if (!form.title.trim()) return;
     const payload = { label: form.title.trim(), dueDay: form.dueDay ? Number(form.dueDay) : undefined };
-    if (item) updateJdgItem(item.id, payload);
-    else addJdgItem(payload);
+    saveJdgItem.mutate({ id: item?.id, input: payload });
     onClose();
   };
   return (

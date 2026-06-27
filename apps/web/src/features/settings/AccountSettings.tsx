@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { setTheme, getCurrentTheme, type Theme } from '@/lib/theme';
 import { logAudit } from '@/lib/audit';
 import { toast } from '@/lib/toast';
+import { needsMfaStepUp } from '@/features/auth/mfa';
 
 const THEMES: { id: Theme; label: string; swatch: string }[] = [
   { id: 'white-lotus', label: 'Beżowy', swatch: '#9a6a42' },
@@ -36,7 +37,14 @@ export function AccountSettings() {
     setTheme(next);
   }
 
+  async function ensureSensitiveSession() {
+    if (!(await needsMfaStepUp())) return true;
+    toast.error('Wymagana jest ponowna weryfikacja MFA w ustawieniach bezpieczeństwa.');
+    return false;
+  }
+
   async function handleExport() {
+    if (!(await ensureSensitiveSession())) return;
     setExporting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -67,6 +75,7 @@ export function AccountSettings() {
       toast.error('Wpisz poprawne potwierdzenie');
       return;
     }
+    if (!(await ensureSensitiveSession())) return;
     setDeleting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();

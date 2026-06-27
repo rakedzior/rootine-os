@@ -36,12 +36,19 @@ Potential tables:
 Potential storage:
 
 - Supabase Storage bucket for user documents.
+- Implemented bucket: `documents` (private).
+- Store files under `{user_id}/...`; storage policies only allow users to read,
+  write, update and delete objects whose first path segment equals `auth.uid()`.
+- Persist the object path in `documents.file_path`.
+- Current Office UI tracks metadata only; add upload/open/download controls in a
+  dedicated UI pass using this bucket contract.
 
 ## Security rules
 
 - Do not expose documents across users.
 - Use RLS.
 - Do not store secrets in client code.
+- Keep uploaded files private; use signed URLs or authenticated downloads only.
 
 ## Acceptance criteria
 
