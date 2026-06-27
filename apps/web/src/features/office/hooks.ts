@@ -36,7 +36,13 @@ export function useAddOfficeDoc() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: NewDocumentInput) => insertDocument(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: DOCS_KEY }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: DOCS_KEY });
+      void logAudit('document_access', {
+        entity: `office.documents.${data.id}`,
+        metadata: { action: 'create_metadata' },
+      });
+    },
   });
 }
 
@@ -44,7 +50,13 @@ export function useDeleteOfficeDoc() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteDocument(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: DOCS_KEY }),
+    onSuccess: (_data, id) => {
+      qc.invalidateQueries({ queryKey: DOCS_KEY });
+      void logAudit('document_access', {
+        entity: `office.documents.${id}`,
+        metadata: { action: 'delete_metadata' },
+      });
+    },
   });
 }
 

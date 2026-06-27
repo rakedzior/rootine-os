@@ -5,6 +5,7 @@ export interface Document {
   category: string;
   name: string;
   doc_number: string | null;
+  doc_number_ciphertext?: string | null;
   file_path: string | null;
   issue_date: string | null;
   expires_on: string | null;

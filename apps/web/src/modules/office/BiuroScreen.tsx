@@ -9,7 +9,7 @@ import {
   useEmployment, useVacations, useAddVacation, useUpdateVacation, useDeleteVacation,
   useUploadOfficeDocFile, useCreateOfficeDocFileUrl, useRemoveOfficeDocFile,
 } from '@/features/office/hooks';
-import { needsMfaStepUp } from '@/features/auth/mfa';
+import { useMfaStepUp } from '@/features/auth/useMfaStepUp';
 import type {
   Document as OfficeDocumentRow,
   InsurancePolicy,
@@ -496,6 +496,7 @@ function OfficeDeadlinesModal({ open, onClose, deadlines }: { open: boolean; onC
 }
 
 function OfficeDocumentsModal({ open, onClose, documents }: { open: boolean; onClose: () => void; documents: OfficeDocument[] }) {
+  const { ensureMfa, mfaStepUpModal } = useMfaStepUp();
   const uploadFile = useUploadOfficeDocFile();
   const createFileUrl = useCreateOfficeDocFileUrl();
   const removeFile = useRemoveOfficeDocFile();
@@ -507,16 +508,14 @@ function OfficeDocumentsModal({ open, onClose, documents }: { open: boolean; onC
 
   const openFile = async (doc: OfficeDocument) => {
     if (!doc.filePath) return;
-    if (await needsMfaStepUp()) {
-      window.alert('Wymagana jest ponowna weryfikacja MFA przed otwarciem dokumentu.');
-      return;
-    }
+    if (!(await ensureMfa())) return;
     const url = await createFileUrl.mutateAsync(doc.filePath);
     void logAudit('document_access', { entity: `office.documents.${doc.id}`, metadata: { action: 'open_file' } });
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
+    <>
     <Modal open={open} onClose={onClose} title="Dokumenty" size="lg">
       {documents.length === 0 ? <EmptyState title="Brak dokumentów" /> : (
         <table className="table">
@@ -559,6 +558,8 @@ function OfficeDocumentsModal({ open, onClose, documents }: { open: boolean; onC
         </table>
       )}
     </Modal>
+    {mfaStepUpModal}
+    </>
   );
 }
 

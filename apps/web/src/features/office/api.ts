@@ -34,7 +34,16 @@ export async function fetchDocuments(): Promise<Document[]> {
     .select('*')
     .order('expires_on', { ascending: true, nullsFirst: false });
   if (error) throw error;
-  return (data ?? []) as Document[];
+  const rows = (data ?? []) as Document[];
+  return Promise.all(rows.map(async (row) => {
+    if (row.doc_number) return row;
+    if (!row.doc_number_ciphertext) return row;
+    const { data: docNumber, error: decryptError } = await supabase.rpc('get_document_doc_number', {
+      document_id: row.id,
+    });
+    if (decryptError) throw decryptError;
+    return { ...row, doc_number: docNumber ?? null };
+  }));
 }
 
 export async function insertDocument(input: NewDocumentInput): Promise<Document> {

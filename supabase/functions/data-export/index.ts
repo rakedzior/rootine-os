@@ -9,6 +9,24 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
+function decodeJwtPayload(authHeader: string): Record<string, unknown> | null {
+  const token = authHeader.replace(/^Bearer\s+/i, '');
+  const payload = token.split('.')[1];
+  if (!payload) return null;
+
+  try {
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), '=');
+    return JSON.parse(atob(padded)) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function hasAal2(authHeader: string): boolean {
+  return decodeJwtPayload(authHeader)?.aal === 'aal2';
+}
+
 type ExportTable = {
   name: string;
   ownerColumn?: 'user_id' | 'id';
@@ -137,6 +155,13 @@ Deno.serve(async (req) => {
   });
   const { data: { user }, error: authErr } = await userClient.auth.getUser();
   if (authErr || !user) return new Response('Unauthorized', { status: 401 });
+
+  if (!hasAal2(authHeader)) {
+    return new Response(JSON.stringify({ error: 'MFA step-up required' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const userId = user.id;
