@@ -1,4 +1,20 @@
 import { defineConfig, devices } from '@playwright/test';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+for (const envFile of ['.env.e2e.local', '.env.local', '.env']) {
+  const envPath = resolve(process.cwd(), envFile);
+  if (!existsSync(envPath)) continue;
+
+  for (const line of readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (!match) continue;
+
+    const [, key, rawValue] = match;
+    if (process.env[key] !== undefined) continue;
+    process.env[key] = rawValue.replace(/^['"]|['"]$/g, '');
+  }
+}
 
 export default defineConfig({
   testDir: './tests/e2e',
