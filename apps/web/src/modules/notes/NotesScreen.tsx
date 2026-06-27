@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
-import { useLocalStore, type ChecklistItem, type Note, type NoteType } from '@/store/localStore';
+import { useAddNote, useDeleteNote, useNotes, usePinNote, useUpdateNote } from '@/features/notes/hooks';
+import type { ChecklistItem, Note as NoteRow, NoteType } from '@/features/notes/types';
 import '@/styles/notes.css';
 
 type NoteIconName =
@@ -17,6 +18,14 @@ type NoteCategory = {
   tone: string;
   matcher: (note: Note) => boolean;
 };
+
+interface Note {
+  id: string; createdAt: string; updatedAt: string;
+  title: string; content: string; type: NoteType;
+  color: string; category: string; tags: string[];
+  pinned: boolean; archived: boolean;
+  checklistItems?: ChecklistItem[];
+}
 
 const NOTE_COLORS = ['#1b2b33', '#21333d', '#14222a', '#261b33', '#1b3330'];
 
@@ -67,8 +76,45 @@ function notePreview(note: Note) {
   return 'Szybka notatka bez treści.';
 }
 
+function mapNote(row: NoteRow): Note {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    title: row.title ?? 'Bez tytulu',
+    content: row.body,
+    type: row.type,
+    color: row.color,
+    category: row.category,
+    tags: row.tags ?? [],
+    pinned: row.pinned,
+    archived: row.archived,
+    checklistItems: row.checklist_items ?? [],
+  };
+}
+
+function toNotePatch(patch: Partial<Note>): Partial<NoteRow> {
+  return {
+    title: patch.title,
+    body: patch.content,
+    type: patch.type,
+    color: patch.color,
+    category: patch.category,
+    tags: patch.tags,
+    pinned: patch.pinned,
+    archived: patch.archived,
+    checklist_items: patch.checklistItems,
+  };
+}
+
 export function NotesScreen() {
-  const { notes, addNote, updateNote, deleteNote } = useLocalStore();
+  const notesQuery = useNotes();
+  const addNote = useAddNote();
+  const updateNote = useUpdateNote();
+  const pinNote = usePinNote();
+  const deleteNoteMutation = useDeleteNote();
+  const deleteNote = (id: string) => deleteNoteMutation.mutate(id);
+  const notes = useMemo(() => (notesQuery.data ?? []).map(mapNote), [notesQuery.data]);
   const [categoryId, setCategoryId] = useState('all');
   const [selectedId, setSelectedId] = useState<string | null>(notes.find((note) => !note.archived)?.id ?? null);
   const [showAdd, setShowAdd] = useState(false);
@@ -124,7 +170,7 @@ export function NotesScreen() {
         {editorOpen ? (
           <main className="notes-full-editor">
             {selected ? (
-              <EditorPanel note={selected} fullScreen onCloseFull={() => setEditorOpen(false)} onUpdate={(patch) => updateNote(selected.id, patch)} onDelete={() => setDeleteId(selected.id)} />
+              <EditorPanel note={selected} fullScreen onCloseFull={() => setEditorOpen(false)} onUpdate={(patch) => updateNote.mutate({ id: selected.id, patch: toNotePatch(patch) })} onDelete={() => setDeleteId(selected.id)} />
             ) : (
               <div className="notes-card notes-empty-center"><EmptyState title="Wybierz notatkę" desc="Kliknij notatkę z listy lub utwórz nową." cta="Nowa notatka" onCta={() => setShowAdd(true)} /></div>
             )}
@@ -146,7 +192,7 @@ export function NotesScreen() {
                       selected={selected?.id === note.id}
                       onSelect={() => setSelectedId(note.id)}
                       onOpen={() => { setSelectedId(note.id); setEditorOpen(true); }}
-                      onPin={() => updateNote(note.id, { pinned: !note.pinned })}
+                      onPin={() => pinNote.mutate({ id: note.id, pinned: !note.pinned })}
                     />
                   ))}
                 </div>
@@ -169,7 +215,7 @@ export function NotesScreen() {
         )}
       </section>
 
-      <NoteModal open={showAdd} onClose={() => setShowAdd(false)} onSave={(data) => { addNote(data); setShowAdd(false); }} />
+      <NoteModal open={showAdd} onClose={() => setShowAdd(false)} onSave={(data) => { addNote.mutate({ title: data.title, body: data.content, type: data.type, color: data.color, category: data.category, tags: data.tags, pinned: data.pinned, archived: data.archived, checklist_items: data.checklistItems ?? [] }); setShowAdd(false); }} />
       <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { if (deleteId) deleteNote(deleteId); setDeleteId(null); }} label="tę notatkę" />
     </PageLayout>
   );

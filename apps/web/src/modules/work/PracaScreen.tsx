@@ -1,7 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, DetailPanel, ProgressBar, PriorityBadge, StatusBadge } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
-import { useLocalStore, type Priority, type TaskStatus, type WorkContext, type WorkProject, type WorkTask } from '@/store/localStore';
+import {
+  useAddCompany,
+  useAddProject,
+  useAddWorkTask,
+  useDeleteProject,
+  useDeleteWorkTask,
+  useMoveWorkTask,
+  useUpdateCompany,
+  useWorkCompanies,
+  useWorkProjects,
+  useWorkTasks,
+} from '@/features/work/hooks';
+import type { WorkCompany as WorkCompanyRow, WorkProject as WorkProjectRow, WorkTask as WorkTaskRowData } from '@/features/work/types';
 import '@/styles/work.css';
 
 type WorkIconName =
@@ -9,6 +21,50 @@ type WorkIconName =
   | 'list' | 'board' | 'calendar' | 'timeline' | 'filter' | 'settings' | 'more'
   | 'note' | 'link' | 'deadline' | 'progress' | 'user' | 'tag' | 'database'
   | 'chart' | 'shield' | 'target' | 'check' | 'chevron' | 'star';
+
+type Priority = 'low' | 'mid' | 'high';
+type TaskStatus = 'todo' | 'active' | 'waiting' | 'done' | 'blocked';
+
+interface WorkContext {
+  id: string;
+  createdAt: string;
+  name: string;
+  company?: string;
+  active: boolean;
+}
+
+interface WorkProject {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  workContextId: string;
+  name: string;
+  description: string;
+  status: TaskStatus;
+  deadline?: string;
+  progress: number;
+  notes: string;
+}
+
+interface WorkLink { label: string; url: string; }
+
+interface WorkTask {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  workContextId: string;
+  projectId?: string;
+  parentTaskId?: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: Priority;
+  dueDate?: string;
+  dueTime?: string;
+  notes: string;
+  subtasks: WorkTask[];
+  links?: WorkLink[];
+}
 
 const PROJECT_TONES = ['violet', 'pink', 'teal', 'amber', 'blue'];
 
@@ -65,22 +121,86 @@ function statusRank(status: TaskStatus) {
   return status === 'active' ? 0 : status === 'todo' ? 1 : status === 'waiting' ? 2 : status === 'blocked' ? 3 : 4;
 }
 
-export function PracaScreen() {
-  const {
-    workContexts,
-    workProjects,
-    workTasks,
-    activeWorkContextId,
-    addWorkContext,
-    setActiveWorkContext,
-    addWorkProject,
-    deleteWorkProject,
-    addWorkTask,
-    updateWorkTask,
-    deleteWorkTask,
-  } = useLocalStore();
+function normalizeStatus(status?: string | null): TaskStatus {
+  if (status === 'done') return 'done';
+  if (status === 'active' || status === 'doing') return 'active';
+  if (status === 'waiting' || status === 'paused') return 'waiting';
+  if (status === 'blocked') return 'blocked';
+  return 'todo';
+}
 
-  const activeContext = workContexts.find((context) => context.id === activeWorkContextId) ?? workContexts.find((context) => context.active) ?? workContexts[0];
+function normalizePriority(priority?: string | null): Priority {
+  return priority === 'high' || priority === 'low' ? priority : 'mid';
+}
+
+function mapContext(row: WorkCompanyRow): WorkContext {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    name: row.name,
+    company: row.company ?? undefined,
+    active: row.active,
+  };
+}
+
+function mapProject(row: WorkProjectRow): WorkProject {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    workContextId: row.company_id ?? '',
+    name: row.name,
+    description: row.description ?? '',
+    status: normalizeStatus(row.status),
+    deadline: row.deadline ?? undefined,
+    progress: row.progress ?? 0,
+    notes: row.notes ?? '',
+  };
+}
+
+function mapTask(row: WorkTaskRowData, projects: WorkProjectRow[]): WorkTask {
+  const project = row.project_id ? projects.find((item) => item.id === row.project_id) : undefined;
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    workContextId: row.company_id ?? project?.company_id ?? '',
+    projectId: row.project_id ?? undefined,
+    parentTaskId: row.parent_task_id ?? undefined,
+    title: row.title,
+    description: row.description ?? '',
+    status: normalizeStatus(row.status),
+    priority: normalizePriority(row.priority),
+    dueDate: row.due_date ?? undefined,
+    dueTime: row.due_time ?? undefined,
+    notes: row.notes ?? '',
+    subtasks: [],
+    links: Array.isArray(row.links) ? row.links : [],
+  };
+}
+
+export function PracaScreen() {
+  const companiesQuery = useWorkCompanies();
+  const projectsQuery = useWorkProjects();
+  const tasksQuery = useWorkTasks();
+  const addCompany = useAddCompany();
+  const updateCompany = useUpdateCompany();
+  const addProject = useAddProject();
+  const deleteProject = useDeleteProject();
+  const addTask = useAddWorkTask();
+  const moveTask = useMoveWorkTask();
+  const deleteTask = useDeleteWorkTask();
+
+  const companyRows = companiesQuery.data ?? [];
+  const projectRows = projectsQuery.data ?? [];
+  const taskRows = tasksQuery.data ?? [];
+
+  const workContexts = useMemo(() => companyRows.map(mapContext), [companyRows]);
+  const workProjects = useMemo(() => projectRows.map(mapProject), [projectRows]);
+  const workTasks = useMemo(() => taskRows.map((task) => mapTask(task, projectRows)), [projectRows, taskRows]);
+  const isLoading = companiesQuery.isLoading || projectsQuery.isLoading || tasksQuery.isLoading;
+
+  const activeContext = workContexts.find((context) => context.active) ?? workContexts[0];
   const [contextId, setContextId] = useState(activeContext?.id ?? '');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -140,7 +260,7 @@ export function PracaScreen() {
                 <span>Firma</span>
                 <select value={context?.id ?? ''} onChange={(event) => {
                   setContextId(event.target.value);
-                  setActiveWorkContext(event.target.value);
+                  updateCompany.mutate({ id: event.target.value, patch: { active: true } });
                 }}>
                   {workContexts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </select>
@@ -194,7 +314,11 @@ export function PracaScreen() {
               </div>
             </div>
 
-            {sortedTasks.length === 0 ? (
+            {isLoading ? (
+              <EmptyState title="Ladowanie danych" desc="Pobieram firmy, projekty i zadania." />
+            ) : workContexts.length === 0 ? (
+              <EmptyState title="Brak firm" desc="Dodaj pierwsza firme lub kontekst pracy." cta="Dodaj firme" onCta={() => setShowContextModal(true)} />
+            ) : sortedTasks.length === 0 ? (
               <EmptyState title="Brak zadań" desc="Dodaj pierwsze zadanie do bieżącej firmy." cta="Dodaj zadanie" onCta={() => setShowTaskModal(true)} />
             ) : (
               <div className="work-task-table">
@@ -210,7 +334,7 @@ export function PracaScreen() {
                       project={taskProject(task, workProjects)}
                       selected={selectedTask?.id === task.id}
                       onSelect={() => setSelectedTaskId(task.id)}
-                      onToggle={() => updateWorkTask(task.id, { status: task.status === 'done' ? 'todo' : 'done' })}
+                      onToggle={() => moveTask.mutate({ id: task.id, status: task.status === 'done' ? 'todo' : 'done' })}
                       onDelete={() => setDeleteTaskId(task.id)}
                     />
                   ))}
@@ -233,7 +357,19 @@ export function PracaScreen() {
         projects={contextProjects}
         context={context}
         onSave={(payload) => {
-          addWorkTask(payload);
+          addTask.mutate({
+            company_id: payload.workContextId,
+            project_id: payload.projectId ?? null,
+            parent_task_id: payload.parentTaskId ?? null,
+            title: payload.title,
+            description: payload.description,
+            status: payload.status,
+            priority: payload.priority,
+            due_date: payload.dueDate ?? null,
+            due_time: payload.dueTime ?? null,
+            notes: payload.notes,
+            links: payload.links,
+          });
           setShowTaskModal(false);
         }}
       />
@@ -242,7 +378,15 @@ export function PracaScreen() {
         onClose={() => setShowProjectModal(false)}
         context={context}
         onSave={(payload) => {
-          addWorkProject(payload);
+          addProject.mutate({
+            company_id: payload.workContextId,
+            name: payload.name,
+            description: payload.description,
+            status: payload.status,
+            deadline: payload.deadline ?? null,
+            progress: payload.progress,
+            notes: payload.notes,
+          });
           setShowProjectModal(false);
         }}
       />
@@ -250,16 +394,16 @@ export function PracaScreen() {
         open={showContextModal}
         onClose={() => setShowContextModal(false)}
         onSave={(payload) => {
-          addWorkContext(payload);
+          addCompany.mutate({ name: payload.name, company: payload.company ?? null, active: payload.active });
           setShowContextModal(false);
         }}
       />
       <ConfirmDelete open={!!deleteTaskId} onClose={() => setDeleteTaskId(null)} onConfirm={() => {
-        if (deleteTaskId) deleteWorkTask(deleteTaskId);
+        if (deleteTaskId) deleteTask.mutate(deleteTaskId);
         setDeleteTaskId(null);
       }} label="to zadanie" />
       <ConfirmDelete open={!!deleteProjectId} onClose={() => setDeleteProjectId(null)} onConfirm={() => {
-        if (deleteProjectId) deleteWorkProject(deleteProjectId);
+        if (deleteProjectId) deleteProject.mutate(deleteProjectId);
         setDeleteProjectId(null);
       }} label="ten projekt" />
     </PageLayout>

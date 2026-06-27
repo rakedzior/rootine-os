@@ -1,9 +1,60 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash, IcoPlus, IcoCheck } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
-import { useLocalStore, type OfficeDocument, type OfficeTask, type Priority, type VacationEntry } from '@/store/localStore';
+import {
+  useOfficeTasks, useAddOfficeTask, useUpdateOfficeTask, useDeleteOfficeTask,
+  useOfficeCategories, useAddOfficeCategory, useDeleteOfficeCategory,
+  useOfficeDocs, useVehicles, useInsurancePolicies,
+  useEmployment, useVacations, useAddVacation, useUpdateVacation, useDeleteVacation,
+} from '@/features/office/hooks';
+import type {
+  Document as OfficeDocumentRow,
+  InsurancePolicy,
+  OfficeTask as OfficeTaskRow,
+  OfficeTaskPriority as Priority,
+  OfficeTaskStatus as TaskStatus,
+  Vacation,
+  Vehicle,
+} from '@/features/office/types';
 
 interface RecurringDeadline { id: string; label: string; sub: string; date: string; }
+
+interface OfficeTask {
+  id: string; createdAt: string; updatedAt: string;
+  title: string; dueDate?: string; priority: Priority;
+  institution: string; category: string; status: TaskStatus;
+  notes: string; isArchived: boolean;
+}
+
+interface OfficeDocument {
+  id: string; createdAt: string;
+  name: string; category: string; documentNumber?: string;
+  issueDate?: string; expiryDate?: string;
+  reminderEnabled: boolean; notes: string; isArchived: boolean;
+}
+
+interface Car {
+  id: string; createdAt: string;
+  name: string; plateNumber: string; mileage: number;
+  insuranceExpiry?: string; inspectionDate?: string;
+  oilChangeDate?: string; tireChangeDate?: string;
+}
+
+interface Insurance {
+  id: string; createdAt: string;
+  name: string; type: string; insurer: string;
+  expiryDate: string; premium: number; frequency: string; notes: string;
+}
+
+interface VacationEntry {
+  id: string; createdAt: string;
+  startDate: string; endDate: string; days: number;
+  type: string; status: string; notes: string;
+}
+
+interface VacationBalance {
+  yearlyLimit: number; usedDays: number; plannedDays: number;
+}
 
 type IconName =
   | 'briefcase' | 'todo' | 'active' | 'calendar' | 'palm' | 'building'
@@ -22,6 +73,89 @@ function daysLeft(d?: string) {
 function currentMonthKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+const DEFAULT_OFFICE_CATEGORIES = ['Zadania urzędowe', 'Dokumenty', 'Samochód', 'Ubezpieczenia', 'Urlopy'];
+
+function mapTask(row: OfficeTaskRow): OfficeTask {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    title: row.title,
+    dueDate: row.due_date ?? undefined,
+    priority: row.priority,
+    institution: row.institution,
+    category: row.category,
+    status: row.status,
+    notes: row.notes,
+    isArchived: row.is_archived,
+  };
+}
+
+function mapDocument(row: OfficeDocumentRow): OfficeDocument {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    name: row.name,
+    category: row.category ?? 'Dokumenty',
+    documentNumber: row.doc_number ?? undefined,
+    issueDate: row.issue_date ?? undefined,
+    expiryDate: row.expires_on ?? undefined,
+    reminderEnabled: row.reminder_enabled,
+    notes: row.notes,
+    isArchived: row.is_archived,
+  };
+}
+
+function mapCar(row: Vehicle): Car {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    name: row.name,
+    plateNumber: row.plate ?? '',
+    mileage: row.mileage ?? 0,
+    insuranceExpiry: row.insurance_expiry ?? undefined,
+    inspectionDate: row.inspection_date ?? undefined,
+    oilChangeDate: row.oil_change_date ?? undefined,
+    tireChangeDate: row.tire_change_date ?? undefined,
+  };
+}
+
+function mapInsurance(row: InsurancePolicy): Insurance {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    name: row.name ?? row.type,
+    type: row.type,
+    insurer: row.insurer,
+    expiryDate: row.expiry_date ?? row.end_date ?? '',
+    premium: row.premium ?? 0,
+    frequency: row.frequency,
+    notes: row.notes,
+  };
+}
+
+function mapVacation(row: Vacation): VacationEntry {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    days: row.days,
+    type: row.type,
+    status: row.status,
+    notes: row.notes,
+  };
+}
+
+function buildVacationBalance(vacations: VacationEntry[], yearlyLimit = 26): VacationBalance {
+  const todayKey = new Date().toISOString().split('T')[0];
+  return vacations.reduce<VacationBalance>((acc, vacation) => {
+    if (vacation.status === 'approved' || vacation.endDate < todayKey) acc.usedDays += vacation.days;
+    else acc.plannedDays += vacation.days;
+    return acc;
+  }, { yearlyLimit, usedDays: 0, plannedDays: 0 });
 }
 
 function OfficeIcon({ name }: { name: IconName }) {
@@ -92,11 +226,35 @@ function OfficeMetric({ icon, label, value, note, onClick }: { icon: IconName; l
 }
 
 export function BiuroScreen() {
-  const {
-    officeTasks, officeCategories, addOfficeTask, updateOfficeTask, deleteOfficeTask,
-    addOfficeCategory, deleteOfficeCategory, vacationBalance,
-    officeDocuments, cars, insurances,
-  } = useLocalStore();
+  const officeTasksQuery = useOfficeTasks();
+  const officeCategoriesQuery = useOfficeCategories();
+  const officeDocumentsQuery = useOfficeDocs();
+  const carsQuery = useVehicles();
+  const insurancesQuery = useInsurancePolicies();
+  const vacationsQuery = useVacations();
+  const employmentQuery = useEmployment();
+  const addOfficeTask = useAddOfficeTask();
+  const updateOfficeTask = useUpdateOfficeTask();
+  const deleteOfficeTask = useDeleteOfficeTask();
+  const addOfficeCategory = useAddOfficeCategory();
+  const deleteOfficeCategory = useDeleteOfficeCategory();
+
+  const officeTasks = useMemo(() => (officeTasksQuery.data ?? []).map(mapTask), [officeTasksQuery.data]);
+  const storedCategories = useMemo(() => officeCategoriesQuery.data ?? [], [officeCategoriesQuery.data]);
+  const officeCategories = useMemo(() => {
+    const names = new Set(DEFAULT_OFFICE_CATEGORIES);
+    for (const category of storedCategories) names.add(category.name);
+    for (const task of officeTasks) names.add(task.category);
+    return [...names];
+  }, [storedCategories, officeTasks]);
+  const officeDocuments = useMemo(() => (officeDocumentsQuery.data ?? []).map(mapDocument), [officeDocumentsQuery.data]);
+  const cars = useMemo(() => (carsQuery.data ?? []).map(mapCar), [carsQuery.data]);
+  const insurances = useMemo(() => (insurancesQuery.data ?? []).map(mapInsurance), [insurancesQuery.data]);
+  const vacations = useMemo(() => (vacationsQuery.data ?? []).map(mapVacation), [vacationsQuery.data]);
+  const vacationBalance = useMemo(
+    () => buildVacationBalance(vacations, employmentQuery.data?.[0]?.vacation_pool ?? 26),
+    [vacations, employmentQuery.data],
+  );
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -203,7 +361,7 @@ export function BiuroScreen() {
               <div className="office-case-list">
                 {sortedTasks.map(task => (
                   <div key={task.id} className={`office-case-row${task.status === 'done' ? ' is-done' : ''}`}>
-                    <button className="office-case-check" type="button" onClick={() => updateOfficeTask(task.id, { status: task.status === 'done' ? 'todo' : 'done' })} aria-label="Zmień status">
+                    <button className="office-case-check" type="button" onClick={() => updateOfficeTask.mutate({ id: task.id, patch: { status: task.status === 'done' ? 'todo' : 'done' } })} aria-label="Zmień status">
                       {task.status === 'done' && <IcoCheck />}
                     </button>
                     <div className="office-case-main">
@@ -277,10 +435,31 @@ export function BiuroScreen() {
         categories={officeCategories}
         defaultCategory={selectedCategory ?? officeCategories[0] ?? 'Administracja'}
         onClose={() => setShowAdd(false)}
-        onSave={(payload) => { addOfficeTask({ ...payload, status: 'todo', isArchived: false }); setShowAdd(false); }}
+        onSave={(payload) => {
+          addOfficeTask.mutate({
+            title: payload.title,
+            due_date: payload.dueDate ?? null,
+            priority: payload.priority,
+            institution: payload.institution,
+            category: payload.category,
+            notes: payload.notes,
+            status: 'todo',
+            is_archived: false,
+          });
+          setShowAdd(false);
+        }}
       />
-      <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { if (deleteId) deleteOfficeTask(deleteId); setDeleteId(null); }} label="to zadanie" />
-      <CategoryManagerModal open={showCategoryManager} onClose={() => setShowCategoryManager(false)} categories={officeCategories} onAdd={addOfficeCategory} onDelete={deleteOfficeCategory} />
+      <ConfirmDelete open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => { if (deleteId) deleteOfficeTask.mutate(deleteId); setDeleteId(null); }} label="to zadanie" />
+      <CategoryManagerModal
+        open={showCategoryManager}
+        onClose={() => setShowCategoryManager(false)}
+        categories={officeCategories}
+        onAdd={(name) => addOfficeCategory.mutate(name)}
+        onDelete={(category) => {
+          const row = storedCategories.find(item => item.name === category);
+          if (row) deleteOfficeCategory.mutate(row.id);
+        }}
+      />
       <VacationModal open={showVacation} onClose={() => setShowVacation(false)} />
       <OfficeDeadlinesModal open={showDeadlines} onClose={() => setShowDeadlines(false)} deadlines={recurringDeadlines} />
       <OfficeDocumentsModal open={showDocuments} onClose={() => setShowDocuments(false)} documents={visibleDocuments} />
@@ -397,7 +576,16 @@ function CategoryManagerModal({ open, onClose, categories, onAdd, onDelete }: { 
 }
 
 function VacationModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { vacations, vacationBalance, addVacation, updateVacation, deleteVacation } = useLocalStore();
+  const vacationsQuery = useVacations();
+  const employmentQuery = useEmployment();
+  const addVacation = useAddVacation();
+  const updateVacation = useUpdateVacation();
+  const deleteVacation = useDeleteVacation();
+  const vacations = useMemo(() => (vacationsQuery.data ?? []).map(mapVacation), [vacationsQuery.data]);
+  const vacationBalance = useMemo(
+    () => buildVacationBalance(vacations, employmentQuery.data?.[0]?.vacation_pool ?? 26),
+    [vacations, employmentQuery.data],
+  );
   const [form, setForm] = useState<{ vacation: VacationEntry | null } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<VacationEntry | null>(null);
   const remaining = vacationBalance.yearlyLimit - vacationBalance.usedDays - vacationBalance.plannedDays;
@@ -446,15 +634,23 @@ function VacationModal({ open, onClose }: { open: boolean; onClose: () => void }
         vacation={form?.vacation ?? null}
         onClose={() => setForm(null)}
         onSave={(payload) => {
-          if (form?.vacation) updateVacation(form.vacation.id, payload);
-          else addVacation(payload);
+          const input = {
+            start_date: payload.startDate,
+            end_date: payload.endDate,
+            days: payload.days,
+            type: payload.type,
+            status: payload.status,
+            notes: payload.notes,
+          };
+          if (form?.vacation) updateVacation.mutate({ id: form.vacation.id, patch: input });
+          else addVacation.mutate(input);
           setForm(null);
         }}
       />
       <ConfirmDelete
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        onConfirm={() => { if (deleteTarget) deleteVacation(deleteTarget.id); setDeleteTarget(null); }}
+        onConfirm={() => { if (deleteTarget) deleteVacation.mutate(deleteTarget.id); setDeleteTarget(null); }}
         label="ten urlop"
       />
     </Modal>

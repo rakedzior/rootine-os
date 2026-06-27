@@ -2,7 +2,41 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, ProgressBar, PriorityBadge, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import { useCreateTask } from '@/features/tasks/hooks';
-import { useLocalStore, type Goal, type GoalTask, type GoalType, type Priority } from '@/store/localStore';
+import {
+  useCreateGoal,
+  useCreateGoalTask,
+  useDeleteGoal,
+  useDeleteGoalTask,
+  useGoalTasks,
+  useGoals,
+  useMilestones,
+  useUpdateGoal,
+  useUpdateGoalTask,
+} from '@/features/goals/hooks';
+import type { Goal as GoalRow, GoalTask as GoalTaskRow, Milestone as MilestoneRow } from '@/features/goals/types';
+
+type Priority = 'low' | 'mid' | 'high';
+type TaskStatus = 'todo' | 'active' | 'waiting' | 'done' | 'blocked';
+type GoalType = 'simple' | 'project';
+
+interface GoalTask {
+  id: string; goalId: string; parentTaskId?: string;
+  title: string; description: string; dueDate?: string;
+  priority?: Priority; status: TaskStatus; progress: number;
+  subtasks: GoalTask[];
+}
+
+interface Milestone { id: string; goalId: string; title: string; dueDate?: string; progress: number; completed: boolean; }
+interface Goal {
+  id: string; createdAt: string; updatedAt: string;
+  title: string; description: string; type: GoalType;
+  category: string; priority?: Priority; deadline?: string;
+  progress: number; streak?: number; tasks: GoalTask[];
+  milestones: Milestone[]; archived: boolean; emoji: string;
+  completedAt?: string;
+}
+
+const DEFAULT_GOAL_CATEGORIES = ['Osobiste', 'Zdrowie', 'Finanse', 'Nauka', 'Praca'];
 
 function collectTasks(tasks: GoalTask[]): GoalTask[] {
   return tasks.flatMap((task) => [task, ...collectTasks(task.subtasks)]);
@@ -65,6 +99,64 @@ function goalStatus(goal: Goal): { label: string; cls: string } {
   return { label: 'Na czasie', cls: 'status-active' };
 }
 
+function normalizePriority(priority?: string | null): Priority | undefined {
+  return priority === 'low' || priority === 'mid' || priority === 'high' ? priority : undefined;
+}
+
+function normalizeStatus(status?: string | null): TaskStatus {
+  if (status === 'active' || status === 'waiting' || status === 'done' || status === 'blocked') return status;
+  return 'todo';
+}
+
+function buildGoalTaskTree(rows: GoalTaskRow[], goalId: string, parentTaskId: string | null = null): GoalTask[] {
+  return rows
+    .filter((task) => task.goal_id === goalId && task.parent_task_id === parentTaskId)
+    .map((task) => ({
+      id: task.id,
+      goalId: task.goal_id,
+      parentTaskId: task.parent_task_id ?? undefined,
+      title: task.title,
+      description: task.description ?? '',
+      dueDate: task.due_date ?? undefined,
+      priority: normalizePriority(task.priority),
+      status: normalizeStatus(task.status),
+      progress: task.progress ?? 0,
+      subtasks: buildGoalTaskTree(rows, goalId, task.id),
+    }));
+}
+
+function mapMilestone(row: MilestoneRow): Milestone {
+  return {
+    id: row.id,
+    goalId: row.goal_id,
+    title: row.title,
+    dueDate: row.due_date ?? undefined,
+    progress: row.progress ?? (row.done ? 100 : 0),
+    completed: row.done,
+  };
+}
+
+function mapGoal(row: GoalRow, taskRows: GoalTaskRow[], milestoneRows: MilestoneRow[]): Goal {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    title: row.name,
+    description: row.description ?? '',
+    type: row.type ?? 'project',
+    category: row.category ?? 'Osobiste',
+    priority: normalizePriority(row.priority),
+    deadline: row.deadline ?? undefined,
+    progress: row.progress ?? 0,
+    streak: row.streak ?? 0,
+    tasks: buildGoalTaskTree(taskRows, row.id),
+    milestones: milestoneRows.filter((milestone) => milestone.goal_id === row.id).map(mapMilestone),
+    archived: row.archived,
+    emoji: row.emoji || 'target',
+    completedAt: row.completed_at ?? undefined,
+  };
+}
+
 function useGoalPlannerBridge() {
   const createTask = useCreateTask();
   function addPlanner(title: string, dueDate?: string, priority?: Priority) {
@@ -117,12 +209,30 @@ function MoreMenu({ actions }: { actions: { label: string; onClick: () => void; 
 }
 
 export function GoalsScreen() {
-  const { goals, goalCategories, addGoal, updateGoal, deleteGoal, addGoalCategory, deleteGoalCategory, addGoalTask, updateGoalTask, deleteGoalTask } = useLocalStore();
+  const goalsQuery = useGoals();
+  const milestonesQuery = useMilestones();
+  const tasksQuery = useGoalTasks();
+  const createGoal = useCreateGoal();
+  const updateGoal = useUpdateGoal();
+  const removeGoal = useDeleteGoal();
+  const createGoalTask = useCreateGoalTask();
+  const updateGoalTask = useUpdateGoalTask();
+  const removeGoalTask = useDeleteGoalTask();
   const { addPlanner } = useGoalPlannerBridge();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [goalModal, setGoalModal] = useState<{ goal: Goal | null } | null>(null);
   const [deleteGoalId, setDeleteGoalId] = useState<string | null>(null);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [extraCategories, setExtraCategories] = useState<string[]>([]);
+
+  const goals = useMemo(
+    () => (goalsQuery.data ?? []).map((goal) => mapGoal(goal, tasksQuery.data ?? [], milestonesQuery.data ?? [])),
+    [goalsQuery.data, milestonesQuery.data, tasksQuery.data],
+  );
+  const goalCategories = useMemo(() => {
+    const categories = [...DEFAULT_GOAL_CATEGORIES, ...extraCategories, ...goals.map((goal) => goal.category)].filter(Boolean);
+    return Array.from(new Set(categories));
+  }, [extraCategories, goals]);
 
   const activeGoals = useMemo(() => goals.filter((goal) => !goal.completedAt), [goals]);
   const selected = activeGoals.find((goal) => goal.id === selectedId) ?? activeGoals[0] ?? null;
@@ -179,7 +289,7 @@ export function GoalsScreen() {
               <GoalDetailHeader
                 goal={selected}
                 onEdit={() => setGoalModal({ goal: selected })}
-                onToggleDone={() => updateGoal(selected.id, selected.completedAt ? { completedAt: undefined, progress: Math.min(selected.progress, 99) } : { completedAt: new Date().toISOString(), progress: 100 })}
+                onToggleDone={() => updateGoal.mutate({ id: selected.id, patch: selected.completedAt ? { completed_at: null, progress: Math.min(selected.progress, 99) } : { completed_at: new Date().toISOString(), progress: 100 } })}
                 onDelete={() => setDeleteGoalId(selected.id)}
               />
               <GoalRoadmap goal={selected} />
@@ -187,15 +297,15 @@ export function GoalsScreen() {
                 goal={selected}
                 tasks={selectedTasks}
                 todayTasks={todayTasks}
-                onToggle={(task) => updateGoalTask(selected.id, task.id, { status: task.status === 'done' ? 'todo' : 'done' })}
+                onToggle={(task) => updateGoalTask.mutate({ id: task.id, patch: { status: task.status === 'done' ? 'todo' : 'done' } })}
                 onPlanner={(task) => addPlanner(task.title, task.dueDate, task.priority)}
               />
               <GoalActionsPanel
                 goal={selected}
-                onUpdate={(taskId, patch) => updateGoalTask(selected.id, taskId, patch)}
-                onDelete={(taskId) => deleteGoalTask(selected.id, taskId)}
+                onUpdate={(taskId, patch) => updateGoalTask.mutate({ id: taskId, patch: { status: patch.status, title: patch.title, description: patch.description, due_date: patch.dueDate, priority: patch.priority, progress: patch.progress } })}
+                onDelete={(taskId) => removeGoalTask.mutate(taskId)}
                 onPlanner={(task) => addPlanner(task.title, task.dueDate, task.priority)}
-                onAdd={(payload) => addGoalTask(selected.id, payload)}
+                onAdd={(payload) => createGoalTask.mutate({ goal_id: selected.id, title: payload.title, description: payload.description, due_date: payload.dueDate ?? null, priority: payload.priority ?? null, status: payload.status, progress: 0 })}
               />
             </>
           ) : (
@@ -210,13 +320,26 @@ export function GoalsScreen() {
         categories={goalCategories}
         onClose={() => setGoalModal(null)}
         onSave={(payload) => {
-          if (goalModal?.goal) updateGoal(goalModal.goal.id, payload);
-          else addGoal(payload);
+          const patch = {
+            name: payload.title,
+            description: payload.description,
+            type: payload.type,
+            category: payload.category,
+            priority: payload.priority ?? null,
+            deadline: payload.deadline ?? null,
+            progress: payload.progress,
+            streak: payload.streak ?? 0,
+            archived: payload.archived,
+            emoji: payload.emoji,
+            completed_at: payload.completedAt ?? null,
+          };
+          if (goalModal?.goal) updateGoal.mutate({ id: goalModal.goal.id, patch });
+          else createGoal.mutate(patch);
           setGoalModal(null);
         }}
       />
-      <ConfirmDelete open={!!deleteGoalId} onClose={() => setDeleteGoalId(null)} onConfirm={() => { if (deleteGoalId) deleteGoal(deleteGoalId); setDeleteGoalId(null); }} label="ten cel" />
-      <CategoryManagerModal open={showCategoryManager} onClose={() => setShowCategoryManager(false)} categories={goalCategories} onAdd={addGoalCategory} onDelete={deleteGoalCategory} />
+      <ConfirmDelete open={!!deleteGoalId} onClose={() => setDeleteGoalId(null)} onConfirm={() => { if (deleteGoalId) removeGoal.mutate(deleteGoalId); setDeleteGoalId(null); }} label="ten cel" />
+      <CategoryManagerModal open={showCategoryManager} onClose={() => setShowCategoryManager(false)} categories={goalCategories} onAdd={(name) => setExtraCategories((items) => items.includes(name) ? items : [...items, name])} onDelete={(name) => setExtraCategories((items) => items.filter((item) => item !== name))} />
     </PageLayout>
   );
 }

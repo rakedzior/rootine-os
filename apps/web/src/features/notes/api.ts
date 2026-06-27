@@ -64,7 +64,12 @@ export async function insertNote(input: NewNoteInput): Promise<Note> {
       type: input.type ?? 'note',
       title: input.title ?? null,
       body: input.body,
+      color: input.color ?? '#1b2b33',
+      category: input.category ?? 'Pomysly',
+      tags: input.tags ?? [],
       pinned: input.pinned ?? false,
+      archived: input.archived ?? false,
+      checklist_items: input.checklist_items ?? [],
     })
     .select('*')
     .single();

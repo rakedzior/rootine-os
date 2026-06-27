@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
-import { useLocalStore, type Trip } from '@/store/localStore';
+import { useCreateTrip, useDeleteTrip, useTrips } from '@/features/travel/hooks';
+import type { Trip as TripRow } from '@/features/travel/types';
 import '@/styles/travel.css';
 
 type TravelIconName =
@@ -11,6 +12,22 @@ type TravelIconName =
 
 type TravelStatusFilter = Trip['status'] | 'all';
 type TravelTab = 'overview' | 'plan' | 'lodging' | 'transport' | 'packing' | 'documents' | 'budget' | 'notes';
+
+interface Trip {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  title: string;
+  country: string;
+  city?: string;
+  startDate: string;
+  endDate: string;
+  status: 'planned' | 'active' | 'completed' | 'archived';
+  coverEmoji: string;
+  notes: string;
+  budget?: number;
+  isArchived: boolean;
+}
 
 const STATUS_LABELS: Record<Trip['status'], string> = {
   planned: 'Planowana',
@@ -113,6 +130,31 @@ function pickNextTrip(trips: Trip[]) {
   return upcoming[0] ?? trips.find((trip) => trip.status !== 'archived') ?? null;
 }
 
+function normalizeStatus(status: TripRow['status'], isArchived: boolean): Trip['status'] {
+  if (isArchived || status === 'archived') return 'archived';
+  if (status === 'done' || status === 'completed') return 'completed';
+  if (status === 'active') return 'active';
+  return 'planned';
+}
+
+function mapTrip(row: TripRow): Trip {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    title: row.dest,
+    country: row.country ?? '',
+    city: row.city ?? undefined,
+    startDate: row.start_date ?? row.created_at.split('T')[0],
+    endDate: row.end_date ?? row.start_date ?? row.created_at.split('T')[0],
+    status: normalizeStatus(row.status, row.is_archived),
+    coverEmoji: row.cover_emoji ?? '',
+    notes: row.notes ?? '',
+    budget: row.budget == null ? undefined : Number(row.budget),
+    isArchived: row.is_archived,
+  };
+}
+
 function buildDeadlines(trip: Trip | null) {
   if (!trip) return [];
   const travelDays = daysBetween(trip.startDate, trip.endDate);
@@ -143,7 +185,10 @@ function buildStay(trip: Trip | null) {
 }
 
 export function TravelScreen() {
-  const { trips, addTrip, deleteTrip } = useLocalStore();
+  const tripsQuery = useTrips();
+  const createTrip = useCreateTrip();
+  const deleteTripMutation = useDeleteTrip();
+  const trips = useMemo(() => (tripsQuery.data ?? []).map(mapTrip), [tripsQuery.data]);
   const [selectedId, setSelectedId] = useState<string | null>(pickNextTrip(trips)?.id ?? null);
   const [filter, setFilter] = useState<TravelStatusFilter>('planned');
   const [activeTab, setActiveTab] = useState<TravelTab>('overview');
@@ -216,14 +261,25 @@ export function TravelScreen() {
       </section>
 
       <TripModal open={showAdd} onClose={() => setShowAdd(false)} onSave={(payload) => {
-        addTrip(payload);
+        createTrip.mutate({
+          dest: payload.title,
+          country: payload.country,
+          city: payload.city ?? null,
+          start_date: payload.startDate,
+          end_date: payload.endDate,
+          status: payload.status,
+          notes: payload.notes,
+          budget: payload.budget ?? null,
+          cover_emoji: payload.coverEmoji,
+          is_archived: payload.isArchived,
+        });
         setShowAdd(false);
       }} />
       <ConfirmDelete
         open={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={() => {
-          if (deleteId) deleteTrip(deleteId);
+          if (deleteId) deleteTripMutation.mutate(deleteId);
           setDeleteId(null);
           setSelectedId(null);
         }}

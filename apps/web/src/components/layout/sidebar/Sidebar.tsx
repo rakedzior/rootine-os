@@ -1,15 +1,36 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useVisibleModules } from '@/features/config/useConfig';
 import { useSidebar } from './SidebarContext';
 import { NAV_ITEMS } from './navConfig';
 import { SidebarItem } from './SidebarItem';
 import { SidebarFooter } from './SidebarFooter';
 import { SidebarLockButton } from './SidebarLockButton';
+import type { ModuleKey } from '@/features/config/registry';
+
+const LABELS_BY_MODULE: Record<ModuleKey, string> = {
+  start: 'Planer',
+  sport: 'Sport',
+  diet: 'Dieta',
+  finance: 'Finanse',
+  goals: 'Cele',
+  office: 'Biuro',
+  travel: 'Podróże',
+  notes: 'Notatki',
+  work: 'Praca',
+};
 
 /** The left navigation rail. When unlocked, hover expands it (pushing content);
  *  a short close delay keeps it from collapsing on an accidental cursor graze. */
 export function Sidebar() {
   const { expanded, setHover } = useSidebar();
+  const modules = useVisibleModules();
+  const visibleItems = modules
+    .map((module) => {
+      const item = NAV_ITEMS.find((navItem) => navItem.key === module.key);
+      return item ? { ...item, label: LABELS_BY_MODULE[module.key] ?? item.label } : null;
+    })
+    .filter((item): item is (typeof NAV_ITEMS)[number] => Boolean(item));
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
@@ -40,7 +61,7 @@ export function Sidebar() {
 
       {/* Primary nav */}
       <nav className="sidebar-nav" aria-label="Główna nawigacja">
-        {NAV_ITEMS.map((item) => (
+        {visibleItems.map((item) => (
           <SidebarItem key={item.key} item={item} expanded={expanded} />
         ))}
       </nav>

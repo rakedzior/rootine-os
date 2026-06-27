@@ -26,7 +26,19 @@ export async function insertTrip(input: NewTripInput): Promise<Trip> {
   const userId = await uid();
   const { data, error } = await supabase
     .from('trips')
-    .insert({ user_id: userId, dest: input.dest, country: input.country ?? null, start_date: input.start_date ?? null, end_date: input.end_date ?? null, status: input.status ?? 'planned' })
+    .insert({
+      user_id: userId,
+      dest: input.dest,
+      country: input.country ?? null,
+      city: input.city ?? null,
+      start_date: input.start_date ?? null,
+      end_date: input.end_date ?? null,
+      status: input.status ?? 'planned',
+      notes: input.notes ?? null,
+      budget: input.budget ?? null,
+      cover_emoji: input.cover_emoji ?? '',
+      is_archived: input.is_archived ?? false,
+    })
     .select('*')
     .single();
   if (error) throw error;

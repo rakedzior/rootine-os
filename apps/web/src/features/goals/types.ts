@@ -2,8 +2,16 @@ export interface Goal {
   id: string;
   user_id: string;
   name: string;
+  description: string;
+  type: 'simple' | 'project';
   category: string | null;
+  priority: 'low' | 'mid' | 'high' | null;
+  deadline: string | null;
   progress: number; // 0..100 (derived from milestones when any exist)
+  streak: number;
+  archived: boolean;
+  emoji: string;
+  completed_at: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -18,6 +26,7 @@ export interface Milestone {
   done: boolean;
   weight: number | null; // explicit % or null = auto (equal split)
   due_date: string | null;
+  progress: number;
   sort_order: number;
   created_at: string;
   updated_at: string;
@@ -25,7 +34,43 @@ export interface Milestone {
 
 export interface NewGoalInput {
   name: string;
+  description?: string;
+  type?: 'simple' | 'project';
   category?: string | null;
+  priority?: 'low' | 'mid' | 'high' | null;
+  deadline?: string | null;
+  progress?: number;
+  streak?: number;
+  archived?: boolean;
+  emoji?: string;
+  completed_at?: string | null;
+}
+
+export interface GoalTask {
+  id: string;
+  user_id: string;
+  goal_id: string;
+  parent_task_id: string | null;
+  title: string;
+  description: string;
+  due_date: string | null;
+  priority: 'low' | 'mid' | 'high' | null;
+  status: 'todo' | 'active' | 'waiting' | 'done' | 'blocked';
+  progress: number;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface NewGoalTaskInput {
+  goal_id: string;
+  parent_task_id?: string | null;
+  title: string;
+  description?: string;
+  due_date?: string | null;
+  priority?: 'low' | 'mid' | 'high' | null;
+  status?: 'todo' | 'active' | 'waiting' | 'done' | 'blocked';
+  progress?: number;
 }
 
 /** Maps a goal category to one of the prototype's coloured icon classes. */

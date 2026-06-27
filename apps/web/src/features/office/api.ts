@@ -3,6 +3,7 @@ import type {
   Document, InsurancePolicy, Vehicle, VehicleService, B2bSettlement, Employment, Vacation,
   NewDocumentInput, NewInsurancePolicyInput, NewVehicleInput, NewVehicleServiceInput,
   NewB2bSettlementInput, NewVacationInput,
+  OfficeCategory, OfficeTask, NewOfficeTaskInput,
 } from './types';
 
 async function uid(): Promise<string> {
@@ -31,7 +32,17 @@ export async function insertDocument(input: NewDocumentInput): Promise<Document>
   const userId = await uid();
   const { data, error } = await supabase
     .from('documents')
-    .insert({ user_id: userId, name: input.name, category_id: input.category_id ?? null, doc_number: input.doc_number ?? null, expires_on: input.expires_on ?? null })
+    .insert({
+      user_id: userId,
+      name: input.name,
+      category_id: input.category_id ?? null,
+      category: input.category ?? 'Dokumenty',
+      doc_number: input.doc_number ?? null,
+      issue_date: input.issue_date ?? null,
+      expires_on: input.expires_on ?? null,
+      reminder_enabled: input.reminder_enabled ?? false,
+      notes: input.notes ?? '',
+    })
     .select('*')
     .single();
   if (error) throw error;
@@ -92,7 +103,16 @@ export async function insertVehicle(input: NewVehicleInput): Promise<Vehicle> {
   const userId = await uid();
   const { data, error } = await supabase
     .from('vehicles')
-    .insert({ user_id: userId, name: input.name, plate: input.plate ?? null })
+    .insert({
+      user_id: userId,
+      name: input.name,
+      plate: input.plate ?? null,
+      mileage: input.mileage ?? 0,
+      insurance_expiry: input.insurance_expiry ?? null,
+      inspection_date: input.inspection_date ?? null,
+      oil_change_date: input.oil_change_date ?? null,
+      tire_change_date: input.tire_change_date ?? null,
+    })
     .select('*')
     .single();
   if (error) throw error;
@@ -198,14 +218,84 @@ export async function insertVacation(input: NewVacationInput): Promise<Vacation>
   const userId = await uid();
   const { data, error } = await supabase
     .from('vacations')
-    .insert({ user_id: userId, ...input, type: input.type ?? 'wypoczynkowy' })
+    .insert({ user_id: userId, ...input, type: input.type ?? 'wypoczynkowy', status: input.status ?? 'planned', notes: input.notes ?? '' })
     .select('*')
     .single();
   if (error) throw error;
   return data as Vacation;
 }
 
+export async function patchVacation(id: string, patch: Partial<Vacation>): Promise<Vacation> {
+  const { data, error } = await supabase.from('vacations').update(patch).eq('id', id).select('*').single();
+  if (error) throw error;
+  return data as Vacation;
+}
+
 export async function deleteVacation(id: string): Promise<void> {
   const { error } = await supabase.from('vacations').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function fetchOfficeCategories(): Promise<OfficeCategory[]> {
+  const { data, error } = await supabase.from('office_categories').select('*').order('name');
+  if (error) throw error;
+  return (data ?? []) as OfficeCategory[];
+}
+
+export async function insertOfficeCategory(name: string): Promise<OfficeCategory> {
+  const userId = await uid();
+  const { data, error } = await supabase
+    .from('office_categories')
+    .upsert({ user_id: userId, name }, { onConflict: 'user_id,name' })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as OfficeCategory;
+}
+
+export async function deleteOfficeCategory(id: string): Promise<void> {
+  const { error } = await supabase.from('office_categories').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function fetchOfficeTasks(): Promise<OfficeTask[]> {
+  const { data, error } = await supabase
+    .from('office_tasks')
+    .select('*')
+    .order('due_date', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as OfficeTask[];
+}
+
+export async function insertOfficeTask(input: NewOfficeTaskInput): Promise<OfficeTask> {
+  const userId = await uid();
+  const { data, error } = await supabase
+    .from('office_tasks')
+    .insert({
+      user_id: userId,
+      title: input.title,
+      due_date: input.due_date ?? null,
+      priority: input.priority ?? 'mid',
+      institution: input.institution ?? '',
+      category: input.category ?? 'Administracja',
+      status: input.status ?? 'todo',
+      notes: input.notes ?? '',
+      is_archived: input.is_archived ?? false,
+    })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as OfficeTask;
+}
+
+export async function patchOfficeTask(id: string, patch: Partial<OfficeTask>): Promise<OfficeTask> {
+  const { data, error } = await supabase.from('office_tasks').update(patch).eq('id', id).select('*').single();
+  if (error) throw error;
+  return data as OfficeTask;
+}
+
+export async function deleteOfficeTask(id: string): Promise<void> {
+  const { error } = await supabase.from('office_tasks').delete().eq('id', id);
   if (error) throw error;
 }

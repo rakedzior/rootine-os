@@ -11,7 +11,25 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
 // Tables with user_id that cascade from auth.users (ON DELETE CASCADE)
 // Listed here for audit logging only — cascade handles actual deletion.
-const AUDIT_TABLES = ['tasks', 'habits', 'finance_transactions', 'notes', 'trips', 'documents'];
+const AUDIT_DATA_GROUPS = [
+  'profile',
+  'settings',
+  'legacy_tasks',
+  'planner',
+  'habits',
+  'goals',
+  'finance_legacy',
+  'finance_redesign',
+  'diet',
+  'sport',
+  'notes',
+  'travel',
+  'work',
+  'office',
+  'integrations',
+  'audit_log',
+  'sync_log',
+];
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
@@ -38,7 +56,7 @@ Deno.serve(async (req) => {
   // Final audit log before deletion
   await admin.from('audit_log').insert({
     user_id: userId, action: 'account_delete', entity: null,
-    metadata: { tables_affected: AUDIT_TABLES, timestamp: new Date().toISOString() },
+    metadata: { data_groups_affected: AUDIT_DATA_GROUPS, timestamp: new Date().toISOString() },
   });
 
   // Delete auth user — cascades to all tables with FK on auth.users ON DELETE CASCADE

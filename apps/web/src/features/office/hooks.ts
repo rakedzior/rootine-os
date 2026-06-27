@@ -6,12 +6,14 @@ import {
   fetchVehicleServices, insertVehicleService, deleteVehicleService,
   fetchB2bSettlements, upsertB2bSettlement, patchB2bSettlement,
   fetchEmployment, insertEmployment, deleteEmployment,
-  fetchVacations, insertVacation, deleteVacation,
+  fetchVacations, insertVacation, patchVacation, deleteVacation,
+  fetchOfficeCategories, insertOfficeCategory, deleteOfficeCategory,
+  fetchOfficeTasks, insertOfficeTask, patchOfficeTask, deleteOfficeTask,
 } from './api';
 import type {
-  InsurancePolicy, B2bSettlement,
+  InsurancePolicy, B2bSettlement, Vacation, OfficeTask,
   NewDocumentInput, NewInsurancePolicyInput, NewVehicleInput, NewVehicleServiceInput,
-  NewB2bSettlementInput, NewVacationInput,
+  NewB2bSettlementInput, NewVacationInput, NewOfficeTaskInput,
 } from './types';
 
 const DOCS_KEY = ['office_documents'] as const;
@@ -21,6 +23,8 @@ const VEH_SERVICES_KEY = ['vehicle_services'] as const;
 const B2B_KEY = ['b2b_settlements'] as const;
 const EMPLOYMENT_KEY = ['employment'] as const;
 const VACATIONS_KEY = ['vacations'] as const;
+const OFFICE_CATEGORIES_KEY = ['office_categories'] as const;
+const OFFICE_TASKS_KEY = ['office_tasks'] as const;
 
 export function useOfficeDocs() {
   return useQuery({ queryKey: DOCS_KEY, queryFn: fetchDocuments });
@@ -166,10 +170,66 @@ export function useAddVacation() {
   });
 }
 
+export function useUpdateVacation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<Vacation> }) => patchVacation(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: VACATIONS_KEY }),
+  });
+}
+
 export function useDeleteVacation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteVacation(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: VACATIONS_KEY }),
+  });
+}
+
+export function useOfficeCategories() {
+  return useQuery({ queryKey: OFFICE_CATEGORIES_KEY, queryFn: fetchOfficeCategories });
+}
+
+export function useAddOfficeCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => insertOfficeCategory(name),
+    onSuccess: () => qc.invalidateQueries({ queryKey: OFFICE_CATEGORIES_KEY }),
+  });
+}
+
+export function useDeleteOfficeCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteOfficeCategory(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: OFFICE_CATEGORIES_KEY }),
+  });
+}
+
+export function useOfficeTasks() {
+  return useQuery({ queryKey: OFFICE_TASKS_KEY, queryFn: fetchOfficeTasks });
+}
+
+export function useAddOfficeTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: NewOfficeTaskInput) => insertOfficeTask(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: OFFICE_TASKS_KEY }),
+  });
+}
+
+export function useUpdateOfficeTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<OfficeTask> }) => patchOfficeTask(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: OFFICE_TASKS_KEY }),
+  });
+}
+
+export function useDeleteOfficeTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteOfficeTask(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: OFFICE_TASKS_KEY }),
   });
 }

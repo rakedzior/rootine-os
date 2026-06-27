@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { Goal, Milestone, NewGoalInput } from './types';
+import type { Goal, GoalTask, Milestone, NewGoalInput, NewGoalTaskInput } from './types';
 
 async function uid(): Promise<string> {
   const { data } = await supabase.auth.getUser();
@@ -23,7 +23,20 @@ export async function fetchGoals(): Promise<Goal[]> {
 export async function insertGoal(input: NewGoalInput): Promise<Goal> {
   const { data, error } = await supabase
     .from('goals')
-    .insert({ user_id: await uid(), name: input.name, category: input.category ?? null })
+    .insert({
+      user_id: await uid(),
+      name: input.name,
+      description: input.description ?? '',
+      type: input.type ?? 'project',
+      category: input.category ?? null,
+      priority: input.priority ?? null,
+      deadline: input.deadline ?? null,
+      progress: input.progress ?? 0,
+      streak: input.streak ?? 0,
+      archived: input.archived ?? false,
+      emoji: input.emoji ?? 'target',
+      completed_at: input.completed_at ?? null,
+    })
     .select('*')
     .single();
   if (error) throw error;
@@ -75,5 +88,52 @@ export async function patchMilestone(id: string, patch: Partial<Milestone>): Pro
 
 export async function deleteMilestone(id: string): Promise<void> {
   const { error } = await supabase.from('milestones').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---- goal tasks ----
+export async function fetchGoalTasks(): Promise<GoalTask[]> {
+  const { data, error } = await supabase
+    .from('goal_tasks')
+    .select('*')
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as GoalTask[];
+}
+
+export async function insertGoalTask(input: NewGoalTaskInput): Promise<GoalTask> {
+  const { data, error } = await supabase
+    .from('goal_tasks')
+    .insert({
+      user_id: await uid(),
+      goal_id: input.goal_id,
+      parent_task_id: input.parent_task_id ?? null,
+      title: input.title,
+      description: input.description ?? '',
+      due_date: input.due_date ?? null,
+      priority: input.priority ?? null,
+      status: input.status ?? 'todo',
+      progress: input.progress ?? 0,
+    })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as GoalTask;
+}
+
+export async function patchGoalTask(id: string, patch: Partial<GoalTask>): Promise<GoalTask> {
+  const { data, error } = await supabase
+    .from('goal_tasks')
+    .update(patch)
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data as GoalTask;
+}
+
+export async function deleteGoalTask(id: string): Promise<void> {
+  const { error } = await supabase.from('goal_tasks').delete().eq('id', id);
   if (error) throw error;
 }

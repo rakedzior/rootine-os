@@ -1,4 +1,10 @@
-export type NoteType = 'note' | 'checklist' | 'quote';
+export type NoteType = 'note' | 'sticky' | 'full' | 'checklist' | 'quote';
+
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  done: boolean;
+}
 
 export interface NoteCollection {
   id: string;
@@ -16,7 +22,12 @@ export interface Note {
   type: NoteType;
   title: string | null;
   body: string;
+  color: string;
+  category: string;
+  tags: string[];
   pinned: boolean;
+  archived: boolean;
+  checklist_items: ChecklistItem[];
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -38,7 +49,12 @@ export interface NewNoteInput {
   type?: NoteType;
   title?: string | null;
   body: string;
+  color?: string;
+  category?: string;
+  tags?: string[];
   pinned?: boolean;
+  archived?: boolean;
+  checklist_items?: ChecklistItem[];
 }
 
 export interface JournalPatch {
