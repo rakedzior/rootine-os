@@ -1,4 +1,4 @@
-# Rootine OS â€” Supabase Schema
+# Rootine OS — Supabase Schema
 
 ## Purpose
 

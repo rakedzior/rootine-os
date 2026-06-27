@@ -1,4 +1,4 @@
-# Rootine OS â€” Agent Report Template
+# Rootine OS — Agent Report Template
 
 Use this format at the end of every agent task.
 

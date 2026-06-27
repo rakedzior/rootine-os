@@ -1,4 +1,4 @@
-# Rootine OS â€” Module Ownership
+# Rootine OS — Module Ownership
 
 ## General rule
 

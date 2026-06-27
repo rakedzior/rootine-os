@@ -1,4 +1,4 @@
-# Rootine OS â€” Architecture Notes
+# Rootine OS — Architecture Notes
 
 ## Goal
 

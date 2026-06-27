@@ -1,4 +1,4 @@
-# Rootine OS â€” QA Checklist
+# Rootine OS — QA Checklist
 
 ## Build quality
 

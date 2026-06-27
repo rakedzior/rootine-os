@@ -1,4 +1,4 @@
-# Module Spec â€” Planner / Start
+# Module Spec — Planner / Start
 
 ## Goal
 

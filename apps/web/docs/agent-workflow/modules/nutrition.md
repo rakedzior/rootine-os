@@ -1,4 +1,4 @@
-# Module Spec â€” Nutrition
+# Module Spec — Nutrition
 
 ## Goal
 

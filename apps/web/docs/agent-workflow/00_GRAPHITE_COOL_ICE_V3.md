@@ -1,4 +1,4 @@
-# Rootine OS â€” Graphite Cool Ice v3 Design System
+# Rootine OS — Graphite Cool Ice v3 Design System
 
 ## 1. General design direction
 
@@ -23,8 +23,8 @@ The design should feel like a serious productivity, planning and self-management
 
 Core visual principle:
 
-90% graphite surfaces  
-8% cool ice accents  
+90% graphite surfaces
+8% cool ice accents
 2% special colors
 
 Bright colors must never dominate large areas.
@@ -144,18 +144,18 @@ Recommended type scale:
 
 Font weights:
 
-- page title: 650â€“700
-- section title: 600â€“650
+- page title: 650–700
+- section title: 600–650
 - card title: 600
-- body: 400â€“500
+- body: 400–500
 - labels: 600
-- metadata: 400â€“500
-- numbers/metrics: 600â€“700
+- metadata: 400–500
+- numbers/metrics: 600–700
 
 Use uppercase labels only for small metadata sections such as:
 
 - DZISIAJ
-- TEN TYDZIEĹ
+- TEN TYDZIEŃ
 - NAWYKI
 - REKORDY
 - PLANOWANE
@@ -196,10 +196,10 @@ Use an 8px spacing system:
 
 Radius system:
 
-- small buttons: 10â€“12px
+- small buttons: 10–12px
 - inputs: 12px
-- cards: 16â€“20px
-- large panels: 20â€“24px
+- cards: 16–20px
+- large panels: 20–24px
 - badges: pill radius
 
 Avoid overly bubbly corners.
@@ -238,8 +238,8 @@ color: var(--text-muted);
 Icons:
 
 - use Lucide / Phosphor / Heroicons outline
-- stroke width 1.75â€“2.0
-- size 16â€“20px
+- stroke width 1.75–2.0
+- size 16–20px
 - inactive color: text-secondary
 - active color: accent-ice
 
@@ -478,7 +478,7 @@ Planner should focus on:
 
 Preferred layout:
 
-Left panel: Tasks + Habits  
+Left panel: Tasks + Habits
 Right panel: Calendar
 
 Task list item:
@@ -504,9 +504,9 @@ Habit section:
 
 Recommended habit layout:
 
-[âś“] 8K krokĂłw       [ ] Czytanie  
-[âś“] Woda 2L         [ ] Trening  
-[ ] Bez cukru       [âś“] Medytacja
+[✓] 8K kroków       [ ] Czytanie
+[✓] Woda 2L         [ ] Trening
+[ ] Bez cukru       [✓] Medytacja
 
 Habit tile:
 
@@ -610,8 +610,8 @@ Goals should use folder-like long-term structures.
 Recommended sections:
 
 - Cele
-- Roadmapa celĂłw
-- Plan na ten tydzieĹ„
+- Roadmapa celów
+- Plan na ten tydzień
 
 Goal cards:
 
@@ -764,7 +764,7 @@ Avoid huge illustrations.
 
 Example:
 
-Brak treningĂłw w tym tygodniu.  
+Brak treningów w tym tygodniu.
 Dodaj trening albo zaplanuj blok.
 
 [+ Dodaj trening] [+ Zaplanuj blok]
@@ -844,7 +844,7 @@ stroke: var(--status-warning);
 
 Do not use rainbow palettes.
 
-Use 1â€“3 colors maximum.
+Use 1–3 colors maximum.
 
 ## 30. Motion and interaction
 

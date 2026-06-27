@@ -1,4 +1,4 @@
-# Module Spec â€” Travel
+# Module Spec — Travel
 
 ## Goal
 

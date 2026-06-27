@@ -1,4 +1,4 @@
-# Module Spec â€” Sport
+# Module Spec — Sport
 
 ## Goal
 

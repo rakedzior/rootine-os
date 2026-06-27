@@ -1,4 +1,4 @@
-# Module Spec â€” Notes
+# Module Spec — Notes
 
 ## Goal
 

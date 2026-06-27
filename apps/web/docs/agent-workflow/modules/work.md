@@ -1,4 +1,4 @@
-# Module Spec â€” Work
+# Module Spec — Work
 
 ## Goal
 

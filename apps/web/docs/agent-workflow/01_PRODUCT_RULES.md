@@ -1,4 +1,4 @@
-# Rootine OS â€” Product Rules
+# Rootine OS — Product Rules
 
 ## Core principle
 

@@ -1,4 +1,4 @@
-# Module Spec â€” Documents
+# Module Spec — Documents
 
 ## Goal
 

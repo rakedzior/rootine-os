@@ -1,4 +1,4 @@
-# Module Spec â€” Habits
+# Module Spec — Habits
 
 ## Goal
 
