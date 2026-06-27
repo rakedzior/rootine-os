@@ -7,8 +7,8 @@ test.skip(!email || !password, 'Set E2E_EMAIL and E2E_PASSWORD to run authentica
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/login');
-  await page.getByLabel(/email/i).fill(email!);
-  await page.getByLabel(/haslo|hasło|password/i).fill(password!);
+  await page.locator('#email').fill(email!);
+  await page.locator('#password').fill(password!);
   await page.getByRole('button', { name: /zaloguj|login/i }).click();
   await expect(page).toHaveURL(/\/$/);
 });

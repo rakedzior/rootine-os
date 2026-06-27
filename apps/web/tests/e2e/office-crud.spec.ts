@@ -7,8 +7,8 @@ test.skip(!email || !password, 'Set E2E_EMAIL and E2E_PASSWORD to run authentica
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/login');
-  await page.getByLabel(/email/i).fill(email!);
-  await page.getByLabel(/haslo|hasło|password/i).fill(password!);
+  await page.locator('#email').fill(email!);
+  await page.locator('#password').fill(password!);
   await page.getByRole('button', { name: /zaloguj|login/i }).click();
   await expect(page).toHaveURL(/\/$/);
 });
@@ -18,16 +18,16 @@ test('creates, completes, and deletes an office task', async ({ page }) => {
 
   await page.goto('/office');
   await page.getByRole('button', { name: /nowe zadanie/i }).click();
-  await page.getByLabel(/tytuł zadania/i).fill(title);
+  await page.getByPlaceholder(/paszport/i).fill(title);
   await page.getByRole('button', { name: /^dodaj$/i }).click();
 
   const taskRow = page.locator('.office-case-row').filter({ hasText: title });
   await expect(taskRow).toBeVisible();
 
-  await taskRow.getByRole('button', { name: /zmień status/i }).click();
+  await taskRow.getByRole('button', { name: /status/i }).click();
   await expect(taskRow).toHaveClass(/is-done/);
 
-  await taskRow.getByRole('button', { name: new RegExp(`usuń ${title}`, 'i') }).click();
-  await page.getByRole('button', { name: /^usu/i }).click();
+  await taskRow.getByRole('button', { name: new RegExp(title, 'i') }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /^usu/i }).click();
   await expect(taskRow).toHaveCount(0);
 });
