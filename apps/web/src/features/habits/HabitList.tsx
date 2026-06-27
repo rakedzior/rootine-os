@@ -2,7 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { Field } from '@/components/common';
 import { useHabits, useHabitLogs, useCreateHabit, useDeleteHabit, useToggleHabitLog } from './hooks';
 import { ALL_WEEKDAYS, HABIT_WEEKDAYS, habitOccursOn, habitScheduleLabel, habitStats, todayStr } from './dates';
-import type { HabitLog, HabitRecurrenceType } from './types';
+import type { HabitLog, HabitScheduleType } from './types';
 
 const CHECK = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
@@ -32,7 +32,7 @@ export function HabitList() {
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState('Zdrowie');
-  const [recurrenceType, setRecurrenceType] = useState<HabitRecurrenceType>('daily');
+  const [recurrenceType, setRecurrenceType] = useState<HabitScheduleType>('daily');
   const [weekdays, setWeekdays] = useState<number[]>(ALL_WEEKDAYS);
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState('');
@@ -67,7 +67,7 @@ export function HabitList() {
       {
         name: n,
         category,
-        recurrence_type: recurrenceType,
+        schedule_type: recurrenceType === 'selected_weekdays' ? 'selected_weekdays' : 'daily',
         weekdays: recurrenceType === 'daily' ? ALL_WEEKDAYS : weekdays,
         start_date: startDate || today,
         end_date: endDate || null,
@@ -184,7 +184,7 @@ export function HabitList() {
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {([
                 ['daily', 'Codziennie'],
-                ['weekly', 'Wybrane dni'],
+                ['selected_weekdays', 'Wybrane dni'],
               ] as const).map(([value, label]) => (
                 <button
                   key={value}
@@ -222,7 +222,7 @@ export function HabitList() {
           </div>
         </div>
 
-        {recurrenceType === 'weekly' && (
+        {recurrenceType === 'selected_weekdays' && (
           <div style={{ gridColumn: '1 / -1' }}>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {HABIT_WEEKDAYS.map((day) => {

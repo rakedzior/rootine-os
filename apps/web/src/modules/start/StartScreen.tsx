@@ -1,10 +1,9 @@
-import { useState, useEffect, useMemo, useRef, type MouseEvent as ReactMouseEvent } from 'react';
-import { Link } from 'react-router-dom';
+﻿import { useState, useEffect, useLayoutEffect, useMemo, useRef, type MouseEvent as ReactMouseEvent } from 'react';
 import { ConfirmDelete, Field, Modal, PageHeader } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
-import { useHabits, useHabitLogs, useToggleHabitLog } from '@/features/habits/hooks';
-import { habitOccursOn, habitScheduleLabel, habitStats, todayStr as habitsTodayStr } from '@/features/habits/dates';
-import type { HabitLog } from '@/features/habits/types';
+import { useHabits, useHabitLogs, useCreateHabit, useUpdateHabit, useDeleteHabit, useSetHabitStatus, useSetHabitVisibility, useSetHabitEntry, useToggleHabitLog } from '@/features/habits/hooks';
+import { ALL_WEEKDAYS, habitOccursOn, habitScheduleLabel, habitStats, todayStr as habitsTodayStr } from '@/features/habits/dates';
+import type { Habit, HabitEndMode, HabitEntryStatus, HabitLog, HabitScheduleType, NewHabitInput } from '@/features/habits/types';
 import { useCreateTask, useDeleteTask, useDeleteTasks, useTasks, useToggleTask, useUpdateTask } from '@/features/tasks/hooks';
 import type { Task as SupabaseTask } from '@/features/tasks/types';
 
@@ -61,7 +60,7 @@ function extractTitleAndTags(text: string, currentTags: string[]): { title: stri
   return { title, tags: dedupeTags([...currentTags, ...captured]) };
 }
 
-// ─── ADD TASK MODAL ───────────────────────────────────────────
+// ??? ADD TASK MODAL ???????????????????????????????????????????
 
 const PRIO_OPTIONS: { value: 'high' | 'mid' | 'low'; label: string }[] = [
   { value: 'high', label: 'Wysoki' },
@@ -720,7 +719,7 @@ function AddTaskModal({
   );
 }
 
-// ─── CALENDAR ─────────────────────────────────────────────────
+// ??? CALENDAR ?????????????????????????????????????????????????
 
 const WEEKDAY_FULL = ['Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota','Niedziela'];
 
@@ -769,18 +768,22 @@ function startOfWeekDate(d: Date): Date {
 interface CalendarProps {
   tasks: SupabaseTask[];
   activeDate?: string | null;
-  onDayClick: (dateStr: string, anchor: { x: number; y: number }) => void;
+  hideCompleted: boolean;
+  onToggleHideCompleted: () => void;
+  onDayClick: (dateStr: string, anchor: AnchorRect) => void;
   onTaskClick: (task: SupabaseTask) => void;
   onToggleTask: (id: string, done: boolean) => void;
   onMoveTask: (task: SupabaseTask, dateStr: string) => void;
 }
 
-function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, onMoveTask }: CalendarProps) {
+function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onDayClick, onTaskClick, onToggleTask, onMoveTask }: CalendarProps) {
   const now = new Date();
+  const calendarRef = useRef<HTMLDivElement | null>(null);
   const [view, setView] = useState<'month'|'week'|'day'>('month');
   const [cursor, setCursor] = useState(() => new Date(now.getFullYear(), now.getMonth(), now.getDate()));
   const [dragTaskId, setDragTaskId] = useState<string | null>(null);
   const [dropTargetDate, setDropTargetDate] = useState<string | null>(null);
+  const [overflowDates, setOverflowDates] = useState<Set<string>>(() => new Set());
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
@@ -810,20 +813,44 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
   const weekDays = Array.from({ length: 7 }, (_, i) => addDaysToDate(weekStart, i));
   const weekEnd = weekDays[6];
 
+  useLayoutEffect(() => {
+    function measureTaskOverflow() {
+      const root = calendarRef.current;
+      if (!root) return;
+      const next = new Set<string>();
+      root.querySelectorAll<HTMLElement>('.day-cell-tasks[data-date]').forEach((el) => {
+        const date = el.dataset.date;
+        if (date && el.scrollHeight > el.clientHeight + 1) next.add(date);
+      });
+      setOverflowDates((prev) => {
+        if (prev.size === next.size && [...prev].every((date) => next.has(date))) return prev;
+        return next;
+      });
+    }
+
+    const frame = window.requestAnimationFrame(measureTaskOverflow);
+    window.addEventListener('resize', measureTaskOverflow);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('resize', measureTaskOverflow);
+    };
+  }, [tasks, view, cursor, activeDate]);
+
   function renderDayCell(date: Date, compact: boolean) {
     const dateStr = toDateStr(date.getFullYear(), date.getMonth(), date.getDate());
     const isCellToday = dateStr === todayDateStr;
     const isActive = dateStr === activeDate;
+    const isDropTarget = dropTargetDate === dateStr;
+    const hasTaskOverflow = overflowDates.has(dateStr);
     const allDayTasks = tasks
       .filter(t => t.due_date === dateStr)
+      .filter(t => !hideCompleted || !t.done)
       .sort((a, b) => Number(a.done) - Number(b.done) || a.created_at.localeCompare(b.created_at));
-    const cap = compact ? 3 : 6;
-    const dayTasks = allDayTasks.slice(0, cap);
-    const extraTasks = Math.max(0, allDayTasks.length - dayTasks.length);
+    const dayTasks = allDayTasks;
     return (
       <div key={dateStr}
-        className="day-cell"
-        onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); onDayClick(dateStr, { x: r.right + 8, y: r.top }); }}
+        className={`day-cell${compact ? ' is-compact' : ''}${isCellToday ? ' is-today' : ''}${isActive ? ' is-active' : ''}${isDropTarget ? ' is-drop-target' : ''}${hasTaskOverflow ? ' has-task-overflow' : ''}`}
+        onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); onDayClick(dateStr, { left: r.left, right: r.right, top: r.top, bottom: r.bottom }); }}
         onDragOver={(e) => {
           if (!dragTaskId) return;
           e.preventDefault();
@@ -850,34 +877,24 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
           setDropTargetDate(null);
           setDragTaskId(null);
         }}
-        style={{
-          minHeight: compact ? 72 : 150, borderRadius:'var(--r-sm)',
-          background: dropTargetDate === dateStr
-            ? 'color-mix(in srgb, var(--accent-ice) 12%, var(--surface-calendar))'
-            : (isActive ? 'color-mix(in srgb, var(--accent-ice) 8%, var(--surface-calendar))' : isCellToday ? 'color-mix(in srgb, var(--accent-ice) 8%, var(--surface-calendar))' : 'var(--surface-calendar)'),
-          border: dropTargetDate === dateStr
-            ? '1px solid var(--border-active)'
-            : ((isActive || isCellToday) ? '1px solid color-mix(in srgb, var(--border-active) 70%, transparent)' : '1px solid var(--border-soft)'),
-          boxShadow: dropTargetDate === dateStr
-            ? '0 0 0 2px color-mix(in srgb, var(--accent-ice) 30%, transparent)'
-            : (isActive ? '0 0 0 2px color-mix(in srgb, var(--accent-ice) 32%, transparent)' : undefined),
-          padding:7, display:'flex', flexDirection:'column', gap:3,
-          cursor:'pointer',
-          transition:'.14s',
-          overflow:'hidden',
-        }}
         title={`Dodaj zadanie na ${date.getDate()} ${MONTH_SHORT[date.getMonth()]}`}
       >
-        <div style={{
-          fontVariantNumeric:'tabular-nums',
-          ...(isCellToday
-            ? { color:'var(--surface-base)', background:'var(--accent-ice)', width:22, height:22, borderRadius:'50%', display:'grid', placeItems:'center', fontSize:11, fontWeight:700 }
-            : { fontSize:12, fontWeight:600, color:'var(--ink-2)' })
-        }}>{date.getDate()}</div>
+        <div className="day-cell-head">
+          <div className="day-number">{date.getDate()}</div>
+          <div className="day-head-meta">
+          {dayTasks.length > 3 && (
+            <span className="day-count" title={`${dayTasks.length} zadań tego dnia`}>
+              <span className="day-count-dot" />{dayTasks.length}
+            </span>
+          )}
+            <span className="day-flag" aria-hidden="true">{IC_FLAG}</span>
+          </div>
+        </div>
+        <div className="day-cell-tasks" data-date={dateStr}>
         {dayTasks.map(t => (
           <div
             key={t.id}
-            className="ev green ev-task"
+            className={`ev ev-task ${t.done ? 'is-done' : ''}`}
             draggable
             onDragStart={(e) => {
               e.stopPropagation();
@@ -894,7 +911,6 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
               onTaskClick(t);
             }}
             style={{
-              fontSize:9.5,
               opacity:t.done ? .75 : 1,
               textDecoration:t.done?'line-through':'none',
               cursor:'grab',
@@ -915,11 +931,15 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
               {t.done && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
             </button>
             {isRecurringTask(t) && <RecurringIcon />}
-            <span style={{ overflow:'hidden', textOverflow:'ellipsis' }}>{t.title}</span>
+            <span className="ev-task-title">{t.title}</span>
+            {t.scheduled_time && <span className="ev-task-time">{t.scheduled_time}</span>}
           </div>
         ))}
-        {extraTasks > 0 && (
-          <div className="ev" style={{ fontSize:9.5, color:'var(--ink-3)' }}>+{extraTasks}</div>
+        </div>
+        {hasTaskOverflow && (
+          <span className="day-scroll-hint" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          </span>
         )}
       </div>
     );
@@ -928,10 +948,11 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
   const cursorDateStr = toDateStr(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
   const dayTasksForAgenda = tasks
     .filter(t => t.due_date === cursorDateStr)
+    .filter(t => !hideCompleted || !t.done)
     .sort((a, b) => Number(a.done) - Number(b.done) || a.created_at.localeCompare(b.created_at));
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', height:'100%', minHeight: 0 }}>
+    <div ref={calendarRef} style={{ display:'flex', flexDirection:'column', height:'100%', minHeight: 0 }}>
       {/* cal head */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexShrink:0, flexWrap:'wrap', gap:8 }}>
         <span style={{ fontFamily:'var(--display)', fontSize:24, fontWeight:600, letterSpacing:'-.01em' }}>
@@ -944,6 +965,15 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
           )}
         </span>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+          <button
+            type="button"
+            className={`hide-completed-toggle${hideCompleted ? ' is-active' : ''}`}
+            onClick={onToggleHideCompleted}
+            aria-pressed={hideCompleted}
+            title="Ukryj zakończone zadania"
+          >
+            Ukryj zakończone
+          </button>
           <div style={{ display:'flex', gap:2, background:'var(--surface-inset)', padding:3, borderRadius:10, border:'1px solid var(--border-soft)' }}>
             {(['month','week','day'] as const).map(v => (
               <button key={v} onClick={()=>setView(v)} style={{
@@ -975,7 +1005,7 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
               <div key={d} style={{ fontFamily:'var(--mono)',fontSize:9.5,letterSpacing:'.1em',textTransform:'uppercase',color:'var(--ink-3)',paddingLeft:4 }}>{d}</div>
             ))}
           </div>
-          {/* grid — flex:1 so it fills remaining card height */}
+          {/* grid - flex:1 so it fills remaining card height */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gridAutoRows:'1fr', gap:5, flex:1, minHeight:0 }}>
             {monthCells.map((date, i) => date ? renderDayCell(date, true) : <div key={`blank-${i}`} style={{ opacity:0 }} />)}
           </div>
@@ -992,7 +1022,7 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
             ))}
           </div>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:5, flex:1, minHeight:0 }}>
-            {weekDays.map(d => renderDayCell(d, false))}
+            {weekDays.map(d => renderDayCell(d, true))}
           </div>
         </>
       )}
@@ -1002,20 +1032,21 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
           <div style={{ fontFamily:'var(--mono)', fontSize:10.5, letterSpacing:'.08em', textTransform:'uppercase', color:'var(--ink-3)', flexShrink:0 }}>
             {WEEKDAY_FULL[cursor.getDay()===0?6:cursor.getDay()-1]}
           </div>
-          <div style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column', gap:6 }}>
+          <div className="day-view-panel">
+            {renderDayCell(cursor, false)}
             {dayTasksForAgenda.length === 0 ? (
               <div style={{ textAlign:'center', padding:'40px 0', color:'var(--ink-3)', fontSize:13 }}>Brak zadań tego dnia.</div>
             ) : dayTasksForAgenda.map(t => (
               <div
                 key={t.id}
-                className="day-cell hover-row"
+                className="day-agenda-task hover-row"
                 draggable
                 onDragStart={(e) => {
                   e.dataTransfer.setData('text/plain', t.id);
                   e.dataTransfer.effectAllowed = 'move';
                 }}
                 onClick={() => onTaskClick(t)}
-                style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 12px', borderRadius:10, border:'1px solid var(--border-soft)', background:'var(--surface-inset)', cursor:'pointer', opacity:t.done?.7:1 }}
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'11px 12px', borderRadius:10, border:'1px solid var(--border-soft)', background:'var(--surface-inset)', cursor:'pointer', opacity:t.done ? .7 : 1 }}
               >
                 <button
                   type="button"
@@ -1035,7 +1066,7 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
               </div>
             ))}
             <button
-              onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); onDayClick(cursorDateStr, { x: r.left, y: r.top }); }}
+              onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); onDayClick(cursorDateStr, { left: r.left, right: r.right, top: r.top, bottom: r.bottom }); }}
               style={{ marginTop:4, display:'flex', alignItems:'center', gap:6, background:'transparent', border:'1px dashed var(--border)', borderRadius:10, padding:'11px 12px', color:'var(--ink-3)', cursor:'pointer', fontSize:13, flexShrink:0 }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -1048,13 +1079,473 @@ function Calendar({ tasks, activeDate, onDayClick, onTaskClick, onToggleTask, on
   );
 }
 
-// ─── BOTTOM STRIP COMPONENTS ──────────────────────────────────
+// ??? BOTTOM STRIP COMPONENTS ??????????????????????????????????
+
+interface HabitDraft {
+  name: string;
+  description: string;
+  visible_on_dashboard: boolean;
+  status: 'active' | 'paused';
+  schedule_type: HabitScheduleType;
+  interval_value: number;
+  weekdays: number[];
+  start_date: string;
+  end_date: string;
+  end_mode: HabitEndMode;
+  end_after_cycles: number;
+}
+
+function habitDraftFromHabit(habit: Habit | null, today: string): HabitDraft {
+  return {
+    name: habit?.name ?? '',
+    description: habit?.description ?? '',
+    visible_on_dashboard: habit?.visible_on_dashboard ?? true,
+    status: habit?.status === 'paused' ? 'paused' : 'active',
+    schedule_type: habit?.schedule_type ?? 'daily',
+    interval_value: habit?.interval_value ?? 1,
+    weekdays: habit?.schedule_days?.length ? habit.schedule_days : ALL_WEEKDAYS,
+    start_date: habit?.start_date ?? today,
+    end_date: habit?.end_date ?? '',
+    end_mode: habit?.end_mode ?? (habit?.end_date ? 'on_date' : 'forever'),
+    end_after_cycles: habit?.end_after_cycles ?? 12,
+  };
+}
+
+function habitDraftToInput(draft: HabitDraft): NewHabitInput {
+  return {
+    name: draft.name,
+    description: draft.description || null,
+    visible_on_dashboard: draft.visible_on_dashboard,
+    status: draft.status,
+    schedule_type: draft.schedule_type,
+    interval_value: draft.interval_value,
+    weekdays: draft.weekdays,
+    start_date: draft.start_date,
+    end_mode: draft.end_mode,
+    end_after_cycles: draft.end_mode === 'after_cycles' ? draft.end_after_cycles : null,
+    end_date: draft.end_mode === 'on_date' ? draft.end_date || null : null,
+    time_of_day: null,
+  };
+}
+
+function datePartsFromStr(date: string) {
+  const [year, month, day] = date.split('-').map(Number);
+  const fallback = new Date();
+  return {
+    year: year || fallback.getFullYear(),
+    month: month || fallback.getMonth() + 1,
+    day: day || fallback.getDate(),
+  };
+}
+
+function HabitDateSelect({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  const parts = datePartsFromStr(value);
+  const years = Array.from({ length: 8 }, (_, i) => new Date().getFullYear() + i);
+  const daysInMonth = new Date(parts.year, parts.month, 0).getDate();
+  const update = (patch: Partial<typeof parts>) => {
+    const next = { ...parts, ...patch };
+    const day = Math.min(next.day, new Date(next.year, next.month, 0).getDate());
+    onChange(`${next.year}-${pad(next.month)}-${pad(day)}`);
+  };
+  return (
+    <div className="habit-date-select">
+      <span>{label}</span>
+      <div>
+        <select className="select" value={parts.day} onChange={(e) => update({ day: Number(e.target.value) })}>
+          {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => <option key={day} value={day}>{day}</option>)}
+        </select>
+        <select className="select" value={parts.month} onChange={(e) => update({ month: Number(e.target.value) })}>
+          {MONTH_SHORT.map((month, index) => <option key={month} value={index + 1}>{month}</option>)}
+        </select>
+        <select className="select" value={parts.year} onChange={(e) => update({ year: Number(e.target.value) })}>
+          {years.map((year) => <option key={year} value={year}>{year}</option>)}
+        </select>
+      </div>
+    </div>
+  );
+}
+
+function HabitDetailsOverlay({
+  open,
+  habits,
+  logs,
+  datesByHabit,
+  today,
+  selectedId,
+  onSelect,
+  onClose,
+  onCreateHabit,
+  onUpdateHabit,
+  onDeleteHabit,
+  onSetHabitStatus,
+  onSetHabitVisibility,
+  onSetHabitEntry,
+}: {
+  open: boolean;
+  habits: Habit[];
+  logs: HabitLog[];
+  datesByHabit: Map<string, Set<string>>;
+  today: string;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  onClose: () => void;
+  onCreateHabit: (input: NewHabitInput) => Promise<Habit | void> | void;
+  onUpdateHabit: (id: string, input: NewHabitInput) => Promise<void> | void;
+  onDeleteHabit: (id: string) => void;
+  onSetHabitStatus: (id: string, status: 'active' | 'paused') => void;
+  onSetHabitVisibility: (id: string, visible: boolean) => void;
+  onSetHabitEntry: (habitId: string, date: string, status: HabitEntryStatus | null) => void;
+}) {
+  const [historyMonth, setHistoryMonth] = useState(() => firstOfMonth(today));
+  const [showActiveOnly, setShowActiveOnly] = useState(true);
+  const [formMode, setFormMode] = useState<'none' | 'create' | 'edit'>('none');
+  const [draft, setDraft] = useState<HabitDraft>(() => habitDraftFromHabit(null, today));
+  const [formError, setFormError] = useState('');
+  const selected = habits.find((habit) => habit.id === selectedId) ?? habits[0] ?? null;
+
+  useEffect(() => {
+    if (open) setHistoryMonth(firstOfMonth(today));
+  }, [open, today]);
+
+  if (!open) return null;
+
+  const historyDate = parseDateStr(historyMonth) ?? new Date();
+  const historyYear = historyDate.getFullYear();
+  const historyMonthIndex = historyDate.getMonth();
+  const firstHistoryDay = new Date(historyYear, historyMonthIndex, 1);
+  const historyStartOffset = (firstHistoryDay.getDay() + 6) % 7;
+  const historyDaysInMonth = new Date(historyYear, historyMonthIndex + 1, 0).getDate();
+  const historyGrid: Array<{ value: string; day: number } | null> = [
+    ...Array.from({ length: historyStartOffset }, () => null),
+    ...Array.from({ length: historyDaysInMonth }, (_, i) => {
+      const day = i + 1;
+      return { value: toDateStr(historyYear, historyMonthIndex, day), day };
+    }),
+  ];
+  const selectedDates = selected ? datesByHabit.get(selected.id) ?? new Set<string>() : new Set<string>();
+  const selectedStats = selected ? habitStats(selectedDates, today, selected) : null;
+  const weekdaySet = new Set(selected?.schedule_days ?? selected?.weekdays ?? []);
+  const selectedEntries = new Map(
+    logs
+      .filter((log) => selected && log.habit_id === selected.id)
+      .map((log) => [log.entry_date, log.status] as const),
+  );
+  const selectedLogsCount = selected ? logs.filter((log) => log.habit_id === selected.id && log.entry_date.startsWith(historyMonth.slice(0, 7))).length : 0;
+  const visibleHabits = showActiveOnly ? habits.filter((habit) => habit.status === 'active') : habits.filter((habit) => habit.status !== 'archived');
+
+  function openCreateForm() {
+    setFormError('');
+    setDraft(habitDraftFromHabit(null, today));
+    setFormMode('create');
+  }
+
+  function openEditForm() {
+    if (!selected) return;
+    setFormError('');
+    setDraft(habitDraftFromHabit(selected, today));
+    setFormMode('edit');
+  }
+
+  function validateDraft() {
+    const name = draft.name.trim();
+    if (!name || name.length > 80) return 'Nazwa nawyku musi mieć 1-80 znaków.';
+    if ((draft.schedule_type === 'selected_weekdays' || draft.schedule_type === 'every_n_weeks') && draft.weekdays.length === 0) return 'Wybierz przynajmniej jeden dzień tygodnia.';
+    if (draft.schedule_type === 'every_n_weeks' && (draft.interval_value < 1 || draft.interval_value > 52)) return 'Powtarzanie tygodniowe musi być w zakresie 1-52.';
+    if (draft.schedule_type === 'every_n_months' && (draft.interval_value < 1 || draft.interval_value > 24)) return 'Powtarzanie miesięczne musi być w zakresie 1-24.';
+    if (draft.end_mode === 'after_cycles' && draft.end_after_cycles < 1) return 'Podaj liczbę cykli większą od zera.';
+    if (draft.end_mode === 'on_date' && !draft.end_date) return 'Wybierz datę zakończenia.';
+    return '';
+  }
+
+  async function submitHabitForm() {
+    const error = validateDraft();
+    if (error) {
+      setFormError(error);
+      return;
+    }
+    const input = habitDraftToInput({ ...draft, name: draft.name.trim() });
+    if (formMode === 'edit' && selected) {
+      await onUpdateHabit(selected.id, input);
+    } else {
+      const created = await onCreateHabit(input);
+      if (created && 'id' in created) onSelect(created.id);
+    }
+    setFormMode('none');
+  }
+
+  function nextEntryStatus(current: HabitEntryStatus | undefined): HabitEntryStatus | null {
+    if (!current) return 'completed';
+    if (current === 'completed') return 'skipped';
+    return null;
+  }
+
+  function toggleDraftWeekday(day: number) {
+    setDraft((prev) => {
+      const has = prev.weekdays.includes(day);
+      return { ...prev, weekdays: has ? prev.weekdays.filter((item) => item !== day) : [...prev.weekdays, day].sort((a, b) => a - b) };
+    });
+  }
+
+  return (
+    <div className="habit-detail-overlay" role="dialog" aria-modal="true" aria-label="Szczegóły nawyków">
+      <div className="habit-detail-shell">
+        <div className="habit-detail-top">
+          <button type="button" className="habit-detail-back" onClick={onClose} aria-label="Wróć">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+          </button>
+          <span>Nawyki</span>
+          <strong>Szczegóły</strong>
+          <button type="button" className="habit-detail-close" onClick={onClose} aria-label="Zamknij">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <div className="habit-detail-grid">
+          <aside className="habit-detail-list">
+            <button type="button" className="habit-detail-add" onClick={openCreateForm}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+              Dodaj nawyk
+            </button>
+            <div className="habit-detail-list-head">
+              <span>Wyświetl aktywne</span>
+              <button type="button" className={`habit-detail-switch${showActiveOnly ? ' is-on' : ''}`} onClick={() => setShowActiveOnly((value) => !value)} aria-pressed={showActiveOnly}><i /></button>
+            </div>
+            <div className="habit-detail-items">
+              {habits.length === 0 && <div className="habit-detail-empty">Brak nawyków.</div>}
+              {visibleHabits.map((habit) => {
+                const isSelected = selected?.id === habit.id;
+                const isActive = habit.status === 'active';
+                return (
+                  <button
+                    key={habit.id}
+                    type="button"
+                    className={`habit-detail-item${isSelected ? ' is-selected' : ''}`}
+                    onClick={() => onSelect(habit.id)}
+                  >
+                    <span
+                      role="checkbox"
+                      aria-checked={habit.visible_on_dashboard}
+                      className={`habit-detail-check${habit.visible_on_dashboard ? ' is-done' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (habit.status === 'paused') {
+                          setFormError('Nawyki wstrzymane nie są widoczne w panelu głównym. Najpierw wznów nawyk.');
+                          return;
+                        }
+                        onSetHabitVisibility(habit.id, !habit.visible_on_dashboard);
+                      }}
+                    >
+                      {habit.visible_on_dashboard && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>}
+                    </span>
+                    <span className="habit-detail-item-main">
+                      <strong>{habit.name}</strong>
+                      <em>{habitScheduleLabel(habit)}</em>
+                    </span>
+                    <span className={`habit-detail-status${isActive ? ' is-active' : ''}`}>{isActive ? 'Aktywny' : 'Wstrzymany'}</span>
+                    <span className="habit-detail-dots">⋮</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="habit-detail-note">
+              <span>i</span>
+              Zaznacz, które nawyki mają być widoczne w głównym panelu.
+            </div>
+          </aside>
+
+          <section className="habit-detail-main">
+            {selected ? (
+              <>
+                <div className="habit-detail-main-head">
+                  <h3>{selected.name}</h3>
+                  <div className="habit-detail-actions">
+                    <button type="button" onClick={openEditForm}><span>E</span> Edytuj</button>
+                    <button type="button" onClick={() => onSetHabitStatus(selected.id, selected.status === 'paused' ? 'active' : 'paused')}><span>II</span> {selected.status === 'paused' ? 'Wznow' : 'Wstrzymaj'}</button>
+                    <button type="button" className="is-danger" onClick={() => { if (window.confirm('Czy na pewno chcesz usunąć ten nawyk? Historia zostanie zachowana.')) onDeleteHabit(selected.id); }}><span>X</span> Usuń</button>
+                  </div>
+                </div>
+
+                <div className="habit-detail-feature">
+                  <span>
+                    <strong>Aktywny w panelu głównym</strong>
+                    <em>Nawyk będzie widoczny w głównym panelu przeglądu.</em>
+                  </span>
+                  <button
+                    type="button"
+                    className={`habit-detail-switch${selected.visible_on_dashboard && selected.status === 'active' ? ' is-on' : ''}`}
+                    onClick={() => {
+                      if (selected.status === 'paused') {
+                        setFormError('Nawyki wstrzymane nie są widoczne w panelu głównym. Najpierw wznów nawyk.');
+                        return;
+                      }
+                      onSetHabitVisibility(selected.id, !selected.visible_on_dashboard);
+                    }}
+                    aria-pressed={selected.visible_on_dashboard && selected.status === 'active'}
+                  ><i /></button>
+                </div>
+
+                <div className="habit-detail-card">
+                  <h4>Cykliczność</h4>
+                  <div className="habit-detail-form-row">
+                    <span>Powtarzaj</span>
+                    <strong>{habitScheduleLabel(selected)}</strong>
+                  </div>
+                  <div className="habit-detail-form-row">
+                    <span>W dni</span>
+                    <div className="habit-detail-weekdays">
+                      {TASK_WEEKDAYS.map((day) => (
+                        <span key={day.value} className={selected.schedule_type === 'daily' || selected.schedule_type === 'every_n_months' || weekdaySet.has(day.value) ? 'is-on' : ''}>{day.label}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="habit-detail-form-row">
+                    <span>Seria</span>
+                    <strong>{selectedStats?.streak ?? 0} dni</strong>
+                  </div>
+                </div>
+
+                <div className="habit-detail-card habit-history-card">
+                  <div className="habit-history-head">
+                    <h4>Historia - {MONTH_FULL[historyDate.getMonth()]} {historyDate.getFullYear()}</h4>
+                    <div>
+                      <button type="button" onClick={() => setHistoryMonth((m) => shiftMonth(m, -1))} aria-label="Poprzedni miesiąc">‹</button>
+                      <button type="button" onClick={() => setHistoryMonth(firstOfMonth(today))}>Dziś</button>
+                      <button type="button" onClick={() => setHistoryMonth((m) => shiftMonth(m, 1))} aria-label="Następny miesiąc">›</button>
+                    </div>
+                  </div>
+                  <div className="habit-history-weekdays">{['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Niedz'].map((day) => <span key={day}>{day}</span>)}</div>
+                  <div className="habit-history-grid">
+                    {historyGrid.map((item, index) => {
+                      if (!item) return <span key={`blank-${index}`} className="habit-history-empty" />;
+                      const planned = selected ? habitOccursOn(selected, item.value) : false;
+                      const entryStatus = selectedEntries.get(item.value);
+                      const done = entryStatus === 'completed';
+                      const isToday = item.value === today;
+                      return (
+                        <button
+                          key={item.value}
+                          type="button"
+                          className={isToday ? 'is-today' : ''}
+                          onClick={() => planned && onSetHabitEntry(selected.id, item.value, nextEntryStatus(entryStatus))}
+                          disabled={!planned}
+                          title={done ? 'Wykonano' : planned ? 'Pominięto' : 'Brak planu'}
+                        >
+                          <span>{item.day}</span>
+                          <i className={done ? 'is-done' : entryStatus === 'skipped' ? 'is-skipped' : planned ? 'is-missed' : 'is-off'}>{done ? '✓' : entryStatus === 'skipped' ? '×' : planned ? '' : '-'}</i>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="habit-history-legend">
+                    <span><i className="is-done">✓</i> Wykonano</span>
+                    <span><i className="is-skipped">×</i> Pominięto</span>
+                    <span><i className="is-missed" /> Zaplanowane</span>
+                    <span><i className="is-off">-</i> Brak planu</span>
+                    <span className="habit-history-count">{selectedLogsCount} wpisów</span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="habit-detail-empty big">Wybierz nawyk z listy.</div>
+            )}
+          </section>
+        </div>
+        {formMode !== 'none' && (
+          <div className="habit-form-layer" role="dialog" aria-label={formMode === 'edit' ? 'Edytuj nawyk' : 'Dodaj nawyk'}>
+            <div className="habit-form-card">
+              <div className="habit-form-head">
+                <h3>{formMode === 'edit' ? 'Edytuj nawyk' : 'Dodaj nawyk'}</h3>
+                <button type="button" onClick={() => setFormMode('none')} aria-label="Zamknij">×</button>
+              </div>
+              {formError && <div className="habit-form-error">{formError}</div>}
+              <label>Nazwa
+                <input className="input" value={draft.name} maxLength={80} onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))} />
+              </label>
+              <label>Opis
+                <textarea className="input" value={draft.description} onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))} />
+              </label>
+              <label>Status
+                <select className="select" value={draft.status} onChange={(e) => setDraft((prev) => ({ ...prev, status: e.target.value as HabitDraft['status'], visible_on_dashboard: e.target.value === 'paused' ? false : prev.visible_on_dashboard }))}>
+                  <option value="active">Aktywny</option>
+                  <option value="paused">Wstrzymany</option>
+                </select>
+              </label>
+              <button type="button" className={`habit-form-toggle${draft.visible_on_dashboard ? ' is-on' : ''}`} onClick={() => setDraft((prev) => ({ ...prev, visible_on_dashboard: prev.status === 'paused' ? false : !prev.visible_on_dashboard }))}>
+                Widoczny w panelu głównym
+                <span className={`habit-detail-switch${draft.visible_on_dashboard ? ' is-on' : ''}`}><i /></span>
+              </button>
+              <div className="habit-form-section">
+                <strong>Plan</strong>
+                <label>Powtarzaj
+                  <select className="select" value={draft.schedule_type} onChange={(e) => setDraft((prev) => ({ ...prev, schedule_type: e.target.value as HabitScheduleType }))}>
+                    <option value="daily">Codziennie</option>
+                    <option value="selected_weekdays">W wybrane dni tygodnia</option>
+                    <option value="every_n_weeks">Co kilka tygodni</option>
+                    <option value="every_n_months">Co kilka miesięcy</option>
+                  </select>
+                </label>
+                {(draft.schedule_type === 'every_n_weeks' || draft.schedule_type === 'every_n_months') && (
+                  <label>{draft.schedule_type === 'every_n_weeks' ? 'Co ile tygodni?' : 'Co ile miesięcy?'}
+                    <input className="input" type="number" min={1} max={draft.schedule_type === 'every_n_months' ? 24 : 52} value={draft.interval_value} onChange={(e) => setDraft((prev) => ({ ...prev, interval_value: Math.max(1, Number(e.target.value) || 1) }))} />
+                  </label>
+                )}
+              </div>
+              {(draft.schedule_type === 'selected_weekdays' || draft.schedule_type === 'every_n_weeks') && (
+                <div className="habit-form-section">
+                  <strong>Dni tygodnia</strong>
+                  <div className="habit-form-days">
+                    {TASK_WEEKDAYS.map((day) => (
+                      <button key={day.value} type="button" className={draft.weekdays.includes(day.value) ? 'is-on' : ''} onClick={() => toggleDraftWeekday(day.value)}>{day.label}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="habit-form-section">
+                <strong>Czas trwania</strong>
+                <HabitDateSelect label="Start" value={draft.start_date} onChange={(value) => setDraft((prev) => ({ ...prev, start_date: value }))} />
+                <div className="habit-end-options">
+                  {[
+                    ['forever', 'Bezterminowo'],
+                    ['after_cycles', 'Po liczbie cykli'],
+                    ['on_date', 'Do daty'],
+                  ].map(([value, label]) => (
+                    <button key={value} type="button" className={draft.end_mode === value ? 'is-on' : ''} onClick={() => setDraft((prev) => ({ ...prev, end_mode: value as HabitEndMode }))}>{label}</button>
+                  ))}
+                </div>
+                {draft.end_mode === 'after_cycles' && (
+                  <label>Liczba cykli
+                    <input className="input" type="number" min={1} max={999} value={draft.end_after_cycles} onChange={(e) => setDraft((prev) => ({ ...prev, end_after_cycles: Math.max(1, Number(e.target.value) || 1) }))} />
+                  </label>
+                )}
+                {draft.end_mode === 'on_date' && (
+                  <HabitDateSelect label="Koniec" value={draft.end_date || draft.start_date} onChange={(value) => setDraft((prev) => ({ ...prev, end_date: value }))} />
+                )}
+              </div>
+              <div className="habit-form-actions">
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => setFormMode('none')}>Anuluj</button>
+                <button type="button" className="btn btn-primary btn-sm" onClick={() => void submitHabitForm()}>Zapisz</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function HabitsStrip() {
   const habitsQ = useHabits();
   const logsQ = useHabitLogs();
+  const createHabit = useCreateHabit();
+  const updateHabit = useUpdateHabit();
+  const deleteHabit = useDeleteHabit();
+  const setHabitStatusMutation = useSetHabitStatus();
+  const setHabitVisibilityMutation = useSetHabitVisibility();
+  const setHabitEntryMutation = useSetHabitEntry();
   const toggleHabit = useToggleHabitLog();
   const today = habitsTodayStr();
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
 
   const datesByHabit = useMemo(() => {
     const map = new Map<string, Set<string>>();
@@ -1064,19 +1555,28 @@ function HabitsStrip() {
         dates = new Set();
         map.set(l.habit_id, dates);
       }
-      dates.add(l.log_date);
+      if (l.status === 'completed') dates.add(l.entry_date);
     }
     return map;
   }, [logsQ.data]);
 
-  const habitItems = (habitsQ.data ?? []).map((habit) => {
+  const habitItems = (habitsQ.data ?? [])
+    .filter((habit) => habit.status === 'active' && habit.visible_on_dashboard)
+    .map((habit) => {
     const stats = habitStats(datesByHabit.get(habit.id) ?? new Set(), today, habit);
     return { habit, stats, scheduledToday: habitOccursOn(habit, today) };
-  });
+  }).filter((item) => item.scheduledToday || item.stats.doneToday);
   const scheduled = habitItems.filter((item) => item.scheduledToday);
   const done = scheduled.filter((item) => item.stats.doneToday).length;
   const total = scheduled.length || habitItems.length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const habits = habitsQ.data ?? [];
+
+  useEffect(() => {
+    if (selectedHabitId && habits.some((habit) => habit.id === selectedHabitId)) return;
+    const next = habits.find((habit) => habit.status === 'active') ?? habits.find((habit) => habit.status === 'paused') ?? null;
+    setSelectedHabitId(next?.id ?? null);
+  }, [habits, selectedHabitId]);
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
@@ -1152,22 +1652,44 @@ function HabitsStrip() {
           );
         })}
       </div>
-      <Link to="/goals" style={{ display:'inline-flex', alignItems:'center', gap:5, marginTop:14, fontFamily:'var(--mono)', fontSize:9.5, letterSpacing:'.06em', textTransform:'uppercase', color:'var(--acc-a-ink)', textDecoration:'none', fontWeight:600, flexShrink:0 }}>
+      <button type="button" onClick={() => setDetailsOpen(true)} style={{ display:'inline-flex', alignItems:'center', gap:5, marginTop:14, fontFamily:'var(--mono)', fontSize:9.5, letterSpacing:'.06em', textTransform:'uppercase', color:'var(--acc-a-ink)', background:'transparent', border:0, padding:0, cursor:'pointer', fontWeight:600, flexShrink:0 }}>
         Zobacz szczegóły
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-      </Link>
+      </button>
+      <HabitDetailsOverlay
+        open={detailsOpen}
+        habits={habits}
+        logs={(logsQ.data ?? []) as HabitLog[]}
+        datesByHabit={datesByHabit}
+        today={today}
+        selectedId={selectedHabitId}
+        onSelect={setSelectedHabitId}
+        onClose={() => setDetailsOpen(false)}
+        onCreateHabit={(input) => createHabit.mutateAsync(input)}
+        onUpdateHabit={(id, input) => updateHabit.mutateAsync({ id, ...input })}
+        onDeleteHabit={(id) => {
+          deleteHabit.mutate(id);
+          const next = habits.find((habit) => habit.id !== id && habit.status === 'active') ?? habits.find((habit) => habit.id !== id && habit.status === 'paused') ?? null;
+          setSelectedHabitId(next?.id ?? null);
+        }}
+        onSetHabitStatus={(id, status) => setHabitStatusMutation.mutate({ id, status })}
+        onSetHabitVisibility={(id, visible) => setHabitVisibilityMutation.mutate({ id, visible })}
+        onSetHabitEntry={(habitId, date, status) => setHabitEntryMutation.mutate({ habitId, date, status })}
+      />
     </div>
   );
 }
 
-// ─── TODAY PANEL ──────────────────────────────────────────────
+// ??? TODAY PANEL ??????????????????????????????????????????????
 
 interface TodayPanelProps {
   tasks: SupabaseTask[];
   isLoading: boolean;
   isSaving: boolean;
-  onAddTask: (prefillTitle?: string, prefillTags?: string[], anchor?: { x: number; y: number }) => void;
-  onQuickAddTask: (title: string, tags: string[]) => Promise<void> | void;
+  hideCompleted: boolean;
+  onToggleHideCompleted: () => void;
+  onScheduleTask: (title: string, tags: string[], dueDate: string, anchor: AnchorRect) => void;
+  onQuickAddTask: (title: string, tags: string[], dueDate: string) => Promise<void> | void;
   onTaskClick: (task: SupabaseTask) => void;
   onToggleTask: (id: string, done: boolean) => void;
 }
@@ -1210,6 +1732,9 @@ function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
             <span key={tag} className="task-tag-badge">{tag}</span>
           ))}
         </div>
+        {task.scheduled_time && (
+          <span className="planner-task-time">{task.scheduled_time}</span>
+        )}
         <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-3)', flexShrink:0, whiteSpace:'nowrap' }}>{dueLabel}</span>
       </div>
     </div>
@@ -1222,7 +1747,9 @@ function TodayPanel({
   tasks,
   isLoading,
   isSaving,
-  onAddTask,
+  hideCompleted,
+  onToggleHideCompleted,
+  onScheduleTask,
   onQuickAddTask,
   onTaskClick,
   onToggleTask,
@@ -1239,24 +1766,28 @@ function TodayPanel({
   const monthKey = todayStr.slice(0, 7);
 
   const byDate = (a: SupabaseTask, b: SupabaseTask) => {
+    if (a.done !== b.done) return Number(a.done) - Number(b.done);
     const aDate = a.due_date ?? '9999-12-31';
     const bDate = b.due_date ?? '9999-12-31';
     if (aDate !== bDate) return aDate.localeCompare(bDate);
+    const aTime = a.scheduled_time ?? '';
+    const bTime = b.scheduled_time ?? '';
+    if (aTime !== bTime) return aTime.localeCompare(bTime);
     return a.created_at.localeCompare(b.created_at);
   };
 
-  const activeTasks = useMemo(() => tasks.filter((t) => !t.done), [tasks]);
+  const panelTasks = useMemo(() => hideCompleted ? tasks.filter((t) => !t.done) : tasks, [hideCompleted, tasks]);
   const counters = useMemo(() => {
-    const today = activeTasks.filter((t) => t.due_date === todayStr).length;
-    const tomorrow = activeTasks.filter((t) => t.due_date === tomorrowStr).length;
-    const week = activeTasks.filter((t) => !!t.due_date && t.due_date >= weekStart && t.due_date <= weekEnd).length;
-    const month = activeTasks.filter((t) => !!t.due_date && t.due_date.startsWith(monthKey)).length;
-    const all = activeTasks.length;
+    const today = panelTasks.filter((t) => t.due_date === todayStr).length;
+    const tomorrow = panelTasks.filter((t) => t.due_date === tomorrowStr).length;
+    const week = panelTasks.filter((t) => !!t.due_date && t.due_date >= weekStart && t.due_date <= weekEnd).length;
+    const month = panelTasks.filter((t) => !!t.due_date && t.due_date.startsWith(monthKey)).length;
+    const all = panelTasks.length;
     return { today, tomorrow, week, month, all };
-  }, [activeTasks, monthKey, todayStr, tomorrowStr, weekEnd, weekStart]);
+  }, [monthKey, panelTasks, todayStr, tomorrowStr, weekEnd, weekStart]);
 
   const visibleTasks = useMemo(() => {
-    const filtered = activeTasks.filter((t) => {
+    const filtered = panelTasks.filter((t) => {
       if (windowFilter === 'today') return t.due_date === todayStr;
       if (windowFilter === 'tomorrow') return t.due_date === tomorrowStr;
       if (windowFilter === 'week') return !!t.due_date && t.due_date >= weekStart && t.due_date <= weekEnd;
@@ -1264,7 +1795,7 @@ function TodayPanel({
       return true;
     });
     return filtered.sort(byDate);
-  }, [activeTasks, monthKey, todayStr, tomorrowStr, weekEnd, weekStart, windowFilter]);
+  }, [monthKey, panelTasks, todayStr, tomorrowStr, weekEnd, weekStart, windowFilter]);
 
   const tabs: Array<{ id: TaskWindow; label: string; count: number }> = [
     { id: 'today', label: 'DZISIAJ', count: counters.today },
@@ -1274,10 +1805,13 @@ function TodayPanel({
     { id: 'all', label: 'WSZYSTKIE', count: counters.all },
   ];
 
+  // Default due date for additions made from this panel follows the active tab.
+  const panelDate = windowFilter === 'tomorrow' ? tomorrowStr : todayStr;
+
   async function handleQuickSubmit() {
     const parsed = extractTitleAndTags(quickTitle, quickTags);
     if (!parsed.title || isSaving) return;
-    await onQuickAddTask(parsed.title, parsed.tags);
+    await onQuickAddTask(parsed.title, parsed.tags, panelDate);
     setQuickTitle('');
     setQuickTags([]);
   }
@@ -1287,6 +1821,15 @@ function TodayPanel({
       {/* Header */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:14, flexShrink:0 }}>
         <span style={{ fontFamily:'var(--display)', fontSize:28, fontWeight:600, letterSpacing:'-.02em', lineHeight:1 }}>Zadania</span>
+        <button
+          type="button"
+          className={`hide-completed-toggle${hideCompleted ? ' is-active' : ''}`}
+          onClick={onToggleHideCompleted}
+          aria-pressed={hideCompleted}
+          title="Ukryj zakończone zadania"
+        >
+          Ukryj zakończone
+        </button>
       </div>
 
       <div className="task-filter-row">
@@ -1303,10 +1846,10 @@ function TodayPanel({
         ))}
       </div>
 
-      {/* Task list — scrollable, grouped */}
+      {/* Task list ? scrollable, grouped */}
       <div style={{ flex:1, overflowY:'auto', overflowX:'hidden', minHeight:0, paddingRight:2 }}>
         {isLoading ? (
-          <div style={{ textAlign:'center', padding:'24px 0', color:'var(--ink-3)', fontSize:13 }}>Ladowanie zadan...</div>
+          <div style={{ textAlign:'center', padding:'24px 0', color:'var(--ink-3)', fontSize:13 }}>Ładowanie zadań...</div>
         ) : visibleTasks.length === 0 ? (
           <div style={{ textAlign:'center', padding:'24px 0', color:'var(--ink-3)', fontSize:13 }}>Brak zadań. Dodaj pierwsze poniżej.</div>
         ) : (
@@ -1368,10 +1911,10 @@ function TodayPanel({
         </button>
         <button
           type="button"
-          onClick={(e) => onAddTask(quickTitle, quickTags, { x: e.clientX, y: e.clientY })}
+          onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); onScheduleTask(quickTitle, quickTags, panelDate, { left: r.left, right: r.right, top: r.top, bottom: r.bottom }); }}
           className="icon-btn"
-          aria-label="Otwórz pełne okno dodawania zadania"
-          title="Więcej opcji"
+          aria-label="Ustaw termin i szczegóły zadania"
+          title="Termin i szczegóły"
           style={{ width: 36, height: 36, borderRadius: 999 }}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}>
@@ -1386,8 +1929,11 @@ function TodayPanel({
 
 interface TaskOptionsState {
   open: boolean;
-  x: number;
-  y: number;
+  overlayMode: boolean;
+  aLeft: number;
+  aRight: number;
+  aTop: number;
+  aBottom: number;
   title: string;
   tags: string[];
   dueDate: string;
@@ -1412,7 +1958,7 @@ interface TaskOptionsPopoverProps {
   onDelete: () => void;
 }
 
-type TaskSubpanel = 'none' | 'time-start' | 'time-end' | 'reminder' | 'repeat' | 'repeat_rule';
+type TaskSubpanel = 'none' | 'time-start' | 'reminder' | 'repeat' | 'repeat_rule';
 
 const TIME_OPTIONS = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '18:00', '19:00', '20:00', '21:00'];
 
@@ -1428,7 +1974,7 @@ const REPEAT_LABEL: Record<TaskOptionsState['repeatModeUi'], string> = {
   none: 'Brak',
   daily: 'Codziennie',
   weekly: 'Co tydzień',
-  monthly: 'Miesięcznie',
+  monthly: 'Miesiącznie',
   yearly: 'Rocznie',
 };
 
@@ -1441,8 +1987,8 @@ const IC_BELL = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 const IC_REPEAT = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>);
 const IC_CHEVRON_L = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>);
 const IC_CHEVRON_R = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>);
-const IC_CHEVRON_D = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>);
 const IC_CHECK = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>);
+const IC_NOTE = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3.5" width="16" height="17" rx="3.5" /><path d="M8.5 3.5v3" /></svg>);
 
 function clampPopoverPosition(x: number, y: number, width: number, height: number, pad = 12) {
   const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
@@ -1450,6 +1996,46 @@ function clampPopoverPosition(x: number, y: number, width: number, height: numbe
   const left = Math.min(Math.max(pad, x), Math.max(pad, vw - width - pad));
   const top = Math.min(Math.max(pad, y), Math.max(pad, vh - height - pad));
   return { left, top };
+}
+
+interface AnchorRect { left: number; right: number; top: number; bottom: number; }
+
+// Smart anchor positioning: prefer the right side of the anchor, flip to the
+// left when there is no room, then keep the panel fully inside the viewport -
+// shifting it up so it never spills past the bottom edge.
+function placePopover(anchor: AnchorRect, width: number, height: number, gap = 8, pad = 16) {
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+  let left = anchor.right + gap;
+  if (left + width + pad > vw) left = anchor.left - gap - width;
+  left = Math.min(Math.max(pad, left), Math.max(pad, vw - width - pad));
+  let top = anchor.top;
+  if (top + height + pad > vh) top = vh - height - pad;
+  top = Math.min(Math.max(pad, top), Math.max(pad, vh - height - pad));
+  return { left, top };
+}
+
+function placeLayeredPopover(anchor: AnchorRect, width: number, height: number, pad = 16) {
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+  const anchorWidth = Math.max(0, anchor.right - anchor.left);
+  const anchorHeight = Math.max(0, anchor.bottom - anchor.top);
+  const offsetX = Math.min(34, Math.max(16, anchorWidth * 0.08));
+  const offsetY = Math.min(42, Math.max(18, anchorHeight * 0.10));
+  let left = anchor.left + offsetX;
+  let top = anchor.top + offsetY;
+  left = Math.min(Math.max(pad, left), Math.max(pad, vw - width - pad));
+  top = Math.min(Math.max(pad, top), Math.max(pad, vh - height - pad));
+  return { left, top };
+}
+
+function taskOptionsSize() {
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+  return {
+    width: Math.min(Math.max(380, Math.round(vw * 0.30)), Math.min(500, Math.max(280, vw - 32))),
+    height: Math.min(Math.max(520, Math.round(vh * 0.72)), Math.min(660, Math.max(340, vh - 32))),
+  };
 }
 
 function firstOfMonth(dateStr: string): string {
@@ -1525,12 +2111,104 @@ function reminderModeFromTask(startAt: string | null, reminderAt: string | null)
   return 'at_time';
 }
 
+// Shared, normalized shape every "add task" entry point funnels through, so the
+// calendar quick-add, the tasks-panel input and the schedule popover all save
+// with identical rules. `buildTaskFields` derives the DB record from a draft.
+interface TaskDraft {
+  title: string;
+  tags: string[];
+  dueDate: string | null;
+  scheduledTime: string;
+  endDate: string;
+  endTime: string;
+  allDay: boolean;
+  priority: 'high' | 'mid' | 'low';
+  reminderMode: TaskOptionsState['reminderMode'];
+  repeatModeUi: TaskOptionsState['repeatModeUi'];
+  repeatAnchor: TaskOptionsState['repeatAnchor'];
+}
+
+function emptyDraft(dueDate: string | null, priority: TaskDraft['priority'] = 'mid'): TaskDraft {
+  return {
+    title: '',
+    tags: [],
+    dueDate,
+    scheduledTime: '',
+    endDate: '',
+    endTime: '',
+    allDay: false,
+    priority,
+    reminderMode: 'at_time',
+    repeatModeUi: 'none',
+    repeatAnchor: 'due_date',
+  };
+}
+
+function buildTaskFields(draft: TaskDraft) {
+  const dueDate = draft.dueDate;
+  const allDay = draft.allDay;
+  const startTime = allDay ? '' : draft.scheduledTime;
+  const endTime = allDay ? '' : draft.endTime;
+  const endDate = draft.endDate || dueDate || '';
+
+  let durationMinutes: number | null = null;
+  const startMin = timeToMinutes(startTime);
+  const endMin = timeToMinutes(endTime);
+  const startDay = dueDate ? parseDateStr(dueDate) : null;
+  const endDay = endDate ? parseDateStr(endDate) : null;
+  if (startMin != null && endMin != null && startDay && endDay) {
+    const dayDiff = Math.round((endDay.getTime() - startDay.getTime()) / 86400000);
+    const total = dayDiff * 1440 + endMin - startMin;
+    durationMinutes = total > 0 ? total : null;
+  }
+
+  const repeatMode = draft.repeatModeUi;
+  const repeatWeekdays = repeatMode === 'weekly' && dueDate ? [weekdayFromDateStr(dueDate)] : null;
+  const repeatRule = repeatMode === 'none'
+    ? null
+    : { frequency: repeatMode, interval: 1, anchor: draft.repeatAnchor, days_of_week: repeatWeekdays, until: null };
+
+  const startAtIso = !dueDate
+    ? null
+    : allDay
+      ? combineDateAndTimeToIso(dueDate, '00:00')
+      : (startTime ? combineDateAndTimeToIso(dueDate, startTime) : null);
+  const endAtIso = allDay || !startTime
+    ? null
+    : (endTime
+      ? combineDateAndTimeToIso(endDate || dueDate || '', endTime)
+      : (durationMinutes && startAtIso
+        ? new Date(new Date(startAtIso).getTime() + durationMinutes * 60_000).toISOString()
+        : null));
+  const reminderAt = allDay || !startTime || !dueDate
+    ? null
+    : isoFromDateWithOffset(dueDate, startTime, minutesToReminderOffset(draft.reminderMode));
+
+  return {
+    title: draft.title,
+    tags: draft.tags,
+    priority: draft.priority,
+    all_day: allDay,
+    due_date: dueDate || null,
+    scheduled_time: startTime || null,
+    start_at: startAtIso,
+    end_at: endAtIso,
+    reminder_at: reminderAt,
+    duration_minutes: durationMinutes,
+    repeat_mode: repeatMode,
+    repeat_rule: repeatRule,
+    repeat_anchor: draft.repeatAnchor,
+    repeat_weekdays: repeatWeekdays,
+  };
+}
+
 function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete }: TaskOptionsPopoverProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const subRef = useRef<HTMLDivElement | null>(null);
   const [subpanel, setSubpanel] = useState<TaskSubpanel>('none');
   const [calEdit, setCalEdit] = useState<'start' | 'end'>('start');
   const [viewMonth, setViewMonth] = useState(() => firstOfMonth(state.dueDate));
+  const [, setViewportVersion] = useState(0);
 
   const today = new Date();
   const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
@@ -1543,14 +2221,37 @@ function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete
 
   const viewDate = parseDateStr(viewMonth) ?? today;
   const monthGrid = useMemo(() => monthGridFor(viewDate.getFullYear(), viewDate.getMonth()), [viewMonth]);
-  const endDateEffective = state.endDate || state.dueDate;
+  const anchorRect = { left: state.aLeft, right: state.aRight, top: state.aTop, bottom: state.aBottom };
+  const { width: popWidth, height: popHeight } = taskOptionsSize();
+  const [mainPos, setMainPos] = useState(() => (
+    state.overlayMode ? placeLayeredPopover(anchorRect, popWidth, popHeight, 16) : placePopover(anchorRect, popWidth, popHeight, 8, 16)
+  ));
 
-  const mainPos = clampPopoverPosition(state.x, state.y, 320, 560, 14);
+  // Re-clamp using the popover's *measured* size so a tall panel opened from a
+  // day low in the calendar never spills past the bottom of the viewport.
+  useLayoutEffect(() => {
+    if (!state.open) return;
+    const el = ref.current;
+    const w = el?.offsetWidth ?? popWidth;
+    const h = el?.offsetHeight ?? popHeight;
+    const nextAnchor = { left: state.aLeft, right: state.aRight, top: state.aTop, bottom: state.aBottom };
+    setMainPos(state.overlayMode ? placeLayeredPopover(nextAnchor, w, h, 16) : placePopover(nextAnchor, w, h, 8, 16));
+  }, [state.open, state.overlayMode, state.aLeft, state.aRight, state.aTop, state.aBottom, popHeight, popWidth]);
+
   const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
-  const subWidth = 248;
-  const preferredSubLeft = mainPos.left + 320 + 10;
+  const subWidth = 244;
+  const preferredSubLeft = mainPos.left + popWidth + 10;
   const subLeft = preferredSubLeft + subWidth + 14 <= vw ? preferredSubLeft : mainPos.left - subWidth - 10;
-  const subPos = clampPopoverPosition(subLeft, mainPos.top + 40, subWidth, 380, 14);
+  const subPos = clampPopoverPosition(subLeft, mainPos.top + 40, subWidth, 360, 14);
+
+  useEffect(() => {
+    if (!state.open) return;
+    function onResize() {
+      setViewportVersion((version) => version + 1);
+    }
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [state.open]);
 
   useEffect(() => {
     if (!state.open) return;
@@ -1594,29 +2295,26 @@ function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete
     }
   }
 
-  function toggleAllDay() {
-    const next = !state.allDay;
-    onChange(next ? { allDay: true, scheduledTime: '', endTime: '' } : { allDay: false });
-  }
-
   return (
     <>
       <div
         ref={ref}
         className="task-options-pop"
-        style={{ left: mainPos.left, top: mainPos.top }}
+        style={{ left: mainPos.left, top: mainPos.top, width: popWidth, height: popHeight }}
         role="dialog"
         aria-label="Dodatkowe opcje zadania"
       >
-        {state.editingId && (
+        <div className="task-options-namebox">
+          <span className="ton-ic">{IC_NOTE}</span>
           <input
             className="task-options-title"
             value={state.title}
             placeholder="Nazwa zadania"
             onChange={(e) => onChange({ title: e.target.value })}
             aria-label="Nazwa zadania"
+            autoFocus={!state.editingId && !state.title}
           />
-        )}
+        </div>
         <div className="task-options-icons">
           <button type="button" className={state.dueDate === quick.today ? 'is-active' : ''} title="Dziś" aria-label="Dziś" onClick={() => pickQuick(quick.today)}>{IC_SUN}</button>
           <button type="button" className={state.dueDate === quick.tomorrow ? 'is-active' : ''} title="Jutro" aria-label="Jutro" onClick={() => pickQuick(quick.tomorrow)}>{IC_SUNRISE}</button>
@@ -1650,45 +2348,22 @@ function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete
           })}
         </div>
 
-        <div className="task-options-fields">
-          <div className={`tof-row ${calEdit === 'start' ? 'is-editing' : ''}`} role="button" tabIndex={0} onClick={() => setCalEdit('start')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCalEdit('start'); } }}>
-            <span className="tof-label">Start</span>
-            <span className="tof-chips">
-              <span className="tof-date">{fmtShortDate(state.dueDate)}</span>
-              {!state.allDay && (
-                <span className="tof-time" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); setCalEdit('start'); setSubpanel('time-start'); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setSubpanel('time-start'); } }}>{state.scheduledTime || '—:—'}<span className="tof-time-chev">{IC_CHEVRON_D}</span></span>
-              )}
-            </span>
-          </div>
-          <div className={`tof-row ${calEdit === 'end' ? 'is-editing' : ''}`} role="button" tabIndex={0} onClick={() => setCalEdit('end')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCalEdit('end'); } }}>
-            <span className="tof-label">Koniec</span>
-            <span className="tof-chips">
-              <span className="tof-date">{fmtShortDate(endDateEffective)}</span>
-              {!state.allDay && (
-                <span className="tof-time" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); setCalEdit('end'); setSubpanel('time-end'); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setSubpanel('time-end'); } }}>{state.endTime || '—:—'}<span className="tof-time-chev">{IC_CHEVRON_D}</span></span>
-              )}
-            </span>
-          </div>
-        </div>
-
-        <button type="button" className="task-options-allday" role="switch" aria-checked={state.allDay} onClick={toggleAllDay}>
-          <span>Cały dzień</span>
-          <span className={`task-tgl ${state.allDay ? 'is-on' : ''}`}><i /></span>
-        </button>
-
-        <div className="task-options-links">
-          <button type="button" onClick={() => setSubpanel('repeat')}>
-            <span className="tol-ic">{IC_REPEAT}</span><span className="tol-lbl">Powtarzaj</span><em>{REPEAT_LABEL[state.repeatModeUi]}</em><span className="tol-chev">{IC_CHEVRON_R}</span>
-          </button>
-          <button type="button" onClick={() => setSubpanel('reminder')}>
-            <span className="tol-ic">{IC_BELL}</span><span className="tol-lbl">Przypomnienie</span><em>{REMINDER_LABEL[state.reminderMode]}</em><span className="tol-chev">{IC_CHEVRON_R}</span>
-          </button>
-          {!state.allDay && (
-            <button type="button" onClick={() => { setCalEdit('start'); setSubpanel('time-start'); }}>
-              <span className="tol-ic">{IC_CLOCK}</span><span className="tol-lbl">Godzina</span><em>{state.scheduledTime || 'Brak'}</em><span className="tol-chev">{IC_CHEVRON_R}</span>
+        <div className="task-options-card task-options-links-card">
+          <div className="task-options-links">
+            <button type="button" onClick={() => setSubpanel('repeat')}>
+              <span className="tol-ic">{IC_REPEAT}</span><span className="tol-lbl">Powtarzaj</span><em>{REPEAT_LABEL[state.repeatModeUi]}</em><span className="tol-chev">{IC_CHEVRON_R}</span>
             </button>
-          )}
+            <button type="button" onClick={() => setSubpanel('reminder')}>
+              <span className="tol-ic">{IC_BELL}</span><span className="tol-lbl">Przypomnienie</span><em>{REMINDER_LABEL[state.reminderMode]}</em><span className="tol-chev">{IC_CHEVRON_R}</span>
+            </button>
+            {!state.allDay && (
+              <button type="button" onClick={() => { setCalEdit('start'); setSubpanel('time-start'); }}>
+                <span className="tol-ic">{IC_CLOCK}</span><span className="tol-lbl">Godzina</span><em>{state.scheduledTime || 'Brak'}</em><span className="tol-chev">{IC_CHEVRON_R}</span>
+              </button>
+            )}
+          </div>
         </div>
+
 
         <div className="task-options-actions">
           {state.editingId ? (
@@ -1703,10 +2378,10 @@ function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete
       </div>
       {subpanel !== 'none' && (
         <div ref={subRef} className="task-options-subpop" style={{ left: subPos.left, top: subPos.top }}>
-          {(subpanel === 'time-start' || subpanel === 'time-end') && (() => {
-            const isStart = subpanel === 'time-start';
-            const value = isStart ? state.scheduledTime : state.endTime;
-            const set = (time: string) => onChange(isStart ? { scheduledTime: time } : { endTime: time });
+          {subpanel === 'time-start' && (() => {
+            const isStart = true;
+            const value = state.scheduledTime;
+            const set = (time: string) => onChange({ scheduledTime: time });
             return (
               <>
                 <div className="task-sub-head">{isStart ? 'Godzina rozpoczęcia' : 'Godzina zakończenia'}</div>
@@ -1733,7 +2408,7 @@ function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete
             <>
               <div className="task-sub-head">Powtarzaj</div>
               <div className="task-sub-list">
-                {([['none', 'Brak'], ['daily', 'Dziennie'], ['weekly', 'Co tydzień'], ['monthly', 'Miesięcznie'], ['yearly', 'Rocznie']] as Array<[TaskOptionsState['repeatModeUi'], string]>).map(([mode, label]) => (
+                {([['none', 'Brak'], ['daily', 'Dziennie'], ['weekly', 'Co tydzień'], ['monthly', 'Miesiącznie'], ['yearly', 'Rocznie']] as Array<[TaskOptionsState['repeatModeUi'], string]>).map(([mode, label]) => (
                   <button key={mode} type="button" className={state.repeatModeUi === mode ? 'is-active' : ''} onClick={() => onChange({ repeatModeUi: mode })}>{label}{state.repeatModeUi === mode && <span className="task-sub-check">{IC_CHECK}</span>}</button>
                 ))}
               </div>
@@ -1757,8 +2432,10 @@ function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete
 
 interface CalendarQuickState {
   open: boolean;
-  x: number;
-  y: number;
+  aLeft: number;
+  aRight: number;
+  aTop: number;
+  aBottom: number;
   date: string;
   title: string;
   tags: string[];
@@ -1768,10 +2445,12 @@ interface CalendarQuickState {
 interface CalendarQuickPopoverProps {
   state: CalendarQuickState;
   saving: boolean;
+  detailsOpen: boolean;
   onClose: () => void;
   onChange: (next: Partial<CalendarQuickState>) => void;
   onSubmit: () => void;
-  onOpenOptions: () => void;
+  onOpenOptions: (anchor: AnchorRect) => void;
+  onReturnSimple: () => void;
 }
 
 function quickDateLabel(dateStr: string): string {
@@ -1786,16 +2465,34 @@ function quickDateLabel(dateStr: string): string {
 
 const IC_CAL_SM = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>);
 const IC_FLAG = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><path d="M4 22v-7" /></svg>);
-function CalendarQuickPopover({ state, onClose, onChange, onSubmit, onOpenOptions }: CalendarQuickPopoverProps) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const quickPos = clampPopoverPosition(state.x, state.y, 300, 196, 12);
+const IC_SEND = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7" /></svg>);
 
+function CalendarQuickPopover({ state, saving, detailsOpen, onClose, onChange, onSubmit, onOpenOptions, onReturnSimple }: CalendarQuickPopoverProps) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const anchorWidth = Math.max(0, state.aRight - state.aLeft);
+  const anchorHeight = Math.max(0, state.aBottom - state.aTop);
+  const gridGap = 6;
+  const viewportW = typeof window !== 'undefined' ? window.innerWidth : 1280;
+  const viewportH = typeof window !== 'undefined' ? window.innerHeight : 800;
+  const maxNoteWidth = Math.max(260, viewportW - 36);
+  const maxNoteHeight = Math.max(190, viewportH - 36);
+  const noteWidth = Math.min(Math.max(300, Math.round(anchorWidth * 2 + gridGap)), maxNoteWidth);
+  const noteHeight = Math.min(Math.max(230, Math.round(anchorHeight * 2 + gridGap)), maxNoteHeight);
+  const quickPos = placePopover({ left: state.aLeft, right: state.aRight, top: state.aTop, bottom: state.aBottom }, noteWidth, noteHeight, 10, 18);
+  const quickRect = { left: quickPos.left, right: quickPos.left + noteWidth, top: quickPos.top, bottom: quickPos.top + noteHeight };
+
+  // Clicking anywhere outside the note confirms it (saves when there is text),
+  // otherwise just closes. Esc always closes without saving.
   useEffect(() => {
     if (!state.open) return;
     function onDown(ev: MouseEvent) {
       if (!ref.current) return;
-      if (ref.current.contains(ev.target as Node)) return;
-      onClose();
+      const target = ev.target as Element;
+      if (ref.current.contains(target)) return;
+      if (target.closest('.task-options-pop, .task-options-subpop')) return;
+      if (detailsOpen) return;
+      if (state.title.trim()) void onSubmit();
+      else onClose();
     }
     function onEsc(ev: KeyboardEvent) {
       if (ev.key === 'Escape') onClose();
@@ -1806,24 +2503,35 @@ function CalendarQuickPopover({ state, onClose, onChange, onSubmit, onOpenOption
       window.removeEventListener('mousedown', onDown);
       window.removeEventListener('keydown', onEsc);
     };
-  }, [onClose, state.open]);
+  }, [detailsOpen, onClose, onSubmit, state.open, state.title]);
 
   if (!state.open) return null;
 
+  const canSave = !!state.title.trim() && !saving;
+
   return (
-    <div ref={ref} className="task-quick-pop" style={{ left: quickPos.left, top: quickPos.top }}>
+    <div
+      ref={ref}
+      className={`task-quick-pop task-quick-note${detailsOpen ? ' is-under-detail' : ''}`}
+      style={{ left: quickPos.left, top: quickPos.top, width: noteWidth, height: noteHeight }}
+      onMouseDownCapture={(e) => {
+        if (!detailsOpen) return;
+        e.preventDefault();
+        e.stopPropagation();
+        onReturnSimple();
+      }}
+    >
       <div className="tq-head">
-        <button type="button" className="tq-date" onClick={onOpenOptions} title="Szczegóły zadania">
+        <button type="button" className="tq-date" onClick={() => onOpenOptions(quickRect)} title="Ustaw termin, godzinę i szczegóły">
           <span className="tq-date-ic">{IC_CAL_SM}</span>
           <span>{quickDateLabel(state.date)}</span>
         </button>
-        <button type="button" className={`tq-flag ${state.flagged ? 'is-on' : ''}`} onClick={() => onChange({ flagged: !state.flagged })} aria-pressed={state.flagged} aria-label="Oflaguj jako ważne">
+        <button type="button" className={`tq-flag ${state.flagged ? 'is-on' : ''}`} onClick={() => onChange({ flagged: !state.flagged })} aria-pressed={state.flagged} aria-label="Oflaguj jako ważne" title="Oflaguj jako ważne">
           {IC_FLAG}
         </button>
       </div>
       <textarea
         className="tq-input"
-        rows={3}
         value={state.title}
         placeholder="Co chciałbyś zrobić?"
         onChange={(e) => {
@@ -1835,14 +2543,27 @@ function CalendarQuickPopover({ state, onClose, onChange, onSubmit, onOpenOption
             e.preventDefault();
             void onSubmit();
           }
+          if (e.key === 'Backspace' && !state.title && state.tags.length > 0) {
+            onChange({ tags: state.tags.slice(0, -1) });
+          }
         }}
         autoFocus
       />
+      {state.tags.length > 0 && (
+        <div className="tq-tags">
+          {state.tags.map((tag) => (
+            <button key={tag} type="button" className="task-tag-badge" title="Usuń tag" onClick={() => onChange({ tags: state.tags.filter((item) => item !== tag) })}>#{tag}</button>
+          ))}
+        </div>
+      )}
+      <button type="button" className="tq-send" onClick={() => void onSubmit()} disabled={!canSave} aria-label="Dodaj zadanie" title="Dodaj (lub kliknij poza notatkę)">
+        {IC_SEND}
+      </button>
     </div>
   );
 }
 
-// ─── ROOT ─────────────────────────────────────────────────────
+// ??? ROOT ?????????????????????????????????????????????????????
 
 function PlannerHeaderIcon() {
   return (
@@ -1863,13 +2584,16 @@ export function StartScreen() {
   const deleteTasks = useDeleteTasks();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalDate, setModalDate] = useState(todayStr);
+  const modalDate = todayStr;
   const [modalInitialTitle, setModalInitialTitle] = useState('');
   const [modalInitialTags, setModalInitialTags] = useState<string[]>([]);
   const [taskOptions, setTaskOptions] = useState<TaskOptionsState>({
     open: false,
-    x: 0,
-    y: 0,
+    overlayMode: false,
+    aLeft: 0,
+    aRight: 0,
+    aTop: 0,
+    aBottom: 0,
     title: '',
     tags: [],
     dueDate: todayStr,
@@ -1886,13 +2610,16 @@ export function StartScreen() {
   });
   const [calendarQuick, setCalendarQuick] = useState<CalendarQuickState>({
     open: false,
-    x: 0,
-    y: 0,
+    aLeft: 0,
+    aRight: 0,
+    aTop: 0,
+    aBottom: 0,
     date: todayStr,
     title: '',
     tags: [],
     flagged: false,
   });
+  const [hideCompletedTasks, setHideCompletedTasks] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [seriesDeleteTarget, setSeriesDeleteTarget] = useState<SupabaseTask | null>(null);
 
@@ -1902,20 +2629,15 @@ export function StartScreen() {
     : 0;
   const taskMutationPending = createTask.isPending || updateTask.isPending || toggleTask.isPending || deleteTask.isPending || deleteTasks.isPending;
 
-  function openForToday(prefillTitle = '', prefillTags: string[] = []) {
-    setEditingTaskId(null);
-    setModalInitialTitle(prefillTitle.trim());
-    setModalInitialTags(dedupeTags(prefillTags));
-    setModalDate(todayStr);
-    setModalOpen(true);
-  }
-
-  function openTaskOptions(anchor: { x: number; y: number }, prefillTitle: string, prefillTags: string[], dueDate: string) {
+  function openTaskOptions(anchor: AnchorRect, prefillTitle: string, prefillTags: string[], dueDate: string, overlayMode = false) {
     const parsed = extractTitleAndTags(prefillTitle, prefillTags);
     setTaskOptions({
       open: true,
-      x: anchor.x,
-      y: anchor.y,
+      overlayMode,
+      aLeft: anchor.left,
+      aRight: anchor.right,
+      aTop: anchor.top,
+      aBottom: anchor.bottom,
       title: parsed.title,
       tags: parsed.tags,
       dueDate,
@@ -1932,96 +2654,49 @@ export function StartScreen() {
     });
   }
 
+  // Single create path shared by the calendar quick-add, the tasks-panel input
+  // and the schedule popover ? no per-component duplication of save rules.
+  async function createTaskFromDraft(draft: TaskDraft, source: 'manual' | 'quick_add' | 'calendar_quick' | 'imported') {
+    if (!draft.title.trim()) return;
+    await createTask.mutateAsync({
+      ...buildTaskFields(draft),
+      source,
+      category: null,
+      note: '',
+      series_id: null,
+      repeat_until: null,
+    });
+  }
+
   async function saveTaskOptions() {
     const parsed = extractTitleAndTags(taskOptions.title, taskOptions.tags);
     if (!parsed.title || taskMutationPending) return;
     const startTime = taskOptions.allDay ? '' : taskOptions.scheduledTime;
     const endTime = taskOptions.allDay ? '' : taskOptions.endTime;
-    const endDate = taskOptions.endDate || taskOptions.dueDate;
 
-    if (!taskOptions.allDay && !startTime) return;
-
-    let durationMinutes: number | null = null;
-    const startMin = timeToMinutes(startTime);
-    const endMin = timeToMinutes(endTime);
-    const startDay = parseDateStr(taskOptions.dueDate);
-    const endDay = parseDateStr(endDate);
-    if (startMin != null && endMin != null && startDay && endDay) {
-      const dayDiff = Math.round((endDay.getTime() - startDay.getTime()) / 86400000);
-      const total = dayDiff * 1440 + endMin - startMin;
-      durationMinutes = total > 0 ? total : null;
-    }
-    if (!taskOptions.allDay && startTime && endTime && durationMinutes == null) return;
-
-    const repeatMode = taskOptions.repeatModeUi;
-    const repeatWeekdays = repeatMode === 'weekly' ? [weekdayFromDateStr(taskOptions.dueDate)] : null;
-    const repeatRule = repeatMode === 'none'
-      ? null
-      : {
-        frequency: repeatMode,
-        interval: 1,
-        anchor: taskOptions.repeatAnchor,
-        days_of_week: repeatWeekdays,
-        until: null,
-      };
-
-    const startAtIso = taskOptions.allDay ? combineDateAndTimeToIso(taskOptions.dueDate, '00:00') : combineDateAndTimeToIso(taskOptions.dueDate, startTime || '00:00');
-    const endAtIso = taskOptions.allDay
-      ? null
-      : (endTime
-        ? combineDateAndTimeToIso(endDate, endTime)
-        : (durationMinutes && startAtIso
-          ? new Date(new Date(startAtIso).getTime() + durationMinutes * 60_000).toISOString()
-          : null));
-
-    const reminderAt = taskOptions.allDay
-      ? null
-      : isoFromDateWithOffset(taskOptions.dueDate, startTime || '00:00', minutesToReminderOffset(taskOptions.reminderMode));
+    const draft: TaskDraft = {
+      title: parsed.title,
+      tags: parsed.tags,
+      dueDate: taskOptions.dueDate || null,
+      scheduledTime: taskOptions.scheduledTime,
+      endDate: taskOptions.endDate,
+      endTime: taskOptions.endTime,
+      allDay: taskOptions.allDay,
+      priority: taskOptions.priority,
+      reminderMode: taskOptions.reminderMode,
+      repeatModeUi: taskOptions.repeatModeUi,
+      repeatAnchor: taskOptions.repeatAnchor,
+    };
+    const fields = buildTaskFields(draft);
+    if (!taskOptions.allDay && startTime && endTime && fields.duration_minutes == null) return;
 
     if (taskOptions.editingId) {
-      await updateTask.mutateAsync({
-        id: taskOptions.editingId,
-        patch: {
-          title: parsed.title,
-          tags: parsed.tags,
-          priority: taskOptions.priority,
-          all_day: taskOptions.allDay,
-          due_date: taskOptions.dueDate || null,
-          scheduled_time: startTime || null,
-          start_at: startAtIso,
-          end_at: endAtIso,
-          reminder_at: reminderAt,
-          duration_minutes: durationMinutes,
-          repeat_mode: repeatMode,
-          repeat_rule: repeatRule,
-          repeat_anchor: taskOptions.repeatAnchor,
-          repeat_weekdays: repeatWeekdays,
-        },
-      });
+      await updateTask.mutateAsync({ id: taskOptions.editingId, patch: fields });
     } else {
-      await createTask.mutateAsync({
-        title: parsed.title,
-        tags: parsed.tags,
-        source: 'manual',
-        category: null,
-        priority: taskOptions.priority,
-        all_day: taskOptions.allDay,
-        due_date: taskOptions.dueDate || null,
-        scheduled_time: startTime || null,
-        start_at: startAtIso,
-        end_at: endAtIso,
-        reminder_at: reminderAt,
-        duration_minutes: durationMinutes,
-        note: '',
-        series_id: null,
-        repeat_mode: repeatMode,
-        repeat_rule: repeatRule,
-        repeat_anchor: taskOptions.repeatAnchor,
-        repeat_until: null,
-        repeat_weekdays: repeatWeekdays,
-      });
+      await createTaskFromDraft(draft, 'manual');
     }
     setTaskOptions((prev) => ({ ...prev, open: false }));
+    setCalendarQuick((prev) => ({ ...prev, open: false, title: '', tags: [], flagged: false }));
   }
 
   function deleteTaskOptions() {
@@ -2032,27 +2707,17 @@ export function StartScreen() {
     if (task) requestDeleteSeries(task);
   }
 
-  async function handleQuickAddTask(title: string, tags: string[]) {
-    await createTask.mutateAsync({
-      title,
-      tags,
-      source: 'quick_add',
-      category: null,
-      priority: 'mid',
-      due_date: todayStr,
-      scheduled_time: null,
-      note: '',
-      series_id: null,
-      repeat_mode: 'none',
-      repeat_until: null,
-      repeat_weekdays: null,
-    });
+  async function handleQuickAddTask(title: string, tags: string[], dueDate: string) {
+    if (taskMutationPending) return;
+    await createTaskFromDraft({ ...emptyDraft(dueDate), title, tags }, 'quick_add');
   }
-  function openCalendarQuick(dateStr: string, anchor: { x: number; y: number }) {
+  function openCalendarQuick(dateStr: string, anchor: AnchorRect) {
     setCalendarQuick({
       open: true,
-      x: anchor.x,
-      y: anchor.y,
+      aLeft: anchor.left,
+      aRight: anchor.right,
+      aTop: anchor.top,
+      aBottom: anchor.bottom,
       date: dateStr,
       title: '',
       tags: [],
@@ -2060,24 +2725,17 @@ export function StartScreen() {
     });
   }
 
+  function openScheduleForPanel(title: string, tags: string[], dueDate: string, anchor: AnchorRect) {
+    openTaskOptions(anchor, title, tags, dueDate);
+  }
+
   async function submitCalendarQuick() {
     const parsed = extractTitleAndTags(calendarQuick.title, calendarQuick.tags);
     if (!parsed.title || taskMutationPending) return;
-    await createTask.mutateAsync({
-      title: parsed.title,
-      tags: parsed.tags,
-      source: 'calendar_quick',
-      category: null,
-      priority: calendarQuick.flagged ? 'high' : 'mid',
-      due_date: calendarQuick.date,
-      scheduled_time: null,
-      duration_minutes: null,
-      note: '',
-      series_id: null,
-      repeat_mode: 'none',
-      repeat_until: null,
-      repeat_weekdays: null,
-    });
+    await createTaskFromDraft(
+      { ...emptyDraft(calendarQuick.date, calendarQuick.flagged ? 'high' : 'mid'), title: parsed.title, tags: parsed.tags },
+      'calendar_quick',
+    );
     setCalendarQuick((prev) => ({ ...prev, open: false, title: '', tags: [], flagged: false }));
   }
   function openTask(task: SupabaseTask) {
@@ -2092,10 +2750,15 @@ export function StartScreen() {
       endTime = `${pad(Math.floor(mm / 60))}:${pad(mm % 60)}`;
       if (addDays > 0) endDate = addDaysStr(task.due_date ?? todayStr, addDays);
     }
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
+    const centerLeft = Math.max(16, (vw - 372) / 2);
     setTaskOptions({
       open: true,
-      x: Math.max(16, (window.innerWidth - 320) / 2),
-      y: 64,
+      overlayMode: false,
+      aLeft: centerLeft - 8,
+      aRight: centerLeft - 8,
+      aTop: 72,
+      aBottom: 72,
       title: task.title,
       tags: dedupeTags(task.tags ?? []),
       dueDate: task.due_date ?? todayStr,
@@ -2227,7 +2890,6 @@ export function StartScreen() {
         icon={<PlannerHeaderIcon />}
         title="Planer"
         desc={'Zaplanuj dzień, zadania, nawyki i cele w jednym miejscu.'}
-        actions={<button className="btn btn-primary btn-sm" type="button" onClick={() => openForToday()}>+ Nowe zadanie</button>}
       />}
     >
 
@@ -2239,7 +2901,9 @@ export function StartScreen() {
                 tasks={tasks}
                 isLoading={tasksLoading}
                 isSaving={taskMutationPending}
-                onAddTask={(prefillTitle = '', prefillTags = []) => openForToday(prefillTitle, prefillTags)}
+                hideCompleted={hideCompletedTasks}
+                onToggleHideCompleted={() => setHideCompletedTasks((prev) => !prev)}
+                onScheduleTask={openScheduleForPanel}
                 onQuickAddTask={handleQuickAddTask}
                 onTaskClick={openTask}
                 onToggleTask={(id, done) => toggleTask.mutate({ id, done })}
@@ -2251,6 +2915,8 @@ export function StartScreen() {
             <Calendar
               tasks={tasks}
               activeDate={calendarQuick.open ? calendarQuick.date : taskOptions.open ? taskOptions.dueDate : null}
+              hideCompleted={hideCompletedTasks}
+              onToggleHideCompleted={() => setHideCompletedTasks((prev) => !prev)}
               onDayClick={openCalendarQuick}
               onTaskClick={openTask}
               onToggleTask={(id, done) => toggleTask.mutate({ id, done })}
@@ -2272,13 +2938,14 @@ export function StartScreen() {
       <CalendarQuickPopover
         state={calendarQuick}
         saving={taskMutationPending}
+        detailsOpen={taskOptions.open && taskOptions.overlayMode}
         onClose={() => setCalendarQuick((prev) => ({ ...prev, open: false }))}
         onChange={(next) => setCalendarQuick((prev) => ({ ...prev, ...next }))}
         onSubmit={submitCalendarQuick}
-        onOpenOptions={() => {
-          openTaskOptions({ x: calendarQuick.x, y: calendarQuick.y }, calendarQuick.title, calendarQuick.tags, calendarQuick.date);
-          setCalendarQuick((prev) => ({ ...prev, open: false }));
+        onOpenOptions={(anchor) => {
+          openTaskOptions(anchor, calendarQuick.title, calendarQuick.tags, calendarQuick.date, true);
         }}
+        onReturnSimple={() => setTaskOptions((prev) => ({ ...prev, open: false }))}
       />
 
       <AddTaskModal
@@ -2305,3 +2972,5 @@ export function StartScreen() {
     </PageLayout>
   );
 }
+
+
