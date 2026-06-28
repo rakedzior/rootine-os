@@ -6,6 +6,13 @@ import { supabase } from '@/lib/supabase';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
+function buildOAuthState(userId: string): string {
+  return btoa(JSON.stringify({
+    userId,
+    returnTo: `${window.location.origin}/settings/integrations`,
+  }));
+}
+
 function buildGoogleOAuthUrl(userId: string): string {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
   if (!clientId) return '';
@@ -17,7 +24,7 @@ function buildGoogleOAuthUrl(userId: string): string {
     scope: 'https://www.googleapis.com/auth/calendar.readonly',
     access_type: 'offline',
     prompt: 'consent',
-    state: userId,
+    state: buildOAuthState(userId),
   });
   return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
 }
@@ -32,7 +39,7 @@ function buildStravaOAuthUrl(userId: string): string {
     response_type: 'code',
     approval_prompt: 'force',
     scope: 'activity:read_all',
-    state: userId,
+    state: buildOAuthState(userId),
   });
   return `https://www.strava.com/oauth/authorize?${params}`;
 }
