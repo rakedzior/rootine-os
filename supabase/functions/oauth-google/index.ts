@@ -24,6 +24,32 @@ const APP_URL = Deno.env.get('APP_URL') ?? 'https://rootine-os.netlify.app';
 
 const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+function parseState(rawState: string): { userId: string; returnTo: string } {
+  try {
+    const parsed = JSON.parse(atob(rawState)) as { userId?: string; returnTo?: string };
+    if (!parsed.userId) throw new Error('Missing userId');
+
+    const fallback = `${APP_URL}/settings/integrations`;
+    const returnTo = parsed.returnTo ?? fallback;
+    const origin = new URL(returnTo).origin;
+    const appOrigin = new URL(APP_URL).origin;
+    const allowed =
+      origin === appOrigin ||
+      origin === 'http://127.0.0.1:5173' ||
+      origin === 'http://localhost:5173';
+
+    return { userId: parsed.userId, returnTo: allowed ? returnTo : fallback };
+  } catch {
+    return { userId: rawState, returnTo: `${APP_URL}/settings/integrations` };
+  }
+}
+
+function redirectWith(returnTo: string, key: 'success' | 'error', value: string): Response {
+  const url = new URL(returnTo);
+  url.searchParams.set(key, value);
+  return Response.redirect(url.toString());
+}
+
 async function encrypt(text: string): Promise<string> {
   const { data, error } = await admin.rpc('pgp_sym_encrypt_text_wrapper', {
     data: text,
@@ -36,11 +62,13 @@ async function encrypt(text: string): Promise<string> {
 Deno.serve(async (req) => {
   const url = new URL(req.url);
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state'); // user_id passed as state
+  const state = url.searchParams.get('state'); // encoded { userId, returnTo }; legacy user_id supported
   const error = url.searchParams.get('error');
+  const parsedState = state ? parseState(state) : null;
+  const returnTo = parsedState?.returnTo ?? `${APP_URL}/settings/integrations`;
 
   if (error) {
-    return Response.redirect(`${APP_URL}/settings/integrations?error=${error}`);
+    return redirectWith(returnTo, 'error', error);
   }
 
   if (!code || !state) {
@@ -65,13 +93,16 @@ Deno.serve(async (req) => {
       refresh_token?: string;
       expires_in: number;
       scope: string;
+      error?: string;
+      error_description?: string;
     };
 
-    if (!tokens.access_token) {
-      throw new Error('No access_token in Google response');
+    if (!tokenRes.ok || !tokens.access_token) {
+      console.error('oauth-google token exchange failed', tokenRes.status, tokens.error, tokens.error_description);
+      return redirectWith(returnTo, 'error', 'token');
     }
 
-    const userId = state;
+    const userId = parsedState?.userId ?? state;
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
     const accessEnc = await encrypt(tokens.access_token);
     const refreshEnc = tokens.refresh_token ? await encrypt(tokens.refresh_token) : null;
@@ -86,7 +117,10 @@ Deno.serve(async (req) => {
       )
       .select('id')
       .single();
-    if (intErr) throw intErr;
+    if (intErr) {
+      console.error('oauth-google integration upsert failed', intErr);
+      return redirectWith(returnTo, 'error', 'database');
+    }
 
     // Upsert token row
     const { error: tokErr } = await admin
@@ -96,16 +130,19 @@ Deno.serve(async (req) => {
           access_token_enc: accessEnc, refresh_token_enc: refreshEnc, expires_at: expiresAt },
         { onConflict: 'integration_id' },
       );
-    if (tokErr) throw tokErr;
+    if (tokErr) {
+      console.error('oauth-google token upsert failed', tokErr);
+      return redirectWith(returnTo, 'error', 'database');
+    }
 
     // Log audit
     await admin.from('audit_log').insert({
       user_id: userId, action: 'integration_connect', entity: 'google_calendar', metadata: {},
     });
 
-    return Response.redirect(`${APP_URL}/settings/integrations?success=google_calendar`);
+    return redirectWith(returnTo, 'success', 'google_calendar');
   } catch (e) {
     console.error('oauth-google error', e);
-    return Response.redirect(`${APP_URL}/settings/integrations?error=server`);
+    return redirectWith(returnTo, 'error', 'server');
   }
 });
