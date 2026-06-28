@@ -7304,3 +7304,141 @@ input[type="checkbox"],
   justify-content: center;
   padding-block: 26px;
 }
+
+@media (max-width: 720px) {
+  .module-page > .page-head {
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .page-head-main,
+  .page-head-actions {
+    width: 100%;
+  }
+
+  .page-head-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+    justify-content: stretch;
+  }
+
+  .page-head-actions > .btn,
+  .page-head-actions > button,
+  .page-head-actions > a {
+    min-width: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .planner-calendar-card {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .planner-calendar-head {
+    align-items: flex-start !important;
+  }
+
+  .planner-calendar-title {
+    min-width: 0;
+    max-width: 100%;
+    font-size: 20px !important;
+    overflow-wrap: anywhere;
+  }
+
+  .planner-calendar-controls {
+    width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  .planner-calendar-controls > * {
+    flex: 0 1 auto;
+  }
+
+  .planner-tasks-card .task-filter-row {
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    gap: 6px;
+    overflow: visible;
+  }
+
+  .planner-tasks-card .task-filter-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .diet-os,
+  .diet-os > .page-body {
+    overflow: auto;
+  }
+
+  .diet-os .diet-shell {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto !important;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    height: auto;
+    overflow: visible;
+  }
+
+  .module-page.diet-os > .page-body > .diet-shell {
+    flex: 0 0 auto !important;
+    height: auto;
+  }
+
+  .diet-datebar {
+    align-items: stretch;
+  }
+
+  .diet-datebar-nav {
+    width: 100%;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .diet-date-label {
+    min-width: 0;
+    flex: 1 1 190px;
+  }
+
+  .diet-meals-col .diet-meal-card {
+    flex: 0 0 auto;
+  }
+
+  .diet-meals-col,
+  .diet-side-col {
+    flex: 0 0 auto !important;
+    height: auto;
+  }
+
+  .diet-side-col {
+    display: flex;
+    flex-direction: column;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .diet-summary-card,
+  .diet-rhythm-card {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 460px) {
+  .page-head-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .planner-calendar-title {
+    font-size: 18px !important;
+  }
+
+  .planner-calendar-controls .hide-completed-toggle {
+    max-width: 148px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
