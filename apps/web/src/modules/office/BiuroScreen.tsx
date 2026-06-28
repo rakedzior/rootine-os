@@ -500,6 +500,7 @@ function OfficeDocumentsModal({ open, onClose, documents }: { open: boolean; onC
   const uploadFile = useUploadOfficeDocFile();
   const createFileUrl = useCreateOfficeDocFileUrl();
   const removeFile = useRemoveOfficeDocFile();
+  const [removeTarget, setRemoveTarget] = useState<OfficeDocument | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -512,6 +513,13 @@ function OfficeDocumentsModal({ open, onClose, documents }: { open: boolean; onC
     const url = await createFileUrl.mutateAsync(doc.filePath);
     void logAudit('document_access', { entity: `office.documents.${doc.id}`, metadata: { action: 'open_file' } });
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const confirmRemoveFile = async () => {
+    if (!removeTarget?.filePath) return;
+    if (!(await ensureMfa())) return;
+    removeFile.mutate({ documentId: removeTarget.id, path: removeTarget.filePath });
+    setRemoveTarget(null);
   };
 
   return (
@@ -532,10 +540,19 @@ function OfficeDocumentsModal({ open, onClose, documents }: { open: boolean; onC
                     {doc.filePath ? (
                       <>
                         <button className="btn btn-secondary btn-sm" type="button" disabled={createFileUrl.isPending} onClick={() => void openFile(doc)}>Otwórz</button>
-                        <button className="btn btn-secondary btn-sm" type="button" disabled={removeFile.isPending} onClick={() => removeFile.mutate({ documentId: doc.id, path: doc.filePath! })}>Usuń plik</button>
+                        <button className="btn btn-secondary btn-sm" type="button" disabled={removeFile.isPending} onClick={() => setRemoveTarget(doc)}>Usuń plik</button>
                       </>
                     ) : (
-                      <label className="btn btn-secondary btn-sm">
+                      <label
+                        className="btn btn-secondary btn-sm"
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key !== 'Enter' && event.key !== ' ') return;
+                          event.preventDefault();
+                          event.currentTarget.querySelector('input')?.click();
+                        }}
+                      >
                         Dodaj plik
                         <input
                           type="file"
@@ -558,6 +575,12 @@ function OfficeDocumentsModal({ open, onClose, documents }: { open: boolean; onC
         </table>
       )}
     </Modal>
+    <ConfirmDelete
+      open={!!removeTarget}
+      onClose={() => setRemoveTarget(null)}
+      onConfirm={() => void confirmRemoveFile()}
+      label={`plik dokumentu "${removeTarget?.name ?? ''}"`}
+    />
     {mfaStepUpModal}
     </>
   );
@@ -716,6 +739,7 @@ function VacationFormModal({ open, vacation, onClose, onSave }: {
   const [type, setType] = useState('Wypoczynkowy');
   const [status, setStatus] = useState('planned');
   const [notes, setNotes] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     setStart(vacation?.startDate ?? '');
@@ -723,6 +747,7 @@ function VacationFormModal({ open, vacation, onClose, onSave }: {
     setType(vacation?.type ?? 'Wypoczynkowy');
     setStatus(vacation?.status ?? 'planned');
     setNotes(vacation?.notes ?? '');
+    setError('');
   }, [vacation, open]);
 
   return (
@@ -730,7 +755,14 @@ function VacationFormModal({ open, vacation, onClose, onSave }: {
       <>
         <button className="btn btn-secondary btn-sm" onClick={onClose}>Anuluj</button>
         <button className="btn btn-primary btn-sm" onClick={() => {
-          if (!start || !end) return;
+          if (!start || !end) {
+            setError('Uzupełnij daty urlopu.');
+            return;
+          }
+          if (end < start) {
+            setError('Data końca nie może być wcześniejsza niż data początku.');
+            return;
+          }
           const days = Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1;
           onSave({ startDate: start, endDate: end, days, type, status, notes });
         }}>Zapisz</button>
@@ -751,6 +783,7 @@ function VacationFormModal({ open, vacation, onClose, onSave }: {
         </Field>
       </div>
       <Field label="Notatki"><input className="input" value={notes} onChange={e => setNotes(e.target.value)} /></Field>
+      {error && <p className="form-error" role="alert">{error}</p>}
     </Modal>
   );
 }

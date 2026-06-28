@@ -13,7 +13,7 @@ import {
   useUpdateGoal,
   useUpdateGoalTask,
 } from '@/features/goals/hooks';
-import type { Goal as GoalRow, GoalTask as GoalTaskRow, Milestone as MilestoneRow } from '@/features/goals/types';
+import { computeGoalProgress, type Goal as GoalRow, type GoalTask as GoalTaskRow, type Milestone as MilestoneRow } from '@/features/goals/types';
 
 type Priority = 'low' | 'mid' | 'high';
 type TaskStatus = 'todo' | 'active' | 'waiting' | 'done' | 'blocked';
@@ -137,6 +137,7 @@ function mapMilestone(row: MilestoneRow): Milestone {
 }
 
 function mapGoal(row: GoalRow, taskRows: GoalTaskRow[], milestoneRows: MilestoneRow[]): Goal {
+  const goalMilestones = milestoneRows.filter((milestone) => milestone.goal_id === row.id);
   return {
     id: row.id,
     createdAt: row.created_at,
@@ -147,10 +148,10 @@ function mapGoal(row: GoalRow, taskRows: GoalTaskRow[], milestoneRows: Milestone
     category: row.category ?? 'Osobiste',
     priority: normalizePriority(row.priority),
     deadline: row.deadline ?? undefined,
-    progress: row.progress ?? 0,
+    progress: goalMilestones.length ? computeGoalProgress(goalMilestones) : row.progress ?? 0,
     streak: row.streak ?? 0,
     tasks: buildGoalTaskTree(taskRows, row.id),
-    milestones: milestoneRows.filter((milestone) => milestone.goal_id === row.id).map(mapMilestone),
+    milestones: goalMilestones.map(mapMilestone),
     archived: row.archived,
     emoji: row.emoji || 'target',
     completedAt: row.completed_at ?? undefined,
@@ -224,6 +225,7 @@ export function GoalsScreen() {
   const [deleteGoalId, setDeleteGoalId] = useState<string | null>(null);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [extraCategories, setExtraCategories] = useState<string[]>([]);
+  const [goalView, setGoalView] = useState<'active' | 'completed'>('active');
 
   const goals = useMemo(
     () => (goalsQuery.data ?? []).map((goal) => mapGoal(goal, tasksQuery.data ?? [], milestonesQuery.data ?? [])),
@@ -234,7 +236,10 @@ export function GoalsScreen() {
     return Array.from(new Set(categories));
   }, [extraCategories, goals]);
 
-  const activeGoals = useMemo(() => goals.filter((goal) => !goal.completedAt), [goals]);
+  const activeGoals = useMemo(
+    () => goals.filter((goal) => goalView === 'completed' ? Boolean(goal.completedAt) || goal.archived : !goal.completedAt && !goal.archived),
+    [goalView, goals],
+  );
   const selected = activeGoals.find((goal) => goal.id === selectedId) ?? activeGoals[0] ?? null;
   const selectedTasks = useMemo(() => selected ? collectTasks(selected.tasks) : [], [selected]);
   const todayTasks = useMemo(() => selectedTasks.filter((task) => task.dueDate === todayStr()), [selectedTasks]);
@@ -278,8 +283,8 @@ export function GoalsScreen() {
             ))}
           </div>
 
-          <button className="goals-archive-link" type="button">
-            <GoalIcon name="calendar" /> Archiwalne cele <IcoChevRight />
+          <button className="goals-archive-link" type="button" onClick={() => setGoalView((view) => view === 'active' ? 'completed' : 'active')}>
+            <GoalIcon name="calendar" /> {goalView === 'active' ? 'Archiwalne cele' : 'Aktywne cele'} <IcoChevRight />
           </button>
         </section>
 

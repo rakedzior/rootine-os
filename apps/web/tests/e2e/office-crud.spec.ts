@@ -120,6 +120,7 @@ test('uploads, opens, and removes an office document file', async ({ page }) => 
     }
 
     await documentRow.getByRole('button').filter({ hasText: /plik/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /^usuń$/i }).click();
     await expect(documentRow.getByText(/dodaj plik/i)).toBeVisible();
 
     const { data, error } = await seeded.client.from('documents').select('file_path').eq('id', seeded.id).single();

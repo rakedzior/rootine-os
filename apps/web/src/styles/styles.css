@@ -3166,11 +3166,14 @@ button.task-tag-badge {
 /* No accent focus-glow inside the planner note / schedule popover — typing
    fields and clickable rows stay calm (overrides the dark :focus-visible ring). */
 .task-quick-pop :focus,
-.task-quick-pop :focus-visible,
-.task-options-pop :focus,
-.task-options-pop :focus-visible {
-  box-shadow: none;
+.task-options-pop :focus {
   outline: none;
+}
+.task-quick-pop :focus-visible,
+.task-options-pop :focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--acc-a) 70%, transparent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc-a) 16%, transparent);
 }
 .task-options-icons {
   display: grid;

@@ -77,7 +77,7 @@ function combineDateTime(date: string | null | undefined, time: string | null | 
 }
 
 function mapTaskRow(row: PlannerTaskRow, tags: string[]): Task {
-  const scheduled = parseTimeFromIso(row.start_at);
+  const scheduled = row.all_day ? null : parseTimeFromIso(row.start_at);
   const repeat = row.repeat_rule ?? null;
   const repeatFrequency = repeat && typeof repeat.frequency === 'string'
     ? repeat.frequency as 'daily' | 'weekly' | 'monthly' | 'yearly'

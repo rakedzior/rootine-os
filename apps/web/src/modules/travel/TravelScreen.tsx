@@ -662,6 +662,7 @@ function TripModal({ open, onClose, onSave }: { open: boolean; onClose: () => vo
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [budget, setBudget] = useState('');
+  const [error, setError] = useState('');
 
   function reset() {
     setTitle('');
@@ -670,6 +671,7 @@ function TripModal({ open, onClose, onSave }: { open: boolean; onClose: () => vo
     setStartDate('');
     setEndDate('');
     setBudget('');
+    setError('');
   }
 
   return (
@@ -677,7 +679,19 @@ function TripModal({ open, onClose, onSave }: { open: boolean; onClose: () => vo
       <>
         <button className="btn btn-ghost" type="button" onClick={onClose}>Anuluj</button>
         <button className="btn btn-primary" type="button" onClick={() => {
-          if (!title.trim() || !country.trim() || !startDate || !endDate) return;
+          const parsedBudget = budget.trim() ? Number(budget) : undefined;
+          if (!title.trim() || !country.trim() || !startDate || !endDate) {
+            setError('Uzupełnij nazwę, kraj oraz daty podróży.');
+            return;
+          }
+          if (endDate < startDate) {
+            setError('Data powrotu nie może być wcześniejsza niż data wyjazdu.');
+            return;
+          }
+          if (parsedBudget !== undefined && (!Number.isFinite(parsedBudget) || parsedBudget < 0)) {
+            setError('Budżet musi być poprawną kwotą większą lub równą 0.');
+            return;
+          }
           onSave({
             title: title.trim(),
             country: country.trim(),
@@ -687,7 +701,7 @@ function TripModal({ open, onClose, onSave }: { open: boolean; onClose: () => vo
             status: 'planned',
             coverEmoji: '',
             notes: '',
-            budget: budget.trim() ? Number(budget) : undefined,
+            budget: parsedBudget,
             isArchived: false,
           });
           reset();
@@ -699,9 +713,10 @@ function TripModal({ open, onClose, onSave }: { open: boolean; onClose: () => vo
         <Field label="Kraj" required><input className="input" value={country} onChange={(event) => setCountry(event.target.value)} placeholder="Indonezja" /></Field>
         <Field label="Miasto"><input className="input" value={city} onChange={(event) => setCity(event.target.value)} placeholder="Bali" /></Field>
         <Field label="Data wyjazdu" required><input className="input" type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} /></Field>
-        <Field label="Data powrotu" required><input className="input" type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} /></Field>
+        <Field label="Data powrotu" required><input className="input" type="date" min={startDate || undefined} value={endDate} onChange={(event) => setEndDate(event.target.value)} /></Field>
         <Field label="Budżet"><input className="input" type="number" min={0} value={budget} onChange={(event) => setBudget(event.target.value)} placeholder="9500" /></Field>
       </div>
+      {error && <p className="form-error" role="alert">{error}</p>}
     </Modal>
   );
 }

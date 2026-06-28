@@ -1807,6 +1807,7 @@ function TodayPanel({
 
   // Default due date for additions made from this panel follows the active tab.
   const panelDate = windowFilter === 'tomorrow' ? tomorrowStr : todayStr;
+  const panelDateLabel = windowFilter === 'tomorrow' ? 'jutro' : 'dziś';
 
   async function handleQuickSubmit() {
     const parsed = extractTitleAndTags(quickTitle, quickTags);
@@ -1891,8 +1892,8 @@ function TodayPanel({
               setQuickTags((prev) => prev.slice(0, -1));
             }
           }}
-          placeholder="Dodaj zadanie na dziś... #praca #pilne"
-          aria-label="Szybkie dodanie zadania na dziś"
+          placeholder={`Dodaj zadanie na ${panelDateLabel}... #praca #pilne`}
+          aria-label={`Szybkie dodanie zadania na ${panelDateLabel}`}
           disabled={isSaving}
           style={{ flex: 1, height: 36 }}
         />
@@ -1900,8 +1901,8 @@ function TodayPanel({
           type="button"
           onClick={() => void handleQuickSubmit()}
           className="icon-btn"
-          aria-label="Szybko dodaj zadanie na dziś"
-          title="Dodaj na dziś"
+          aria-label={`Szybko dodaj zadanie na ${panelDateLabel}`}
+          title={`Dodaj na ${panelDateLabel}`}
           disabled={isSaving || !quickTitle.trim()}
           style={{ width: 36, height: 36, borderRadius: 999 }}
         >

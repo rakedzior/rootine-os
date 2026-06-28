@@ -131,7 +131,8 @@ export function NotesScreen() {
   const noteCounts = useMemo(() => {
     const map = new Map<string, number>();
     CATEGORIES.forEach((cat) => {
-      map.set(cat.id, cat.id === 'all' ? notes.filter((note) => !note.archived).length : notes.filter(cat.matcher).length);
+      const base = cat.id === 'archive' ? notes.filter((note) => note.archived) : notes.filter((note) => !note.archived);
+      map.set(cat.id, cat.id === 'all' ? base.length : base.filter(cat.matcher).length);
     });
     return map;
   }, [notes]);
@@ -267,6 +268,7 @@ function EditorPanel({ note, onUpdate, onDelete, fullScreen, onCloseFull }: { no
         </div>
         <div className="notes-editor-meta">
           {fullScreen && <button className="notes-star-btn" type="button" onClick={() => onUpdate({ pinned: !note.pinned })} aria-label="Ulubione"><NoteIcon name="star" /></button>}
+          {fullScreen && <button className="notes-star-btn" type="button" onClick={onDelete} aria-label="Usuń notatkę"><NoteIcon name="more" /></button>}
           {fullScreen && <button className="btn btn-secondary btn-sm" type="button" onClick={onCloseFull}><NoteIcon name="expand" /> Zamknij pełny ekran</button>}
           {!fullScreen && <span>Zapisano {relativeTime(note.updatedAt)}</span>}
           {!fullScreen && <NoteIcon name="check" />}
@@ -278,7 +280,7 @@ function EditorPanel({ note, onUpdate, onDelete, fullScreen, onCloseFull }: { no
       <div className="notes-toolbar">
         <select aria-label="Format"><option>Akapit</option><option>Nagłówek</option></select>
         {(['bold', 'italic', 'underline', 'strike', 'tag', 'list', 'align', 'grid', 'link', 'image', 'table', 'code', 'undo', 'redo'] as NoteIconName[]).map((icon) => (
-          <button key={icon} type="button"><NoteIcon name={icon} /></button>
+          <button key={icon} type="button" disabled aria-label={`Narzędzie ${icon} niedostępne`}><NoteIcon name={icon} /></button>
         ))}
         <button type="button" onClick={saveDraft}><NoteIcon name="save" /></button>
       </div>

@@ -507,7 +507,19 @@ function MealSection({ category, items, active, date, onActivate, onAdd, onEdit 
           {items.map((item) => (
             <button key={item.id} className="diet-entry-row" onClick={(event) => { event.stopPropagation(); onEdit(item); }}>
               <span className="diet-entry-name">
-                <span className="diet-row-delete" role="button" tabIndex={0} onClick={(event) => { event.stopPropagation(); remove.mutate(item.id); }}><X size={13} /></span>
+                <span
+                  className="diet-row-delete"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Usuń wpis ${item.name}`}
+                  onClick={(event) => { event.stopPropagation(); remove.mutate(item.id); }}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    remove.mutate(item.id);
+                  }}
+                ><X size={13} /></span>
                 <span className="diet-entry-thumb"><Utensils size={15} /></span>
                 <span>{item.name}</span>
               </span>
@@ -697,6 +709,15 @@ function AddMealDrawer({ open, category, date, meals, recentItems, categories, o
     return [...map.values()].slice(0, 10);
   }, [recentItems]);
 
+  const changeMode = (nextMode: AddMode) => {
+    setMode(nextMode);
+    if (nextMode !== 'search') setSelected(null);
+  };
+  const updateManual = (patch: Partial<typeof manual>) => {
+    setSelected(null);
+    setManual((current) => ({ ...current, ...patch }));
+  };
+
   const canSave = !!targetCategory && (selected || manual.name.trim() || quickText.trim()) && amount > 0;
 
   const addMeal = async () => {
@@ -790,7 +811,7 @@ function AddMealDrawer({ open, category, date, meals, recentItems, categories, o
           { id: 'quick', label: 'Szybkie' },
         ]}
         active={mode}
-        onChange={(id) => setMode(id as AddMode)}
+        onChange={(id) => changeMode(id as AddMode)}
       />
       <div className="diet-drawer-grid">
         <div className="diet-drawer-left">
@@ -808,7 +829,7 @@ function AddMealDrawer({ open, category, date, meals, recentItems, categories, o
                 {results.slice(0, 10).map((entry) => {
                   const macros = foodMacros(entry);
                   return (
-                    <button key={`${entry.source}-${foodName(entry)}`} className={selected === entry ? 'is-selected' : ''} onClick={() => { setSelected(entry); setAmount(macros.perAmount); setUnit(macros.unit); }}>
+                    <button key={`${entry.source}-${foodName(entry)}`} className={selected === entry ? 'is-selected' : ''} onClick={() => { setSelected(entry); setManual({ name: '', kcal: 0, protein: 0, carb: 0, fat: 0, amount: 100, unit: 'g' }); setQuickText(''); setAmount(macros.perAmount); setUnit(macros.unit); }}>
                       <span className="diet-food-thumb"><Utensils size={15} /></span>
                       <span><strong>{foodName(entry)}</strong><small>{macros.perAmount} {macros.unit} | {round(macros.kcal)} kcal</small></span>
                     </button>
@@ -817,19 +838,19 @@ function AddMealDrawer({ open, category, date, meals, recentItems, categories, o
               </div>
             </>
           )}
-          {mode === 'recent' && <RecentItemsList items={recentUnique} onPick={(item) => { setManual({ name: item.name, kcal: item.kcal, protein: item.protein, carb: item.carb, fat: item.fat, amount: item.amount, unit: item.unit || 'g' }); setAmount(item.amount); setUnit(item.unit || 'g'); }} />}
+          {mode === 'recent' && <RecentItemsList items={recentUnique} onPick={(item) => { setSelected(null); setManual({ name: item.name, kcal: item.kcal, protein: item.protein, carb: item.carb, fat: item.fat, amount: item.amount, unit: item.unit || 'g' }); setAmount(item.amount); setUnit(item.unit || 'g'); }} />}
           {mode === 'favorites' && <CustomMealQuickList meals={customMeals.filter((meal) => meal.is_favorite)} onPick={addCustomMeal} />}
           {mode === 'custom' && (
             <div className="diet-form-stack">
               <button className="btn btn-secondary btn-sm" onClick={() => onOpenCustomMeals(targetCategory)}>Otwórz bibliotekę własnych posiłków</button>
-              <label>Nazwa posiłku<input value={manual.name} onChange={(event) => setManual({ ...manual, name: event.target.value })} /></label>
+              <label>Nazwa posiłku<input value={manual.name} onChange={(event) => updateManual({ name: event.target.value })} /></label>
               <div className="diet-form-grid">
-                <label>Ilość<input type="number" min={1} value={manual.amount} onChange={(event) => setManual({ ...manual, amount: Number(event.target.value) })} /></label>
-                <label>Jednostka<select value={manual.unit} onChange={(event) => setManual({ ...manual, unit: event.target.value })}>{UNIT_OPTIONS.map((item) => <option key={item}>{item}</option>)}</select></label>
-                <label>Kcal<input type="number" min={0} value={manual.kcal} onChange={(event) => setManual({ ...manual, kcal: Number(event.target.value) })} /></label>
-                <label>Białko<input type="number" min={0} value={manual.protein} onChange={(event) => setManual({ ...manual, protein: Number(event.target.value) })} /></label>
-                <label>Węgle<input type="number" min={0} value={manual.carb} onChange={(event) => setManual({ ...manual, carb: Number(event.target.value) })} /></label>
-                <label>Tłuszcze<input type="number" min={0} value={manual.fat} onChange={(event) => setManual({ ...manual, fat: Number(event.target.value) })} /></label>
+                <label>Ilość<input type="number" min={1} value={manual.amount} onChange={(event) => updateManual({ amount: Number(event.target.value) })} /></label>
+                <label>Jednostka<select value={manual.unit} onChange={(event) => updateManual({ unit: event.target.value })}>{UNIT_OPTIONS.map((item) => <option key={item}>{item}</option>)}</select></label>
+                <label>Kcal<input type="number" min={0} value={manual.kcal} onChange={(event) => updateManual({ kcal: Number(event.target.value) })} /></label>
+                <label>Białko<input type="number" min={0} value={manual.protein} onChange={(event) => updateManual({ protein: Number(event.target.value) })} /></label>
+                <label>Węgle<input type="number" min={0} value={manual.carb} onChange={(event) => updateManual({ carb: Number(event.target.value) })} /></label>
+                <label>Tłuszcze<input type="number" min={0} value={manual.fat} onChange={(event) => updateManual({ fat: Number(event.target.value) })} /></label>
               </div>
             </div>
           )}
@@ -837,8 +858,8 @@ function AddMealDrawer({ open, category, date, meals, recentItems, categories, o
             <div className="diet-form-stack">
               <label>Ręczny kod kreskowy<input value={barcode} onChange={(event) => setBarcode(event.target.value)} placeholder="np. 590..." /></label>
               <button className="btn btn-secondary btn-sm" onClick={lookup}>Sprawdź kod</button>
-              <label>Szybki wpis<input value={quickText} onChange={(event) => setQuickText(event.target.value)} placeholder="np. ryż 150g" /></label>
-              <button className="btn btn-secondary btn-sm" onClick={() => { setQuery(quickText.replace(/(\d+(?:[,.]\d+)?)\s*(g|ml|szt\.?|porcja)?/i, '').trim() || quickText); setAmount(Number((quickText.match(/(\d+(?:[,.]\d+)?)/)?.[1] ?? '100').replace(',', '.'))); setMode('search'); }}>Szukaj z szybkiego wpisu</button>
+              <label>Szybki wpis<input value={quickText} onChange={(event) => { setSelected(null); setQuickText(event.target.value); }} placeholder="np. ryż 150g" /></label>
+              <button className="btn btn-secondary btn-sm" onClick={() => { setSelected(null); setQuery(quickText.replace(/(\d+(?:[,.]\d+)?)\s*(g|ml|szt\.?|porcja)?/i, '').trim() || quickText); setAmount(Number((quickText.match(/(\d+(?:[,.]\d+)?)/)?.[1] ?? '100').replace(',', '.'))); setMode('search'); }}>Szukaj z szybkiego wpisu</button>
             </div>
           )}
         </div>
@@ -1290,7 +1311,7 @@ function AnalyticsPanel({ mode, setMode, date, items, nutrition, goals, todayTot
       const count = Math.max(1, Math.min(62, Math.floor((end.getTime() - start.getTime()) / 86400000) + 1));
       return rangeDays(rangeEnd, count);
     }
-    return rangeDays(date, mode === 'month' ? 30 : mode === 'week' ? 7 : 7);
+    return rangeDays(date, mode === 'month' ? 30 : mode === 'week' ? 7 : 1);
   }, [date, mode, rangeEnd, rangeStart]);
 
   const dailyCalories = useMemo(() => {
