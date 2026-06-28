@@ -954,8 +954,8 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
   return (
     <div ref={calendarRef} style={{ display:'flex', flexDirection:'column', height:'100%', minHeight: 0 }}>
       {/* cal head */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexShrink:0, flexWrap:'wrap', gap:8 }}>
-        <span style={{ fontFamily:'var(--display)', fontSize:24, fontWeight:600, letterSpacing:'-.01em' }}>
+      <div className="planner-calendar-head" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexShrink:0, flexWrap:'wrap', gap:8 }}>
+        <span className="planner-calendar-title" style={{ fontFamily:'var(--display)', fontSize:24, fontWeight:600, letterSpacing:'-.01em' }}>
           {view === 'month' && <>{MONTH_FULL[month]} <span style={{ color:'var(--ink-3)', fontWeight:500 }}>{year}</span></>}
           {view === 'day' && <>{cursor.getDate()} {MONTH_FULL[cursor.getMonth()]} <span style={{ color:'var(--ink-3)', fontWeight:500 }}>{cursor.getFullYear()}</span></>}
           {view === 'week' && (
@@ -964,7 +964,7 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
               : <>{weekStart.getDate()} {MONTH_SHORT[weekStart.getMonth()]} – {weekEnd.getDate()} {MONTH_SHORT[weekEnd.getMonth()]} <span style={{ color:'var(--ink-3)', fontWeight:500 }}>{weekEnd.getFullYear()}</span></>
           )}
         </span>
-        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+        <div className="planner-calendar-controls" style={{ display:'flex', alignItems:'center', gap:6 }}>
           <button
             type="button"
             className={`hide-completed-toggle${hideCompleted ? ' is-active' : ''}`}
