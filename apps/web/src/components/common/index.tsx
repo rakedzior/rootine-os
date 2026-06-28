@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode, type FC } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode, type FC } from 'react';
 
 // ─── MODAL ───────────────────────────────────────────────────
 
@@ -13,13 +13,49 @@ interface ModalProps {
 
 export function Modal({ open, onClose, title, children, size, footer }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const titleId = useId();
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusTimer = window.setTimeout(() => {
+      const firstFocusable = dialogRef.current?.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      (firstFocusable ?? dialogRef.current)?.focus();
+    }, 0);
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
+      )).filter((el) => !el.hasAttribute('disabled') && el.getAttribute('aria-hidden') !== 'true');
+      if (!focusable.length) {
+        e.preventDefault();
+        dialogRef.current.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     document.addEventListener('keydown', handler);
     document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', handler); document.body.style.overflow = ''; };
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('keydown', handler);
+      document.body.style.overflow = '';
+      previousFocusRef.current?.focus?.();
+      previousFocusRef.current = null;
+    };
   }, [open, onClose]);
 
   if (!open) return null;
@@ -32,9 +68,16 @@ export function Modal({ open, onClose, title, children, size, footer }: ModalPro
       ref={overlayRef}
       onMouseDown={e => { if (e.target === overlayRef.current) onClose(); }}
     >
-      <div className={`modal ${sizeClass}`} role="dialog" aria-modal="true">
+      <div
+        className={`modal ${sizeClass}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        ref={dialogRef}
+      >
         <div className="modal-head">
-          <span className="modal-title">{title}</span>
+          <span className="modal-title" id={titleId}>{title}</span>
           <button className="modal-close" onClick={onClose} aria-label="Zamknij">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 6 6 18M6 6l12 12"/>

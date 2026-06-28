@@ -1,6 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, KpiCard, DetailPanel, ProgressBar, PriorityBadge, StatusBadge } from '@/components/common';
-import { useLocalStore, type Priority, type TaskStatus, type WorkContext, type WorkProject, type WorkTask } from '@/store/localStore';
+import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, DetailPanel, ProgressBar, PriorityBadge, StatusBadge } from '@/components/common';
+import { PageLayout } from '@/components/layout/primitives';
+import {
+  useAddCompany,
+  useAddProject,
+  useAddWorkTask,
+  useDeleteProject,
+  useDeleteWorkTask,
+  useMoveWorkTask,
+  useUpdateCompany,
+  useWorkCompanies,
+  useWorkProjects,
+  useWorkTasks,
+} from '@/features/work/hooks';
+import type { WorkCompany as WorkCompanyRow, WorkProject as WorkProjectRow, WorkTask as WorkTaskRowData } from '@/features/work/types';
 import '@/styles/work.css';
 
 type WorkIconName =
@@ -8,6 +21,50 @@ type WorkIconName =
   | 'list' | 'board' | 'calendar' | 'timeline' | 'filter' | 'settings' | 'more'
   | 'note' | 'link' | 'deadline' | 'progress' | 'user' | 'tag' | 'database'
   | 'chart' | 'shield' | 'target' | 'check' | 'chevron' | 'star';
+
+type Priority = 'low' | 'mid' | 'high';
+type TaskStatus = 'todo' | 'active' | 'waiting' | 'done' | 'blocked';
+
+interface WorkContext {
+  id: string;
+  createdAt: string;
+  name: string;
+  company?: string;
+  active: boolean;
+}
+
+interface WorkProject {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  workContextId: string;
+  name: string;
+  description: string;
+  status: TaskStatus;
+  deadline?: string;
+  progress: number;
+  notes: string;
+}
+
+interface WorkLink { label: string; url: string; }
+
+interface WorkTask {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  workContextId: string;
+  projectId?: string;
+  parentTaskId?: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: Priority;
+  dueDate?: string;
+  dueTime?: string;
+  notes: string;
+  subtasks: WorkTask[];
+  links?: WorkLink[];
+}
 
 const PROJECT_TONES = ['violet', 'pink', 'teal', 'amber', 'blue'];
 
@@ -27,12 +84,6 @@ const PRIORITY_LABELS: Record<Priority, string> = {
 
 function todayStr() {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-function addDays(date: string, delta: number) {
-  const d = new Date(`${date}T12:00:00`);
-  d.setDate(d.getDate() + delta);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
@@ -70,22 +121,86 @@ function statusRank(status: TaskStatus) {
   return status === 'active' ? 0 : status === 'todo' ? 1 : status === 'waiting' ? 2 : status === 'blocked' ? 3 : 4;
 }
 
-export function PracaScreen() {
-  const {
-    workContexts,
-    workProjects,
-    workTasks,
-    activeWorkContextId,
-    addWorkContext,
-    setActiveWorkContext,
-    addWorkProject,
-    deleteWorkProject,
-    addWorkTask,
-    updateWorkTask,
-    deleteWorkTask,
-  } = useLocalStore();
+function normalizeStatus(status?: string | null): TaskStatus {
+  if (status === 'done') return 'done';
+  if (status === 'active' || status === 'doing') return 'active';
+  if (status === 'waiting' || status === 'paused') return 'waiting';
+  if (status === 'blocked') return 'blocked';
+  return 'todo';
+}
 
-  const activeContext = workContexts.find((context) => context.id === activeWorkContextId) ?? workContexts.find((context) => context.active) ?? workContexts[0];
+function normalizePriority(priority?: string | null): Priority {
+  return priority === 'high' || priority === 'low' ? priority : 'mid';
+}
+
+function mapContext(row: WorkCompanyRow): WorkContext {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    name: row.name,
+    company: row.company ?? undefined,
+    active: row.active,
+  };
+}
+
+function mapProject(row: WorkProjectRow): WorkProject {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    workContextId: row.company_id ?? '',
+    name: row.name,
+    description: row.description ?? '',
+    status: normalizeStatus(row.status),
+    deadline: row.deadline ?? undefined,
+    progress: row.progress ?? 0,
+    notes: row.notes ?? '',
+  };
+}
+
+function mapTask(row: WorkTaskRowData, projects: WorkProjectRow[]): WorkTask {
+  const project = row.project_id ? projects.find((item) => item.id === row.project_id) : undefined;
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    workContextId: row.company_id ?? project?.company_id ?? '',
+    projectId: row.project_id ?? undefined,
+    parentTaskId: row.parent_task_id ?? undefined,
+    title: row.title,
+    description: row.description ?? '',
+    status: normalizeStatus(row.status),
+    priority: normalizePriority(row.priority),
+    dueDate: row.due_date ?? undefined,
+    dueTime: row.due_time ?? undefined,
+    notes: row.notes ?? '',
+    subtasks: [],
+    links: Array.isArray(row.links) ? row.links : [],
+  };
+}
+
+export function PracaScreen() {
+  const companiesQuery = useWorkCompanies();
+  const projectsQuery = useWorkProjects();
+  const tasksQuery = useWorkTasks();
+  const addCompany = useAddCompany();
+  const updateCompany = useUpdateCompany();
+  const addProject = useAddProject();
+  const deleteProject = useDeleteProject();
+  const addTask = useAddWorkTask();
+  const moveTask = useMoveWorkTask();
+  const deleteTask = useDeleteWorkTask();
+
+  const companyRows = companiesQuery.data ?? [];
+  const projectRows = projectsQuery.data ?? [];
+  const taskRows = tasksQuery.data ?? [];
+
+  const workContexts = useMemo(() => companyRows.map(mapContext), [companyRows]);
+  const workProjects = useMemo(() => projectRows.map(mapProject), [projectRows]);
+  const workTasks = useMemo(() => taskRows.map((task) => mapTask(task, projectRows)), [projectRows, taskRows]);
+  const isLoading = companiesQuery.isLoading || projectsQuery.isLoading || tasksQuery.isLoading;
+
+  const activeContext = workContexts.find((context) => context.active) ?? workContexts[0];
   const [contextId, setContextId] = useState(activeContext?.id ?? '');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -94,7 +209,6 @@ export function PracaScreen() {
   const [showContextModal, setShowContextModal] = useState(false);
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
   const [deleteProjectId, setDeleteProjectId] = useState<string | null>(null);
-  const [activityCollapsed, setActivityCollapsed] = useState(false);
 
   useEffect(() => {
     if (!contextId && activeContext) setContextId(activeContext.id);
@@ -126,17 +240,17 @@ export function PracaScreen() {
     if (selectedTaskId && !sortedTasks.some((task) => task.id === selectedTaskId)) setSelectedTaskId(sortedTasks[0]?.id ?? null);
   }, [selectedTask, selectedTaskId, sortedTasks]);
 
-  const metrics = buildWorkMetrics(contextProjects, contextTasks);
   const deadlines = buildDeadlines(contextTasks, contextProjects);
-  const activity = buildActivity(contextTasks, contextProjects);
 
   return (
-    <div className="module-page work-os">
-      <PageHeader
+    <PageLayout
+      className="work-os"
+      header={<PageHeader
         icon={<WorkIcon name="briefcase" />}
         title="Praca"
         desc="Wszystkie firmy, projekty, zadania i notatki w jednym miejscu."
-      />
+      />}
+    >
 
       <section className="work-shell">
         <main className="work-main">
@@ -146,7 +260,7 @@ export function PracaScreen() {
                 <span>Firma</span>
                 <select value={context?.id ?? ''} onChange={(event) => {
                   setContextId(event.target.value);
-                  setActiveWorkContext(event.target.value);
+                  updateCompany.mutate({ id: event.target.value, patch: { active: true } });
                 }}>
                   {workContexts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </select>
@@ -200,7 +314,11 @@ export function PracaScreen() {
               </div>
             </div>
 
-            {sortedTasks.length === 0 ? (
+            {isLoading ? (
+              <EmptyState title="Ladowanie danych" desc="Pobieram firmy, projekty i zadania." />
+            ) : workContexts.length === 0 ? (
+              <EmptyState title="Brak firm" desc="Dodaj pierwsza firme lub kontekst pracy." cta="Dodaj firme" onCta={() => setShowContextModal(true)} />
+            ) : sortedTasks.length === 0 ? (
               <EmptyState title="Brak zadań" desc="Dodaj pierwsze zadanie do bieżącej firmy." cta="Dodaj zadanie" onCta={() => setShowTaskModal(true)} />
             ) : (
               <div className="work-task-table">
@@ -216,7 +334,7 @@ export function PracaScreen() {
                       project={taskProject(task, workProjects)}
                       selected={selectedTask?.id === task.id}
                       onSelect={() => setSelectedTaskId(task.id)}
-                      onToggle={() => updateWorkTask(task.id, { status: task.status === 'done' ? 'todo' : 'done' })}
+                      onToggle={() => moveTask.mutate({ id: task.id, status: task.status === 'done' ? 'todo' : 'done' })}
                       onDelete={() => setDeleteTaskId(task.id)}
                     />
                   ))}
@@ -225,30 +343,11 @@ export function PracaScreen() {
             )}
           </section>
 
-          <section className="work-activity">
-            <button type="button" className="collapse-toggle work-activity-title" onClick={() => setActivityCollapsed(v => !v)} aria-expanded={!activityCollapsed} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14, transform: activityCollapsed ? 'rotate(-90deg)' : 'none', transition: 'transform .15s' }}><path d="M6 9l6 6 6-6" /></svg>
-              Ostatnie aktywności
-            </button>
-            {!activityCollapsed && (
-              <div className="work-activity-list">
-                {activity.map((item) => (
-                  <div className={`work-activity-item work-tone-${item.tone}`} key={item.title}>
-                    <span>{item.initial}</span>
-                    <strong>{item.title}</strong>
-                    <small>{item.subtitle}</small>
-                    <em>{item.time}</em>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
         </main>
 
         <aside className="work-side">
-          <TaskDetails task={selectedTask} project={selectedTask ? taskProject(selectedTask, workProjects) : undefined} context={context} onUpdate={(patch) => selectedTask && updateWorkTask(selectedTask.id, patch)} />
+          <TaskDetails task={selectedTask} project={selectedTask ? taskProject(selectedTask, workProjects) : undefined} context={context} />
           <DeadlinesPanel deadlines={deadlines} />
-          <WorkKpiPanel metrics={metrics} />
         </aside>
       </section>
 
@@ -258,7 +357,19 @@ export function PracaScreen() {
         projects={contextProjects}
         context={context}
         onSave={(payload) => {
-          addWorkTask(payload);
+          addTask.mutate({
+            company_id: payload.workContextId,
+            project_id: payload.projectId ?? null,
+            parent_task_id: payload.parentTaskId ?? null,
+            title: payload.title,
+            description: payload.description,
+            status: payload.status,
+            priority: payload.priority,
+            due_date: payload.dueDate ?? null,
+            due_time: payload.dueTime ?? null,
+            notes: payload.notes,
+            links: payload.links,
+          });
           setShowTaskModal(false);
         }}
       />
@@ -267,7 +378,15 @@ export function PracaScreen() {
         onClose={() => setShowProjectModal(false)}
         context={context}
         onSave={(payload) => {
-          addWorkProject(payload);
+          addProject.mutate({
+            company_id: payload.workContextId,
+            name: payload.name,
+            description: payload.description,
+            status: payload.status,
+            deadline: payload.deadline ?? null,
+            progress: payload.progress,
+            notes: payload.notes,
+          });
           setShowProjectModal(false);
         }}
       />
@@ -275,55 +394,20 @@ export function PracaScreen() {
         open={showContextModal}
         onClose={() => setShowContextModal(false)}
         onSave={(payload) => {
-          addWorkContext(payload);
+          addCompany.mutate({ name: payload.name, company: payload.company ?? null, active: payload.active });
           setShowContextModal(false);
         }}
       />
       <ConfirmDelete open={!!deleteTaskId} onClose={() => setDeleteTaskId(null)} onConfirm={() => {
-        if (deleteTaskId) deleteWorkTask(deleteTaskId);
+        if (deleteTaskId) deleteTask.mutate(deleteTaskId);
         setDeleteTaskId(null);
       }} label="to zadanie" />
       <ConfirmDelete open={!!deleteProjectId} onClose={() => setDeleteProjectId(null)} onConfirm={() => {
-        if (deleteProjectId) deleteWorkProject(deleteProjectId);
+        if (deleteProjectId) deleteProject.mutate(deleteProjectId);
         setDeleteProjectId(null);
       }} label="ten projekt" />
-    </div>
+    </PageLayout>
   );
-}
-
-function buildWorkMetrics(projects: WorkProject[], tasks: WorkTask[]) {
-  const today = todayStr();
-  const weekEnd = addDays(today, 7);
-  return [
-    {
-      icon: 'project' as const,
-      label: 'Aktywne projekty',
-      value: projects.filter((project) => project.status !== 'done').length,
-      note: '+1 w tym miesiącu',
-      tone: 'blue' as const,
-    },
-    {
-      icon: 'task' as const,
-      label: 'Otwarte zadania',
-      value: tasks.filter((task) => task.status !== 'done').length,
-      note: '-3 od wczoraj',
-      tone: 'violet' as const,
-    },
-    {
-      icon: 'week' as const,
-      label: 'Do zrobienia w tym tygodniu',
-      value: tasks.filter((task) => task.status !== 'done' && task.dueDate && task.dueDate >= today && task.dueDate <= weekEnd).length,
-      note: '3 dziś',
-      tone: 'amber' as const,
-    },
-    {
-      icon: 'done' as const,
-      label: 'Zakończone zadania',
-      value: tasks.filter((task) => task.status === 'done').length,
-      note: '+8 w tym miesiącu',
-      tone: 'teal' as const,
-    },
-  ];
 }
 
 function buildDeadlines(tasks: WorkTask[], projects: WorkProject[]) {
@@ -332,16 +416,6 @@ function buildDeadlines(tasks: WorkTask[], projects: WorkProject[]) {
     .sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? ''))
     .slice(0, 5)
     .map((task) => ({ task, project: taskProject(task, projects), left: daysUntil(task.dueDate) }));
-}
-
-function buildActivity(tasks: WorkTask[], projects: WorkProject[]) {
-  return tasks.slice(0, 3).map((task, index) => ({
-    initial: initials(task.title)[0],
-    title: index === 0 ? 'Zaktualizowałeś zadanie' : index === 1 ? 'Dodano notatkę do projektu' : 'Zakończono zadanie',
-    subtitle: taskProject(task, projects)?.name ?? task.title,
-    time: index === 0 ? '10 min temu' : index === 1 ? '35 min temu' : '2 godz. temu',
-    tone: index === 0 ? 'pink' : index === 1 ? 'teal' : 'violet',
-  }));
 }
 
 function WorkTaskRow({ task, project, selected, onSelect, onToggle, onDelete }: { task: WorkTask; project?: WorkProject; selected: boolean; onSelect: () => void; onToggle: () => void; onDelete: () => void }) {
@@ -368,20 +442,9 @@ function WorkTaskRow({ task, project, selected, onSelect, onToggle, onDelete }: 
   );
 }
 
-function TaskDetails({ task, project, context, onUpdate }: { task?: WorkTask; project?: WorkProject; context?: WorkContext; onUpdate?: (patch: Partial<WorkTask>) => void }) {
+function TaskDetails({ task, project, context }: { task?: WorkTask; project?: WorkProject; context?: WorkContext }) {
   const left = daysUntil(task?.dueDate);
   const progress = task?.status === 'done' ? 100 : task?.status === 'active' ? 65 : task?.status === 'waiting' ? 40 : task?.status === 'blocked' ? 20 : 15;
-  const links = task?.links ?? [];
-
-  function addLink() {
-    const url = window.prompt('Adres URL linku:')?.trim();
-    if (!url) return;
-    const label = window.prompt('Etykieta (opcjonalnie):')?.trim() || url.replace(/^https?:\/\//, '').slice(0, 40);
-    onUpdate?.({ links: [...links, { label, url }] });
-  }
-  function removeLink(idx: number) {
-    onUpdate?.({ links: links.filter((_, i) => i !== idx) });
-  }
 
   if (!task) {
     return (
@@ -406,7 +469,6 @@ function TaskDetails({ task, project, context, onUpdate }: { task?: WorkTask; pr
         )}
         fields={[
           { label: 'Notatki', value: task.notes ? '1 notatka' : '0 notatek' },
-          { label: 'Linki', value: `${links.length} ${links.length === 1 ? 'link' : 'linków'}` },
           { label: 'Deadline', value: task.dueDate ? `${fmtDate(task.dueDate, true)}${left !== null ? ` (${left} dni)` : ''}` : 'Brak' },
           {
             label: 'Postęp',
@@ -428,25 +490,6 @@ function TaskDetails({ task, project, context, onUpdate }: { task?: WorkTask; pr
               <p>{task.notes}</p>
             </div>
           )}
-          <div className="work-detail-links">
-            <div className="work-detail-section-head">
-              <span>Linki i załączniki</span>
-              <button className="btn btn-ghost btn-sm" type="button" onClick={addLink}><WorkIcon name="plus" /> Dodaj link</button>
-            </div>
-            {links.length === 0 ? (
-              <p className="work-detail-empty">Brak linków. Dodaj odnośnik do dokumentu, repozytorium lub pliku.</p>
-            ) : (
-              <div className="work-detail-link-list">
-                {links.map((link, i) => (
-                  <div key={i} className="work-detail-link-row">
-                    <WorkIcon name="link" />
-                    <a href={link.url} target="_blank" rel="noreferrer">{link.label}</a>
-                    <button className="icon-btn" type="button" onClick={() => removeLink(i)} aria-label="Usuń link"><WorkIcon name="trash" /></button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
       </DetailPanel>
     </section>
   );
@@ -474,29 +517,6 @@ function DeadlinesPanel({ deadlines }: { deadlines: { task: WorkTask; project?: 
             </div>
             <em>{left === null ? '' : left <= 0 ? 'dziś' : `${left} dni`}</em>
           </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function WorkKpiPanel({ metrics }: { metrics: ReturnType<typeof buildWorkMetrics> }) {
-  return (
-    <section className="work-panel work-kpi-panel">
-      <div className="work-panel-head">
-        <h2>KPI pracy</h2>
-        <WorkIcon name="chart" />
-      </div>
-      <div className="work-side-kpis">
-        {metrics.map((metric) => (
-          <KpiCard
-            key={metric.label}
-            icon={<WorkIcon name={metric.icon} />}
-            label={metric.label}
-            value={metric.value}
-            sub={metric.note}
-            tone={metric.tone}
-          />
         ))}
       </div>
     </section>

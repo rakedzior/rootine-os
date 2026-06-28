@@ -1,4 +1,4 @@
-export type TripStatus = 'planned' | 'active' | 'done';
+export type TripStatus = 'planned' | 'active' | 'done' | 'completed' | 'archived';
 export type TripItemType = 'flight' | 'lodging' | 'transport' | 'attraction' | 'packing';
 export type DocStatus = 'valid' | 'expiring' | 'expired';
 export type BucketStatus = 'dream' | 'planned' | 'done';
@@ -8,10 +8,14 @@ export interface Trip {
   user_id: string;
   dest: string;
   country: string | null;
+  city: string | null;
   start_date: string | null;
   end_date: string | null;
   status: TripStatus;
   notes: string | null;
+  budget: number | null;
+  cover_emoji: string;
+  is_archived: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -63,9 +67,14 @@ export interface BucketListItem {
 export interface NewTripInput {
   dest: string;
   country?: string | null;
+  city?: string | null;
   start_date?: string | null;
   end_date?: string | null;
   status?: TripStatus;
+  notes?: string | null;
+  budget?: number | null;
+  cover_emoji?: string;
+  is_archived?: boolean;
 }
 
 export interface NewTripItemInput {

@@ -1,12 +1,9 @@
 import type { Habit } from './types';
 
-/** Local-date helpers (YYYY-MM-DD). Habit logs use a calendar date, so we
- *  format using the user's local time, not UTC. */
-
 export const HABIT_WEEKDAYS = [
   { value: 1, label: 'Pon' },
   { value: 2, label: 'Wt' },
-  { value: 3, label: 'Sr' },
+  { value: 3, label: 'Śr' },
   { value: 4, label: 'Czw' },
   { value: 5, label: 'Pt' },
   { value: 6, label: 'Sob' },
@@ -39,36 +36,122 @@ export function weekdayOf(str: string): number {
   return day === 0 ? 7 : day;
 }
 
-function normalizedWeekdays(habit: Pick<Habit, 'recurrence_type' | 'weekdays'>): number[] {
-  if (habit.recurrence_type === 'daily') return ALL_WEEKDAYS;
-  const days = Array.isArray(habit.weekdays) ? habit.weekdays.filter((d) => d >= 1 && d <= 7) : [];
+function normalizedWeekdays(
+  habit: Pick<Habit, 'recurrence_type' | 'weekdays'> & Partial<Pick<Habit, 'schedule_type' | 'schedule_days'>>,
+): number[] {
+  if (habit.schedule_type === 'daily' || habit.schedule_type === 'every_n_months') return ALL_WEEKDAYS;
+  if (habit.recurrence_type === 'daily' && !habit.schedule_type) return ALL_WEEKDAYS;
+  const source = Array.isArray(habit.schedule_days) ? habit.schedule_days : habit.weekdays;
+  const days = Array.isArray(source) ? source.filter((d) => d >= 1 && d <= 7) : [];
   return days.length > 0 ? [...new Set(days)].sort((a, b) => a - b) : ALL_WEEKDAYS;
 }
 
-export function habitOccursOn(
-  habit: Pick<Habit, 'recurrence_type' | 'weekdays' | 'start_date' | 'end_date'>,
-  date: string = todayStr(),
-): boolean {
+function dateParts(str: string): { year: number; month: number; day: number } {
+  const [year, month, day] = str.split('-').map(Number);
+  return { year, month, day };
+}
+
+function weeksBetween(start: string, date: string): number {
+  const a = dateParts(start);
+  const b = dateParts(date);
+  const startDate = new Date(a.year, a.month - 1, a.day);
+  const targetDate = new Date(b.year, b.month - 1, b.day);
+  return Math.floor((targetDate.getTime() - startDate.getTime()) / (7 * 86400000));
+}
+
+function monthsBetween(start: string, date: string): number {
+  const a = dateParts(start);
+  const b = dateParts(date);
+  return (b.year - a.year) * 12 + (b.month - a.month);
+}
+
+function lastDayOfMonth(year: number, month: number): number {
+  return new Date(year, month, 0).getDate();
+}
+
+type HabitScheduleShape = Pick<Habit, 'recurrence_type' | 'weekdays' | 'start_date' | 'end_date'> &
+  Partial<Pick<Habit, 'status' | 'schedule_type' | 'schedule_days' | 'interval_value' | 'end_mode' | 'end_after_cycles'>>;
+
+function habitOccursBySchedule(habit: HabitScheduleShape, date: string): boolean {
   if (habit.start_date && date < habit.start_date) return false;
-  if (habit.end_date && date > habit.end_date) return false;
-  return normalizedWeekdays(habit).includes(weekdayOf(date));
+  const endMode = habit.end_mode ?? (habit.end_date ? 'on_date' : 'forever');
+  if (endMode === 'on_date' && habit.end_date && date > habit.end_date) return false;
+  if (habit.status && habit.status !== 'active' && date >= todayStr()) return false;
+
+  const scheduleType = habit.schedule_type ?? (habit.recurrence_type === 'weekly' ? 'selected_weekdays' : 'daily');
+  const interval = Math.max(1, habit.interval_value ?? 1);
+
+  if (scheduleType === 'daily') return true;
+  if (scheduleType === 'selected_weekdays') return normalizedWeekdays(habit).includes(weekdayOf(date));
+  if (scheduleType === 'every_n_weeks') {
+    return weeksBetween(habit.start_date || date, date) % interval === 0 && normalizedWeekdays(habit).includes(weekdayOf(date));
+  }
+  if (scheduleType === 'every_n_months') {
+    const diff = monthsBetween(habit.start_date || date, date);
+    if (diff < 0 || diff % interval !== 0) return false;
+    const start = dateParts(habit.start_date || date);
+    const current = dateParts(date);
+    const expectedDay = Math.min(start.day, lastDayOfMonth(current.year, current.month));
+    return current.day === expectedDay;
+  }
+  return false;
+}
+
+function occurrenceNumberOnOrBefore(habit: HabitScheduleShape, date: string): number {
+  let cursor = habit.start_date || date;
+  let count = 0;
+  let guard = 0;
+  while (cursor <= date && guard < 5000) {
+    guard++;
+    if (habitOccursBySchedule({ ...habit, status: 'active', end_mode: 'forever', end_date: null }, cursor)) count++;
+    cursor = addDays(cursor, 1);
+  }
+  return count;
+}
+
+export function habitOccursOn(habit: HabitScheduleShape, date: string = todayStr()): boolean {
+  if (!habitOccursBySchedule(habit, date)) return false;
+  if (habit.end_mode === 'after_cycles' && habit.end_after_cycles && habit.start_date) {
+    return occurrenceNumberOnOrBefore(habit, date) <= habit.end_after_cycles;
+  }
+  return true;
+}
+
+function withEndLabel(
+  label: string,
+  habit: Partial<Pick<Habit, 'end_mode' | 'end_date' | 'end_after_cycles'>>,
+): string {
+  const endMode = habit.end_mode ?? (habit.end_date ? 'on_date' : 'forever');
+  if (endMode === 'on_date' && habit.end_date) return `${label} do ${habit.end_date}`;
+  if (endMode === 'after_cycles' && habit.end_after_cycles) return `${label} · ${habit.end_after_cycles} cykli`;
+  return label;
 }
 
 export function habitScheduleLabel(
-  habit: Pick<Habit, 'recurrence_type' | 'weekdays' | 'end_date'>,
+  habit: Pick<Habit, 'recurrence_type' | 'weekdays' | 'end_date'> &
+    Partial<Pick<Habit, 'schedule_type' | 'schedule_days' | 'interval_value' | 'end_mode' | 'end_after_cycles'>>,
 ): string {
+  const scheduleType = habit.schedule_type ?? (habit.recurrence_type === 'weekly' ? 'selected_weekdays' : 'daily');
+  if (scheduleType === 'every_n_months') {
+    const interval = Math.max(1, habit.interval_value ?? 1);
+    return withEndLabel(interval === 1 ? 'Co miesiąc' : `Co ${interval} mies.`, habit);
+  }
+
   const days = normalizedWeekdays(habit);
   const sameDays = (expected: number[]) => expected.length === days.length && expected.every((d, i) => d === days[i]);
   let label = 'Codziennie';
-  if (habit.recurrence_type === 'weekly' && !sameDays(ALL_WEEKDAYS)) {
+  if ((scheduleType === 'selected_weekdays' || scheduleType === 'every_n_weeks') && !sameDays(ALL_WEEKDAYS)) {
     if (sameDays([1, 2, 3, 4, 5])) label = 'Dni robocze';
     else if (sameDays([6, 7])) label = 'Weekend';
     else label = days.map((d) => HABIT_WEEKDAYS.find((w) => w.value === d)?.label ?? String(d)).join(', ');
   }
-  return habit.end_date ? `${label} do ${habit.end_date}` : label;
+  if (scheduleType === 'every_n_weeks') {
+    const interval = Math.max(1, habit.interval_value ?? 1);
+    label = `Co ${interval} tyg.${label === 'Codziennie' ? '' : ` · ${label}`}`;
+  }
+  return withEndLabel(label, habit);
 }
 
-/** Oldest -> newest list of the last `n` calendar dates ending at `end`. */
 export function lastNDays(n: number, end: string = todayStr()): string[] {
   const out: string[] = [];
   for (let i = n - 1; i >= 0; i--) out.push(addDays(end, -i));
@@ -78,16 +161,13 @@ export function lastNDays(n: number, end: string = todayStr()): string[] {
 export interface HabitStats {
   doneToday: boolean;
   streak: number;
-  week: boolean[]; // last 7 days, oldest -> newest
+  week: boolean[];
 }
 
-/** Compute today-status, current streak and 7-day dots from a set of
- *  completed dates. Streak counts consecutive days ending today (or
- *  yesterday if today isn't done yet, so a pending today doesn't reset it). */
 export function habitStats(
   dates: Set<string>,
   today: string = todayStr(),
-  habit?: Pick<Habit, 'recurrence_type' | 'weekdays' | 'start_date' | 'end_date'>,
+  habit?: HabitScheduleShape,
 ): HabitStats {
   const doneToday = dates.has(today);
   const scheduledToday = habit ? habitOccursOn(habit, today) : true;

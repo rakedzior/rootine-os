@@ -177,10 +177,42 @@ async function loadWeather(point: GeoPoint): Promise<WeatherData> {
 }
 
 const WARSAW: GeoPoint = { lat: 52.2297, lon: 21.0122, label: 'Warszawa, Polska', source: 'default' };
+const WEATHER_CACHE_KEY = 'rootine-weather-cache-v1';
+const WEATHER_CACHE_TTL_MS = 1000 * 60 * 20;
+
+interface WeatherCachePayload {
+  savedAt: number;
+  data: WeatherData;
+}
+
+function readWeatherCache(): WeatherData | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(WEATHER_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as WeatherCachePayload;
+    if (!parsed?.data || !parsed.savedAt) return null;
+    if (Date.now() - parsed.savedAt > WEATHER_CACHE_TTL_MS) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function writeWeatherCache(data: WeatherData) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), data } satisfies WeatherCachePayload));
+  } catch {
+    // Weather is a sidebar convenience; storage failure should not break the app.
+  }
+}
 
 export function useWeather() {
-  const [data, setData] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const initialCache = useRef<WeatherData | null | undefined>(undefined);
+  if (initialCache.current === undefined) initialCache.current = readWeatherCache();
+  const [data, setData] = useState<WeatherData | null>(() => initialCache.current ?? null);
+  const [loading, setLoading] = useState(() => !initialCache.current);
   const [error, setError] = useState(false);
   const [needsCity, setNeedsCity] = useState(false);
   const cancelled = useRef(false);
@@ -190,6 +222,7 @@ export function useWeather() {
     setError(false);
     try {
       const payload = await loadWeather(point);
+      writeWeatherCache(payload);
       if (!cancelled.current) { setData(payload); setNeedsCity(false); }
     } catch {
       if (!cancelled.current) setError(true);

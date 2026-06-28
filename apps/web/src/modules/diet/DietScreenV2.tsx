@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
-import { Modal, ProgressBar, SubTabs } from '@/components/common';
+import { Modal, PageHeader, ProgressBar, SubTabs } from '@/components/common';
+import { PageLayout } from '@/components/layout/primitives';
 import { toast } from '@/lib/toast';
 import {
   useAddMealItem,
@@ -319,13 +320,23 @@ export function DietScreen() {
   const goals = combineGoals(target, nutrition);
 
   return (
-    <div className="diet-os">
+    <PageLayout
+      className="diet-os"
+      header={<PageHeader
+        icon={<Utensils size={24} />}
+        title="Dieta"
+        desc="Dziennik posiłków, makroskładniki i nawodnienie w jednym miejscu."
+        actions={<>
+          <button className="btn btn-secondary btn-sm" disabled={categoriesLoading || itemsLoading} onClick={() => { setCustomMealTarget(null); setCustomMealsOpen(true); }}><Book size={15} /> Własne posiłki</button>
+          <button className="btn btn-secondary btn-sm" disabled={categoriesLoading || itemsLoading} onClick={() => setSettingsOpen(true)}><Settings size={15} /> Ustawienia</button>
+        </>}
+      />}
+    >
+
       <DateBar
         date={selectedDate}
         loading={categoriesLoading || itemsLoading}
         onChange={setSelectedDate}
-        onManageMeals={() => { setCustomMealTarget(null); setCustomMealsOpen(true); }}
-        onSettings={() => setSettingsOpen(true)}
       />
 
       <div className="diet-shell">
@@ -429,13 +440,13 @@ export function DietScreen() {
             </div>
           ))}
         </div>
-        <p className="diet-todo-note">TODO: docelowo podpiąć paginację i filtrowanie pełnej historii po zakresie dat.</p>
+        <p className="diet-todo-note">Historia pokazuje ostatnie wpisy. Pełny zakres wybierzesz w analityce dziennej, tygodniowej i miesięcznej.</p>
       </Modal>
-    </div>
+    </PageLayout>
   );
 }
 
-function DateBar({ date, loading, onChange, onManageMeals, onSettings }: { date: string; loading: boolean; onChange: (date: string) => void; onManageMeals: () => void; onSettings: () => void }) {
+function DateBar({ date, loading, onChange }: { date: string; loading: boolean; onChange: (date: string) => void }) {
   return (
     <div className="diet-datebar">
       <div className="diet-datebar-nav">
@@ -453,10 +464,6 @@ function DateBar({ date, loading, onChange, onManageMeals, onSettings }: { date:
           <Calendar size={15} />
           <input id="diet-date-picker" type="date" value={date} disabled={loading} onChange={(event) => onChange(event.target.value)} />
         </label>
-      </div>
-      <div className="diet-datebar-actions">
-        <button className="btn btn-secondary btn-sm" disabled={loading} onClick={onManageMeals}><Book size={15} /> Własne posiłki</button>
-        <button className="btn btn-secondary btn-sm" disabled={loading} onClick={onSettings}><Settings size={15} /> Ustawienia</button>
       </div>
     </div>
   );
@@ -538,7 +545,7 @@ function NutritionSummaryPanel({ mode, setMode, totals, nutrition, target, onOpe
         active={mode}
         onChange={(id) => setMode(id as SummaryMode)}
       />
-      {mode === 'range' && <p className="diet-todo-note">TODO: zakres własny ma gotowe UI w sekcji analitycznej; backend agregacji zakresu można rozbudować przy historii.</p>}
+      {mode === 'range' && <p className="diet-todo-note">Zakres własny korzysta z bieżących danych dnia. Tygodniowe i miesięczne agregacje są dostępne w sąsiednich widokach.</p>}
       <div className="diet-kcal-line">
         <div className="diet-ring" style={{ '--pct': `${kcalPct}%` } as CSSProperties} />
         <div>

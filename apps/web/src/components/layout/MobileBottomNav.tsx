@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useVisibleModules } from '@/features/config/useConfig';
+import type { ModuleKey } from '@/features/config/registry';
 
-// ─── ICONS ────────────────────────────────────────────────────
 const I = {
   start: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -61,34 +62,49 @@ const I = {
   ),
 };
 
-const PRIMARY: { to: string; label: string; end?: boolean; icon: ReactNode }[] = [
-  { to: '/', label: 'Planer', end: true, icon: I.start },
-  { to: '/sport', label: 'Sport', icon: I.sport },
-  { to: '/diet', label: 'Dieta', icon: I.diet },
-  { to: '/notes', label: 'Notatki', icon: I.notes },
-];
+const ICONS_BY_MODULE: Record<ModuleKey, ReactNode> = {
+  start: I.start,
+  sport: I.sport,
+  diet: I.diet,
+  finance: I.finance,
+  goals: I.goals,
+  office: I.office,
+  travel: I.travel,
+  notes: I.notes,
+  work: I.work,
+};
 
-// Full module list for the "More" sheet.
-const ALL: { to: string; label: string; end?: boolean; icon: ReactNode }[] = [
-  { to: '/', label: 'Planer', end: true, icon: I.start },
-  { to: '/sport', label: 'Sport', icon: I.sport },
-  { to: '/diet', label: 'Dieta', icon: I.diet },
-  { to: '/finance', label: 'Finanse', icon: I.finance },
-  { to: '/goals', label: 'Cele', icon: I.goals },
-  { to: '/office', label: 'Biuro', icon: I.office },
-  { to: '/travel', label: 'Podróże', icon: I.travel },
-  { to: '/notes', label: 'Notatki', icon: I.notes },
-  { to: '/work', label: 'Praca', icon: I.work },
-  { to: '/settings', label: 'Ustawienia', icon: I.settings },
-];
+const LABELS_BY_MODULE: Record<ModuleKey, string> = {
+  start: 'Planer',
+  sport: 'Sport',
+  diet: 'Dieta',
+  finance: 'Finanse',
+  goals: 'Cele',
+  office: 'Biuro',
+  travel: 'Podróże',
+  notes: 'Notatki',
+  work: 'Praca',
+};
 
 export function MobileBottomNav() {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const modules = useVisibleModules();
+  const moduleItems = modules.map((module) => ({
+    to: module.path,
+    label: LABELS_BY_MODULE[module.key] ?? module.label,
+    end: module.path === '/',
+    icon: ICONS_BY_MODULE[module.key],
+  }));
+  const primaryItems = moduleItems.slice(0, 4);
+  const sheetItems = [
+    ...moduleItems,
+    { to: '/settings', label: 'Ustawienia', end: false, icon: I.settings },
+  ];
 
   return (
     <>
       <nav className="mobile-nav">
-        {PRIMARY.map((item) => (
+        {primaryItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
@@ -116,7 +132,7 @@ export function MobileBottomNav() {
           <div className="sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <div className="sheet-grab" />
             <div className="sheet-grid">
-              {ALL.map((item) => (
+              {sheetItems.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}

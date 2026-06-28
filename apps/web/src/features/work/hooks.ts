@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  fetchCompanies, insertCompany, deleteCompany,
-  fetchProjects, insertProject, deleteProject,
+  fetchCompanies, insertCompany, patchCompany, deleteCompany,
+  fetchProjects, insertProject, patchProject, deleteProject,
   fetchWorkTasks, insertWorkTask, patchWorkTask, deleteWorkTask,
   fetchSubtasks, insertSubtask, patchSubtask, deleteSubtask,
 } from './api';
-import type { WorkTask, WorkSubtask, NewWorkTaskInput, CompanyType } from './types';
+import type { WorkCompany, WorkProject, WorkTask, WorkSubtask, NewWorkTaskInput, NewWorkProjectInput, CompanyType } from './types';
 
 const COMPANIES_KEY = ['work_companies'] as const;
 const PROJECTS_KEY = ['work_projects'] as const;
@@ -18,7 +18,15 @@ export function useWorkCompanies() {
 export function useAddCompany() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ name, type }: { name: string; type?: CompanyType }) => insertCompany(name, type),
+    mutationFn: ({ name, type, company, active }: { name: string; type?: CompanyType; company?: string | null; active?: boolean }) => insertCompany(name, type, company, active),
+    onSuccess: () => qc.invalidateQueries({ queryKey: COMPANIES_KEY }),
+  });
+}
+
+export function useUpdateCompany() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<WorkCompany> }) => patchCompany(id, patch),
     onSuccess: () => qc.invalidateQueries({ queryKey: COMPANIES_KEY }),
   });
 }
@@ -38,7 +46,15 @@ export function useWorkProjects() {
 export function useAddProject() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ name, companyId }: { name: string; companyId?: string | null }) => insertProject(name, companyId),
+    mutationFn: (input: NewWorkProjectInput) => insertProject(input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: PROJECTS_KEY }),
+  });
+}
+
+export function useUpdateProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<WorkProject> }) => patchProject(id, patch),
     onSuccess: () => qc.invalidateQueries({ queryKey: PROJECTS_KEY }),
   });
 }
@@ -66,7 +82,7 @@ export function useAddWorkTask() {
 export function useMoveWorkTask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'todo' | 'doing' | 'done' }) => patchWorkTask(id, { status }),
+    mutationFn: ({ id, status }: { id: string; status: WorkTask['status'] }) => patchWorkTask(id, { status }),
     onMutate: async ({ id, status }) => {
       await qc.cancelQueries({ queryKey: TASKS_KEY });
       const prev = qc.getQueryData<WorkTask[]>(TASKS_KEY);

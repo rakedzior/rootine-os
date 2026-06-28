@@ -7,8 +7,8 @@ export function SidebarLockButton({ expanded }: { expanded: boolean }) {
 
   const iconName = lockMode === 'auto' ? 'unlock' : 'lock';
   const text = lockMode === 'auto'
-    ? 'Auto'
-    : (lockMode === 'pinned-open' ? 'Widoczne' : 'Ukryte');
+    ? 'Tryb auto'
+    : (lockMode === 'pinned-open' ? 'Menu widoczne' : 'Menu ukryte');
   const label = lockMode === 'auto'
     ? 'Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.'
     : (lockMode === 'pinned-open'
@@ -24,7 +24,7 @@ export function SidebarLockButton({ expanded }: { expanded: boolean }) {
       aria-label={label}
       title={expanded ? undefined : label}
     >
-      <span className="sb-item-ic"><Icon name={iconName} size={20} /></span>
+      <span className="sb-item-ic sb-lock-ic"><Icon name={iconName} size={19} /></span>
       <span className="sb-item-label">{text}</span>
       {!expanded && <span className="sb-tooltip" role="tooltip">{label}</span>}
     </button>

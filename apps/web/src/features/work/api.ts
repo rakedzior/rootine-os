@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import type {
   WorkCompany, WorkProject, WorkTask, WorkSubtask,
-  NewWorkTaskInput, CompanyType, ProjectStatus,
+  NewWorkTaskInput, NewWorkProjectInput, CompanyType,
 } from './types';
 
 async function uid(): Promise<string> {
@@ -19,9 +19,15 @@ export async function fetchCompanies(): Promise<WorkCompany[]> {
   return (data ?? []) as WorkCompany[];
 }
 
-export async function insertCompany(name: string, type: CompanyType = 'client'): Promise<WorkCompany> {
+export async function insertCompany(name: string, type: CompanyType = 'client', company?: string | null, active = false): Promise<WorkCompany> {
   const userId = await uid();
-  const { data, error } = await supabase.from('work_companies').insert({ user_id: userId, name, type }).select('*').single();
+  const { data, error } = await supabase.from('work_companies').insert({ user_id: userId, name, type, company: company ?? null, active }).select('*').single();
+  if (error) throw error;
+  return data as WorkCompany;
+}
+
+export async function patchCompany(id: string, patch: Partial<WorkCompany>): Promise<WorkCompany> {
+  const { data, error } = await supabase.from('work_companies').update(patch).eq('id', id).select('*').single();
   if (error) throw error;
   return data as WorkCompany;
 }
@@ -39,9 +45,24 @@ export async function fetchProjects(): Promise<WorkProject[]> {
   return (data ?? []) as WorkProject[];
 }
 
-export async function insertProject(name: string, companyId?: string | null, status: ProjectStatus = 'active'): Promise<WorkProject> {
+export async function insertProject(input: NewWorkProjectInput): Promise<WorkProject> {
   const userId = await uid();
-  const { data, error } = await supabase.from('work_projects').insert({ user_id: userId, name, company_id: companyId ?? null, status }).select('*').single();
+  const { data, error } = await supabase.from('work_projects').insert({
+    user_id: userId,
+    company_id: input.company_id ?? null,
+    name: input.name,
+    description: input.description ?? '',
+    status: input.status ?? 'active',
+    deadline: input.deadline ?? null,
+    progress: input.progress ?? 0,
+    notes: input.notes ?? '',
+  }).select('*').single();
+  if (error) throw error;
+  return data as WorkProject;
+}
+
+export async function patchProject(id: string, patch: Partial<WorkProject>): Promise<WorkProject> {
+  const { data, error } = await supabase.from('work_projects').update(patch).eq('id', id).select('*').single();
   if (error) throw error;
   return data as WorkProject;
 }
@@ -67,7 +88,20 @@ export async function insertWorkTask(input: NewWorkTaskInput): Promise<WorkTask>
   const userId = await uid();
   const { data, error } = await supabase
     .from('work_tasks')
-    .insert({ user_id: userId, title: input.title, project_id: input.project_id ?? null, status: input.status ?? 'todo', due_date: input.due_date ?? null })
+    .insert({
+      user_id: userId,
+      company_id: input.company_id ?? null,
+      project_id: input.project_id ?? null,
+      parent_task_id: input.parent_task_id ?? null,
+      title: input.title,
+      description: input.description ?? '',
+      status: input.status ?? 'todo',
+      priority: input.priority ?? 'mid',
+      due_date: input.due_date ?? null,
+      due_time: input.due_time ?? null,
+      notes: input.notes ?? '',
+      links: input.links ?? [],
+    })
     .select('*')
     .single();
   if (error) throw error;

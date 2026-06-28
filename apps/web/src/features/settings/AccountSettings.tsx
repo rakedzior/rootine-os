@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { setTheme, getCurrentTheme, type Theme } from '@/lib/theme';
 import { logAudit } from '@/lib/audit';
 import { toast } from '@/lib/toast';
+import { useMfaStepUp } from '@/features/auth/useMfaStepUp';
 
 const THEMES: { id: Theme; label: string; swatch: string }[] = [
   { id: 'white-lotus', label: 'Beżowy', swatch: '#9a6a42' },
@@ -18,6 +19,7 @@ const THEMES: { id: Theme; label: string; swatch: string }[] = [
 ];
 
 export function AccountSettings() {
+  const { ensureMfa, mfaStepUpModal } = useMfaStepUp();
   const [theme, setThemeState] = useState<Theme>(getCurrentTheme);
   const [email, setEmail] = useState('');
   const [exporting, setExporting] = useState(false);
@@ -36,7 +38,9 @@ export function AccountSettings() {
     setTheme(next);
   }
 
+
   async function handleExport() {
+    if (!(await ensureMfa())) return;
     setExporting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -67,6 +71,7 @@ export function AccountSettings() {
       toast.error('Wpisz poprawne potwierdzenie');
       return;
     }
+    if (!(await ensureMfa())) return;
     setDeleting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -207,6 +212,7 @@ export function AccountSettings() {
           </div>
         )}
       </article>
+      {mfaStepUpModal}
     </>
     );
 }

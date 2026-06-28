@@ -1,193 +1,145 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { logAudit } from '@/lib/audit';
 import {
-  fetchAccounts, insertAccount, deleteAccount,
-  fetchTransactions, insertTransaction, deleteTransaction,
-  fetchCategories, insertCategory, deleteCategory,
-  fetchBudgets, insertBudget, deleteBudget,
-  fetchRecurring, insertRecurring, patchRecurring, deleteRecurring,
+  deleteAccount,
+  deleteBudgetCategory,
+  deleteFinancialReminder,
+  deleteRecurringExpense,
+  deleteSavingsGoal,
+  fetchFinanceDashboard,
+  saveAccount,
+  saveBudgetCategory,
+  saveFinancialReminder,
+  saveJdgItem,
+  saveRecurringExpense,
+  saveSavingsGoal,
+  setFinancialReminderCompleted,
+  setJdgMonth,
+  setRecurringPaid,
 } from './api';
 import type {
-  Account, Transaction, Category, Budget, RecurringExpense,
-  NewAccountInput, NewTransactionInput, NewCategoryInput, NewBudgetInput, NewRecurringInput,
+  AccountInput,
+  BudgetCategoryInput,
+  FinancialReminderInput,
+  JdgItemInput,
+  JdgMonth,
+  RecurringExpense,
+  RecurringExpenseInput,
+  SavingsGoalInput,
 } from './types';
 
-export const ACCOUNTS_KEY = ['accounts'] as const;
-export const TRANSACTIONS_KEY = ['transactions'] as const;
-export const CATEGORIES_KEY = ['financial_categories'] as const;
-export const BUDGETS_KEY = ['budgets'] as const;
-export const RECURRING_KEY = ['recurring_expenses'] as const;
+export const FINANCE_KEY = ['finance'] as const;
 
-// ---- accounts ----
-export function useAccounts() {
-  return useQuery({ queryKey: ACCOUNTS_KEY, queryFn: fetchAccounts });
-}
-
-export function useCreateAccount() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: NewAccountInput) => insertAccount(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ACCOUNTS_KEY }),
+export function useFinanceDashboard(month: string) {
+  return useQuery({
+    queryKey: [...FINANCE_KEY, month],
+    queryFn: () => fetchFinanceDashboard(month),
   });
 }
 
-export function useDeleteAccount() {
+function useInvalidateFinance() {
   const qc = useQueryClient();
+  return () => qc.invalidateQueries({ queryKey: FINANCE_KEY });
+}
+
+function onFinanceChange(invalidate: () => void, entity: string) {
+  invalidate();
+  void logAudit('finance_change', { entity });
+}
+
+export function useSaveAccount() {
+  const invalidate = useInvalidateFinance();
   return useMutation({
-    mutationFn: (id: string) => deleteAccount(id),
-    onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: ACCOUNTS_KEY });
-      const prev = qc.getQueryData<Account[]>(ACCOUNTS_KEY);
-      qc.setQueryData<Account[]>(ACCOUNTS_KEY, (old) => (old ?? []).filter((a) => a.id !== id));
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(ACCOUNTS_KEY, ctx.prev);
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: ACCOUNTS_KEY });
-      qc.invalidateQueries({ queryKey: TRANSACTIONS_KEY });
-    },
+    mutationFn: ({ id, input }: { id?: string; input: AccountInput }) => saveAccount(input, id),
+    onSuccess: () => onFinanceChange(invalidate, 'finance.account'),
   });
 }
 
-// ---- transactions ----
-export function useTransactions() {
-  return useQuery({ queryKey: TRANSACTIONS_KEY, queryFn: () => fetchTransactions() });
+export function useDeleteFinanceAccount() {
+  const invalidate = useInvalidateFinance();
+  return useMutation({ mutationFn: deleteAccount, onSuccess: () => onFinanceChange(invalidate, 'finance.account') });
 }
 
-export function useCreateTransaction() {
-  const qc = useQueryClient();
+export function useSaveBudgetCategory() {
+  const invalidate = useInvalidateFinance();
   return useMutation({
-    mutationFn: (input: NewTransactionInput) => insertTransaction(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: TRANSACTIONS_KEY }),
+    mutationFn: ({ id, input }: { id?: string; input: BudgetCategoryInput }) => saveBudgetCategory(input, id),
+    onSuccess: () => onFinanceChange(invalidate, 'finance.budget_category'),
   });
 }
 
-export function useDeleteTransaction() {
-  const qc = useQueryClient();
+export function useDeleteFinanceBudgetCategory() {
+  const invalidate = useInvalidateFinance();
+  return useMutation({ mutationFn: deleteBudgetCategory, onSuccess: () => onFinanceChange(invalidate, 'finance.budget_category') });
+}
+
+export function useSaveSavingsGoal() {
+  const invalidate = useInvalidateFinance();
   return useMutation({
-    mutationFn: (id: string) => deleteTransaction(id),
-    onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: TRANSACTIONS_KEY });
-      const prev = qc.getQueryData<Transaction[]>(TRANSACTIONS_KEY);
-      qc.setQueryData<Transaction[]>(TRANSACTIONS_KEY, (old) => (old ?? []).filter((t) => t.id !== id));
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(TRANSACTIONS_KEY, ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: TRANSACTIONS_KEY }),
+    mutationFn: ({ id, input }: { id?: string; input: SavingsGoalInput }) => saveSavingsGoal(input, id),
+    onSuccess: () => onFinanceChange(invalidate, 'finance.savings_goal'),
   });
 }
 
-// ---- categories ----
-export function useCategories() {
-  return useQuery({ queryKey: CATEGORIES_KEY, queryFn: fetchCategories });
+export function useDeleteFinanceSavingsGoal() {
+  const invalidate = useInvalidateFinance();
+  return useMutation({ mutationFn: deleteSavingsGoal, onSuccess: () => onFinanceChange(invalidate, 'finance.savings_goal') });
 }
 
-export function useCreateCategory() {
-  const qc = useQueryClient();
+export function useSaveRecurringExpense() {
+  const invalidate = useInvalidateFinance();
   return useMutation({
-    mutationFn: (input: NewCategoryInput) => insertCategory(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: CATEGORIES_KEY }),
+    mutationFn: ({ id, input }: { id?: string; input: RecurringExpenseInput }) => saveRecurringExpense(input, id),
+    onSuccess: () => onFinanceChange(invalidate, 'finance.recurring_expense'),
   });
 }
 
-export function useDeleteCategory() {
-  const qc = useQueryClient();
+export function useDeleteFinanceRecurringExpense() {
+  const invalidate = useInvalidateFinance();
+  return useMutation({ mutationFn: deleteRecurringExpense, onSuccess: () => onFinanceChange(invalidate, 'finance.recurring_expense') });
+}
+
+export function useSaveFinancialReminder() {
+  const invalidate = useInvalidateFinance();
   return useMutation({
-    mutationFn: (id: string) => deleteCategory(id),
-    onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: CATEGORIES_KEY });
-      const prev = qc.getQueryData<Category[]>(CATEGORIES_KEY);
-      qc.setQueryData<Category[]>(CATEGORIES_KEY, (old) => (old ?? []).filter((c) => c.id !== id));
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(CATEGORIES_KEY, ctx.prev);
-    },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: CATEGORIES_KEY });
-      qc.invalidateQueries({ queryKey: BUDGETS_KEY });
-    },
+    mutationFn: ({ id, input }: { id?: string; input: FinancialReminderInput }) => saveFinancialReminder(input, id),
+    onSuccess: () => onFinanceChange(invalidate, 'finance.reminder'),
   });
 }
 
-// ---- budgets ----
-export function useBudgets() {
-  return useQuery({ queryKey: BUDGETS_KEY, queryFn: fetchBudgets });
+export function useDeleteFinanceReminder() {
+  const invalidate = useInvalidateFinance();
+  return useMutation({ mutationFn: deleteFinancialReminder, onSuccess: () => onFinanceChange(invalidate, 'finance.reminder') });
 }
 
-export function useCreateBudget() {
-  const qc = useQueryClient();
+export function useToggleFinanceReminder() {
+  const invalidate = useInvalidateFinance();
   return useMutation({
-    mutationFn: (input: NewBudgetInput) => insertBudget(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: BUDGETS_KEY }),
+    mutationFn: ({ id, completed }: { id: string; completed: boolean }) => setFinancialReminderCompleted(id, completed),
+    onSuccess: () => onFinanceChange(invalidate, 'finance.reminder'),
   });
 }
 
-export function useDeleteBudget() {
-  const qc = useQueryClient();
+export function useSetRecurringPaid() {
+  const invalidate = useInvalidateFinance();
   return useMutation({
-    mutationFn: (id: string) => deleteBudget(id),
-    onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: BUDGETS_KEY });
-      const prev = qc.getQueryData<Budget[]>(BUDGETS_KEY);
-      qc.setQueryData<Budget[]>(BUDGETS_KEY, (old) => (old ?? []).filter((b) => b.id !== id));
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(BUDGETS_KEY, ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: BUDGETS_KEY }),
+    mutationFn: (input: { payment: RecurringExpense; month: string; paid: boolean }) => setRecurringPaid(input),
+    onSuccess: () => onFinanceChange(invalidate, 'finance.recurring_occurrence'),
   });
 }
 
-// ---- recurring ----
-export function useRecurring() {
-  return useQuery({ queryKey: RECURRING_KEY, queryFn: fetchRecurring });
-}
-
-export function useCreateRecurring() {
-  const qc = useQueryClient();
+export function useSaveJdgItem() {
+  const invalidate = useInvalidateFinance();
   return useMutation({
-    mutationFn: (input: NewRecurringInput) => insertRecurring(input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: RECURRING_KEY }),
+    mutationFn: ({ id, input }: { id?: string; input: JdgItemInput }) => saveJdgItem(input, id),
+    onSuccess: () => onFinanceChange(invalidate, 'finance.jdg_item'),
   });
 }
 
-export function useToggleRecurring() {
-  const qc = useQueryClient();
+export function useSetJdgMonth() {
+  const invalidate = useInvalidateFinance();
   return useMutation({
-    mutationFn: ({ id, active }: { id: string; active: boolean }) => patchRecurring(id, { active }),
-    onMutate: async ({ id, active }) => {
-      await qc.cancelQueries({ queryKey: RECURRING_KEY });
-      const prev = qc.getQueryData<RecurringExpense[]>(RECURRING_KEY);
-      qc.setQueryData<RecurringExpense[]>(RECURRING_KEY, (old) =>
-        (old ?? []).map((r) => (r.id === id ? { ...r, active } : r)),
-      );
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(RECURRING_KEY, ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: RECURRING_KEY }),
-  });
-}
-
-export function useDeleteRecurring() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => deleteRecurring(id),
-    onMutate: async (id) => {
-      await qc.cancelQueries({ queryKey: RECURRING_KEY });
-      const prev = qc.getQueryData<RecurringExpense[]>(RECURRING_KEY);
-      qc.setQueryData<RecurringExpense[]>(RECURRING_KEY, (old) => (old ?? []).filter((r) => r.id !== id));
-      return { prev };
-    },
-    onError: (_e, _v, ctx) => {
-      if (ctx?.prev) qc.setQueryData(RECURRING_KEY, ctx.prev);
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: RECURRING_KEY }),
+    mutationFn: ({ month, itemIds }: { month: JdgMonth; itemIds: string[] }) => setJdgMonth(month, itemIds),
+    onSuccess: () => onFinanceChange(invalidate, 'finance.jdg_month'),
   });
 }

@@ -62,6 +62,23 @@ export function usePinNote() {
   });
 }
 
+export function useUpdateNote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<Note> }) => patchNote(id, patch),
+    onMutate: async ({ id, patch }) => {
+      await qc.cancelQueries({ queryKey: NOTES_KEY });
+      const prev = qc.getQueryData<Note[]>([...NOTES_KEY, 'all']);
+      qc.setQueryData<Note[]>([...NOTES_KEY, 'all'], (old) =>
+        (old ?? []).map((note) => (note.id === id ? { ...note, ...patch } : note)),
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => { if (ctx?.prev) qc.setQueryData([...NOTES_KEY, 'all'], ctx.prev); },
+    onSettled: () => qc.invalidateQueries({ queryKey: NOTES_KEY }),
+  });
+}
+
 export function useDeleteNote() {
   const qc = useQueryClient();
   return useMutation({

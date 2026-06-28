@@ -11,6 +11,20 @@ export function PageContainer({ children, className = '' }: { children: ReactNod
   return <div className={`lay-page ${className}`.trim()}>{children}</div>;
 }
 
+/** Full-screen module wrapper: one header rhythm and one scroll/height contract for every app tab. */
+export function PageLayout({
+  header,
+  children,
+  className = '',
+}: { header: ReactNode; children: ReactNode; className?: string }) {
+  return (
+    <div className={`module-page ${className}`.trim()}>
+      {header}
+      <div className="page-body">{children}</div>
+    </div>
+  );
+}
+
 /** Generic responsive grid. `min` controls the smallest column width before wrapping. */
 export function ResponsiveModuleGrid({
   children,

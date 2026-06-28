@@ -628,12 +628,6 @@
   line-height: 1.5;
 }
 
-.work-detail-links {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .work-detail-section-head {
   display: flex;
   align-items: center;
@@ -645,38 +639,6 @@
   margin: 0;
   font-size: 12px;
   color: var(--ink-3);
-}
-
-.work-detail-link-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.work-detail-link-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--border-soft);
-  background: var(--surface-inset);
-}
-
-.work-detail-link-row svg {
-  width: 16px;
-  height: 16px;
-  color: var(--ink-3);
-}
-
-.work-detail-link-row a {
-  flex: 1;
-  min-width: 0;
-  font-size: 13px;
-  color: var(--acc-ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .work-deadline-list {
@@ -841,6 +803,198 @@
   flex-shrink: 0;
 }
 
+/* Work screen composition tuned to the Praca mockup. */
+.work-os {
+  gap: 14px;
+  overflow: hidden;
+}
+
+.work-shell {
+  grid-template-columns: minmax(0, 1fr) minmax(330px, 380px);
+  gap: 14px;
+}
+
+.work-main,
+.work-side {
+  gap: 14px;
+}
+
+.work-main {
+  overflow: hidden;
+}
+
+.work-side {
+  position: static;
+  align-self: stretch;
+  max-height: none;
+  overflow: hidden;
+}
+
+.work-context-panel,
+.work-task-board,
+.work-panel {
+  border-color: color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--surface-2) 34%, transparent), transparent 48%),
+    color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: none;
+}
+
+.work-context-panel {
+  flex: 0 0 auto;
+  padding: 14px;
+}
+
+.work-company-bar {
+  margin-bottom: 14px;
+}
+
+.work-company-bar select {
+  min-height: 42px;
+  border-color: color-mix(in srgb, var(--border) 82%, transparent);
+  background: color-mix(in srgb, var(--surface-inset) 92%, transparent);
+}
+
+.work-icon-btn {
+  width: 40px;
+  height: 40px;
+}
+
+.work-project-strip {
+  grid-template-columns: repeat(3, minmax(220px, 1fr)) minmax(180px, .72fr);
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-gutter: stable;
+}
+
+.work-project-card,
+.work-new-project {
+  min-height: 82px;
+  border-radius: 12px;
+}
+
+.work-project-card {
+  border-color: color-mix(in srgb, var(--border) 80%, transparent);
+  background: color-mix(in srgb, var(--surface-inset) 46%, transparent);
+}
+
+.work-project-card:hover,
+.work-new-project:hover {
+  border-color: var(--acc-line);
+  background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+}
+
+.work-project-card.is-selected {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--acc-line) 62%, transparent);
+}
+
+.work-new-project {
+  border-color: color-mix(in srgb, var(--border) 78%, transparent);
+  border-style: solid;
+}
+
+.work-task-board {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.work-viewbar {
+  min-height: 58px;
+  padding: 10px 14px;
+  border-bottom-color: color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.work-view-tabs button {
+  min-height: 38px;
+  border-radius: 9px;
+  padding: 0 13px;
+}
+
+.work-view-tabs button.is-active {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--acc-soft) 58%, var(--surface-2));
+  border-color: var(--acc-line);
+}
+
+.work-view-actions button {
+  color: var(--ink-3);
+}
+
+.work-task-table {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 12px 12px;
+  scrollbar-gutter: stable;
+}
+
+.work-task-head,
+.work-task-row {
+  grid-template-columns: minmax(360px, 1.8fr) minmax(150px, .78fr) minmax(110px, .48fr) minmax(118px, .52fr) minmax(132px, .58fr) 86px 34px;
+  min-width: 1040px;
+}
+
+.work-task-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 12px 10px 9px;
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+}
+
+.work-task-row {
+  min-height: 46px;
+  border-top-color: color-mix(in srgb, var(--border-soft) 78%, transparent);
+}
+
+.work-task-row.is-selected {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--acc-soft) 42%, transparent), transparent 72%),
+    color-mix(in srgb, var(--surface-2) 62%, transparent);
+}
+
+.work-task-row:hover {
+  background: color-mix(in srgb, var(--surface-2) 58%, transparent);
+}
+
+.work-task-title strong {
+  font-size: 13px;
+  font-weight: 720;
+}
+
+.work-priority,
+.work-status {
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.work-panel {
+  padding: 16px;
+}
+
+.work-side .work-panel:first-child {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.work-side .detail-panel-title strong {
+  font-size: 17px;
+}
+
+.work-side .detail-panel-fields > div {
+  padding: 10px 0;
+}
+
+.work-deadline-list {
+  gap: 2px;
+}
+
+.work-deadline {
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  padding: 10px 0;
+}
+
 @media (max-width: 1400px) {
   .work-shell {
     grid-template-columns: 1fr;
@@ -915,4 +1069,147 @@
     flex: 1;
     justify-content: center;
   }
+}
+
+/* Graphite Cool Ice alignment with shared tabs/status/table primitives. */
+.work-view-tabs {
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-mid);
+  background: color-mix(in srgb, var(--surface-base) 72%, transparent);
+}
+
+.work-view-tabs button {
+  min-height: 36px;
+  border-radius: calc(var(--r-sm) + 2px);
+  border: 1px solid transparent;
+  color: var(--ink-3);
+  padding: 0 13px;
+}
+
+.work-view-tabs button:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+}
+
+.work-view-tabs button.is-active {
+  color: var(--acc-ink);
+  background: var(--acc-soft);
+  border-color: var(--acc-line);
+  box-shadow: none;
+}
+
+.work-task-table {
+  border-radius: var(--r-mid);
+  border: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--surface-base) 52%, transparent);
+  overflow: hidden;
+  padding: 0;
+}
+
+.work-task-head {
+  padding: 13px 14px 10px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.work-task-row {
+  min-height: 56px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.work-task-row:hover,
+.work-task-row.is-selected {
+  background: color-mix(in srgb, var(--surface-2) 64%, transparent);
+}
+
+.work-check {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-sm);
+  border-color: color-mix(in srgb, var(--accent-ice) 34%, var(--border-strong));
+}
+
+.work-check.is-done {
+  color: #07111a;
+  background: var(--accent-ice);
+  border-color: var(--accent-ice);
+}
+
+.work-priority,
+.work-status {
+  min-height: 22px;
+  border-radius: var(--r-pill);
+  border: 1px solid transparent;
+  padding: 3px 9px;
+  font-size: 9px;
+  letter-spacing: .06em;
+}
+
+.work-priority.is-high { color: var(--danger-ink); background: rgba(248, 113, 113, .11); border-color: rgba(248, 113, 113, .22); }
+.work-priority.is-mid { color: var(--warn-ink); background: rgba(251, 191, 36, .10); border-color: rgba(251, 191, 36, .20); }
+.work-priority.is-low { color: var(--accent-ice); background: rgba(125, 211, 252, .10); border-color: rgba(125, 211, 252, .22); }
+.work-status.is-active { color: var(--accent-ice); background: rgba(125, 211, 252, .10); border-color: rgba(125, 211, 252, .22); }
+.work-status.is-todo,
+.work-status.is-waiting { color: var(--ink-3); background: color-mix(in srgb, var(--surface-2) 70%, transparent); border-color: var(--border-soft); }
+.work-status.is-done { color: var(--success-ink); background: rgba(52, 211, 153, .10); border-color: rgba(52, 211, 153, .22); }
+.work-status.is-blocked { color: var(--warn-ink); background: rgba(251, 191, 36, .10); border-color: rgba(251, 191, 36, .20); }
+
+/* Final full-height pass under shared PageLayout. */
+.work-os,
+.work-os > .page-body {
+  overflow: hidden;
+}
+
+.work-shell {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.work-main,
+.work-side,
+.work-task-table {
+  max-height: none;
+  min-height: 0;
+}
+
+.work-side {
+  overflow: hidden;
+}
+
+.work-panel {
+  min-height: 0;
+  border-color: var(--border-soft);
+  border-radius: var(--r-card);
+}
+
+.work-project-card,
+.work-new-project {
+  border-radius: var(--r-mid);
+}
+
+.work-project-card.is-selected {
+  border-color: var(--acc-line);
+  background: color-mix(in srgb, var(--acc-soft) 58%, transparent);
+  box-shadow: inset 2px 0 0 var(--accent-ice);
+}
+
+/* UI audit v6: right rail and task table use internal scrolling, matching other modules. */
+.work-side {
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.work-side .work-panel:first-child {
+  max-height: none;
+}
+
+.work-task-table {
+  overflow: auto;
+}
+
+.work-task-row {
+  min-height: 52px;
 }

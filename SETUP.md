@@ -27,3 +27,26 @@ npm run dev                 # http://localhost:5173
 
 ## Hosting
 - Netlify czyta `netlify.toml` (build w `apps/web`, nagłówki CSP/HSTS).
+
+## Verification
+
+```bash
+cd apps/web
+npm run build
+npm run e2e
+```
+
+E2E requires a test account:
+
+```bash
+set E2E_EMAIL=test@example.com
+set E2E_PASSWORD=...
+npm run e2e
+```
+
+Without `E2E_EMAIL` and `E2E_PASSWORD`, Playwright tests are skipped.
+
+## Integrations
+
+- Google Calendar and Strava require API secrets configured for Supabase Edge Functions.
+- Do not put integration secrets in `apps/web/.env`; the frontend uses only the anon key.

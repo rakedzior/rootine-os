@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import '@/styles/sport.css';
 import { PageHeader, ConfirmDelete } from '@/components/common';
-import { PageContainer, PageGrid } from '@/components/layout/primitives';
+import { PageContainer, PageGrid, PageLayout } from '@/components/layout/primitives';
 import {
   useWeekWorkouts, useSports, useTemplates, useExercises, useCreateScheduledWorkout,
   useCreateFromTemplate, useCreateTrainingBlock, useMoveScheduledWorkout, useDeleteScheduledWorkout,
@@ -78,14 +78,16 @@ export function SportScreen() {
   }
 
   return (
-    <div className="module-page sport-os">
-      <PageHeader icon={<SportIcon />} title="Sport" desc="Planuj, analizuj i poprawiaj swoje treningi."
+    <PageLayout
+      className="sport-os"
+      header={<PageHeader icon={<SportIcon />} title="Sport" desc="Planuj, analizuj i poprawiaj swoje treningi."
         actions={<>
           <button className="btn btn-ghost" onClick={() => setCycleManagerOpen(true)}>Cykle treningowe</button>
           <button className="btn btn-secondary" onClick={() => setAddDrawer({ open: true, date: todayStr(), mode: 'template' })}>+ Dodaj trening</button>
           <button className="btn btn-primary" onClick={() => setAddDrawer({ open: true, date: todayStr(), mode: 'block' })}>+ Zaplanuj blok</button>
         </>}
-      />
+      />}
+    >
 
       <PageContainer>
         <ActiveCycleBanner
@@ -155,6 +157,6 @@ export function SportScreen() {
         onOpenDetail={(id) => { setCycleManagerOpen(false); setCycleDetailId(id); }}
       />
       <CycleDetailModal cycleId={cycleDetailId} onClose={() => setCycleDetailId(null)} templates={templates} sports={sports} exercises={exercises} />
-    </div>
+    </PageLayout>
   );
 }

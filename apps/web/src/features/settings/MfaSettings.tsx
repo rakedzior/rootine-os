@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { logAudit } from '@/lib/audit';
 import { verifyTotpCode } from '@/features/auth/mfa';
 
 interface Enrollment {
@@ -58,6 +59,7 @@ export function MfaSettings() {
     setEnrollment(null);
     setCode('');
     setStatus({ kind: 'ok', text: 'MFA zostało włączone.' });
+    await logAudit('security_change', { entity: 'mfa', metadata: { action: 'enable' } });
     await refresh();
   };
 
@@ -76,6 +78,7 @@ export function MfaSettings() {
     }
     setBusy(false);
     setStatus({ kind: 'ok', text: 'MFA zostało wyłączone.' });
+    await logAudit('security_change', { entity: 'mfa', metadata: { action: 'disable' } });
     await refresh();
   };
 
