@@ -3291,6 +3291,68 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
 .day-cell:hover { filter: brightness(1.04); }
 .hover-row { transition: background var(--t); }
 .hover-row:hover { background: var(--surface-2); }
+
+/* ============================================================ PLANNER INTERACTION POLISH
+   Shared micro-motion for the Planner's add-task surfaces, drag-to-reschedule
+   feedback, and the complete-task confirm. All durations sit in the 120-220ms
+   band (state feedback, not choreography). The global prefers-reduced-motion
+   guard near the end of this file collapses every animation below to ~instant. */
+
+/* Popover entrance — the three add-task surfaces (schedule popover, quick note,
+   and the schedule subpanel) scale + fade in from the click point. The exact
+   transform-origin is set inline per instance so the panel grows out of the
+   anchor it was opened from, not from a fixed corner. */
+@keyframes planner-pop-in {
+  from { opacity: 0; transform: scale(.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.task-options-pop,
+.task-quick-pop,
+.task-options-subpop {
+  animation: planner-pop-in 170ms var(--ease);
+  transform-origin: var(--pop-origin, center);
+  will-change: transform, opacity;
+}
+
+/* Drag source while a task is being dragged to a new day — clearly "lifted". */
+.ev-task.is-dragging {
+  opacity: .55;
+  cursor: grabbing;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .38), 0 0 0 1px var(--accent-ice);
+}
+
+/* Settle flash on the task that just landed on a new day after a drop. */
+.ev-task.just-moved { animation: planner-task-land 600ms var(--ease); }
+@keyframes planner-task-land {
+  0%   { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-ice) 70%, transparent); }
+  55%  { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-ice) 34%, transparent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* Complete-task confirm — a quick pop the moment a panel row is checked off.
+   JS-gated (.is-pop is added only on a real toggle), so already-done rows don't
+   pop on initial load. */
+.tsk-check.is-pop { animation: planner-check-pop 200ms var(--ease); }
+@keyframes planner-check-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.28); }
+  100% { transform: scale(1); }
+}
+
+/* Loading skeleton for the tasks panel (replaces the old text "Ładowanie..."). */
+.planner-task-skeletons { display: flex; flex-direction: column; gap: 2px; }
+.planner-skel-row { display: flex; align-items: center; gap: 10px; padding: 9px 6px; }
+.planner-skel-check { width: 19px; height: 19px; border-radius: 7px; flex-shrink: 0; }
+.planner-skel-line { height: 13px; border-radius: 6px; flex: 1; }
+.planner-skel-row:nth-child(2) .planner-skel-line { max-width: 78%; }
+.planner-skel-row:nth-child(3) .planner-skel-line { max-width: 62%; }
+.planner-skel-row:nth-child(4) .planner-skel-line { max-width: 84%; }
+.planner-skel-row:nth-child(5) .planner-skel-line { max-width: 54%; }
+
+/* Tag chips inside the schedule popover title (brings it in line with the
+   quick-note and the full add-task modal, which already show entered #tags). */
+.task-options-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+
 .task-filter-row {
   display: flex;
   align-items: center;

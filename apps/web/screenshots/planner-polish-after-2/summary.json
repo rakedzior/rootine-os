@@ -1,0 +1,53 @@
+{
+  "bodyW": 390,
+  "clientW": 390,
+  "mainTop": 350,
+  "mainScrollH": 1194,
+  "mainClientH": 844,
+  "tasks": {
+    "rect": {
+      "x": 18,
+      "y": -106,
+      "w": 354,
+      "h": 332,
+      "bottom": 226
+    },
+    "css": {
+      "height": "332px",
+      "minHeight": "0px",
+      "overflow": "hidden",
+      "display": "flex"
+    }
+  },
+  "habits": {
+    "rect": {
+      "x": 18,
+      "y": 240,
+      "w": 324,
+      "h": 161,
+      "bottom": 400
+    },
+    "css": {
+      "height": "160.75px",
+      "minHeight": "150px",
+      "overflow": "hidden",
+      "display": "flex"
+    }
+  },
+  "calendar": {
+    "rect": {
+      "x": 18,
+      "y": 414,
+      "w": 354,
+      "h": 430,
+      "bottom": 844
+    },
+    "css": {
+      "height": "430px",
+      "minHeight": "430px",
+      "overflow": "hidden",
+      "display": "grid"
+    }
+  },
+  "offenders": []
+}

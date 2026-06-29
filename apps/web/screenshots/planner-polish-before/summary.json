@@ -1,0 +1,124 @@
+[
+  {
+    "name": "mobile",
+    "metrics": {
+      "bodyW": 390,
+      "clientW": 390,
+      "mainScrollH": 1391,
+      "mainClientH": 844,
+      "shell": {
+        "x": 18,
+        "y": 244,
+        "w": 354,
+        "h": 430,
+        "bottom": 674,
+        "right": 372
+      },
+      "layout": {
+        "x": 18,
+        "y": 244,
+        "w": 354,
+        "h": 1148,
+        "bottom": 1391,
+        "right": 372
+      },
+      "sidebar": {
+        "x": 18,
+        "y": 244,
+        "w": 354,
+        "h": 704,
+        "bottom": 947,
+        "right": 372
+      },
+      "tasks": {
+        "x": 18,
+        "y": 244,
+        "w": 354,
+        "h": 483,
+        "bottom": 727,
+        "right": 372
+      },
+      "habits": {
+        "x": 18,
+        "y": 741,
+        "w": 342,
+        "h": 207,
+        "bottom": 947,
+        "right": 360
+      },
+      "calendar": {
+        "x": 18,
+        "y": 961,
+        "w": 354,
+        "h": 430,
+        "bottom": 1391,
+        "right": 372
+      },
+      "offenders": []
+    },
+    "logs": [
+      "warning: ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+    ]
+  },
+  {
+    "name": "desktop",
+    "metrics": {
+      "bodyW": 1440,
+      "clientW": 1440,
+      "mainScrollH": 900,
+      "mainClientH": 900,
+      "shell": {
+        "x": 105,
+        "y": 117,
+        "w": 1296,
+        "h": 763,
+        "bottom": 880,
+        "right": 1401
+      },
+      "layout": {
+        "x": 105,
+        "y": 117,
+        "w": 1296,
+        "h": 763,
+        "bottom": 880,
+        "right": 1401
+      },
+      "sidebar": {
+        "x": 105,
+        "y": 117,
+        "w": 300,
+        "h": 763,
+        "bottom": 880,
+        "right": 405
+      },
+      "tasks": {
+        "x": 105,
+        "y": 117,
+        "w": 300,
+        "h": 392,
+        "bottom": 509,
+        "right": 405
+      },
+      "habits": {
+        "x": 105,
+        "y": 526,
+        "w": 300,
+        "h": 354,
+        "bottom": 880,
+        "right": 405
+      },
+      "calendar": {
+        "x": 425,
+        "y": 117,
+        "w": 976,
+        "h": 763,
+        "bottom": 880,
+        "right": 1401
+      },
+      "offenders": []
+    },
+    "logs": [
+      "warning: ⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+    ]
+  }
+]

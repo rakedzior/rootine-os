@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-29T00:00:00.000Z",
+  "title": "Design System: Rootine OS",
+  "extensions": {
+    "colorMeta": {
+      "graphite-bg": {
+        "role": "neutral",
+        "displayName": "Graphite Background",
+        "canonical": "#0d1117",
+        "tonalRamp": ["#080d13", "#0d1117", "#101721", "#141d29", "#182232", "#1b2838", "#202831", "#262d36"]
+      },
+      "surface-raised": {
+        "role": "neutral",
+        "displayName": "Raised Graphite",
+        "canonical": "#182232",
+        "tonalRamp": ["#080d13", "#101721", "#141d29", "#182232", "#1b2838", "#202831", "#263342", "#344456"]
+      },
+      "ice": {
+        "role": "primary",
+        "displayName": "Ice Accent",
+        "canonical": "#7dd3fc",
+        "tonalRamp": ["#082f49", "#075985", "#0284c7", "#38bdf8", "#7dd3fc", "#a7e5ff", "#bae6fd", "#e0f2fe"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Sora Display",
+        "purpose": "Module titles and primary headings."
+      },
+      "body": {
+        "displayName": "Inter Product Body",
+        "purpose": "Repeated product UI content and task scanning."
+      },
+      "label": {
+        "displayName": "IBM Plex Mono Labels",
+        "purpose": "Dates, counters, metadata, compact system labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card",
+        "value": "0 6px 16px rgba(0, 0, 0, 0.14)",
+        "purpose": "Standard cards and module panels."
+      },
+      {
+        "name": "panel",
+        "value": "0 10px 26px rgba(0, 0, 0, 0.18)",
+        "purpose": "Larger panels that need more hierarchy."
+      }
+    ],
+    "motion": [
+      {
+        "name": "standard",
+        "value": "160ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Default state transitions."
+      }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "760px" },
+      { "name": "desktop", "value": "1181px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main surface action in ice blue.",
+      "html": "<button class=\"ds-btn-primary\">+ Nowe zadanie</button>",
+      "css": ".ds-btn-primary{height:44px;padding:0 18px;border-radius:11px;border:1px solid rgba(186,230,253,.5);background:#7dd3fc;color:#080d13;font:760 14px Inter,system-ui,sans-serif;box-shadow:0 4px 10px rgba(0,0,0,.13);cursor:pointer}.ds-btn-primary:hover{background:#8bdcff}.ds-btn-primary:focus-visible{outline:2px solid rgba(125,211,252,.7);outline-offset:2px}"
+    },
+    {
+      "name": "Graphite Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Default raised graphite container.",
+      "html": "<section class=\"ds-card\"><h3>Panel</h3><p>Operational content lives here.</p></section>",
+      "css": ".ds-card{padding:22px;border-radius:18px;border:1px solid rgba(157,177,198,.13);background:rgba(22,33,46,.82);color:#e6edf5;box-shadow:0 6px 16px rgba(0,0,0,.14);font-family:Inter,system-ui,sans-serif}.ds-card h3{margin:0 0 8px;font:760 18px Sora,Inter,sans-serif;letter-spacing:-.02em}.ds-card p{margin:0;color:#a7b4c2;font-size:14px}"
+    },
+    {
+      "name": "Segmented Chip Row",
+      "kind": "chip",
+      "refersTo": "chip-active",
+      "description": "Compact filter and view controls.",
+      "html": "<div class=\"ds-segments\"><button class=\"is-active\">Dzisiaj</button><button>Tydzień</button><button>Miesiąc</button></div>",
+      "css": ".ds-segments{display:inline-flex;height:36px;padding:3px;gap:2px;border-radius:11px;border:1px solid rgba(148,163,184,.12);background:rgba(12,18,26,.42)}.ds-segments button{height:30px;padding:0 12px;border:1px solid transparent;border-radius:8px;background:transparent;color:#a7b4c2;font:760 11.5px Inter,system-ui,sans-serif;cursor:pointer}.ds-segments button.is-active{color:#f1f5f9;border-color:rgba(125,211,252,.5);background:rgba(125,211,252,.12)}"
+    },
+    {
+      "name": "Inset Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Dark compact entry field.",
+      "html": "<input class=\"ds-input\" placeholder=\"Dodaj zadanie...\" />",
+      "css": ".ds-input{height:42px;padding:0 14px;border-radius:12px;border:1px solid rgba(148,163,184,.10);background:rgba(10,17,26,.74);color:#e6edf5;font:500 13px Inter,system-ui,sans-serif}.ds-input::placeholder{color:#7c8a9a}.ds-input:focus{outline:none;border-color:rgba(125,211,252,.42);box-shadow:0 0 0 2px rgba(125,211,252,.08)}"
+    },
+    {
+      "name": "Navigation Icon",
+      "kind": "nav",
+      "refersTo": "nav-active",
+      "description": "Compact module navigation state.",
+      "html": "<button class=\"ds-nav-icon\" aria-label=\"Planer\">▣</button>",
+      "css": ".ds-nav-icon{width:42px;height:42px;border-radius:11px;border:1px solid rgba(125,211,252,.34);background:rgba(125,211,252,.10);color:#7dd3fc;font:760 13px Inter,system-ui,sans-serif;display:grid;place-items:center}.ds-nav-icon:focus-visible{outline:2px solid rgba(125,211,252,.7);outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Private Command Graphite",
+    "overview": "Rootine OS is a premium personal command center, not a corporate dashboard and not a blank productivity canvas. Its visual system is graphite-first, restrained, dense, and exact.",
+    "keyCharacteristics": [
+      "Dense but calm product UI, optimized for repeated daily use.",
+      "Graphite surfaces with blue/ice state accents only.",
+      "Strong module continuity: every tab belongs to the same machine.",
+      "Visual treatment clarifies state before it decorates."
+    ],
+    "rules": [
+      {
+        "name": "The Ice Is State Rule",
+        "body": "Ice-blue marks selection, focus, current state, and primary action. Do not use it as decorative glow.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tonal Depth Rule",
+        "body": "Prefer surface changes and borders before shadows. Shadow is hierarchy, not decoration.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep Rootine graphite-first with ice-blue accents for state and action.",
+      "Do keep controls compact, aligned, and single-line when the information is scan-first.",
+      "Do preserve one raster across modules."
+    ],
+    "donts": [
+      "Don't make Rootine look like a corporate dashboard, SaaS analytics page, or boardroom KPI wall.",
+      "Don't make it feel like Notion, a blank block canvas, or a generic productivity template.",
+      "Don't introduce orange, beige, black/orange task-app styling, purple gradients, decorative glow, or heavy glassmorphism."
+    ]
+  }
+}

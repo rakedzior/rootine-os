@@ -278,6 +278,12 @@
   flex-wrap: wrap !important;
 }
 
+.planner-mobile-modebar,
+.planner-mobile-fab,
+.planner-calendar-agenda {
+  display: none;
+}
+
 .module-page.planner-page .planner-layout,
 .module-page.sport-os > .page-body > .lay-page,
 .sport-os > .page-body > .lay-page {
@@ -426,15 +432,13 @@
   }
 
   .page-head-actions > .planner-header-actions > .date-navigator {
-    grid-column: 1 / -1 !important;
+    grid-column: 1 !important;
     width: 100% !important;
     flex: none !important;
   }
 
   .page-head-actions > .planner-header-actions > .btn-primary {
-    grid-column: 1 !important;
-    width: 100% !important;
-    min-width: 0 !important;
+    display: none !important;
   }
 
   .page-head-actions > .planner-header-actions > .icon-btn {
@@ -548,6 +552,68 @@
     padding: 0 !important;
   }
 
+  .module-page.planner-page .planner-mobile-modebar {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    width: 100%;
+    padding: 3px;
+    margin-bottom: var(--rt-layout-gap);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 14px;
+    background: rgba(10, 16, 24, 0.66);
+  }
+
+  .module-page.planner-page .planner-mobile-modebar button {
+    min-width: 0;
+    min-height: 38px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    background: transparent;
+    color: rgba(190, 205, 221, 0.72);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 760;
+    cursor: pointer;
+  }
+
+  .module-page.planner-page .planner-mobile-modebar button.is-active {
+    color: var(--rt-ice-strong);
+    border-color: rgba(125, 211, 252, 0.5);
+    background: rgba(125, 211, 252, 0.11);
+  }
+
+  .module-page.planner-page .planner-layout[data-mobile-view="today"] .planner-calendar-card,
+  .module-page.planner-page .planner-layout[data-mobile-view="calendar"] .planner-sidebar {
+    display: none !important;
+  }
+
+  .module-page.planner-page .planner-layout[data-mobile-view="calendar"] {
+    gap: 0 !important;
+  }
+
+  .module-page.planner-page .planner-mobile-fab {
+    position: fixed;
+    right: 20px;
+    bottom: calc(var(--rt-mobile-nav-h) + 18px);
+    z-index: 35;
+    display: grid !important;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border: 1px solid rgba(125, 211, 252, 0.7);
+    border-radius: 16px;
+    background: var(--accent-ice);
+    color: #07111a;
+    box-shadow: 0 10px 24px rgba(7, 17, 26, 0.34);
+    cursor: pointer;
+  }
+
+  .module-page.planner-page .planner-mobile-fab svg {
+    width: 23px;
+    height: 23px;
+  }
+
   .module-page.planner-page .planner-layout,
   .sport-os .sport-bottom-grid,
   .finance-summary-strip,
@@ -627,12 +693,126 @@
   }
 
   .module-page.planner-page .planner-tasks-card {
-    min-height: 112px !important;
+    min-height: 0 !important;
+    padding: var(--rt-space-5) !important;
+    overflow: hidden !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card > div:first-child {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card > div:first-child > div:first-child {
+    margin-bottom: var(--rt-space-3) !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .task-filter-row {
+    margin-bottom: var(--rt-space-3) !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .filter-chips {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 2px !important;
+    width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    margin: 0 !important;
+    padding: 3px !important;
+    overflow: hidden !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .filter-chip {
+    min-width: 0 !important;
+    min-height: 32px !important;
+    height: 32px !important;
+    padding-inline: 3px !important;
+    border-radius: 10px !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .filter-chip > span:first-child {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card > div:first-child > div:nth-child(3) {
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    max-height: 152px !important;
+    overflow: auto !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .empty-state-compact {
+    min-height: 96px !important;
+    height: auto !important;
+    padding: var(--rt-space-3) 0 !important;
+    justify-content: center !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .empty-state-compact svg {
+    width: 24px !important;
+    height: 24px !important;
+    padding: 8px !important;
+    margin-bottom: var(--rt-space-2) !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .empty-state-compact h3,
+  .module-page.planner-page .planner-tasks-card .empty-state-compact .es-title {
+    font-size: 17px !important;
+    margin-bottom: var(--rt-space-1) !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .empty-state-compact p,
+  .module-page.planner-page .planner-tasks-card .empty-state-compact .es-desc {
+    margin-bottom: 0 !important;
+    font-size: 13px !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card > div:first-child > div:last-child {
+    margin-top: var(--rt-space-3) !important;
+    padding-top: var(--rt-space-3) !important;
   }
 
   .module-page.planner-page .planner-habits-card {
-    min-height: 124px !important;
+    min-height: 150px !important;
+    padding: var(--rt-space-4) var(--rt-space-5) !important;
     overflow: hidden !important;
+  }
+
+  .module-page.planner-page .planner-habits-card > div:first-child {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  .module-page.planner-page .planner-habits-card > div:first-child > div:first-child {
+    margin-bottom: var(--rt-space-2) !important;
+  }
+
+  .module-page.planner-page .planner-habits-card > div:first-child > div:nth-child(2) {
+    gap: var(--rt-space-3) !important;
+    margin-bottom: var(--rt-space-2) !important;
+  }
+
+  .module-page.planner-page .planner-habits-card > div:first-child > div:nth-child(2) > div:first-child,
+  .module-page.planner-page .planner-habits-card > div:first-child > div:nth-child(2) > div:first-child svg,
+  .module-page.planner-page .planner-habits-card > div:first-child > div:nth-child(2) > div:first-child span {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .module-page.planner-page .planner-habits-card .habits-strip-list {
+    flex: 0 0 auto !important;
+    max-height: 30px !important;
+    overflow: hidden !important;
+  }
+
+  .module-page.planner-page .planner-habits-card > div:first-child > button:last-of-type {
+    margin-top: var(--rt-space-2) !important;
   }
 
   .planner-calendar-card {
@@ -648,6 +828,11 @@
     min-height: 430px !important;
     height: auto !important;
     flex: 0 0 auto !important;
+  }
+
+  .module-page.planner-page .planner-layout[data-mobile-view="calendar"] .planner-calendar-card {
+    min-height: 0 !important;
+    padding: var(--rt-space-5) !important;
   }
 
   .module-page.planner-page .planner-calendar-card > div:first-child {
@@ -727,6 +912,91 @@
     justify-content: center !important;
   }
 
+  .module-page.planner-page .planner-calendar-agenda {
+    display: flex !important;
+    flex-direction: column;
+    gap: var(--rt-space-2);
+    margin-top: var(--rt-space-4);
+    padding-top: var(--rt-space-4);
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+  }
+
+  .module-page.planner-page .planner-calendar-agenda-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--rt-space-3);
+    color: rgba(190, 205, 221, 0.7);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 760;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .module-page.planner-page .planner-calendar-agenda-head strong {
+    color: var(--rt-ink);
+    font-size: 11px;
+  }
+
+  .module-page.planner-page .planner-calendar-agenda-empty,
+  .module-page.planner-page .planner-calendar-agenda-row,
+  .module-page.planner-page .planner-calendar-agenda-add {
+    min-height: 44px;
+    border-radius: 12px;
+    background: rgba(10, 16, 24, 0.5);
+  }
+
+  .module-page.planner-page .planner-calendar-agenda-empty {
+    display: flex;
+    align-items: center;
+    padding-inline: var(--rt-space-4);
+    color: rgba(190, 205, 221, 0.68);
+    font-size: 13px;
+  }
+
+  .module-page.planner-page .planner-calendar-agenda-row,
+  .module-page.planner-page .planner-calendar-agenda-add {
+    display: flex;
+    align-items: center;
+    gap: var(--rt-space-3);
+    width: 100%;
+    border: 1px solid rgba(148, 163, 184, 0.11);
+    color: var(--rt-ink);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .module-page.planner-page .planner-calendar-agenda-row {
+    padding: 0 var(--rt-space-3);
+    font-size: 13px;
+    font-weight: 650;
+  }
+
+  .module-page.planner-page .planner-calendar-agenda-row > span:nth-child(2) {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .module-page.planner-page .planner-calendar-agenda-row small {
+    color: rgba(190, 205, 221, 0.62);
+    font-family: var(--mono);
+    font-size: 10px;
+  }
+
+  .module-page.planner-page .planner-calendar-agenda-add {
+    justify-content: center;
+    padding: 0 var(--rt-space-4);
+    border-style: dashed;
+    color: var(--rt-ice-strong);
+    background: transparent;
+    font-size: 13px;
+    font-weight: 760;
+  }
+
   .sport-week-grid-v2,
   .week-strip-grid,
   .sport-week-grid {
@@ -787,6 +1057,234 @@
   .empty-state,
   .lay-empty {
     padding: var(--rt-space-6) var(--rt-space-4) !important;
+  }
+}
+
+@media (min-width: 1181px) {
+  .module-page.planner-page > .page-body {
+    height: calc(100vh - var(--rt-header-height)) !important;
+    overflow: hidden !important;
+    padding: var(--rt-content-gap) var(--rt-page-x) !important;
+  }
+
+  .module-page.planner-page > .page-body > .planner-shell,
+  .module-page.planner-page .planner-shell {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .module-page.planner-page .planner-mobile-modebar,
+  .module-page.planner-page .planner-mobile-fab,
+  .module-page.planner-page .planner-calendar-agenda {
+    display: none !important;
+  }
+
+  .module-page.planner-page .planner-layout {
+    display: grid !important;
+    grid-template-columns: minmax(420px, 28%) minmax(0, 1fr) !important;
+    align-items: stretch !important;
+    gap: 22px !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+  }
+
+  .module-page.planner-page .planner-sidebar {
+    display: grid !important;
+    grid-template-rows: minmax(0, 1.45fr) minmax(0, 1fr) !important;
+    align-content: stretch !important;
+    gap: 18px !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card,
+  .module-page.planner-page .planner-habits-card,
+  .module-page.planner-page .planner-calendar-card {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    border-radius: 18px !important;
+    background:
+      linear-gradient(180deg, rgba(33, 43, 55, 0.94), rgba(22, 32, 43, 0.94)) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.035),
+      0 14px 34px rgba(0, 0, 0, 0.16) !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card,
+  .module-page.planner-page .planner-habits-card {
+    padding: 22px !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card {
+    min-height: 0 !important;
+  }
+
+  .module-page.planner-page .planner-habits-card {
+    min-height: 0 !important;
+  }
+
+  .module-page.planner-page .planner-calendar-card {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    padding: 24px !important;
+  }
+
+  .module-page.planner-page .planner-calendar-card > div:first-child {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .module-page.planner-page .planner-calendar-head-compact {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    min-height: 36px !important;
+    margin: 0 0 14px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .module-page.planner-page .planner-calendar-head-compact .date-navigator {
+    flex: 0 0 auto !important;
+    height: 36px !important;
+    padding: 3px !important;
+    gap: 3px !important;
+    border-radius: 11px !important;
+  }
+
+  .module-page.planner-page .planner-calendar-head-compact .date-navigator .icon-btn {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    border-radius: 8px !important;
+  }
+
+  .module-page.planner-page .planner-calendar-head-compact .date-navigator .icon-btn svg {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  .module-page.planner-page .planner-calendar-head-compact .date-navigator-label {
+    min-width: 128px !important;
+    min-height: 30px !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+    font-weight: 760 !important;
+  }
+
+  .module-page.planner-page .planner-calendar-head-compact .date-navigator .btn {
+    min-height: 30px !important;
+    padding: 0 14px !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 760 !important;
+  }
+
+  .module-page.planner-page .planner-calendar-head-compact .planner-calendar-controls {
+    display: flex !important;
+    justify-content: flex-end !important;
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .module-page.planner-page .planner-calendar-head-compact .planner-calendar-controls .view-segmented-control {
+    height: 36px !important;
+    padding: 3px !important;
+    gap: 2px !important;
+    border-radius: 11px !important;
+  }
+
+  .module-page.planner-page .planner-calendar-head-compact .planner-calendar-controls .view-segmented-control button {
+    min-height: 30px !important;
+    padding: 0 12px !important;
+    border-radius: 8px !important;
+    font-size: 11.5px !important;
+    font-weight: 760 !important;
+  }
+
+  .module-page.planner-page .planner-weekdays,
+  .module-page.planner-page .planner-month-grid {
+    gap: 8px !important;
+  }
+
+  .module-page.planner-page .planner-month-grid {
+    flex: 1 1 auto !important;
+    grid-auto-rows: 1fr !important;
+    min-height: 0 !important;
+  }
+
+  .module-page.planner-page .day-cell.is-compact {
+    min-height: 0 !important;
+    padding: 9px 10px !important;
+    border-radius: 13px !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .empty-state {
+    min-height: 116px !important;
+    padding: 22px 0 14px !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .empty-state svg {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .task-filter-row {
+    margin-bottom: 14px !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .filter-chips {
+    display: grid !important;
+    grid-template-columns: 1.05fr 0.9fr 1fr 1fr 1.18fr !important;
+    gap: 2px !important;
+    width: 100% !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    margin: 0 !important;
+    padding: 3px !important;
+    border-radius: 11px !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .filter-chip {
+    min-width: 0 !important;
+    min-height: 30px !important;
+    height: 30px !important;
+    padding: 0 4px !important;
+    border-radius: 8px !important;
+    font-size: 10.4px !important;
+    line-height: 1 !important;
+    gap: 4px !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .filter-chip > span:first-child {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card .filter-chip .count-badge {
+    min-width: 14px !important;
+    height: 14px !important;
+    padding: 0 4px !important;
+    font-size: 9px !important;
   }
 }
 
