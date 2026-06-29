@@ -129,7 +129,7 @@
 .rest-mid{ flex:1; }
 .rest-mid .lbl{ font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--acc-a-ink); opacity:.8; }
 .rest-track{ height:6px; border-radius:999px; background:rgba(0,0,0,.07); overflow:hidden; margin-top:6px; }
-.rest-track i{ display:block; height:100%; background:var(--acc-a); border-radius:999px; transition:width 1s linear; }
+.rest-track i{ display:block; height:100%; background:var(--acc-a); border-radius:999px; }
 .rest-btns{ display:flex; gap:8px; }
 .rest-btns button{ font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; font-weight:600; padding:8px 12px; border-radius:9px; border:1px solid var(--acc-a-ink); background:transparent; color:var(--acc-a-ink); cursor:pointer; }
 .rest-btns button.solid{ background:var(--acc-a-ink); color:var(--bg-1); border-color:var(--acc-a-ink); }

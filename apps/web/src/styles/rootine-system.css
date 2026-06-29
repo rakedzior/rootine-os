@@ -1,0 +1,830 @@
+/* ============================================================
+   Rootine OS governed system layer
+   Imported last. Keep this file small: tokens first, then shared
+   contracts, then responsive adaptations.
+   ============================================================ */
+
+:root,
+[data-theme],
+.auth-wrap {
+  --rt-space-1: 4px;
+  --rt-space-2: 8px;
+  --rt-space-3: 12px;
+  --rt-space-4: 16px;
+  --rt-space-5: 20px;
+  --rt-space-6: 24px;
+  --rt-space-7: 32px;
+  --rt-space-8: 40px;
+
+  --rt-layout-gap: var(--rt-space-5);
+  --rt-layout-edge-x: clamp(22px, 2vw, 36px);
+  --rt-layout-edge-y: clamp(14px, 1.4vw, 20px);
+  --rt-mobile-edge: 18px;
+  --rt-mobile-nav-h: calc(72px + env(safe-area-inset-bottom));
+
+  --rt-radius-panel: 18px;
+  --rt-radius-card: 16px;
+  --rt-radius-control: 11px;
+
+  --rt-surface-panel-system: rgba(27, 39, 53, 0.78);
+  --rt-surface-card-system: rgba(22, 33, 46, 0.82);
+  --rt-surface-field-system: rgba(10, 17, 26, 0.74);
+  --rt-border-system: rgba(157, 177, 198, 0.13);
+  --rt-border-system-strong: rgba(157, 177, 198, 0.21);
+  --rt-accent-system: #7dd3fc;
+  --rt-accent-system-soft: rgba(125, 211, 252, 0.12);
+
+  --rt-shadow-panel-system: 0 10px 26px rgba(0, 0, 0, 0.18);
+  --rt-shadow-card-system: 0 6px 16px rgba(0, 0, 0, 0.14);
+  --rt-shadow-control-system: 0 4px 10px rgba(0, 0, 0, 0.13);
+
+  --rt-type-title: 30px;
+  --rt-type-title-mobile: 28px;
+  --rt-type-section: 18px;
+  --rt-type-body: 14px;
+  --rt-type-label: 11px;
+}
+
+/* Extracted shared surfaces: flatter, consistent, and quieter. */
+:where(
+  .card,
+  .lay-card,
+  .module-card,
+  .kpi-card,
+  .finance-card,
+  .finance-month-panel,
+  .finance-context-card,
+  .finance-summary-tile,
+  .office-dashboard-shell,
+  .office-sidebar,
+  .office-cases-panel,
+  .office-mini-panel,
+  .office-metric,
+  .travel-card,
+  .travel-list-card,
+  .notes-card,
+  .notes-sidebar,
+  .notes-board-panel,
+  .work-panel,
+  .work-context-panel,
+  .work-task-board,
+  .work-detail-panel,
+  .diet-meal-card,
+  .diet-side-card,
+  .diet-summary-card,
+  .sport-panel,
+  .sport-cycle-banner,
+  .sport-week-card,
+  .planner-calendar-card,
+  .planner-tasks-card,
+  .planner-habits-card,
+  .goals-command-panel,
+  .goals-roadmap-card,
+  .goals-week-card,
+  .goals-actions-card,
+  .goals-empty-detail
+) {
+  background: var(--rt-surface-card-system) !important;
+  border: 1px solid var(--rt-border-system) !important;
+  border-radius: var(--rt-radius-panel) !important;
+  box-shadow: var(--rt-shadow-card-system) !important;
+}
+
+:where(
+  .card.is-link,
+  .card-interactive,
+  .finance-summary-tile,
+  .work-project-card,
+  .travel-trip-item,
+  .notes-note-card,
+  .goals-folder-row
+):hover {
+  transform: none !important;
+  background: rgba(26, 38, 52, 0.88) !important;
+  border-color: var(--rt-border-system-strong) !important;
+  box-shadow: var(--rt-shadow-card-system) !important;
+}
+
+:where(
+  .card.is-selected,
+  .card.is-active,
+  .card-selected,
+  .finance-summary-tile.is-active,
+  .notes-category.is-active,
+  .notes-note-card.is-selected,
+  .work-project-card.is-selected,
+  .travel-trip-item.is-selected,
+  .office-category-row.is-active,
+  .goals-folder-row.is-active
+) {
+  background: rgba(30, 48, 64, 0.88) !important;
+  border-color: rgba(125, 211, 252, 0.42) !important;
+  box-shadow: inset 0 0 0 1px rgba(125, 211, 252, 0.06) !important;
+}
+
+.btn-primary,
+.btn.btn-primary,
+.auth-btn {
+  min-height: 44px !important;
+  border-radius: var(--rt-radius-control) !important;
+  background: var(--rt-accent-system) !important;
+  border-color: rgba(186, 230, 253, 0.50) !important;
+  box-shadow: var(--rt-shadow-control-system) !important;
+  font-weight: 760 !important;
+}
+
+.btn-primary:hover,
+.btn.btn-primary:hover,
+.auth-btn:hover {
+  transform: none !important;
+  filter: none !important;
+  background: #8bdcff !important;
+  box-shadow: var(--rt-shadow-control-system) !important;
+}
+
+.btn-secondary,
+.btn.btn-secondary,
+.btn-ghost,
+.btn.btn-ghost,
+.icon-btn,
+.sb-iconbtn {
+  border-radius: var(--rt-radius-control) !important;
+  box-shadow: none !important;
+}
+
+.btn-secondary,
+.btn.btn-secondary,
+.btn-ghost,
+.btn.btn-ghost {
+  min-height: 42px !important;
+  background: var(--rt-surface-field-system) !important;
+  border-color: var(--rt-border-system) !important;
+  font-weight: 680 !important;
+}
+
+.icon-btn,
+.sb-iconbtn {
+  min-width: 42px !important;
+  min-height: 42px !important;
+  background: rgba(148, 163, 184, 0.055) !important;
+  border-color: var(--rt-border-system) !important;
+}
+
+.page-head-text h1,
+.page-header h1,
+.module-title,
+.page-title {
+  font-size: var(--rt-type-title) !important;
+  line-height: 1.08 !important;
+  font-weight: 760 !important;
+  letter-spacing: -0.02em !important;
+  text-wrap: balance;
+}
+
+.page-head-text p,
+.page-header .ph-context,
+.module-subtitle,
+.page-subtitle {
+  font-size: var(--rt-type-body) !important;
+  line-height: 1.45 !important;
+  color: rgba(176, 190, 205, 0.82) !important;
+  text-wrap: pretty;
+}
+
+.text-label,
+.field label,
+.form-label,
+.kicker,
+.lay-eyebrow,
+.card-title,
+.section-head h3,
+.goals-section-title {
+  letter-spacing: 0.08em !important;
+}
+
+.kpi-card {
+  border-left: 1px solid var(--rt-border-system) !important;
+}
+
+.kpi-card[data-tone] {
+  box-shadow: none !important;
+}
+
+.kpi-card[data-tone="pink"],
+.kpi-card[data-tone="green"],
+.kpi-card[data-tone="teal"],
+.kpi-card[data-tone="amber"],
+.kpi-card[data-tone="red"],
+.kpi-card[data-tone="blue"],
+.kpi-card[data-tone="violet"] {
+  border-left-width: 1px !important;
+}
+
+.empty-state,
+.lay-empty {
+  padding: var(--rt-space-7) var(--rt-space-5) !important;
+  gap: var(--rt-space-3) !important;
+  color: rgba(176, 190, 205, 0.80) !important;
+}
+
+.empty-state svg,
+.empty-state > svg:first-child,
+.empty-state .es-icon,
+.lay-empty-ic {
+  width: 48px !important;
+  height: 48px !important;
+  margin-bottom: var(--rt-space-3) !important;
+  padding: 10px !important;
+  border-radius: 14px !important;
+  background: rgba(125, 211, 252, 0.07) !important;
+  border: 1px solid rgba(125, 211, 252, 0.18) !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+}
+
+.empty-state h3,
+.empty-state .es-title,
+.lay-empty-title {
+  color: rgba(224, 232, 241, 0.88) !important;
+  font-size: var(--rt-type-section) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.empty-state p,
+.empty-state .es-desc,
+.lay-empty-desc {
+  max-width: 34ch !important;
+  color: rgba(159, 174, 190, 0.78) !important;
+  line-height: 1.5 !important;
+}
+
+.module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-page) > .page-head,
+.module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-page) > header.page-head {
+  height: auto !important;
+  min-height: 88px !important;
+  max-height: none !important;
+  flex: 0 0 auto !important;
+  padding: 18px var(--rt-layout-edge-x) !important;
+}
+
+.module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os) > .page-body {
+  padding: var(--rt-layout-edge-y) var(--rt-layout-edge-x) !important;
+}
+
+.page-head-actions,
+.planner-header-actions {
+  gap: var(--rt-space-3) !important;
+  flex-wrap: wrap !important;
+}
+
+.module-page.planner-page .planner-layout,
+.module-page.sport-os > .page-body > .lay-page,
+.sport-os > .page-body > .lay-page {
+  gap: var(--rt-layout-gap) !important;
+}
+
+.module-page.planner-page .planner-layout {
+  grid-template-columns: minmax(300px, 0.28fr) minmax(0, 1fr) !important;
+}
+
+.sport-os .sport-bottom-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.module-page.finance-os > .page-body > .finance-summary-strip,
+.finance-summary-strip {
+  gap: var(--rt-layout-gap) !important;
+}
+
+.modal-overlay,
+.sheet-overlay,
+.diet-drawer-overlay,
+.finance-drawer-overlay {
+  background: rgba(8, 13, 19, 0.76) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
+@media (max-width: 1180px) {
+  .module-page.planner-page .planner-layout,
+  .module-page.sport-os > .page-body > .lay-page,
+  .sport-os > .page-body > .lay-page,
+  .sport-os .sport-bottom-grid,
+  .module-page.diet-os .diet-shell,
+  .module-page.travel-page .travel-dashboard,
+  .module-page.office-page .office-dashboard-grid,
+  .module-page.work-os .work-shell,
+  .module-page.notes-os .notes-workspace,
+  .module-page.goals-page .goals-os {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  .module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os) > .page-body {
+    overflow: auto !important;
+  }
+}
+
+@media (max-width: 760px) {
+  :root,
+  [data-theme],
+  .auth-wrap {
+    --rt-layout-gap: 14px;
+    --rt-layout-edge-x: var(--rt-mobile-edge);
+    --rt-layout-edge-y: 14px;
+  }
+
+  .app-shell {
+    min-height: 100dvh !important;
+    overflow-x: clip !important;
+  }
+
+  .sidebar,
+  .sidebar-spacer {
+    display: none !important;
+  }
+
+  .app-main {
+    width: 100% !important;
+    margin-left: 0 !important;
+    padding-bottom: var(--rt-mobile-nav-h) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .module-page,
+  .module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os) {
+    height: auto !important;
+    min-height: 100dvh !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .module-page > .page-head,
+  .module-page > header.page-head {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: var(--rt-space-4) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding: 20px var(--rt-mobile-edge) 16px !important;
+    overflow: visible !important;
+  }
+
+  .page-head-main {
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: var(--rt-space-3) !important;
+    align-items: start !important;
+  }
+
+  .page-head-icon {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    border-radius: 13px !important;
+  }
+
+  .page-head-text {
+    min-width: 0 !important;
+  }
+
+  .page-head-text h1,
+  .page-header h1,
+  .module-title,
+  .page-title {
+    font-size: var(--rt-type-title-mobile) !important;
+  }
+
+  .page-head-text p,
+  .page-header .ph-context {
+    max-width: 28ch !important;
+  }
+
+  .page-head-actions,
+  .planner-header-actions {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    flex-wrap: wrap !important;
+    gap: var(--rt-space-2) !important;
+  }
+
+  .page-head-actions > .planner-header-actions {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 42px !important;
+    gap: var(--rt-space-2) !important;
+  }
+
+  .page-head-actions > .planner-header-actions > .date-navigator {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  .page-head-actions > .planner-header-actions > .btn-primary {
+    grid-column: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .page-head-actions > .planner-header-actions > .icon-btn {
+    grid-column: 2 !important;
+    width: 42px !important;
+    min-width: 42px !important;
+  }
+
+  .module-page.finance-os .page-head-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .module-page.finance-os .page-head-actions > .date-navigator,
+  .module-page.finance-os .page-head-actions > .finance-header-cta {
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  .page-head-actions > .date-navigator,
+  .planner-header-actions > .date-navigator {
+    order: 0 !important;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) 42px auto !important;
+    gap: var(--rt-space-2) !important;
+  }
+
+  .date-navigator > :nth-child(1) {
+    order: 0 !important;
+    grid-column: 1 !important;
+  }
+
+  .date-navigator > :nth-child(2) {
+    order: 0 !important;
+    grid-column: 2 !important;
+  }
+
+  .date-navigator > :nth-child(3) {
+    order: 0 !important;
+    grid-column: 3 !important;
+  }
+
+  .date-navigator > :nth-child(4) {
+    order: 0 !important;
+    grid-column: 4 !important;
+  }
+
+  .date-navigator .icon-btn,
+  .date-navigator-label,
+  .date-navigator .btn {
+    min-height: 42px !important;
+    height: 42px !important;
+  }
+
+  .date-navigator-label {
+    min-width: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+    padding-inline: var(--rt-space-3) !important;
+  }
+
+  .page-head-actions > .btn-primary,
+  .planner-header-actions > .btn-primary {
+    order: 1 !important;
+    flex: 1 1 min(100%, 220px) !important;
+    min-width: 0 !important;
+  }
+
+  .page-head-actions > .btn-secondary,
+  .page-head-actions > .btn-ghost,
+  .planner-header-actions > .btn-secondary,
+  .planner-header-actions > .btn-ghost {
+    flex: 1 1 150px !important;
+    min-width: 0 !important;
+  }
+
+  .page-head-actions > .icon-btn,
+  .planner-header-actions > .icon-btn {
+    order: 2 !important;
+    flex: 0 0 42px !important;
+  }
+
+  .module-page > .page-body,
+  .module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os) > .page-body {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding: var(--rt-layout-edge-y) var(--rt-mobile-edge) calc(var(--rt-mobile-nav-h) + 18px) !important;
+  }
+
+  .module-page.planner-page > .page-body > .planner-shell,
+  .module-page.planner-page .planner-shell,
+  .module-page.sport-os > .page-body > .lay-page,
+  .sport-os > .page-body > .lay-page,
+  .module-page.goals-page > .page-body > .goals-os,
+  .module-page.goals-page .goals-os,
+  .module-page.finance-os > .page-body > .finance-workspace,
+  .module-page.diet-os .diet-shell,
+  .module-page.travel-page .travel-dashboard,
+  .module-page.office-page .office-dashboard-shell,
+  .module-page.office-page .office-dashboard-grid,
+  .module-page.work-os .work-shell,
+  .module-page.notes-os .notes-workspace {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .module-page.planner-page .planner-layout,
+  .sport-os .sport-bottom-grid,
+  .finance-summary-strip,
+  .module-page.finance-os > .page-body > .finance-summary-strip,
+  .office-dashboard-grid,
+  .work-shell,
+  .notes-workspace,
+  .travel-dashboard,
+  .diet-shell,
+  .goals-os {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: var(--rt-layout-gap) !important;
+  }
+
+  .module-page.planner-page .planner-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--rt-layout-gap) !important;
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .module-page.planner-page > .page-body > .planner-shell .planner-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .planner-sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-rows: none !important;
+    gap: var(--rt-layout-gap) !important;
+    height: auto !important;
+  }
+
+  .module-page.planner-page .planner-sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 0 0 auto !important;
+    grid-template-rows: none !important;
+    grid-auto-rows: auto !important;
+    align-items: start !important;
+    gap: var(--rt-layout-gap) !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .planner-calendar-card,
+  .planner-tasks-card,
+  .planner-habits-card,
+  .sport-week-card,
+  .sport-panel,
+  .goals-command-panel,
+  .goals-actions-card,
+  .finance-month-panel,
+  .office-mini-panel,
+  .work-task-board,
+  .work-detail-panel,
+  .notes-card,
+  .travel-card {
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .module-page.planner-page .planner-tasks-card {
+    min-height: 112px !important;
+  }
+
+  .module-page.planner-page .planner-habits-card {
+    min-height: 124px !important;
+    overflow: hidden !important;
+  }
+
+  .planner-calendar-card {
+    min-height: 430px !important;
+    flex: 0 0 auto !important;
+    height: auto !important;
+    padding: var(--rt-space-4) !important;
+    overflow: hidden !important;
+  }
+
+  .module-page.planner-page .planner-calendar-card {
+    width: 100% !important;
+    min-height: 430px !important;
+    height: auto !important;
+    flex: 0 0 auto !important;
+  }
+
+  .module-page.planner-page .planner-calendar-card > div:first-child {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .module-page.planner-page .planner-calendar-head,
+  .module-page.planner-page .planner-calendar-head-compact,
+  .module-page.planner-page .planner-calendar-controls,
+  .module-page.planner-page .planner-calendar-controls .view-segmented-control,
+  .module-page.planner-page .planner-weekdays,
+  .module-page.planner-page .planner-month-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .module-page.planner-page .planner-calendar-head-compact {
+    display: block !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .module-page.planner-page .planner-calendar-controls .view-segmented-control {
+    display: flex !important;
+    justify-content: flex-start !important;
+    gap: 2px !important;
+    padding: 3px !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none;
+  }
+
+  .module-page.planner-page .planner-calendar-controls .view-segmented-control::-webkit-scrollbar {
+    display: none;
+  }
+
+  .module-page.planner-page .planner-calendar-controls .view-segmented-control button {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding-inline: 4px !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+    font-size: 10.8px !important;
+  }
+
+  .module-page.planner-page .planner-weekdays,
+  .module-page.planner-page .planner-month-grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+  }
+
+  .module-page.planner-page .planner-weekdays > div {
+    min-width: 0 !important;
+    padding-left: 0 !important;
+    text-align: center !important;
+    letter-spacing: 0.08em !important;
+  }
+
+  .module-page.planner-page .day-cell.is-compact {
+    min-width: 0 !important;
+    min-height: 38px !important;
+    padding: 5px !important;
+    border-radius: 10px !important;
+  }
+
+  .module-page.planner-page .day-cell-head {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .sport-week-grid-v2,
+  .week-strip-grid,
+  .sport-week-grid {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(156px, 74vw) !important;
+    grid-template-columns: none !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x proximity;
+    padding-bottom: var(--rt-space-2) !important;
+  }
+
+  .sport-week-grid-v2 > *,
+  .week-strip-grid > *,
+  .sport-week-grid > * {
+    scroll-snap-align: start;
+  }
+
+  .sport-os .sport-bottom-grid {
+    display: grid !important;
+    flex: 0 0 auto !important;
+    grid-auto-rows: auto !important;
+    align-items: start !important;
+    margin-top: var(--rt-layout-gap) !important;
+  }
+
+  .sport-bottom-grid > .lay-card,
+  .sport-panel {
+    height: auto !important;
+    min-height: 220px !important;
+    max-height: none !important;
+    overflow: hidden !important;
+  }
+
+  .mobile-nav {
+    height: var(--rt-mobile-nav-h) !important;
+    padding: 0 8px env(safe-area-inset-bottom) !important;
+    border-top: 1px solid rgba(148, 163, 184, 0.13) !important;
+    border-bottom: 0 !important;
+    background: rgba(13, 19, 27, 0.94) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+  }
+
+  .mobile-nav a {
+    min-width: 0 !important;
+    min-height: 58px !important;
+    gap: 4px !important;
+    font-size: 11px !important;
+  }
+
+  .mobile-nav a svg {
+    width: 21px !important;
+    height: 21px !important;
+  }
+
+  .empty-state,
+  .lay-empty {
+    padding: var(--rt-space-6) var(--rt-space-4) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .page-head-actions > .date-navigator,
+  .planner-header-actions > .date-navigator {
+    grid-template-columns: 36px minmax(0, 1fr) 36px !important;
+    min-width: 0 !important;
+    height: 42px !important;
+    max-height: 42px !important;
+    overflow: hidden !important;
+  }
+
+  .date-navigator .btn {
+    display: none !important;
+  }
+
+  .date-navigator-label {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding-inline: var(--rt-space-3) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+}
+
+@media (pointer: coarse) {
+  :where(button, a, input, select, textarea, [role="button"]) {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+}

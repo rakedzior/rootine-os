@@ -1,0 +1,111 @@
+{
+  "bodyW": 390,
+  "clientW": 390,
+  "bodyH": 844,
+  "clientH": 844,
+  "overflowX": false,
+  "rects": [
+    {
+      "sel": ".planner-shell",
+      "rect": {
+        "x": 18,
+        "y": 244,
+        "w": 354,
+        "h": 430,
+        "bottom": 674
+      },
+      "css": {
+        "display": "flex",
+        "flex": "1 1 auto",
+        "overflow": "visible",
+        "height": "430.406px",
+        "minHeight": "0px"
+      }
+    },
+    {
+      "sel": ".planner-layout",
+      "rect": {
+        "x": 18,
+        "y": 244,
+        "w": 354,
+        "h": 1148,
+        "bottom": 1391
+      },
+      "css": {
+        "display": "flex",
+        "flex": "0 0 auto",
+        "overflow": "visible",
+        "height": "1147.75px",
+        "minHeight": "0px"
+      }
+    },
+    {
+      "sel": ".planner-sidebar",
+      "rect": {
+        "x": 18,
+        "y": 244,
+        "w": 354,
+        "h": 704,
+        "bottom": 947
+      },
+      "css": {
+        "display": "flex",
+        "flex": "0 0 auto",
+        "overflow": "visible",
+        "height": "703.75px",
+        "minHeight": "0px"
+      }
+    },
+    {
+      "sel": ".planner-tasks-card",
+      "rect": {
+        "x": 18,
+        "y": 244,
+        "w": 354,
+        "h": 483,
+        "bottom": 727
+      },
+      "css": {
+        "display": "flex",
+        "flex": "0 1 auto",
+        "overflow": "visible",
+        "height": "483px",
+        "minHeight": "112px"
+      }
+    },
+    {
+      "sel": ".planner-habits-card",
+      "rect": {
+        "x": 18,
+        "y": 741,
+        "w": 342,
+        "h": 207,
+        "bottom": 947
+      },
+      "css": {
+        "display": "flex",
+        "flex": "0 1 auto",
+        "overflow": "hidden",
+        "height": "206.75px",
+        "minHeight": "124px"
+      }
+    },
+    {
+      "sel": ".planner-calendar-card",
+      "rect": {
+        "x": 18,
+        "y": 961,
+        "w": 354,
+        "h": 430,
+        "bottom": 1391
+      },
+      "css": {
+        "display": "grid",
+        "flex": "0 0 auto",
+        "overflow": "hidden",
+        "height": "430px",
+        "minHeight": "430px"
+      }
+    }
+  ]
+}

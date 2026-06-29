@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, DetailPanel, ProgressBar, PriorityBadge, StatusBadge } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, DetailPanel, ProgressBar, PriorityBadge, StatusBadge, ViewSegmentedControl } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import {
   useAddCompany,
@@ -257,6 +257,7 @@ export function PracaScreen() {
         icon={<WorkIcon name="briefcase" />}
         title="Praca"
         desc="Wszystkie firmy, projekty, zadania i notatki w jednym miejscu."
+        actions={<button className="btn btn-primary btn-sm" type="button" onClick={() => setShowTaskModal(true)}><WorkIcon name="plus" /> Nowe zadanie</button>}
       />}
     >
 
@@ -309,12 +310,17 @@ export function PracaScreen() {
 
           <section className="work-task-board">
             <div className="work-viewbar">
-              <div className="work-view-tabs">
-                <button className="is-active" type="button"><WorkIcon name="list" /> Lista</button>
-                <button type="button" disabled><WorkIcon name="board" /> Tablica</button>
-                <button type="button" disabled><WorkIcon name="calendar" /> Kalendarz</button>
-                <button type="button" disabled><WorkIcon name="timeline" /> Oś czasu</button>
-              </div>
+              <ViewSegmentedControl
+                items={[
+                  { id: 'list', label: 'Lista', icon: <WorkIcon name="list" /> },
+                  { id: 'board', label: 'Tablica', icon: <WorkIcon name="board" />, disabled: true },
+                  { id: 'calendar', label: 'Kalendarz', icon: <WorkIcon name="calendar" />, disabled: true },
+                  { id: 'timeline', label: 'Oś czasu', icon: <WorkIcon name="timeline" />, disabled: true },
+                ]}
+                value="list"
+                onChange={() => undefined}
+                ariaLabel="Widok zadań"
+              />
               <div className="work-view-actions">
                 <button type="button" disabled><WorkIcon name="filter" /> Filtry</button>
                 <button type="button" disabled>Sortuj: Priorytet</button>
@@ -505,12 +511,12 @@ function DeadlinesPanel({ deadlines }: { deadlines: { task: WorkTask; project?: 
   return (
     <section className="work-panel">
       <div className="work-panel-head">
-        <h2>Najbliższe deadline'y</h2>
+        <h2>Najbliższe terminy</h2>
         <button type="button">Zobacz kalendarz <WorkIcon name="chevron" /></button>
       </div>
       <div className="work-deadline-list">
         {deadlines.length === 0 ? (
-          <div className="work-empty-small">Brak najbliższych terminów.</div>
+          <EmptyState compact title="Brak najbliższych terminów" desc="Zadania z terminami pojawią się tutaj." />
         ) : deadlines.map(({ task, project, left }) => (
           <div className="work-deadline" key={task.id}>
             <time>

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, ProgressBar, PriorityBadge, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore } from '@/components/common';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { CountBadge, Modal, EmptyState, ConfirmDelete, Field, PageHeader, ProgressBar, PriorityBadge, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import { useCreateTask } from '@/features/tasks/hooks';
 import {
@@ -328,7 +328,7 @@ export function GoalsScreen() {
         title="Cele"
         desc="Roadmapy, kamienie milowe i działania na dziś w jednym widoku."
         actions={<>
-          <button className="btn btn-primary btn-sm" type="button" onClick={() => setGoalModal({ goal: null })}><IcoPlus /> Dodaj cel</button>
+          <button className="btn btn-primary btn-sm" type="button" onClick={() => setGoalModal({ goal: null })}><IcoPlus /> Nowy cel</button>
           <button className="icon-btn" type="button" onClick={() => setShowCategoryManager(true)} aria-label="Kategorie"><GoalIcon name="gear" /></button>
         </>}
       />}
@@ -448,7 +448,9 @@ function GoalTaskTree({ tasks, goalId, onUpdate, onDelete, onPlanner, depth = 0 
   onPlanner: (task: GoalTask) => void;
   depth?: number;
 }) {
-  if (tasks.length === 0 && depth === 0) return <div className="goals-muted">Brak działań. Dodaj pierwszy krok pod celem.</div>;
+  if (tasks.length === 0 && depth === 0) {
+    return <EmptyState compact title="Brak działań" description="Dodaj pierwszy krok prowadzący do tego celu." />;
+  }
   return (
     <div className={depth === 0 ? 'goals-task-tree' : 'goals-task-children'}>
       {tasks.map((task) => (
@@ -504,7 +506,7 @@ function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onAdd }: {
     <section className="card goals-actions-card">
       <div className="card-head">
         <div>
-          <span className="card-title">Działania celu</span>
+          <span className="card-title">Działania celu <CountBadge value={tasks.length} tone="info" /></span>
           <span className="goals-collapsed-summary">{openTasks} otwarte · {tasks.length} wszystkich</span>
         </div>
       </div>
@@ -679,6 +681,8 @@ function GoalFormModal({ open, goal, categories, onAddCategory, onEditCategory, 
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
   const [emoji, setEmoji] = useState('target');
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
+  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -694,6 +698,8 @@ function GoalFormModal({ open, goal, categories, onAddCategory, onEditCategory, 
     setEditingCategory(null);
     setEditingCategoryName('');
     setEmoji(goal?.emoji ?? 'target');
+    setIconPickerOpen(false);
+    setCategoryManagerOpen(false);
   }, [categories, goal, open]);
 
   function addCategory() {
@@ -746,61 +752,86 @@ function GoalFormModal({ open, goal, categories, onAddCategory, onEditCategory, 
   return (
     <Modal open={open} onClose={onClose} title={goal ? 'Edytuj cel' : 'Dodaj cel'} size="lg">
       <form className="modal-form goals-goal-form" onSubmit={submit}>
-        <div className="goals-form-grid">
-          <Field label="Nazwa celu"><input className="input" value={title} onChange={(event) => setTitle(event.target.value)} autoFocus /></Field>
-          <Field label="Ikona">
-            <div className="goals-icon-editor">
+        <p className="goals-modal-subtitle">Dostosuj ustawienia i postęp celu.</p>
+        <section className="goals-form-section goals-identity-section">
+          <div className="goals-section-title">Tożsamość celu</div>
+          <div className="goals-identity-grid">
+            <div className="goals-icon-editor is-compact">
               <div className="goals-icon-preview"><GoalIconMark value={emoji || 'target'} /></div>
-              <div className="goals-icon-tools">
-                <div className="goals-icon-presets">
+              {iconPickerOpen && (
+                <div className="goals-icon-popover">
                   {DEFAULT_GOAL_ICONS.map((icon) => (
-                    <button key={icon.value} type="button" className={emoji === icon.value ? 'is-active' : ''} onClick={() => setEmoji(icon.value)} title={icon.label} aria-label={icon.label}>
+                    <button key={icon.value} type="button" className={emoji === icon.value ? 'is-active' : ''} onClick={() => { setEmoji(icon.value); setIconPickerOpen(false); }} title={icon.label} aria-label={icon.label}>
                       <GoalIconMark value={icon.value} />
+                      <span>{icon.label}</span>
                     </button>
                   ))}
                 </div>
+              )}
+            </div>
+            <div className="goals-identity-main">
+              <Field label="Nazwa celu"><input className="input" value={title} onChange={(event) => setTitle(event.target.value)} autoFocus /></Field>
+              <div className="goals-identity-actions">
+                <button className="btn btn-secondary btn-sm goals-pick-icon-btn" type="button" onClick={() => setIconPickerOpen((value) => !value)}><GoalIcon name="target" /> Wybierz ikonę</button>
                 <label className="goals-upload-btn">
-                  Wgraj zdjęcie
+                  <GoalIcon name="calendar" /> Dodaj zdjęcie
                   <input type="file" accept="image/*" onChange={uploadIcon} />
                 </label>
               </div>
             </div>
-          </Field>
-          <Field label="Termin końcowy"><GoalDatePicker value={deadline} onChange={setDeadline} /></Field>
-          <Field label="Typ"><select className="input" value={type} onChange={(event) => setType(event.target.value as GoalType)}><option value="project">Projekt</option><option value="simple">Prosty cel</option></select></Field>
-          <Field label="Kategoria">
-            <div className="goals-category-picker">
-              <input className="input" list="goal-categories" value={category} onChange={(event) => setCategory(event.target.value)} placeholder="Wpisz lub wybierz kategorię" />
-              <datalist id="goal-categories">{categories.map((name) => <option key={name} value={name} />)}</datalist>
-              <div className="goals-category-chips">
-                {categories.map((name) => (
-                  <span key={name} className={category === name ? 'is-active' : ''}>
-                    {editingCategory === name ? (
-                      <>
-                        <input value={editingCategoryName} onChange={(event) => setEditingCategoryName(event.target.value)} />
-                        <button type="button" onClick={saveCategoryEdit}><IcoCheck /></button>
-                      </>
-                    ) : (
-                      <>
-                        <button type="button" onClick={() => setCategory(name)}>{name}</button>
-                        <button type="button" aria-label={`Edytuj ${name}`} onClick={() => { setEditingCategory(name); setEditingCategoryName(name); }}>Edytuj</button>
-                        <button type="button" aria-label={`Usuń ${name}`} onClick={() => { onDeleteCategory(name); if (category === name) setCategory(categories.find((item) => item !== name) ?? 'Osobiste'); }}><IcoTrash /></button>
-                      </>
-                    )}
-                  </span>
-                ))}
-              </div>
-              <div className="goals-category-inline-add">
+          </div>
+        </section>
+
+        <section className="goals-form-section">
+          <div className="goals-section-title">Ustawienia</div>
+          <div className="goals-settings-grid">
+            <Field label="Termin końcowy"><GoalDatePicker value={deadline} onChange={setDeadline} /></Field>
+            <Field label="Typ"><select className="input" value={type} onChange={(event) => setType(event.target.value as GoalType)}><option value="project">Projekt</option><option value="simple">Prosty cel</option></select></Field>
+            <Field label="Kategoria">
+              <select className="input" value={category} onChange={(event) => setCategory(event.target.value)}>
+                {categories.map((name) => <option key={name} value={name}>{name}</option>)}
+              </select>
+            </Field>
+            <Field label="Priorytet"><select className="input" value={priority} onChange={(event) => setPriority(event.target.value as Priority | '')}><option value="">Brak</option><option value="low">Niski</option><option value="mid">Średni</option><option value="high">Wysoki</option></select></Field>
+          </div>
+          <button className="goals-manage-categories" type="button" onClick={() => setCategoryManagerOpen((value) => !value)}>Zarządzaj kategoriami</button>
+          {categoryManagerOpen && (
+            <div className="goals-category-manager-inline">
+              <div className="goals-category-add-inline">
                 <input className="input" value={categoryDraft} onChange={(event) => setCategoryDraft(event.target.value)} placeholder="Nowa kategoria" />
                 <button className="btn btn-secondary btn-sm" type="button" onClick={addCategory}><IcoPlus /> Dodaj</button>
               </div>
+              <div className="goals-category-edit-actions">
+                <button className="btn btn-secondary btn-sm" type="button" onClick={() => { setEditingCategory(category); setEditingCategoryName(category); }}>Edytuj wybraną</button>
+                <button className="btn btn-secondary btn-sm goals-delete-category-btn" type="button" onClick={() => { onDeleteCategory(category); setCategory(categories.find((item) => item !== category) ?? 'Osobiste'); }}><IcoTrash /> Usuń wybraną kategorię</button>
+              </div>
+              {editingCategory && (
+                <div className="goals-category-edit-row">
+                  <input className="input" value={editingCategoryName} onChange={(event) => setEditingCategoryName(event.target.value)} />
+                  <button className="btn btn-primary btn-sm" type="button" onClick={saveCategoryEdit}><IcoCheck /> Zapisz</button>
+                </div>
+              )}
             </div>
-          </Field>
-        <option value="mid">Średni</option>
-          <Field label={`Postęp (${progress}%)`}><input className="goals-range" type="range" min={0} max={100} value={progress} onChange={(event) => setProgress(Number(event.target.value))} /></Field>
-          <Field label="Seria"><input className="input" type="number" min={0} value={streak} onChange={(event) => setStreak(Number(event.target.value))} /></Field>
-        </div>
-        <Field label="Opis"><textarea className="textarea" rows={4} value={description} onChange={(event) => setDescription(event.target.value)} /></Field>
+          )}
+        </section>
+
+        <section className="goals-form-section goals-progress-section">
+          <div className="goals-section-title">Postęp</div>
+          <div className="goals-progress-grid">
+            <div className="goals-progress-main">
+              <div className="goals-progress-head"><strong>{progress}% ukończone</strong></div>
+              <input className="goals-range" style={{ '--progress': `${progress}%` } as CSSProperties} type="range" min={0} max={100} value={progress} onChange={(event) => setProgress(Number(event.target.value))} />
+              <p>Delikatny postęp bez presji.</p>
+            </div>
+            <Field label="Seria"><div className="goals-streak-field"><input className="input" type="number" min={0} value={streak} onChange={(event) => setStreak(Number(event.target.value))} /><span>dni</span></div></Field>
+          </div>
+        </section>
+
+        <section className="goals-form-section goals-description-section">
+          <Field label="Opis"><textarea className="textarea" rows={3} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Dodaj krótki opis, zasady lub zakres tego celu..." /></Field>
+          <p>Opcjonalnie - opisz, co oznacza ukończenie tego celu.</p>
+        </section>
+
         <div className="modal-actions goals-form-actions"><button className="btn btn-secondary" type="button" onClick={onClose}>Anuluj</button><button className="btn btn-primary" type="submit">Zapisz cel</button></div>
       </form>
     </Modal>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash } from '@/components/common';
+import { AppTabs, Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import { useCreateTrip, useDeleteTrip, useTrips } from '@/features/travel/hooks';
 import type { Trip as TripRow } from '@/features/travel/types';
@@ -418,15 +418,7 @@ function TravelTabs({ active, onChange }: { active: TravelTab; onChange: (tab: T
     { id: 'budget', label: 'Budżet', icon: 'wallet' },
     { id: 'notes', label: 'Notatki', icon: 'note' },
   ];
-  return (
-    <div className="travel-tabs" role="tablist">
-      {tabs.map((tab) => (
-        <button key={tab.id} type="button" className={active === tab.id ? 'is-active' : ''} onClick={() => onChange(tab.id)}>
-          <TravelIcon name={tab.icon} /> {tab.label}
-        </button>
-      ))}
-    </div>
-  );
+  return <AppTabs items={tabs.map((tab) => ({ ...tab, icon: <TravelIcon name={tab.icon} /> }))} value={active} onChange={(id) => onChange(id as TravelTab)} variant="compact" ariaLabel="Sekcje podróży" />;
 }
 
 function TimelineCard({ deadlines, expanded = false }: { deadlines: ReturnType<typeof buildDeadlines>; expanded?: boolean }) {

@@ -66,7 +66,7 @@ test('creates, completes, and deletes an office task', async ({ page }) => {
   const title = `E2E office task ${Date.now()}`;
 
   await page.goto('/office');
-  await page.getByRole('button', { name: /nowe zadanie/i }).click();
+  await page.getByRole('button', { name: /nowa sprawa/i }).click();
   await page.getByPlaceholder(/paszport/i).fill(title);
   await page.getByRole('button', { name: /^dodaj$/i }).click();
 

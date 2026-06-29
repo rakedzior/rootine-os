@@ -83,8 +83,8 @@ export function SportScreen() {
       header={<PageHeader icon={<SportIcon />} title="Sport" desc="Planuj, analizuj i poprawiaj swoje treningi."
         actions={<>
           <button className="btn btn-ghost" onClick={() => setCycleManagerOpen(true)}>Cykle treningowe</button>
-          <button className="btn btn-secondary" onClick={() => setAddDrawer({ open: true, date: todayStr(), mode: 'template' })}>+ Dodaj trening</button>
-          <button className="btn btn-primary" onClick={() => setAddDrawer({ open: true, date: todayStr(), mode: 'block' })}>+ Zaplanuj blok</button>
+          <button className="btn btn-secondary" onClick={() => setAddDrawer({ open: true, date: todayStr(), mode: 'block' })}>Zaplanuj blok</button>
+          <button className="btn btn-primary" onClick={() => setAddDrawer({ open: true, date: todayStr(), mode: 'template' })}>+ Nowy trening</button>
         </>}
       />}
     >

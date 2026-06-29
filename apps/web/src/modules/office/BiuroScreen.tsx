@@ -312,7 +312,7 @@ export function BiuroScreen() {
         icon={<OfficeIcon name="briefcase" />}
         title="Biuro"
         desc="Sprawy, dokumenty i terminy w jednym miejscu."
-        actions={<button className="btn btn-primary btn-sm office-new-task-btn" type="button" onClick={() => setShowAdd(true)}><IcoPlus /> Nowe zadanie</button>}
+        actions={<button className="btn btn-primary btn-sm office-new-task-btn" type="button" onClick={() => setShowAdd(true)}><IcoPlus /> Nowa sprawa</button>}
       />}
     >
       <div className="office-shell office-dashboard-shell">
@@ -361,7 +361,7 @@ export function BiuroScreen() {
             </div>
 
             {sortedTasks.length === 0 ? (
-              <EmptyState title="Brak spraw" cta="Dodaj zadanie" onCta={() => setShowAdd(true)} />
+              <EmptyState title="Brak spraw" desc="Dodaj pierwszą sprawę, dokument lub termin przyciskiem w nagłówku." />
             ) : (
               <div className="office-case-list">
                 {sortedTasks.map(task => (
@@ -393,7 +393,7 @@ export function BiuroScreen() {
                 <span className="office-panel-icon"><OfficeIcon name="calendar" /></span>
               </div>
               {recurringDeadlines.length === 0 ? (
-                <EmptyState title="Brak terminów" />
+                <EmptyState title="Brak terminów" desc="Nadchodzące terminy pojawią się tutaj." compact />
               ) : (
                 <div className="office-deadline-list">
                   {recurringDeadlines.slice(0, 5).map(deadline => (
@@ -417,7 +417,7 @@ export function BiuroScreen() {
                 <span className="office-panel-icon"><OfficeIcon name="doc" /></span>
               </div>
               {visibleDocuments.length === 0 ? (
-                <EmptyState title="Brak dokumentów" />
+                <EmptyState title="Brak dokumentów" desc="Dokumenty powiązane ze sprawami pojawią się tutaj." compact />
               ) : (
                 <div className="office-document-list">
                   {visibleDocuments.slice(0, 3).map(doc => (
@@ -608,7 +608,7 @@ function TaskFormModal({ open, categories, defaultCategory, onClose, onSave }: {
   }, [open, defaultCategory]);
 
   return (
-    <Modal open={open} onClose={onClose} title="Nowe zadanie" footer={
+    <Modal open={open} onClose={onClose} title="Nowa sprawa" footer={
       <>
         <button className="btn btn-secondary btn-sm" onClick={onClose}>Anuluj</button>
         <button className="btn btn-primary btn-sm" onClick={() => {

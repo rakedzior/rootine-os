@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
-import { Modal, PageHeader, ProgressBar, SubTabs } from '@/components/common';
+import { DateNavigator, Modal, PageHeader, ProgressBar, SubTabs } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import { toast } from '@/lib/toast';
 import {
@@ -111,8 +111,8 @@ function shiftDate(value: string, days: number) {
   return dateToIso(date);
 }
 
-function prettyDate(value: string) {
-  return new Intl.DateTimeFormat('pl-PL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${value}T12:00:00`));
+function compactHeaderDate(value: string) {
+  return new Intl.DateTimeFormat('pl-PL', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T12:00:00`));
 }
 
 function formatDateShort(value: string) {
@@ -327,18 +327,17 @@ export function DietScreen() {
         title="Dieta"
         desc="Dziennik posiłków, makroskładniki i nawodnienie w jednym miejscu."
         actions={<>
+          <DateBar
+            date={selectedDate}
+            loading={categoriesLoading || itemsLoading}
+            onChange={setSelectedDate}
+          />
+          <button className="btn btn-primary btn-sm" disabled={categoriesLoading || itemsLoading || !activeCategory} onClick={() => { if (activeCategory) setAddCategory(activeCategory); }}>+ Dodaj wpis</button>
           <button className="btn btn-secondary btn-sm" disabled={categoriesLoading || itemsLoading} onClick={() => { setCustomMealTarget(null); setCustomMealsOpen(true); }}><Book size={15} /> Własne posiłki</button>
           <button className="btn btn-secondary btn-sm" disabled={categoriesLoading || itemsLoading} onClick={() => setSettingsOpen(true)}><Settings size={15} /> Ustawienia</button>
         </>}
       />}
     >
-
-      <DateBar
-        date={selectedDate}
-        loading={categoriesLoading || itemsLoading}
-        onChange={setSelectedDate}
-      />
-
       <div className="diet-shell">
         <main className="diet-meals-col" aria-busy={itemsLoading || categoriesLoading}>
           {categoriesLoading ? (
@@ -447,22 +446,27 @@ export function DietScreen() {
 }
 
 function DateBar({ date, loading, onChange }: { date: string; loading: boolean; onChange: (date: string) => void }) {
+  const pickerId = 'diet-date-picker';
+  const openPicker = () => {
+    const picker = document.getElementById(pickerId) as (HTMLInputElement & { showPicker?: () => void }) | null;
+    if (picker?.showPicker) picker.showPicker();
+    else picker?.click();
+  };
   return (
     <div className="diet-datebar">
       <div className="diet-datebar-nav">
-        <button className="icon-btn" disabled={loading} onClick={() => onChange(shiftDate(date, -1))} aria-label="Poprzedni dzień"><ChevronLeft size={16} /></button>
-        <button className="diet-date-label" disabled={loading} onClick={() => {
-          const picker = document.getElementById('diet-date-picker') as (HTMLInputElement & { showPicker?: () => void }) | null;
-          if (picker?.showPicker) picker.showPicker();
-          else picker?.click();
-        }}>
-          {prettyDate(date)}
-        </button>
-        <button className="icon-btn" disabled={loading} onClick={() => onChange(shiftDate(date, 1))} aria-label="Następny dzień"><ChevronRight size={16} /></button>
-        <button className="btn btn-secondary btn-sm" disabled={loading} onClick={() => onChange(dateToIso(new Date()))}>Dzisiaj</button>
+        <DateNavigator
+          mode="day"
+          value={new Date(`${date}T12:00:00`)}
+          label={compactHeaderDate(date)}
+          onPrevious={() => { if (!loading) onChange(shiftDate(date, -1)); }}
+          onNext={() => { if (!loading) onChange(shiftDate(date, 1)); }}
+          onToday={() => { if (!loading) onChange(dateToIso(new Date())); }}
+          onOpenPicker={loading ? undefined : openPicker}
+        />
         <label className="icon-btn diet-date-picker" aria-label="Wybierz datę">
           <Calendar size={15} />
-          <input id="diet-date-picker" type="date" value={date} disabled={loading} onChange={(event) => onChange(event.target.value)} />
+          <input id={pickerId} type="date" value={date} disabled={loading} onChange={(event) => onChange(event.target.value)} />
         </label>
       </div>
     </div>

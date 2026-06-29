@@ -1,0 +1,649 @@
+[
+  {
+    "viewport": "mobile",
+    "route": "/",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29\\mobile-start.png",
+    "path": "/",
+    "bodyW": 390,
+    "clientW": 390,
+    "bodyH": 844,
+    "clientH": 844,
+    "overflowX": false,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 178.59375,
+      "right": 390,
+      "bottom": 178.59375
+    },
+    "actions": {
+      "x": 18,
+      "y": 113.59375,
+      "w": 354,
+      "h": 46,
+      "right": 372,
+      "bottom": 159.59375
+    },
+    "offenders": [
+      {
+        "tag": "DIV",
+        "cls": "",
+        "text": "DzisiajJutroTydzieńMiesiącWszystkiePonWtŚrCzwPtSobNdz123456789101112131415161718",
+        "rect": {
+          "x": 43,
+          "y": 441,
+          "w": 365,
+          "h": 202,
+          "right": 408
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "planner-calendar-head planner-calendar-head-compact",
+        "text": "DzisiajJutroTydzieńMiesiącWszystkie",
+        "rect": {
+          "x": 43,
+          "y": 441,
+          "w": 365,
+          "h": 42,
+          "right": 408
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "planner-calendar-controls",
+        "text": "DzisiajJutroTydzieńMiesiącWszystkie",
+        "rect": {
+          "x": 43,
+          "y": 441,
+          "w": 365,
+          "h": 42,
+          "right": 408
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "view-segmented-control",
+        "text": "DzisiajJutroTydzieńMiesiącWszystkie",
+        "rect": {
+          "x": 43,
+          "y": 441,
+          "w": 365,
+          "h": 42,
+          "right": 408
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "",
+        "text": "Wszystkie",
+        "rect": {
+          "x": 318,
+          "y": 447,
+          "w": 85,
+          "h": 30,
+          "right": 403
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "planner-weekdays",
+        "text": "PonWtŚrCzwPtSobNdz",
+        "rect": {
+          "x": 43,
+          "y": 491,
+          "w": 365,
+          "h": 14,
+          "right": 408
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "",
+        "text": "Ndz",
+        "rect": {
+          "x": 363,
+          "y": 491,
+          "w": 45,
+          "h": 14,
+          "right": 408
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "planner-month-grid",
+        "text": "123456789101112131415161718192021222324252627282930",
+        "rect": {
+          "x": 43,
+          "y": 512,
+          "w": 365,
+          "h": 131,
+          "right": 408
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-cell is-compact",
+        "text": "7",
+        "rect": {
+          "x": 363,
+          "y": 512,
+          "w": 45,
+          "h": 20,
+          "right": 408
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-cell-head",
+        "text": "7",
+        "rect": {
+          "x": 374,
+          "y": 522,
+          "w": 23,
+          "h": 20,
+          "right": 397
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-cell is-compact",
+        "text": "14",
+        "rect": {
+          "x": 363,
+          "y": 540,
+          "w": 45,
+          "h": 20,
+          "right": 408
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-cell-head",
+        "text": "14",
+        "rect": {
+          "x": 374,
+          "y": 550,
+          "w": 23,
+          "h": 20,
+          "right": 397
+        }
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "route": "/sport",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29\\mobile-sport.png",
+    "path": "/sport",
+    "bodyW": 390,
+    "clientW": 390,
+    "bodyH": 844,
+    "clientH": 844,
+    "overflowX": false,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 223.828125,
+      "right": 390,
+      "bottom": 223.828125
+    },
+    "actions": {
+      "x": 18,
+      "y": 110.828125,
+      "w": 354,
+      "h": 94,
+      "right": 372,
+      "bottom": 204.828125
+    },
+    "offenders": [
+      {
+        "tag": "DIV",
+        "cls": "sport-day-col",
+        "text": "ŚRO1.07+",
+        "rect": {
+          "x": 371,
+          "y": 584,
+          "w": 156,
+          "h": 160,
+          "right": 527
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "sport-day-head",
+        "text": "ŚRO1.07",
+        "rect": {
+          "x": 382,
+          "y": 595,
+          "w": 134,
+          "h": 15,
+          "right": 516
+        }
+      },
+      {
+        "tag": "SPAN",
+        "cls": "sport-day-name",
+        "text": "ŚRO",
+        "rect": {
+          "x": 382,
+          "y": 595,
+          "w": 20,
+          "h": 15,
+          "right": 402
+        }
+      },
+      {
+        "tag": "SPAN",
+        "cls": "sport-day-date",
+        "text": "1.07",
+        "rect": {
+          "x": 408,
+          "y": 595,
+          "w": 24,
+          "h": 15,
+          "right": 432
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "sport-day-cards",
+        "text": "",
+        "rect": {
+          "x": 382,
+          "y": 618,
+          "w": 134,
+          "h": 77,
+          "right": 516
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "sport-day-add",
+        "text": "+",
+        "rect": {
+          "x": 382,
+          "y": 703,
+          "w": 134,
+          "h": 30,
+          "right": 516
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "sport-day-col",
+        "text": "CZW2.07+",
+        "rect": {
+          "x": 535,
+          "y": 584,
+          "w": 156,
+          "h": 160,
+          "right": 691
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "sport-day-head",
+        "text": "CZW2.07",
+        "rect": {
+          "x": 546,
+          "y": 595,
+          "w": 134,
+          "h": 15,
+          "right": 680
+        }
+      },
+      {
+        "tag": "SPAN",
+        "cls": "sport-day-name",
+        "text": "CZW",
+        "rect": {
+          "x": 546,
+          "y": 595,
+          "w": 20,
+          "h": 15,
+          "right": 566
+        }
+      },
+      {
+        "tag": "SPAN",
+        "cls": "sport-day-date",
+        "text": "2.07",
+        "rect": {
+          "x": 572,
+          "y": 595,
+          "w": 24,
+          "h": 15,
+          "right": 596
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "sport-day-cards",
+        "text": "",
+        "rect": {
+          "x": 546,
+          "y": 618,
+          "w": 134,
+          "h": 77,
+          "right": 680
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "sport-day-add",
+        "text": "+",
+        "rect": {
+          "x": 546,
+          "y": 703,
+          "w": 134,
+          "h": 30,
+          "right": 680
+        }
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "route": "/finance",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29\\mobile-finance.png",
+    "path": "/finance",
+    "bodyW": 390,
+    "clientW": 390,
+    "bodyH": 844,
+    "clientH": 844,
+    "overflowX": false,
+    "header": {
+      "x": 0,
+      "y": 2,
+      "w": 390,
+      "h": 173.828125,
+      "right": 390,
+      "bottom": 175.828125
+    },
+    "actions": {
+      "x": 18,
+      "y": 112.828125,
+      "w": 354,
+      "h": 44,
+      "right": 372,
+      "bottom": 156.828125
+    },
+    "offenders": []
+  },
+  {
+    "viewport": "mobile",
+    "route": "/goals",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29\\mobile-goals.png",
+    "path": "/goals",
+    "bodyW": 390,
+    "clientW": 390,
+    "bodyH": 844,
+    "clientH": 844,
+    "overflowX": false,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 173.828125,
+      "right": 390,
+      "bottom": 173.828125
+    },
+    "actions": {
+      "x": 18,
+      "y": 110.828125,
+      "w": 354,
+      "h": 44,
+      "right": 372,
+      "bottom": 154.828125
+    },
+    "offenders": []
+  },
+  {
+    "viewport": "mobile",
+    "route": "/settings",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29\\mobile-settings.png",
+    "path": "/settings",
+    "bodyW": 390,
+    "clientW": 390,
+    "bodyH": 844,
+    "clientH": 844,
+    "overflowX": false,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 113.828125,
+      "right": 390,
+      "bottom": 113.828125
+    },
+    "actions": null,
+    "offenders": []
+  },
+  {
+    "viewport": "tablet",
+    "route": "/",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29\\tablet-start.png",
+    "path": "/",
+    "bodyW": 820,
+    "clientW": 820,
+    "bodyH": 1180,
+    "clientH": 1180,
+    "overflowX": false,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "w": 810,
+      "h": 160.296875,
+      "right": 810,
+      "bottom": 160.296875
+    },
+    "actions": {
+      "x": 22,
+      "y": 95.296875,
+      "w": 549.28125,
+      "h": 46,
+      "right": 571.28125,
+      "bottom": 141.296875
+    },
+    "offenders": []
+  },
+  {
+    "viewport": "tablet",
+    "route": "/sport",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29\\tablet-sport.png",
+    "path": "/sport",
+    "bodyW": 820,
+    "clientW": 820,
+    "bodyH": 1180,
+    "clientH": 1180,
+    "overflowX": false,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "w": 810,
+      "h": 157.6875,
+      "right": 810,
+      "bottom": 157.6875
+    },
+    "actions": {
+      "x": 22,
+      "y": 94.6875,
+      "w": 489.671875,
+      "h": 44,
+      "right": 511.671875,
+      "bottom": 138.6875
+    },
+    "offenders": []
+  },
+  {
+    "viewport": "tablet",
+    "route": "/work",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29\\tablet-work.png",
+    "path": "/work",
+    "bodyW": 820,
+    "clientW": 820,
+    "bodyH": 1180,
+    "clientH": 1180,
+    "overflowX": false,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "w": 810,
+      "h": 95.6875,
+      "right": 810,
+      "bottom": 95.6875
+    },
+    "actions": {
+      "x": 618.53125,
+      "y": 25.34375,
+      "w": 169.46875,
+      "h": 44,
+      "right": 788,
+      "bottom": 69.34375
+    },
+    "offenders": []
+  },
+  {
+    "viewport": "tablet",
+    "route": "/notes",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29\\tablet-notes.png",
+    "path": "/notes",
+    "bodyW": 820,
+    "clientW": 820,
+    "bodyH": 1180,
+    "clientH": 1180,
+    "overflowX": false,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "w": 810,
+      "h": 95.6875,
+      "right": 810,
+      "bottom": 95.6875
+    },
+    "actions": {
+      "x": 528.640625,
+      "y": 25.34375,
+      "w": 259.359375,
+      "h": 44,
+      "right": 788,
+      "bottom": 69.34375
+    },
+    "offenders": []
+  },
+  {
+    "viewport": "desktop",
+    "route": "/",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29\\desktop-start.png",
+    "path": "/",
+    "bodyW": 1440,
+    "clientW": 1440,
+    "bodyH": 900,
+    "clientH": 900,
+    "overflowX": false,
+    "header": {
+      "x": 76,
+      "y": 0,
+      "w": 1354,
+      "h": 96.296875,
+      "right": 1430,
+      "bottom": 96.296875
+    },
+    "actions": {
+      "x": 819.921875,
+      "y": 24.640625,
+      "w": 581.28125,
+      "h": 46,
+      "right": 1401.203125,
+      "bottom": 70.640625
+    },
+    "offenders": []
+  },
+  {
+    "viewport": "desktop",
+    "route": "/sport",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29\\desktop-sport.png",
+    "path": "/sport",
+    "bodyW": 1440,
+    "clientW": 1440,
+    "bodyH": 900,
+    "clientH": 900,
+    "overflowX": false,
+    "header": {
+      "x": 76,
+      "y": 0,
+      "w": 1354,
+      "h": 95.6875,
+      "right": 1430,
+      "bottom": 95.6875
+    },
+    "actions": {
+      "x": 911.53125,
+      "y": 25.34375,
+      "w": 489.671875,
+      "h": 44,
+      "right": 1401.203125,
+      "bottom": 69.34375
+    },
+    "offenders": []
+  },
+  {
+    "viewport": "desktop",
+    "route": "/finance",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29\\desktop-finance.png",
+    "path": "/finance",
+    "bodyW": 1440,
+    "clientW": 1440,
+    "bodyH": 900,
+    "clientH": 900,
+    "overflowX": false,
+    "header": {
+      "x": 76,
+      "y": 2,
+      "w": 1354,
+      "h": 95.6875,
+      "right": 1430,
+      "bottom": 97.6875
+    },
+    "actions": {
+      "x": 877.546875,
+      "y": 27.34375,
+      "w": 523.65625,
+      "h": 44,
+      "right": 1401.203125,
+      "bottom": 71.34375
+    },
+    "offenders": []
+  },
+  {
+    "viewport": "desktop",
+    "route": "/notes",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29\\desktop-notes.png",
+    "path": "/notes",
+    "bodyW": 1440,
+    "clientW": 1440,
+    "bodyH": 900,
+    "clientH": 900,
+    "overflowX": false,
+    "header": {
+      "x": 76,
+      "y": 0,
+      "w": 1354,
+      "h": 95.6875,
+      "right": 1430,
+      "bottom": 95.6875
+    },
+    "actions": {
+      "x": 1137.84375,
+      "y": 25.34375,
+      "w": 263.359375,
+      "h": 44,
+      "right": 1401.203125,
+      "bottom": 69.34375
+    },
+    "offenders": []
+  }
+]

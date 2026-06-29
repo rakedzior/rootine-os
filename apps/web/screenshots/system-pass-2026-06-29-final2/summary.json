@@ -1,0 +1,88 @@
+{
+  "bodyW": 390,
+  "clientW": 390,
+  "bodyH": 844,
+  "overflowX": false,
+  "rects": [
+    {
+      "sel": ".planner-layout",
+      "rect": {
+        "x": 18,
+        "y": 244,
+        "w": 354,
+        "h": 430,
+        "bottom": 674
+      },
+      "css": {
+        "display": "grid",
+        "flexDirection": "row",
+        "overflow": "visible",
+        "height": "430.406px"
+      }
+    },
+    {
+      "sel": ".planner-sidebar",
+      "rect": {
+        "x": 18,
+        "y": 244,
+        "w": 354,
+        "h": 177,
+        "bottom": 421
+      },
+      "css": {
+        "display": "flex",
+        "flexDirection": "column",
+        "overflow": "visible",
+        "height": "177.203px"
+      }
+    },
+    {
+      "sel": ".planner-tasks-card",
+      "rect": {
+        "x": 18,
+        "y": 244,
+        "w": 354,
+        "h": 96,
+        "bottom": 340
+      },
+      "css": {
+        "display": "flex",
+        "flexDirection": "column",
+        "overflow": "visible",
+        "height": "96.4062px"
+      }
+    },
+    {
+      "sel": ".planner-habits-card",
+      "rect": {
+        "x": 18,
+        "y": 354,
+        "w": 342,
+        "h": 67,
+        "bottom": 421
+      },
+      "css": {
+        "display": "flex",
+        "flexDirection": "column",
+        "overflow": "visible",
+        "height": "66.7969px"
+      }
+    },
+    {
+      "sel": ".planner-calendar-card",
+      "rect": {
+        "x": 18,
+        "y": 435,
+        "w": 354,
+        "h": 239,
+        "bottom": 674
+      },
+      "css": {
+        "display": "grid",
+        "flexDirection": "column",
+        "overflow": "hidden",
+        "height": "239.203px"
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "route": "/",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29-r4\\mobile-start.png",
+    "bodyW": 390,
+    "clientW": 390,
+    "bodyH": 844,
+    "clientH": 844,
+    "overflowX": false,
+    "offenders": []
+  },
+  {
+    "route": "/sport",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29-r4\\mobile-sport.png",
+    "bodyW": 390,
+    "clientW": 390,
+    "bodyH": 844,
+    "clientH": 844,
+    "overflowX": false,
+    "offenders": []
+  },
+  {
+    "route": "/finance",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29-r4\\mobile-finance.png",
+    "bodyW": 390,
+    "clientW": 390,
+    "bodyH": 844,
+    "clientH": 844,
+    "overflowX": false,
+    "offenders": []
+  }
+]

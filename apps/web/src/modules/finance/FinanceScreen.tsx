@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ConfirmDelete, Field, PageHeader } from '@/components/common';
+import { AppTabs, ConfirmDelete, DateNavigator, Field, PageHeader } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import {
   type Account,
@@ -111,6 +111,11 @@ function shiftMonth(month: string, delta: number) {
 function monthLabel(month: string) {
   const [year, m] = month.split('-').map(Number);
   return `${MONTHS[m - 1]} ${year}`;
+}
+
+function monthToDate(month: string) {
+  const [year, m] = month.split('-').map(Number);
+  return new Date(year, m - 1, 1);
 }
 
 function daysInMonth(month: string) {
@@ -255,6 +260,14 @@ export function FinanceScreen() {
     if (key === 'due') setSegment('due');
   };
 
+  const changeSegment = (next: string) => {
+    const value = next as FinanceSegment;
+    setSegment(value);
+    if (value === 'accounts' || value === 'savings' || value === 'budget' || value === 'due') {
+      setActiveSummary(value);
+    }
+  };
+
   const addForSegment = () => {
     if (segment === 'accounts') setAccountEditorToken((value) => value + 1);
     if (segment === 'due') setPaymentDrawer({ open: true });
@@ -272,11 +285,16 @@ export function FinanceScreen() {
         title="Finanse"
         desc="Przegląd finansów, budżetu i płatności w jednym miejscu."
         actions={(
-          <div className="finance-month-control">
-            <button className="icon-btn" type="button" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Poprzedni miesiąc"><Icon name="arrow" flip /></button>
-            <input className="input finance-month-input" type="month" value={month} onChange={(event) => setMonth(event.target.value || currentYearMonth())} />
-            <button className="icon-btn" type="button" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Następny miesiąc"><Icon name="arrow" /></button>
-          </div>
+          <>
+            <DateNavigator
+              mode="month"
+              value={monthToDate(month)}
+              onPrevious={() => setMonth(shiftMonth(month, -1))}
+              onNext={() => setMonth(shiftMonth(month, 1))}
+              onToday={() => setMonth(currentYearMonth())}
+            />
+            <button className="btn btn-primary btn-sm finance-header-cta" type="button" onClick={addForSegment}>{ctaLabel(segment)}</button>
+          </>
         )}
       />}
     >
@@ -291,12 +309,9 @@ export function FinanceScreen() {
       <div className="finance-workspace">
         <main className="finance-month-panel">
           <div className="finance-segment-toolbar">
-            <nav className="finance-segment-tabs">
-              {SEGMENTS.map((item) => <button key={item.id} className={segment === item.id ? 'is-active' : ''} type="button" onClick={() => setSegment(item.id)}>{item.label}</button>)}
-            </nav>
+            <AppTabs items={SEGMENTS} value={segment} onChange={changeSegment} variant="compact" ariaLabel="Sekcje finansów" />
             <div className="finance-segment-side">
               <SegmentKpiRail segment={segment} month={month} accounts={activeAccounts} payments={payments} goals={finance.savingsGoals} totals={totals} jdgItems={finance.jdgItems} jdgMonths={finance.jdgMonths} />
-              <button className="btn btn-primary btn-sm finance-segment-cta" type="button" onClick={addForSegment}>{ctaLabel(segment)}</button>
             </div>
           </div>
           <div className="finance-segment-body">
@@ -326,12 +341,12 @@ export function FinanceScreen() {
 }
 
 function ctaLabel(segment: FinanceSegment) {
-  if (segment === 'accounts') return '+ Źródło';
-  if (segment === 'due') return '+ Płatność';
-  if (segment === 'budget') return '+ Kategoria';
+  if (segment === 'accounts') return '+ Nowe źródło';
+  if (segment === 'due') return '+ Nowa płatność';
+  if (segment === 'budget') return '+ Nowa kategoria';
   if (segment === 'savings') return '+ Nowy cel';
-  if (segment === 'jdg') return '+ Obowiązek';
-  return 'Eksportuj';
+  if (segment === 'jdg') return '+ Obowiązek JDG';
+  return 'Eksportuj historię';
 }
 
 function SummaryTile({ label, value, note, active, action, onClick }: { label: string; value: string; note: string; active: boolean; action?: IconName; onClick: () => void }) {
@@ -664,7 +679,6 @@ function AccountsSegment({ editorToken, accounts }: { editorToken: number; accou
           </button>
         ))}
       </div>
-      <button className="btn btn-secondary finance-inline-add" type="button" onClick={() => setEditing(blankAccount())}>+ Dodaj źródło</button>
       <AccountEditor account={editing} onClose={() => setEditing(null)} onSave={(payload) => {
         saveAccount.mutate({ id: editing?.id || undefined, input: payload });
         setEditing(null);

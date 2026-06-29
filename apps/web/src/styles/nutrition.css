@@ -26,7 +26,7 @@
 .nt-macro .mh .v{ font-family:var(--mono); font-size:11px; font-weight:600; color:var(--ink-2); font-variant-numeric:tabular-nums; }
 .nt-macro .mh .v b{ color:var(--ink); }
 .nt-track{ height:8px; border-radius:999px; background:var(--surface-inset); overflow:hidden; }
-.nt-track i{ display:block; height:100%; border-radius:999px; transition:width .35s ease; }
+.nt-track i{ display:block; height:100%; border-radius:999px; }
 
 /* ============================================================
    HYDRATION + SNAPSHOT (left)
@@ -195,7 +195,7 @@
 .psum-day .s{ font-family:var(--mono); font-size:8.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3); margin-top:3px; }
 .psum-bar{ flex:1; height:8px; border-radius:999px; background:var(--surface-inset); overflow:hidden; position:relative; }
 .psum-bar::after{ content:""; position:absolute; top:-2px; bottom:-2px; width:1.5px; background:var(--ink-3); opacity:.4; }
-.psum-bar i{ display:block; height:100%; border-radius:999px; background:var(--m-prot); transition:width .3s; }
+.psum-bar i{ display:block; height:100%; border-radius:999px; background:var(--m-prot); }
 .psum-bar i.over{ background:var(--acc-b); }
 .psum-macros{ font-family:var(--mono); font-size:9px; color:var(--ink-3); width:118px; text-align:right; display:flex; gap:8px; justify-content:flex-end; }
 .psum-macros b{ color:var(--ink-2); font-weight:600; }

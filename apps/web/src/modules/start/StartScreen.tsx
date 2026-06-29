@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useLayoutEffect, useMemo, useRef, type MouseEvent as ReactMouseEvent } from 'react';
-import { ConfirmDelete, Field, Modal, PageHeader } from '@/components/common';
+import { ConfirmDelete, DateNavigator, EmptyState, Field, FilterChips, Modal, PageHeader, ViewSegmentedControl } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import { useHabits, useHabitLogs, useCreateHabit, useUpdateHabit, useDeleteHabit, useSetHabitStatus, useSetHabitVisibility, useSetHabitEntry, useToggleHabitLog } from '@/features/habits/hooks';
 import { ALL_WEEKDAYS, habitOccursOn, habitScheduleLabel, habitStats, todayStr as habitsTodayStr } from '@/features/habits/dates';
@@ -769,18 +769,19 @@ interface CalendarProps {
   tasks: SupabaseTask[];
   activeDate?: string | null;
   hideCompleted: boolean;
-  onToggleHideCompleted: () => void;
+  view: 'month' | 'week' | 'day';
+  cursor: Date;
+  rangeMode: 'today' | 'tomorrow' | 'week' | 'month' | 'all';
+  onRangeModeChange: (mode: string) => void;
   onDayClick: (dateStr: string, anchor: AnchorRect) => void;
   onTaskClick: (task: SupabaseTask) => void;
   onToggleTask: (id: string, done: boolean) => void;
   onMoveTask: (task: SupabaseTask, dateStr: string) => void;
 }
 
-function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onDayClick, onTaskClick, onToggleTask, onMoveTask }: CalendarProps) {
+function Calendar({ tasks, activeDate, hideCompleted, view, cursor, rangeMode, onRangeModeChange, onDayClick, onTaskClick, onToggleTask, onMoveTask }: CalendarProps) {
   const now = new Date();
   const calendarRef = useRef<HTMLDivElement | null>(null);
-  const [view, setView] = useState<'month'|'week'|'day'>('month');
-  const [cursor, setCursor] = useState(() => new Date(now.getFullYear(), now.getMonth(), now.getDate()));
   const [dragTaskId, setDragTaskId] = useState<string | null>(null);
   const [dropTargetDate, setDropTargetDate] = useState<string | null>(null);
   const [overflowDates, setOverflowDates] = useState<Set<string>>(() => new Set());
@@ -788,18 +789,6 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
   const todayDateStr = toDateStr(now.getFullYear(), now.getMonth(), now.getDate());
-
-  function prev() {
-    if (view === 'month') setCursor(c => new Date(c.getFullYear(), c.getMonth() - 1, 1));
-    else if (view === 'week') setCursor(c => addDaysToDate(c, -7));
-    else setCursor(c => addDaysToDate(c, -1));
-  }
-  function next() {
-    if (view === 'month') setCursor(c => new Date(c.getFullYear(), c.getMonth() + 1, 1));
-    else if (view === 'week') setCursor(c => addDaysToDate(c, 7));
-    else setCursor(c => addDaysToDate(c, 1));
-  }
-  function goToday() { setCursor(new Date(now.getFullYear(), now.getMonth(), now.getDate())); }
 
   const first = new Date(year, month, 1);
   const last  = new Date(year, month+1, 0);
@@ -811,7 +800,6 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
 
   const weekStart = startOfWeekDate(cursor);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDaysToDate(weekStart, i));
-  const weekEnd = weekDays[6];
 
   useLayoutEffect(() => {
     function measureTaskOverflow() {
@@ -847,6 +835,8 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
       .filter(t => !hideCompleted || !t.done)
       .sort((a, b) => Number(a.done) - Number(b.done) || a.created_at.localeCompare(b.created_at));
     const dayTasks = allDayTasks;
+    const visibleDayTasks = compact ? dayTasks.slice(0, 3) : dayTasks;
+    const hiddenDayTasksCount = Math.max(0, dayTasks.length - visibleDayTasks.length);
     return (
       <div key={dateStr}
         className={`day-cell${compact ? ' is-compact' : ''}${isCellToday ? ' is-today' : ''}${isActive ? ' is-active' : ''}${isDropTarget ? ' is-drop-target' : ''}${hasTaskOverflow ? ' has-task-overflow' : ''}`}
@@ -891,7 +881,7 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
           </div>
         </div>
         <div className="day-cell-tasks" data-date={dateStr}>
-        {dayTasks.map(t => (
+        {visibleDayTasks.map(t => (
           <div
             key={t.id}
             className={`ev ev-task ${t.done ? 'is-done' : ''}`}
@@ -935,6 +925,19 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
             {t.scheduled_time && <span className="ev-task-time">{t.scheduled_time}</span>}
           </div>
         ))}
+        {hiddenDayTasksCount > 0 && (
+          <button
+            type="button"
+            className="day-more-tasks"
+            onClick={(e) => {
+              e.stopPropagation();
+              const r = e.currentTarget.closest('.day-cell')?.getBoundingClientRect();
+              onDayClick(dateStr, r ? { left: r.left, right: r.right, top: r.top, bottom: r.bottom } : { left: 0, right: 0, top: 0, bottom: 0 });
+            }}
+          >
+            +{hiddenDayTasksCount} więcej
+          </button>
+        )}
         </div>
         {hasTaskOverflow && (
           <span className="day-scroll-hint" aria-hidden="true">
@@ -953,60 +956,33 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
 
   return (
     <div ref={calendarRef} style={{ display:'flex', flexDirection:'column', height:'100%', minHeight: 0 }}>
-      {/* cal head */}
-      <div className="planner-calendar-head" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexShrink:0, flexWrap:'wrap', gap:8 }}>
-        <span className="planner-calendar-title" style={{ fontFamily:'var(--display)', fontSize:24, fontWeight:600, letterSpacing:'-.01em' }}>
-          {view === 'month' && <>{MONTH_FULL[month]} <span style={{ color:'var(--ink-3)', fontWeight:500 }}>{year}</span></>}
-          {view === 'day' && <>{cursor.getDate()} {MONTH_FULL[cursor.getMonth()]} <span style={{ color:'var(--ink-3)', fontWeight:500 }}>{cursor.getFullYear()}</span></>}
-          {view === 'week' && (
-            weekStart.getMonth() === weekEnd.getMonth()
-              ? <>{weekStart.getDate()}–{weekEnd.getDate()} {MONTH_FULL[weekStart.getMonth()]} <span style={{ color:'var(--ink-3)', fontWeight:500 }}>{weekEnd.getFullYear()}</span></>
-              : <>{weekStart.getDate()} {MONTH_SHORT[weekStart.getMonth()]} – {weekEnd.getDate()} {MONTH_SHORT[weekEnd.getMonth()]} <span style={{ color:'var(--ink-3)', fontWeight:500 }}>{weekEnd.getFullYear()}</span></>
-          )}
-        </span>
-        <div className="planner-calendar-controls" style={{ display:'flex', alignItems:'center', gap:6 }}>
-          <button
-            type="button"
-            className={`hide-completed-toggle${hideCompleted ? ' is-active' : ''}`}
-            onClick={onToggleHideCompleted}
-            aria-pressed={hideCompleted}
-            title="Ukryj zakończone zadania"
-          >
-            Ukryj zakończone
-          </button>
-          <div style={{ display:'flex', gap:2, background:'var(--surface-inset)', padding:3, borderRadius:10, border:'1px solid var(--border-soft)' }}>
-            {(['month','week','day'] as const).map(v => (
-              <button key={v} onClick={()=>setView(v)} style={{
-                fontFamily:'var(--mono)', fontSize:9.5, letterSpacing:'.08em', textTransform:'uppercase', fontWeight:600,
-                padding:'5px 10px', borderRadius:7, border:0, cursor:'pointer', transition:'.14s',
-                background: view===v ? 'var(--surface)' : 'transparent',
-                color: view===v ? 'var(--ink)' : 'var(--ink-3)',
-                boxShadow: view===v ? 'var(--sh-1)' : 'none',
-              }}>{v==='month'?'Miesiąc':v==='week'?'Tydzień':'Dzień'}</button>
-            ))}
-          </div>
-          <button onClick={prev} style={{ width:28,height:28,borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',display:'grid',placeItems:'center',cursor:'pointer',color:'var(--ink-2)' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-          </button>
-          <button onClick={next} style={{ width:28,height:28,borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',display:'grid',placeItems:'center',cursor:'pointer',color:'var(--ink-2)' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-          </button>
-          <button onClick={goToday} style={{ fontFamily:'var(--mono)',fontSize:10,letterSpacing:'.08em',textTransform:'uppercase',fontWeight:600,padding:'6px 12px',borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',color:'var(--ink)',cursor:'pointer' }}>
-            Dziś
-          </button>
+      <div className="planner-calendar-head planner-calendar-head-compact">
+        <div className="planner-calendar-controls">
+          <ViewSegmentedControl
+            items={[
+              { id: 'today', label: 'Dzisiaj' },
+              { id: 'tomorrow', label: 'Jutro' },
+              { id: 'week', label: 'Tydzień' },
+              { id: 'month', label: 'Miesiąc' },
+              { id: 'all', label: 'Wszystkie' },
+            ]}
+            value={rangeMode}
+            onChange={onRangeModeChange}
+            ariaLabel="Zakres kalendarza"
+          />
         </div>
       </div>
 
       {view === 'month' && (
         <>
           {/* day names */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:5, marginBottom:5, flexShrink:0 }}>
+          <div className="planner-weekdays" style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:5, marginBottom:5, flexShrink:0 }}>
             {['Pon','Wt','Śr','Czw','Pt','Sob','Ndz'].map(d => (
               <div key={d} style={{ fontFamily:'var(--mono)',fontSize:9.5,letterSpacing:'.1em',textTransform:'uppercase',color:'var(--ink-3)',paddingLeft:4 }}>{d}</div>
             ))}
           </div>
           {/* grid - flex:1 so it fills remaining card height */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gridAutoRows:'1fr', gap:5, flex:1, minHeight:0 }}>
+          <div className="planner-month-grid" style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gridAutoRows:'1fr', gap:5, flex:1, minHeight:0 }}>
             {monthCells.map((date, i) => date ? renderDayCell(date, true) : <div key={`blank-${i}`} style={{ opacity:0 }} />)}
           </div>
         </>
@@ -1409,7 +1385,7 @@ function HabitDetailsOverlay({
                     <h4>Historia - {MONTH_FULL[historyDate.getMonth()]} {historyDate.getFullYear()}</h4>
                     <div>
                       <button type="button" onClick={() => setHistoryMonth((m) => shiftMonth(m, -1))} aria-label="Poprzedni miesiąc">‹</button>
-                      <button type="button" onClick={() => setHistoryMonth(firstOfMonth(today))}>Dziś</button>
+                      <button type="button" onClick={() => setHistoryMonth(firstOfMonth(today))}>Dzisiaj</button>
                       <button type="button" onClick={() => setHistoryMonth((m) => shiftMonth(m, 1))} aria-label="Następny miesiąc">›</button>
                     </div>
                   </div>
@@ -1798,11 +1774,11 @@ function TodayPanel({
   }, [monthKey, panelTasks, todayStr, tomorrowStr, weekEnd, weekStart, windowFilter]);
 
   const tabs: Array<{ id: TaskWindow; label: string; count: number }> = [
-    { id: 'today', label: 'DZISIAJ', count: counters.today },
-    { id: 'tomorrow', label: 'JUTRO', count: counters.tomorrow },
-    { id: 'week', label: 'TYDZIEŃ', count: counters.week },
-    { id: 'month', label: 'MIESIĄC', count: counters.month },
-    { id: 'all', label: 'WSZYSTKIE', count: counters.all },
+    { id: 'today', label: 'Dzisiaj', count: counters.today },
+    { id: 'tomorrow', label: 'Jutro', count: counters.tomorrow },
+    { id: 'week', label: 'Tydzień', count: counters.week },
+    { id: 'month', label: 'Miesiąc', count: counters.month },
+    { id: 'all', label: 'Wszystkie', count: counters.all },
   ];
 
   // Default due date for additions made from this panel follows the active tab.
@@ -1834,17 +1810,7 @@ function TodayPanel({
       </div>
 
       <div className="task-filter-row">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`task-filter-btn${windowFilter === tab.id ? ' is-active' : ''}`}
-            onClick={() => setWindowFilter(tab.id)}
-          >
-            <span>{tab.label}</span>
-            <sup>{tab.count}</sup>
-          </button>
-        ))}
+        <FilterChips items={tabs} value={windowFilter} onChange={(id) => setWindowFilter(id as TaskWindow)} ariaLabel="Filtry zadań" />
       </div>
 
       {/* Task list - scrollable, grouped */}
@@ -1852,7 +1818,7 @@ function TodayPanel({
         {isLoading ? (
           <div style={{ textAlign:'center', padding:'24px 0', color:'var(--ink-3)', fontSize:13 }}>Ładowanie zadań...</div>
         ) : visibleTasks.length === 0 ? (
-          <div style={{ textAlign:'center', padding:'24px 0', color:'var(--ink-3)', fontSize:13 }}>Brak zadań. Dodaj pierwsze poniżej.</div>
+          <EmptyState compact title="Brak zadań" description="Dodaj pierwsze zadanie na dziś." />
         ) : (
           visibleTasks.map((task) => <PlannerTaskRow key={task.id} task={task} todayStr={todayStr} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />)
         )}
@@ -2317,7 +2283,7 @@ function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete
           />
         </div>
         <div className="task-options-icons">
-          <button type="button" className={state.dueDate === quick.today ? 'is-active' : ''} title="Dziś" aria-label="Dziś" onClick={() => pickQuick(quick.today)}>{IC_SUN}</button>
+          <button type="button" className={state.dueDate === quick.today ? 'is-active' : ''} title="Dzisiaj" aria-label="Dzisiaj" onClick={() => pickQuick(quick.today)}>{IC_SUN}</button>
           <button type="button" className={state.dueDate === quick.tomorrow ? 'is-active' : ''} title="Jutro" aria-label="Jutro" onClick={() => pickQuick(quick.tomorrow)}>{IC_SUNRISE}</button>
           <button type="button" className={state.dueDate === quick.week ? 'is-active' : ''} title="Za tydzień" aria-label="Za tydzień" onClick={() => pickQuick(quick.week)}>{IC_WEEK}</button>
           <button type="button" className={state.dueDate === quick.month ? 'is-active' : ''} title="Za miesiąc" aria-label="Za miesiąc" onClick={() => pickQuick(quick.month)}>{IC_MOON}</button>
@@ -2621,6 +2587,9 @@ export function StartScreen() {
     flagged: false,
   });
   const [hideCompletedTasks, setHideCompletedTasks] = useState(false);
+  const [calendarView, setCalendarView] = useState<'month'|'week'|'day'>('month');
+  const [calendarRangeMode, setCalendarRangeMode] = useState<'today'|'tomorrow'|'week'|'month'|'all'>('month');
+  const [calendarCursor, setCalendarCursor] = useState(() => new Date(now.getFullYear(), now.getMonth(), now.getDate()));
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [seriesDeleteTarget, setSeriesDeleteTarget] = useState<SupabaseTask | null>(null);
 
@@ -2884,6 +2853,38 @@ export function StartScreen() {
     setSeriesDeleteTarget(null);
     closeTaskModal();
   }
+  function prevCalendarPeriod() {
+    if (calendarView === 'month') setCalendarCursor((value) => new Date(value.getFullYear(), value.getMonth() - 1, 1));
+    else if (calendarView === 'week') setCalendarCursor((value) => addDaysToDate(value, -7));
+    else setCalendarCursor((value) => addDaysToDate(value, -1));
+  }
+  function nextCalendarPeriod() {
+    if (calendarView === 'month') setCalendarCursor((value) => new Date(value.getFullYear(), value.getMonth() + 1, 1));
+    else if (calendarView === 'week') setCalendarCursor((value) => addDaysToDate(value, 7));
+    else setCalendarCursor((value) => addDaysToDate(value, 1));
+  }
+  function goCalendarToday() {
+    setCalendarCursor(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+  }
+  function changeCalendarRange(nextMode: string) {
+    const mode = nextMode as typeof calendarRangeMode;
+    setCalendarRangeMode(mode);
+    if (mode === 'today') {
+      setCalendarCursor(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+      setCalendarView('day');
+      return;
+    }
+    if (mode === 'tomorrow') {
+      setCalendarCursor(addDaysToDate(new Date(now.getFullYear(), now.getMonth(), now.getDate()), 1));
+      setCalendarView('day');
+      return;
+    }
+    if (mode === 'week') {
+      setCalendarView('week');
+      return;
+    }
+    setCalendarView('month');
+  }
   return (
     <PageLayout
       className="planner-page"
@@ -2891,6 +2892,18 @@ export function StartScreen() {
         icon={<PlannerHeaderIcon />}
         title="Planer"
         desc={'Zaplanuj dzień, zadania, nawyki i cele w jednym miejscu.'}
+        actions={(
+          <div className="planner-header-actions">
+            <DateNavigator mode={calendarView} value={calendarCursor} onPrevious={prevCalendarPeriod} onNext={nextCalendarPeriod} onToday={goCalendarToday} />
+            <button className="btn btn-primary btn-sm" type="button" onClick={() => setModalOpen(true)}>+ Nowe zadanie</button>
+            <button className="icon-btn planner-settings-btn" type="button" aria-label="Ustawienia planera" title="Ustawienia planera">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
+                <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.05.05a2.15 2.15 0 0 1-3.04 3.04l-.05-.05a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.09 1.65V21.4a2.15 2.15 0 0 1-4.3 0v-.09a1.8 1.8 0 0 0-1.09-1.65 1.8 1.8 0 0 0-1.98.36l-.05.05a2.15 2.15 0 0 1-3.04-3.04l.05-.05A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.65-1.09h-.09a2.15 2.15 0 0 1 0-4.3h.09A1.8 1.8 0 0 0 4.6 8a1.8 1.8 0 0 0-.36-1.98l-.05-.05a2.15 2.15 0 1 1 3.04-3.04l.05.05A1.8 1.8 0 0 0 9.26 2.6 1.8 1.8 0 0 0 10.35.95V.86a2.15 2.15 0 0 1 4.3 0v.09a1.8 1.8 0 0 0 1.09 1.65 1.8 1.8 0 0 0 1.98-.36l.05-.05a2.15 2.15 0 1 1 3.04 3.04l-.05.05A1.8 1.8 0 0 0 19.4 8c.25.66.88 1.09 1.59 1.09h.15a2.15 2.15 0 0 1 0 4.3h-.15A1.8 1.8 0 0 0 19.4 15Z" />
+              </svg>
+            </button>
+          </div>
+        )}
       />}
     >
 
@@ -2917,7 +2930,10 @@ export function StartScreen() {
               tasks={tasks}
               activeDate={calendarQuick.open ? calendarQuick.date : taskOptions.open ? taskOptions.dueDate : null}
               hideCompleted={hideCompletedTasks}
-              onToggleHideCompleted={() => setHideCompletedTasks((prev) => !prev)}
+              view={calendarView}
+              cursor={calendarCursor}
+              rangeMode={calendarRangeMode}
+              onRangeModeChange={changeCalendarRange}
               onDayClick={openCalendarQuick}
               onTaskClick={openTask}
               onToggleTask={(id, done) => toggleTask.mutate({ id, done })}

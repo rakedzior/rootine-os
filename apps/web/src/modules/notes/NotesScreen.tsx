@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, IcoTrash, ViewSegmentedControl } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import { useAddNote, useDeleteNote, useNotes, usePinNote, useUpdateNote } from '@/features/notes/hooks';
 import type { ChecklistItem, Note as NoteRow, NoteType } from '@/features/notes/types';
@@ -31,7 +31,7 @@ const NOTE_COLORS = ['#1b2b33', '#21333d', '#14222a', '#261b33', '#1b3330'];
 
 const CATEGORIES: NoteCategory[] = [
   { id: 'all', label: 'Wszystkie notatki', icon: 'note', tone: 'pink', matcher: () => true },
-  { id: 'ideas', label: 'Notatki', icon: 'idea', tone: 'teal', matcher: (n) => matches(n, ['pomysł', 'pomysl', 'idea', 'inspir']) },
+  { id: 'ideas', label: 'Szybkie notatki', icon: 'idea', tone: 'teal', matcher: (n) => matches(n, ['pomysł', 'pomysl', 'idea', 'inspir']) },
   { id: 'projects', label: 'Projekty', icon: 'project', tone: 'blue', matcher: (n) => matches(n, ['projekt', 'aplikacja', 'product', 'mvp']) },
   { id: 'meetings', label: 'Spotkania', icon: 'people', tone: 'teal', matcher: (n) => matches(n, ['spotkan', 'zespół', 'zespol', 'meeting']) },
   { id: 'personal', label: 'Osobiste', icon: 'user', tone: 'violet', matcher: (n) => matches(n, ['osobiste', 'cele', 'plan']) },
@@ -121,12 +121,26 @@ export function NotesScreen() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [view, setView] = useState<'cards' | 'list'>('cards');
   const [editorOpen, setEditorOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<'updated' | 'created' | 'title'>('updated');
 
   const activeCategory = CATEGORIES.find((cat) => cat.id === categoryId) ?? CATEGORIES[0];
   const visibleNotes = useMemo(() => {
     const base = categoryId === 'archive' ? notes.filter((note) => note.archived) : notes.filter((note) => !note.archived);
-    return base.filter(activeCategory.matcher).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  }, [activeCategory, categoryId, notes]);
+    const query = search.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    return base
+      .filter(activeCategory.matcher)
+      .filter((note) => {
+        if (!query) return true;
+        const source = `${note.title} ${note.content} ${note.category} ${note.tags.join(' ')}`.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        return source.includes(query);
+      })
+      .sort((a, b) => {
+        if (sort === 'title') return a.title.localeCompare(b.title, 'pl');
+        if (sort === 'created') return b.createdAt.localeCompare(a.createdAt);
+        return b.updatedAt.localeCompare(a.updatedAt);
+      });
+  }, [activeCategory, categoryId, notes, search, sort]);
   const selected = notes.find((note) => note.id === selectedId) ?? visibleNotes[0] ?? notes.find((note) => !note.archived);
   const noteCounts = useMemo(() => {
     const map = new Map<string, number>();
@@ -150,11 +164,17 @@ export function NotesScreen() {
         title="Notatki"
         desc="Wszystkie notatki, pomysły i szybkie zapisy w jednym miejscu."
         actions={<>
+          <ViewSegmentedControl
+            items={[
+              { id: 'cards', label: 'Grid', icon: <NoteIcon name="grid" /> },
+              { id: 'list', label: 'Lista', icon: <NoteIcon name="list" /> },
+            ]}
+            value={view}
+            onChange={(id) => setView(id as typeof view)}
+            ariaLabel="Widok notatek"
+            iconOnly
+          />
           <button className="btn btn-primary" type="button" onClick={() => setShowAdd(true)}><NoteIcon name="plus" /> Nowa notatka</button>
-          <div className="notes-view-toggle">
-            <button className={view === 'cards' ? 'is-active' : ''} type="button" onClick={() => setView('cards')} aria-label="Widok kafelków"><NoteIcon name="grid" /></button>
-            <button className={view === 'list' ? 'is-active' : ''} type="button" onClick={() => setView('list')} aria-label="Widok listy"><NoteIcon name="list" /></button>
-          </div>
         </>}
       />}
     >
@@ -181,8 +201,16 @@ export function NotesScreen() {
             <div className="notes-board-title">
               <h2>{activeCategory.label}</h2>
             </div>
+            <div className="notes-board-toolbar">
+              <input className="input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Szukaj notatek..." />
+              <select className="select" value={sort} onChange={(event) => setSort(event.target.value as typeof sort)} aria-label="Sortowanie notatek">
+                <option value="updated">Ostatnio edytowane</option>
+                <option value="created">Ostatnio utworzone</option>
+                <option value="title">Tytuł A-Z</option>
+              </select>
+            </div>
             {visibleNotes.length === 0 ? (
-              <EmptyState title="Brak notatek w tej kategorii" cta="Nowa notatka" onCta={() => setShowAdd(true)} />
+              <EmptyState title="Brak notatek" desc="Utwórz pierwszą notatkę w tej kategorii." cta="Nowa notatka" onCta={() => setShowAdd(true)} />
             ) : view === 'cards' ? (
               <>
                 <div className="notes-card-grid">
@@ -223,13 +251,15 @@ export function NotesScreen() {
 }
 
 function CategoryPanel({ activeId, counts, onSelect }: { activeId: string; counts: Map<string, number>; onSelect: (id: string) => void }) {
+  const regularCategories = CATEGORIES.filter((cat) => cat.id !== 'archive');
+  const archiveCategory = CATEGORIES.find((cat) => cat.id === 'archive');
   return (
     <section className="notes-card notes-sidebar">
       <div className="notes-card-head">
         <h2>Kategorie</h2>
       </div>
       <div className="notes-category-list">
-        {CATEGORIES.map((cat) => (
+        {regularCategories.map((cat) => (
           <button key={cat.id} className={`notes-category notes-tone-${cat.tone} ${activeId === cat.id ? 'is-active' : ''}`} type="button" onClick={() => onSelect(cat.id)}>
             <span><NoteIcon name={cat.icon} /></span>
             <strong>{cat.label}</strong>
@@ -237,6 +267,15 @@ function CategoryPanel({ activeId, counts, onSelect }: { activeId: string; count
           </button>
         ))}
       </div>
+      {archiveCategory && (
+        <div className="notes-archive-section">
+          <button className={`notes-category notes-tone-${archiveCategory.tone} ${activeId === archiveCategory.id ? 'is-active' : ''}`} type="button" onClick={() => onSelect(archiveCategory.id)}>
+            <span><NoteIcon name={archiveCategory.icon} /></span>
+            <strong>{archiveCategory.label}</strong>
+            <em>{counts.get(archiveCategory.id) ?? 0}</em>
+          </button>
+        </div>
+      )}
       <button className="notes-add-category" type="button"><NoteIcon name="plus" /> Dodaj kategorię</button>
     </section>
   );

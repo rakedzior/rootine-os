@@ -17,7 +17,7 @@ export function ActiveCycleBanner({ onOpenManager, onOpenDetail }: ActiveCycleBa
           <div className="sport-cycle-banner-title">Brak aktywnego cyklu treningowego</div>
           <div className="sport-history-row-meta">Zaplanuj wieloetapowy cykl, np. blok hipertrofii albo przygotowanie do zawodów.</div>
         </div>
-        <button className="btn btn-primary btn-sm" onClick={onOpenManager}>+ Zaplanuj cykl treningowy</button>
+        <button className="btn btn-secondary btn-sm" onClick={onOpenManager}>+ Zaplanuj cykl treningowy</button>
       </div>
     );
   }
