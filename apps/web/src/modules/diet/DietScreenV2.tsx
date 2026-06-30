@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import { closestCenter, DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS as DndCSS } from '@dnd-kit/utilities';
-import { Modal, PageHeader, ProgressBar, SubTabs } from '@/components/common';
+import { DateNavigator, Modal, PageHeader, ProgressBar, SubTabs } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import { toast } from '@/lib/toast';
 import {
@@ -111,8 +111,8 @@ function shiftDate(value: string, days: number) {
   return dateToIso(date);
 }
 
-function prettyDate(value: string) {
-  return new Intl.DateTimeFormat('pl-PL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${value}T12:00:00`));
+function compactHeaderDate(value: string) {
+  return new Intl.DateTimeFormat('pl-PL', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T12:00:00`));
 }
 
 function formatDateShort(value: string) {
@@ -327,18 +327,17 @@ export function DietScreen() {
         title="Dieta"
         desc="Dziennik posiłków, makroskładniki i nawodnienie w jednym miejscu."
         actions={<>
+          <DateBar
+            date={selectedDate}
+            loading={categoriesLoading || itemsLoading}
+            onChange={setSelectedDate}
+          />
+          <button className="btn btn-primary btn-sm" disabled={categoriesLoading || itemsLoading || !activeCategory} onClick={() => { if (activeCategory) setAddCategory(activeCategory); }}>+ Dodaj wpis</button>
           <button className="btn btn-secondary btn-sm" disabled={categoriesLoading || itemsLoading} onClick={() => { setCustomMealTarget(null); setCustomMealsOpen(true); }}><Book size={15} /> Własne posiłki</button>
           <button className="btn btn-secondary btn-sm" disabled={categoriesLoading || itemsLoading} onClick={() => setSettingsOpen(true)}><Settings size={15} /> Ustawienia</button>
         </>}
       />}
     >
-
-      <DateBar
-        date={selectedDate}
-        loading={categoriesLoading || itemsLoading}
-        onChange={setSelectedDate}
-      />
-
       <div className="diet-shell">
         <main className="diet-meals-col" aria-busy={itemsLoading || categoriesLoading}>
           {categoriesLoading ? (
@@ -447,22 +446,27 @@ export function DietScreen() {
 }
 
 function DateBar({ date, loading, onChange }: { date: string; loading: boolean; onChange: (date: string) => void }) {
+  const pickerId = 'diet-date-picker';
+  const openPicker = () => {
+    const picker = document.getElementById(pickerId) as (HTMLInputElement & { showPicker?: () => void }) | null;
+    if (picker?.showPicker) picker.showPicker();
+    else picker?.click();
+  };
   return (
     <div className="diet-datebar">
       <div className="diet-datebar-nav">
-        <button className="icon-btn" disabled={loading} onClick={() => onChange(shiftDate(date, -1))} aria-label="Poprzedni dzień"><ChevronLeft size={16} /></button>
-        <button className="diet-date-label" disabled={loading} onClick={() => {
-          const picker = document.getElementById('diet-date-picker') as (HTMLInputElement & { showPicker?: () => void }) | null;
-          if (picker?.showPicker) picker.showPicker();
-          else picker?.click();
-        }}>
-          {prettyDate(date)}
-        </button>
-        <button className="icon-btn" disabled={loading} onClick={() => onChange(shiftDate(date, 1))} aria-label="Następny dzień"><ChevronRight size={16} /></button>
-        <button className="btn btn-secondary btn-sm" disabled={loading} onClick={() => onChange(dateToIso(new Date()))}>Dzisiaj</button>
+        <DateNavigator
+          mode="day"
+          value={new Date(`${date}T12:00:00`)}
+          label={compactHeaderDate(date)}
+          onPrevious={() => { if (!loading) onChange(shiftDate(date, -1)); }}
+          onNext={() => { if (!loading) onChange(shiftDate(date, 1)); }}
+          onToday={() => { if (!loading) onChange(dateToIso(new Date())); }}
+          onOpenPicker={loading ? undefined : openPicker}
+        />
         <label className="icon-btn diet-date-picker" aria-label="Wybierz datę">
           <Calendar size={15} />
-          <input id="diet-date-picker" type="date" value={date} disabled={loading} onChange={(event) => onChange(event.target.value)} />
+          <input id={pickerId} type="date" value={date} disabled={loading} onChange={(event) => onChange(event.target.value)} />
         </label>
       </div>
     </div>
@@ -507,7 +511,19 @@ function MealSection({ category, items, active, date, onActivate, onAdd, onEdit 
           {items.map((item) => (
             <button key={item.id} className="diet-entry-row" onClick={(event) => { event.stopPropagation(); onEdit(item); }}>
               <span className="diet-entry-name">
-                <span className="diet-row-delete" role="button" tabIndex={0} onClick={(event) => { event.stopPropagation(); remove.mutate(item.id); }}><X size={13} /></span>
+                <span
+                  className="diet-row-delete"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Usuń wpis ${item.name}`}
+                  onClick={(event) => { event.stopPropagation(); remove.mutate(item.id); }}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    remove.mutate(item.id);
+                  }}
+                ><X size={13} /></span>
                 <span className="diet-entry-thumb"><Utensils size={15} /></span>
                 <span>{item.name}</span>
               </span>
@@ -697,6 +713,15 @@ function AddMealDrawer({ open, category, date, meals, recentItems, categories, o
     return [...map.values()].slice(0, 10);
   }, [recentItems]);
 
+  const changeMode = (nextMode: AddMode) => {
+    setMode(nextMode);
+    if (nextMode !== 'search') setSelected(null);
+  };
+  const updateManual = (patch: Partial<typeof manual>) => {
+    setSelected(null);
+    setManual((current) => ({ ...current, ...patch }));
+  };
+
   const canSave = !!targetCategory && (selected || manual.name.trim() || quickText.trim()) && amount > 0;
 
   const addMeal = async () => {
@@ -790,7 +815,7 @@ function AddMealDrawer({ open, category, date, meals, recentItems, categories, o
           { id: 'quick', label: 'Szybkie' },
         ]}
         active={mode}
-        onChange={(id) => setMode(id as AddMode)}
+        onChange={(id) => changeMode(id as AddMode)}
       />
       <div className="diet-drawer-grid">
         <div className="diet-drawer-left">
@@ -808,7 +833,7 @@ function AddMealDrawer({ open, category, date, meals, recentItems, categories, o
                 {results.slice(0, 10).map((entry) => {
                   const macros = foodMacros(entry);
                   return (
-                    <button key={`${entry.source}-${foodName(entry)}`} className={selected === entry ? 'is-selected' : ''} onClick={() => { setSelected(entry); setAmount(macros.perAmount); setUnit(macros.unit); }}>
+                    <button key={`${entry.source}-${foodName(entry)}`} className={selected === entry ? 'is-selected' : ''} onClick={() => { setSelected(entry); setManual({ name: '', kcal: 0, protein: 0, carb: 0, fat: 0, amount: 100, unit: 'g' }); setQuickText(''); setAmount(macros.perAmount); setUnit(macros.unit); }}>
                       <span className="diet-food-thumb"><Utensils size={15} /></span>
                       <span><strong>{foodName(entry)}</strong><small>{macros.perAmount} {macros.unit} | {round(macros.kcal)} kcal</small></span>
                     </button>
@@ -817,19 +842,19 @@ function AddMealDrawer({ open, category, date, meals, recentItems, categories, o
               </div>
             </>
           )}
-          {mode === 'recent' && <RecentItemsList items={recentUnique} onPick={(item) => { setManual({ name: item.name, kcal: item.kcal, protein: item.protein, carb: item.carb, fat: item.fat, amount: item.amount, unit: item.unit || 'g' }); setAmount(item.amount); setUnit(item.unit || 'g'); }} />}
+          {mode === 'recent' && <RecentItemsList items={recentUnique} onPick={(item) => { setSelected(null); setManual({ name: item.name, kcal: item.kcal, protein: item.protein, carb: item.carb, fat: item.fat, amount: item.amount, unit: item.unit || 'g' }); setAmount(item.amount); setUnit(item.unit || 'g'); }} />}
           {mode === 'favorites' && <CustomMealQuickList meals={customMeals.filter((meal) => meal.is_favorite)} onPick={addCustomMeal} />}
           {mode === 'custom' && (
             <div className="diet-form-stack">
               <button className="btn btn-secondary btn-sm" onClick={() => onOpenCustomMeals(targetCategory)}>Otwórz bibliotekę własnych posiłków</button>
-              <label>Nazwa posiłku<input value={manual.name} onChange={(event) => setManual({ ...manual, name: event.target.value })} /></label>
+              <label>Nazwa posiłku<input value={manual.name} onChange={(event) => updateManual({ name: event.target.value })} /></label>
               <div className="diet-form-grid">
-                <label>Ilość<input type="number" min={1} value={manual.amount} onChange={(event) => setManual({ ...manual, amount: Number(event.target.value) })} /></label>
-                <label>Jednostka<select value={manual.unit} onChange={(event) => setManual({ ...manual, unit: event.target.value })}>{UNIT_OPTIONS.map((item) => <option key={item}>{item}</option>)}</select></label>
-                <label>Kcal<input type="number" min={0} value={manual.kcal} onChange={(event) => setManual({ ...manual, kcal: Number(event.target.value) })} /></label>
-                <label>Białko<input type="number" min={0} value={manual.protein} onChange={(event) => setManual({ ...manual, protein: Number(event.target.value) })} /></label>
-                <label>Węgle<input type="number" min={0} value={manual.carb} onChange={(event) => setManual({ ...manual, carb: Number(event.target.value) })} /></label>
-                <label>Tłuszcze<input type="number" min={0} value={manual.fat} onChange={(event) => setManual({ ...manual, fat: Number(event.target.value) })} /></label>
+                <label>Ilość<input type="number" min={1} value={manual.amount} onChange={(event) => updateManual({ amount: Number(event.target.value) })} /></label>
+                <label>Jednostka<select value={manual.unit} onChange={(event) => updateManual({ unit: event.target.value })}>{UNIT_OPTIONS.map((item) => <option key={item}>{item}</option>)}</select></label>
+                <label>Kcal<input type="number" min={0} value={manual.kcal} onChange={(event) => updateManual({ kcal: Number(event.target.value) })} /></label>
+                <label>Białko<input type="number" min={0} value={manual.protein} onChange={(event) => updateManual({ protein: Number(event.target.value) })} /></label>
+                <label>Węgle<input type="number" min={0} value={manual.carb} onChange={(event) => updateManual({ carb: Number(event.target.value) })} /></label>
+                <label>Tłuszcze<input type="number" min={0} value={manual.fat} onChange={(event) => updateManual({ fat: Number(event.target.value) })} /></label>
               </div>
             </div>
           )}
@@ -837,8 +862,8 @@ function AddMealDrawer({ open, category, date, meals, recentItems, categories, o
             <div className="diet-form-stack">
               <label>Ręczny kod kreskowy<input value={barcode} onChange={(event) => setBarcode(event.target.value)} placeholder="np. 590..." /></label>
               <button className="btn btn-secondary btn-sm" onClick={lookup}>Sprawdź kod</button>
-              <label>Szybki wpis<input value={quickText} onChange={(event) => setQuickText(event.target.value)} placeholder="np. ryż 150g" /></label>
-              <button className="btn btn-secondary btn-sm" onClick={() => { setQuery(quickText.replace(/(\d+(?:[,.]\d+)?)\s*(g|ml|szt\.?|porcja)?/i, '').trim() || quickText); setAmount(Number((quickText.match(/(\d+(?:[,.]\d+)?)/)?.[1] ?? '100').replace(',', '.'))); setMode('search'); }}>Szukaj z szybkiego wpisu</button>
+              <label>Szybki wpis<input value={quickText} onChange={(event) => { setSelected(null); setQuickText(event.target.value); }} placeholder="np. ryż 150g" /></label>
+              <button className="btn btn-secondary btn-sm" onClick={() => { setSelected(null); setQuery(quickText.replace(/(\d+(?:[,.]\d+)?)\s*(g|ml|szt\.?|porcja)?/i, '').trim() || quickText); setAmount(Number((quickText.match(/(\d+(?:[,.]\d+)?)/)?.[1] ?? '100').replace(',', '.'))); setMode('search'); }}>Szukaj z szybkiego wpisu</button>
             </div>
           )}
         </div>
@@ -1290,7 +1315,7 @@ function AnalyticsPanel({ mode, setMode, date, items, nutrition, goals, todayTot
       const count = Math.max(1, Math.min(62, Math.floor((end.getTime() - start.getTime()) / 86400000) + 1));
       return rangeDays(rangeEnd, count);
     }
-    return rangeDays(date, mode === 'month' ? 30 : mode === 'week' ? 7 : 7);
+    return rangeDays(date, mode === 'month' ? 30 : mode === 'week' ? 7 : 1);
   }, [date, mode, rangeEnd, rangeStart]);
 
   const dailyCalories = useMemo(() => {

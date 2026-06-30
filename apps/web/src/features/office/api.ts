@@ -84,7 +84,12 @@ export async function uploadDocumentFile(documentId: string, file: File): Promis
   const path = `${userId}/${documentId}/${Date.now()}-${safeFilename(file.name)}`;
   const { error: uploadError } = await supabase.storage.from('documents').upload(path, file, { upsert: false });
   if (uploadError) throw uploadError;
-  return patchDocument(documentId, { file_path: path });
+  try {
+    return await patchDocument(documentId, { file_path: path });
+  } catch (error) {
+    await supabase.storage.from('documents').remove([path]);
+    throw error;
+  }
 }
 
 export async function createDocumentFileUrl(path: string): Promise<string> {

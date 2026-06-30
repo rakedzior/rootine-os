@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState, type ReactNode, type FC } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type FC } from 'react';
+import { createPortal } from 'react-dom';
 
 // ─── MODAL ───────────────────────────────────────────────────
 
@@ -9,9 +10,10 @@ interface ModalProps {
   children: ReactNode;
   size?: 'sm' | 'md' | 'lg';
   footer?: ReactNode;
+  className?: string;
 }
 
-export function Modal({ open, onClose, title, children, size, footer }: ModalProps) {
+export function Modal({ open, onClose, title, children, size, footer, className }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -61,15 +63,16 @@ export function Modal({ open, onClose, title, children, size, footer }: ModalPro
   if (!open) return null;
 
   const sizeClass = size === 'lg' ? 'modal-lg' : size === 'sm' ? 'modal-sm' : '';
+  const modalClassName = ['modal', sizeClass, className].filter(Boolean).join(' ');
 
-  return (
+  return createPortal(
     <div
       className="modal-overlay"
       ref={overlayRef}
       onMouseDown={e => { if (e.target === overlayRef.current) onClose(); }}
     >
       <div
-        className={`modal ${sizeClass}`}
+        className={modalClassName}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -87,7 +90,8 @@ export function Modal({ open, onClose, title, children, size, footer }: ModalPro
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-footer">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -119,18 +123,28 @@ interface EmptyStateProps {
   icon?: ReactNode;
   title: string;
   desc?: string;
+  description?: string;
   cta?: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+    icon?: ReactNode;
+  };
   onCta?: () => void;
   secondary?: string;
   onSecondary?: () => void;
+  compact?: boolean;
 }
-export function EmptyState({ icon, title, desc, cta, onCta, secondary, onSecondary }: EmptyStateProps) {
+export function EmptyState({ icon, title, desc, description, cta, action, onCta, secondary, onSecondary, compact }: EmptyStateProps) {
+  const effectiveDesc = desc ?? description;
+  const effectiveCta = action?.label ?? cta;
+  const effectiveOnCta = action?.onClick ?? onCta;
   return (
-    <div className="empty-state">
+    <div className={`empty-state${compact ? ' empty-state-compact' : ''}`}>
       {icon ?? <DefaultEmptyIcon />}
       <h3>{title}</h3>
-      {desc && <p>{desc}</p>}
-      {cta && <button className="btn btn-primary btn-sm" onClick={onCta} style={{ marginTop: 4 }}>{cta}</button>}
+      {effectiveDesc && <p>{effectiveDesc}</p>}
+      {effectiveCta && <button className="btn btn-primary btn-sm" onClick={effectiveOnCta} style={{ marginTop: 4 }}>{action?.icon}{effectiveCta}</button>}
       {secondary && <button className="btn btn-ghost btn-sm" onClick={onSecondary}>{secondary}</button>}
     </div>
   );
@@ -150,13 +164,205 @@ interface SubTab { id: string; label: string; icon?: () => ReactNode; }
 interface SubTabsProps { tabs: SubTab[]; active: string; onChange: (id: string) => void; }
 export function SubTabs({ tabs, active, onChange }: SubTabsProps) {
   return (
-    <div className="sub-tabs">
+    <div className="sub-tabs" role="group" aria-label="Podzakładki">
       {tabs.map(t => (
-        <button key={t.id} className={active === t.id ? 'active' : ''} onClick={() => onChange(t.id)}>
+        <button
+          key={t.id}
+          type="button"
+          className={active === t.id ? 'active' : ''}
+          aria-pressed={active === t.id}
+          onClick={() => onChange(t.id)}
+        >
           {t.icon && <span className="sub-tab-icon">{t.icon()}</span>}
           {t.label}
         </button>
       ))}
+    </div>
+  );
+}
+
+// ─── COUNT BADGE / TABS / FILTERS / SEGMENTED CONTROL ─────────────────────
+
+type SharedTone = 'default' | 'muted' | 'info' | 'warning' | 'danger' | 'success';
+
+interface CountBadgeProps {
+  value: number | string;
+  tone?: SharedTone;
+  size?: 'xs' | 'sm' | 'md';
+}
+export function CountBadge({ value, tone = 'default', size = 'sm' }: CountBadgeProps) {
+  return <span className={`count-badge count-badge-${tone} count-badge-${size}`}>{value}</span>;
+}
+
+interface FilterChipItem {
+  id: string;
+  label: string;
+  count?: number;
+  disabled?: boolean;
+}
+interface FilterChipsProps {
+  items: FilterChipItem[];
+  value: string;
+  onChange: (id: string) => void;
+  ariaLabel?: string;
+}
+export function FilterChips({ items, value, onChange, ariaLabel = 'Filtry' }: FilterChipsProps) {
+  return (
+    <div className="filter-chips" role="group" aria-label={ariaLabel}>
+      {items.map((item) => (
+        <button
+          key={item.id}
+          className={`filter-chip${value === item.id ? ' is-active' : ''}`}
+          type="button"
+          disabled={item.disabled}
+          aria-pressed={value === item.id}
+          onClick={() => onChange(item.id)}
+        >
+          <span>{item.label}</span>
+          {typeof item.count !== 'undefined' && <CountBadge value={item.count} tone={value === item.id ? 'info' : 'muted'} size="xs" />}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+interface AppTabItem {
+  id: string;
+  label: string;
+  icon?: ReactNode;
+  count?: number;
+  disabled?: boolean;
+}
+interface AppTabsProps {
+  items: AppTabItem[];
+  value: string;
+  onChange: (id: string) => void;
+  variant?: 'default' | 'compact';
+  ariaLabel?: string;
+}
+function moveWithin(items: { id: string; disabled?: boolean }[], value: string, delta: number) {
+  const enabled = items.filter((item) => !item.disabled);
+  const index = Math.max(0, enabled.findIndex((item) => item.id === value));
+  return enabled[(index + delta + enabled.length) % enabled.length]?.id ?? value;
+}
+export function AppTabs({ items, value, onChange, variant = 'default', ariaLabel = 'Zakładki' }: AppTabsProps) {
+  function onKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+    event.preventDefault();
+    onChange(moveWithin(items, value, event.key === 'ArrowRight' ? 1 : -1));
+  }
+
+  return (
+    <div className={`app-tabs app-tabs-${variant}`} role="tablist" aria-label={ariaLabel} onKeyDown={onKeyDown}>
+      {items.map((item) => (
+        <button
+          key={item.id}
+          className={value === item.id ? 'is-active' : ''}
+          type="button"
+          role="tab"
+          aria-selected={value === item.id}
+          disabled={item.disabled}
+          onClick={() => onChange(item.id)}
+        >
+          {item.icon && <span className="app-tab-icon">{item.icon}</span>}
+          <span>{item.label}</span>
+          {typeof item.count !== 'undefined' && <CountBadge value={item.count} tone={value === item.id ? 'info' : 'muted'} size="xs" />}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+interface ViewSegment {
+  id: string;
+  label: string;
+  icon?: ReactNode;
+  disabled?: boolean;
+}
+interface ViewSegmentedControlProps {
+  items: ViewSegment[];
+  value: string;
+  onChange: (id: string) => void;
+  ariaLabel?: string;
+  iconOnly?: boolean;
+}
+export function ViewSegmentedControl({ items, value, onChange, ariaLabel = 'Widok', iconOnly }: ViewSegmentedControlProps) {
+  function onKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+    event.preventDefault();
+    onChange(moveWithin(items, value, event.key === 'ArrowRight' ? 1 : -1));
+  }
+
+  return (
+    <div className={`view-segmented-control${iconOnly ? ' is-icon-only' : ''}`} role="group" aria-label={ariaLabel} onKeyDown={onKeyDown}>
+      {items.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          className={value === item.id ? 'is-active' : ''}
+          aria-pressed={value === item.id}
+          aria-label={iconOnly ? item.label : undefined}
+          title={iconOnly ? item.label : undefined}
+          disabled={item.disabled}
+          onClick={() => onChange(item.id)}
+        >
+          {item.icon && <span className="view-segment-icon">{item.icon}</span>}
+          {!iconOnly && <span>{item.label}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+type DateNavigatorMode = 'day' | 'week' | 'month' | 'range';
+type DateNavigatorValue = Date | { start: Date; end: Date };
+interface DateNavigatorProps {
+  mode: DateNavigatorMode;
+  value: DateNavigatorValue;
+  onPrevious: () => void;
+  onNext: () => void;
+  onToday?: () => void;
+  onOpenPicker?: () => void;
+  label?: string;
+}
+const MONTHS_FULL = ['styczeń', 'luty', 'marzec', 'kwiecień', 'maj', 'czerwiec', 'lipiec', 'sierpień', 'wrzesień', 'październik', 'listopad', 'grudzień'];
+function datePart(date: Date, withWeekday = false) {
+  const weekday = withWeekday ? `${date.toLocaleDateString('pl-PL', { weekday: 'long' })}, ` : '';
+  return `${weekday}${date.getDate()} ${MONTHS_FULL[date.getMonth()]} ${date.getFullYear()}`;
+}
+function compactRange(start: Date, end: Date) {
+  if (start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth()) {
+    return `${start.getDate()}-${end.getDate()} ${MONTHS_FULL[end.getMonth()]} ${end.getFullYear()}`;
+  }
+  return `${datePart(start)} - ${datePart(end)}`;
+}
+function navigatorLabel(mode: DateNavigatorMode, value: DateNavigatorValue) {
+  if ('start' in value) return compactRange(value.start, value.end);
+  if (mode === 'month') return `${MONTHS_FULL[value.getMonth()]} ${value.getFullYear()}`;
+  if (mode === 'week') {
+    const start = new Date(value);
+    const day = start.getDay() || 7;
+    start.setDate(start.getDate() + 1 - day);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    return compactRange(start, end);
+  }
+  return datePart(value, mode === 'day');
+}
+export function DateNavigator({ mode, value, onPrevious, onNext, onToday, onOpenPicker, label }: DateNavigatorProps) {
+  const renderedLabel = label ?? navigatorLabel(mode, value);
+  return (
+    <div className="date-navigator" data-mode={mode}>
+      <button className="icon-btn" type="button" onClick={onPrevious} aria-label="Poprzedni okres">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+      </button>
+      <button className="date-navigator-label" type="button" onClick={onOpenPicker} disabled={!onOpenPicker}>
+        {renderedLabel}
+      </button>
+      <button className="icon-btn" type="button" onClick={onNext} aria-label="Następny okres">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+      </button>
+      {onToday && <button className="btn btn-secondary btn-sm" type="button" onClick={onToday}>Dzisiaj</button>}
     </div>
   );
 }
@@ -169,7 +375,7 @@ export function ProgressBar({ value, max = 100, color, size }: ProgressBarProps)
   const h = size === 'sm' ? 4 : size === 'lg' ? 8 : 6;
   return (
     <div style={{ height: h, borderRadius: 99, background: 'var(--surface-3)', overflow: 'hidden', width: '100%' }}>
-      <div style={{ height: '100%', width: `${pct}%`, borderRadius: 99, background: color ?? 'var(--green-mid)', transition: 'width .3s' }} />
+      <div style={{ height: '100%', width: `${pct}%`, borderRadius: 99, background: color ?? 'var(--green-mid)' }} />
     </div>
   );
 }
@@ -396,26 +602,62 @@ export const IcoMore: FC = () => (
 export interface MoreMenuItem { label: string; onClick: () => void; danger?: boolean; disabled?: boolean; }
 export function MoreMenu({ items, label = 'Więcej' }: { items: MoreMenuItem[]; label?: string }) {
   const [open, setOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  function positionMenu() {
+    const button = ref.current?.querySelector('button');
+    if (!button) return;
+    const rect = button.getBoundingClientRect();
+    const width = 180;
+    const estimatedHeight = Math.min(220, Math.max(52, items.length * 44 + 12));
+    const left = Math.min(window.innerWidth - width - 12, Math.max(12, rect.right - width));
+    const anchorTop = Math.min(window.innerHeight - 12, Math.max(12, rect.top));
+    const anchorBottom = Math.min(window.innerHeight - 12, Math.max(12, rect.bottom));
+    const hasRoomBelow = anchorBottom + estimatedHeight + 10 <= window.innerHeight;
+    const preferredTop = hasRoomBelow ? anchorBottom + 8 : anchorTop - estimatedHeight - 8;
+    const top = Math.min(window.innerHeight - estimatedHeight - 12, Math.max(12, preferredTop));
+    setMenuStyle({ position: 'fixed', top, left, width });
+  }
+
   useEffect(() => {
-    function handler(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    function handler(e: MouseEvent) {
+      const target = e.target as Node;
+      if (ref.current?.contains(target) || menuRef.current?.contains(target)) return;
+      setOpen(false);
+    }
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    positionMenu();
+    const handler = () => positionMenu();
+    window.addEventListener('resize', handler);
+    window.addEventListener('scroll', handler, true);
+    return () => {
+      window.removeEventListener('resize', handler);
+      window.removeEventListener('scroll', handler, true);
+    };
+  }, [open, items.length]);
+
   return (
     <div className="more-menu-wrap" ref={ref}>
-      <button className="icon-btn" onClick={() => setOpen((v) => !v)} aria-label={label} aria-haspopup="menu" aria-expanded={open}>
+      <button className="icon-btn" onClick={() => { setOpen((v) => !v); window.requestAnimationFrame(positionMenu); }} aria-label={label} aria-haspopup="menu" aria-expanded={open}>
         <IcoMore />
       </button>
-      {open && (
-        <div className="more-menu" role="menu">
+      {open && createPortal(
+        <div className="more-menu more-menu-portal" role="menu" ref={menuRef} style={menuStyle}>
           {items.map((it, i) => (
             <button key={i} role="menuitem" className={it.danger ? 'danger' : ''} disabled={it.disabled}
               onClick={() => { setOpen(false); it.onClick(); }}>
               {it.label}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

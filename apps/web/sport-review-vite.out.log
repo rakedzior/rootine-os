@@ -1,0 +1,132 @@
+
+> rootine-os-web@0.1.0 dev
+> vite --host 127.0.0.1 --port 5175
+
+
+  [32m[1mVITE[22m v8.0.16[39m  [2mready in [0m[1m196[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5175[22m/[39m
+[2m11:52:46[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m11:52:58[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/TemplateEditorModal.tsx[22m
+[2m11:53:24[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m11:54:31[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m12:08:23[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/features/auth/AuthProvider.tsx[22m
+[2m12:08:23[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/features/auth/AuthProvider.tsx[22m Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m12:08:23[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/App.tsx, /src/features/auth/RequireAuth.tsx, /src/components/layout/sidebar/UserProfileWidget.tsx[22m
+[2m12:08:36[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx, /src/modules/sport/components/HistoryPanel.tsx, /src/modules/sport/components/TemplatesPanel.tsx, /src/modules/sport/components/ActiveSessionScreen.tsx, /src/modules/sport/components/RecordsPanel.tsx, /src/modules/sport/components/TemplateEditorModal.tsx, /src/modules/sport/components/SportField.tsx, /src/modules/sport/components/WeekStrip.tsx, /src/modules/sport/components/AddToPlanDrawer.tsx, /src/modules/sport/components/ActiveCycleBanner.tsx and 4 more[22m
+[2m12:10:16[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/TemplateEditorModal.tsx[22m
+[2m12:12:38[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/features/auth/AuthProvider.tsx, /src/modules/sport/SportScreen.tsx, /src/modules/sport/components/HistoryPanel.tsx, /src/modules/sport/components/TemplatesPanel.tsx, /src/modules/sport/components/ActiveSessionScreen.tsx, /src/modules/sport/components/RecordsPanel.tsx, /src/modules/sport/components/TemplateEditorModal.tsx, /src/modules/sport/components/SportField.tsx, /src/modules/sport/components/WeekStrip.tsx, /src/modules/sport/components/AddToPlanDrawer.tsx and 5 more[22m
+[2m12:12:38[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/features/auth/AuthProvider.tsx[22m Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m12:12:38[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/App.tsx, /src/features/auth/RequireAuth.tsx, /src/components/layout/sidebar/UserProfileWidget.tsx[22m
+[2m12:15:05[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx, /src/modules/sport/components/HistoryPanel.tsx, /src/modules/sport/components/TemplatesPanel.tsx, /src/modules/sport/components/ActiveSessionScreen.tsx, /src/modules/sport/components/RecordsPanel.tsx, /src/modules/sport/components/TemplateEditorModal.tsx, /src/modules/sport/components/SportField.tsx, /src/modules/sport/components/WeekStrip.tsx, /src/modules/sport/components/AddToPlanDrawer.tsx, /src/modules/sport/components/ActiveCycleBanner.tsx and 4 more[22m
+[2m12:15:34[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx, /src/modules/sport/components/HistoryPanel.tsx, /src/modules/sport/components/TemplatesPanel.tsx, /src/modules/sport/components/ActiveSessionScreen.tsx, /src/modules/sport/components/RecordsPanel.tsx, /src/modules/sport/components/TemplateEditorModal.tsx, /src/modules/sport/components/SportField.tsx, /src/modules/sport/components/WeekStrip.tsx, /src/modules/sport/components/AddToPlanDrawer.tsx, /src/modules/sport/components/ActiveCycleBanner.tsx and 4 more[22m
+[2m12:16:40[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx, /src/modules/sport/components/TemplatesPanel.tsx, /src/modules/sport/components/ActiveSessionScreen.tsx, /src/modules/sport/components/HistoryPanel.tsx, /src/modules/sport/components/RecordsPanel.tsx, /src/modules/sport/components/TemplateEditorModal.tsx, /src/modules/sport/components/SportField.tsx[22m
+[2m12:49:10[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx, /src/modules/sport/components/HistoryPanel.tsx, /src/modules/sport/components/TemplatesPanel.tsx, /src/modules/sport/components/ActiveSessionScreen.tsx, /src/modules/sport/components/RecordsPanel.tsx, /src/modules/sport/components/TemplateEditorModal.tsx, /src/modules/sport/components/SportField.tsx, /src/modules/sport/components/WeekStrip.tsx, /src/modules/sport/components/AddToPlanDrawer.tsx, /src/modules/sport/components/ActiveCycleBanner.tsx and 4 more[22m
+[2m12:49:38[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/ActiveCycleBanner.tsx, /src/modules/sport/components/CycleManagerModal.tsx, /src/modules/sport/components/CycleDetailModal.tsx, /src/modules/sport/components/CycleEditorModal.tsx, /src/modules/sport/components/CyclePhaseModal.tsx[22m
+[2m12:49:55[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/TemplateEditorModal.tsx[22m
+[2m12:50:42[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m12:51:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m12:51:16[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/TemplatesPanel.tsx[22m
+[2m12:51:39[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m12:52:43[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m12:55:13[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/TemplatesPanel.tsx[22m
+[2m12:55:31[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m13:29:10[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleEditorModal.tsx[22m
+[2m13:29:40[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleEditorModal.tsx[22m
+[2m13:30:23[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m13:33:41[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m13:36:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m13:37:47[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleManagerModal.tsx[22m
+[2m13:39:29[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m13:41:59[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m13:43:14[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m13:44:22[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m13:50:14[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleManagerModal.tsx[22m
+[2m13:50:29[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleManagerModal.tsx[22m
+[2m13:50:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m13:51:48[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m13:58:17[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleDetailModal.tsx[22m
+[2m13:59:06[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleDetailModal.tsx[22m
+[2m13:59:29[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleManagerModal.tsx[22m
+[2m13:59:51[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleManagerModal.tsx[22m
+[2m14:00:29[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleDetailModal.tsx[22m
+[2m14:00:42[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleDetailModal.tsx[22m
+[2m14:01:43[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m14:04:51[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m14:10:40[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleDetailModal.tsx[22m
+[2m14:11:40[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleDetailModal.tsx[22m
+[2m14:12:03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m14:13:23[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleDetailModal.tsx[22m
+[2m14:16:14[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleDetailModal.tsx[22m
+[2m14:16:48[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx, /src/modules/sport/components/HistoryPanel.tsx, /src/modules/sport/components/TemplatesPanel.tsx, /src/modules/sport/components/ActiveSessionScreen.tsx, /src/modules/sport/components/RecordsPanel.tsx, /src/modules/sport/components/TemplateEditorModal.tsx, /src/modules/sport/components/SportField.tsx, /src/modules/sport/components/CycleDetailModal.tsx, /src/modules/sport/components/WeekStrip.tsx, /src/modules/sport/components/AddToPlanDrawer.tsx and 4 more[22m
+[2m14:17:15[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx, /src/modules/sport/components/HistoryPanel.tsx, /src/modules/sport/components/TemplatesPanel.tsx, /src/modules/sport/components/ActiveSessionScreen.tsx, /src/modules/sport/components/RecordsPanel.tsx, /src/modules/sport/components/TemplateEditorModal.tsx, /src/modules/sport/components/SportField.tsx, /src/modules/sport/components/CycleDetailModal.tsx, /src/modules/sport/components/WeekStrip.tsx, /src/modules/sport/components/AddToPlanDrawer.tsx and 4 more[22m
+[2m14:18:07[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/CycleDetailModal.tsx[22m
+[2m14:31:15[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx, /src/modules/sport/components/HistoryPanel.tsx, /src/modules/sport/components/TemplatesPanel.tsx, /src/modules/sport/components/ActiveSessionScreen.tsx, /src/modules/sport/components/RecordsPanel.tsx, /src/modules/sport/components/TemplateEditorModal.tsx, /src/modules/sport/components/SportField.tsx, /src/modules/sport/components/CycleDetailModal.tsx, /src/modules/sport/components/WeekStrip.tsx, /src/modules/sport/components/AddToPlanDrawer.tsx and 4 more[22m
+[2m14:31:36[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx, /src/modules/sport/components/HistoryPanel.tsx, /src/modules/sport/components/TemplatesPanel.tsx, /src/modules/sport/components/ActiveSessionScreen.tsx, /src/modules/sport/components/RecordsPanel.tsx, /src/modules/sport/components/TemplateEditorModal.tsx, /src/modules/sport/components/SportField.tsx, /src/modules/sport/components/CycleDetailModal.tsx, /src/modules/sport/components/WeekStrip.tsx, /src/modules/sport/components/AddToPlanDrawer.tsx and 4 more[22m
+[2m14:39:17[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/features/settings/SettingsScreen.tsx[22m
+[2m14:39:38[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/features/settings/SettingsScreen.tsx[22m
+[2m14:39:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m14:44:27[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/icons.tsx[22m
+[2m14:44:27[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/modules/sport/components/icons.tsx[22m Could not Fast Refresh (new export)
+[2m14:44:27[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/WeekStrip.tsx, /src/modules/sport/components/ActiveSessionScreen.tsx[22m
+[2m14:44:49[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/WeekStrip.tsx[22m
+[2m14:45:26[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m14:46:08[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m14:47:33[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m14:48:40[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m14:48:56[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m14:49:34[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m14:49:50[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/WeekStrip.tsx[22m
+[2m14:53:41[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m14:54:16[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m14:54:54[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m14:56:13[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:02:06[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m15:03:23[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m15:03:43[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:04:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:05:09[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:05:37[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:05:48[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:06:01[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:06:13[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:07:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:07:43[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:07:55[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:08:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/WeekStrip.tsx[22m
+[2m15:08:48[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/WeekStrip.tsx[22m
+[2m15:09:03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/WeekStrip.tsx[22m
+[2m15:09:19[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/WeekStrip.tsx[22m
+[2m15:09:33[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/WeekStrip.tsx[22m
+[2m15:10:42[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/WeekStrip.tsx[22m
+[2m15:11:07[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m15:12:27[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m15:14:05[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m15:32:24[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:32:38[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:33:14[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:33:28[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:34:49[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:35:33[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m15:38:46[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m15:39:37[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m15:40:54[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m15:52:24[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/icons.tsx[22m
+[2m15:52:24[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/modules/sport/components/icons.tsx[22m Could not Fast Refresh (new export)
+[2m15:52:24[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/WeekStrip.tsx, /src/modules/sport/components/ActiveSessionScreen.tsx, /src/modules/sport/SportScreen.tsx[22m
+[2m15:53:03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:53:45[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/SportScreen.tsx[22m
+[2m15:54:26[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/sport/components/WeekStrip.tsx[22m
+[2m15:55:36[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m15:58:21[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m15:59:06[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m16:04:05[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m16:38:40[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m16:41:39[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m16:42:39[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m16:45:56[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m17:06:16[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m17:13:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m17:15:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m17:20:43[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m
+[2m17:21:49[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/rootine-system.css[22m

@@ -5,7 +5,12 @@ import { logAudit } from '@/lib/audit';
 import { toast } from '@/lib/toast';
 import { useMfaStepUp } from '@/features/auth/useMfaStepUp';
 
-const THEMES: { id: Theme; label: string; swatch: string }[] = [
+const GRAPHITE_THEME: { id: Theme; label: string; swatch: string }[] = [
+  { id: 'dark', label: 'Graphite', swatch: 'linear-gradient(135deg, #262d36, #111821 58%, #7dd3fc)' },
+];
+const _LEGACY_THEMES: { id: Theme; label: string; swatch: string }[] = [
+
+
   { id: 'white-lotus', label: 'Beżowy', swatch: '#9a6a42' },
   { id: 'green', label: 'Chłodny', swatch: '#4257d4' },
   { id: 'dark', label: 'Grafit', swatch: '#161c26' },
@@ -34,8 +39,9 @@ export function AccountSettings() {
   }, []);
 
   function pickTheme(next: Theme) {
-    setThemeState(next);
-    setTheme(next);
+    const knownTheme = _LEGACY_THEMES.some((item) => item.id === next) ? next : 'dark';
+    setThemeState(knownTheme);
+    setTheme(knownTheme);
   }
 
 
@@ -105,10 +111,10 @@ export function AccountSettings() {
           <div className="lhs"><span className="card-title">Motyw i kolor akcentu</span></div>
         </div>
         <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: '0 0 14px' }}>
-          Wybierz paletę aplikacji. Ustawienie jest zapisywane na koncie i synchronizowane między urządzeniami.
+          Rootine OS korzysta z jednego motywu Graphite Cool Ice, synchronizowanego między urządzeniami.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
-          {THEMES.map((t) => (
+          {GRAPHITE_THEME.map((t) => (
             <button
               key={t.id}
               type="button"

@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-30T00:00:00.000Z",
+  "title": "Design System: Rootine OS",
+  "extensions": {
+    "colorMeta": {
+      "graphite-bg": {
+        "role": "neutral",
+        "displayName": "Graphite Background",
+        "canonical": "#0d1117",
+        "tonalRamp": ["#080d13", "#0d1117", "#101721", "#141d29", "#182232", "#1b2838", "#202831", "#262d36"]
+      },
+      "surface-raised": {
+        "role": "neutral",
+        "displayName": "Raised Graphite",
+        "canonical": "#182232",
+        "tonalRamp": ["#101721", "#141d29", "#182232", "#1b2838", "#202831", "#262d36", "#344456", "#4b5f75"]
+      },
+      "ice": {
+        "role": "primary",
+        "displayName": "Ice State Accent",
+        "canonical": "#7dd3fc",
+        "tonalRamp": ["#082f49", "#075985", "#0284c7", "#38bdf8", "#7dd3fc", "#a7e5ff", "#bae6fd", "#e0f2fe"]
+      },
+      "success": {
+        "role": "semantic",
+        "displayName": "Success",
+        "canonical": "#86efac",
+        "tonalRamp": ["#052e16", "#14532d", "#166534", "#15803d", "#22c55e", "#86efac", "#bbf7d0", "#dcfce7"]
+      },
+      "warning": {
+        "role": "semantic",
+        "displayName": "Warning",
+        "canonical": "#fcd34d",
+        "tonalRamp": ["#451a03", "#78350f", "#92400e", "#b45309", "#f59e0b", "#fcd34d", "#fef3c7", "#fffbeb"]
+      },
+      "danger": {
+        "role": "semantic",
+        "displayName": "Danger",
+        "canonical": "#f87171",
+        "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#b91c1c", "#ef4444", "#f87171", "#fecaca", "#fee2e2"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Sora Module Display",
+        "purpose": "Module page titles and primary screen headings."
+      },
+      "headline": {
+        "displayName": "Dense Section Headline",
+        "purpose": "Card heads, modal sections, and major panel titles."
+      },
+      "body": {
+        "displayName": "Inter Product Body",
+        "purpose": "Repeated task, note, finance, travel, and settings content."
+      },
+      "label": {
+        "displayName": "Mono Metadata Label",
+        "purpose": "Dates, counters, compact metadata, weekdays, and system labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "system-card",
+        "value": "0 6px 16px rgba(0, 0, 0, 0.14)",
+        "purpose": "Governed card default in rootine-system.css."
+      },
+      {
+        "name": "system-panel",
+        "value": "0 10px 26px rgba(0, 0, 0, 0.18)",
+        "purpose": "Larger panel token, not yet consistently applied."
+      },
+      {
+        "name": "control",
+        "value": "0 4px 10px rgba(0, 0, 0, 0.13)",
+        "purpose": "Primary buttons and compact controls."
+      },
+      {
+        "name": "modal",
+        "value": "0 34px 90px rgba(0, 0, 0, 0.56)",
+        "purpose": "Dialogs, drawers, and overlays."
+      }
+    ],
+    "motion": [
+      {
+        "name": "system-default",
+        "value": "160ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Default state transitions."
+      },
+      {
+        "name": "system-slow",
+        "value": "220ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Background and larger state changes."
+      }
+    ],
+    "breakpoints": [
+      { "name": "module-collapse", "value": "1180px" },
+      { "name": "mobile-shell", "value": "760px" },
+      { "name": "small-mobile", "value": "520px" },
+      { "name": "short-height", "value": "820px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Current governed primary action: ice fill, graphite text, compact height.",
+      "html": "<button class=\"ds-btn-primary\">+ Nowe zadanie</button>",
+      "css": ".ds-btn-primary{height:44px;padding:0 26px;border-radius:11px;border:1px solid rgba(186,230,253,.50);background:#7dd3fc;color:#080d13;font:760 14px Inter,system-ui,sans-serif;box-shadow:0 4px 10px rgba(0,0,0,.13);cursor:pointer}.ds-btn-primary:hover{background:#8bdcff}.ds-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(125,211,252,.20),0 4px 10px rgba(0,0,0,.13)}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Current secondary/ghost action: field surface, soft border, quiet text.",
+      "html": "<button class=\"ds-btn-secondary\">Anuluj</button>",
+      "css": ".ds-btn-secondary{height:42px;padding:0 24px;border-radius:11px;border:1px solid rgba(157,177,198,.13);background:rgba(10,17,26,.74);color:#e6edf5;font:680 14px Inter,system-ui,sans-serif;box-shadow:none;cursor:pointer}.ds-btn-secondary:hover{border-color:rgba(157,177,198,.21);background:rgba(26,38,52,.88)}.ds-btn-secondary:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(125,211,252,.12)}"
+    },
+    {
+      "name": "System Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Governed card/panel surface used across dashboard modules.",
+      "html": "<section class=\"ds-card\"><h3>Panel</h3><p>Operational content lives here.</p></section>",
+      "css": ".ds-card{padding:20px;border-radius:18px;border:1px solid rgba(157,177,198,.13);background:rgba(22,33,46,.82);color:#e6edf5;box-shadow:0 6px 16px rgba(0,0,0,.14);font-family:Inter,system-ui,sans-serif}.ds-card h3{margin:0 0 8px;font:750 18px Sora,Inter,sans-serif;letter-spacing:0}.ds-card p{margin:0;color:#a7b4c2;font-size:14px;line-height:1.45}"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Default dark inset field; compact modules often override height to 42px.",
+      "html": "<input class=\"ds-input\" placeholder=\"Szukaj...\" />",
+      "css": ".ds-input{height:52px;padding:0 16px;border-radius:13px;border:1px solid rgba(148,163,184,.135);background:linear-gradient(180deg,#151d25,#111821);color:#e6edf5;font:600 16px Inter,system-ui,sans-serif}.ds-input::placeholder{color:rgba(167,180,194,.54)}.ds-input:hover{border-color:rgba(148,163,184,.20)}.ds-input:focus{outline:none;border-color:rgba(125,211,252,.34);box-shadow:0 0 0 3px rgba(125,211,252,.075)}"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "chip",
+      "refersTo": "chip-active",
+      "description": "Current shared tabs/chips state pattern.",
+      "html": "<div class=\"ds-segmented\"><button class=\"is-active\">Dzisiaj</button><button>Tydzien</button><button>Miesiac</button></div>",
+      "css": ".ds-segmented{display:inline-flex;align-items:center;gap:6px;padding:5px;border-radius:14px;border:1px solid rgba(148,163,184,.10);background:rgba(13,19,27,.46)}.ds-segmented button{min-height:34px;padding:0 11px;border:1px solid transparent;border-radius:10px;background:transparent;color:#a7b4c2;font:700 12px Inter,system-ui,sans-serif;cursor:pointer}.ds-segmented button:hover{background:rgba(230,237,245,.05);color:#e6edf5}.ds-segmented button.is-active{border-color:rgba(125,211,252,.42);background:rgba(125,211,252,.12);color:#f1f5f9}"
+    },
+    {
+      "name": "Module Header",
+      "kind": "custom",
+      "refersTo": "page-header",
+      "description": "Shared PageHeader pattern used by most modules.",
+      "html": "<header class=\"ds-page-head\"><span class=\"ds-page-icon\">R</span><div><h1>Planer</h1><p>Zaplanuj dzien, zadania i nawyki.</p></div></header>",
+      "css": ".ds-page-head{min-height:88px;padding:18px 36px;display:flex;align-items:center;gap:16px;border-bottom:1px solid rgba(148,163,184,.10);background:linear-gradient(180deg,#262d36,#202831);color:#e6edf5;font-family:Inter,system-ui,sans-serif}.ds-page-icon{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:rgba(125,211,252,.10);color:#7dd3fc;border:1px solid rgba(125,211,252,.24);font-weight:760}.ds-page-head h1{margin:0;color:#f1f5f9;font:760 30px/1.08 Sora,Inter,sans-serif;letter-spacing:-.02em}.ds-page-head p{margin:6px 0 0;color:#a7b4c2;font-size:14px;line-height:1.45}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Private Command Graphite, Currently Mid-Migration",
+    "overview": "This document describes the UI as it exists now, before any redesign. Rootine OS is implemented as a Vite/React personal life-tracking app in apps/web, with legacy static HTML/CSS files still present at the repository root. The active app has a fixed app shell, a left desktop sidebar, a mobile bottom navigation bar, authenticated routes, and module pages for Planner, Sport, Diet, Finance, Goals, Office, Travel, Work, Notes, and Settings.",
+    "keyCharacteristics": [
+      "Dense, operational, dark product UI with strong module-specific dashboards.",
+      "Graphite/ice direction is clear in rendered output, less clear in CSS ownership.",
+      "Shared primitives exist, but module-specific panels still define much of the experience.",
+      "Responsive behavior is heavily override-driven rather than token-governed."
+    ],
+    "rules": [
+      {
+        "name": "The Ice Is State Rule",
+        "body": "Ice-blue currently means primary action, selected item, focus, progress, and current period. It should not become decorative glow.",
+        "section": "colors"
+      },
+      {
+        "name": "The Semantic Color Rule",
+        "body": "Green, yellow, and red should remain success/warning/danger. Violet, pink, teal, and hot pink need explicit module roles or should be reduced.",
+        "section": "colors"
+      },
+      {
+        "name": "The Product Type Rule",
+        "body": "Typography should serve scanning. Display sizing belongs to page titles and major modal titles, not buttons, labels, dense table rows, or badges.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tonal Depth Rule",
+        "body": "Use surface level and border strength first. Shadow should confirm hierarchy, not decorate every panel.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do document and preserve the current graphite/ice direction before changing visuals.",
+      "Do treat apps/web as the active product surface and root-level HTML/CSS as legacy unless explicitly revived.",
+      "Do make PageLayout, PageHeader, shared cards, shared controls, and rootine-system.css the future governance layer.",
+      "Do standardize page-body padding, module header height, card radius, button height, input height, and subnavigation before polishing individual tabs.",
+      "Do keep Settings on the fix list; it visually feels the least integrated with the dashboard modules."
+    ],
+    "donts": [
+      "Don't redesign yet; this document is an audit of the current UI state.",
+      "Don't make Rootine look like a corporate dashboard, SaaS analytics page, or boardroom KPI wall.",
+      "Don't make it feel like Notion, a blank block canvas, or a generic productivity template.",
+      "Don't polish one tab by adding more local CSS overrides before the shared raster is stabilized.",
+      "Don't add another subnavigation pattern; map new needs to tabs, segmented controls, filter chips, or category rails.",
+      "Don't rely on !important as the normal implementation path for new UI."
+    ]
+  }
+}

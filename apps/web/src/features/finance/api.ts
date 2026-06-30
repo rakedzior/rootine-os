@@ -230,7 +230,7 @@ export async function deleteSavingsGoal(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function saveRecurringExpense(input: RecurringExpenseInput, id?: string): Promise<void> {
+export async function saveRecurringExpense(input: RecurringExpenseInput, id?: string, month?: string): Promise<void> {
   const payload = {
     user_id: await uid(),
     name: input.name,
@@ -243,9 +243,28 @@ export async function saveRecurringExpense(input: RecurringExpenseInput, id?: st
     show_in_planner: false,
   };
   const result = id
-    ? await supabase.from('finance_payments').update(payload).eq('id', id)
-    : await supabase.from('finance_payments').insert(payload);
+    ? await supabase.from('finance_payments').update(payload).eq('id', id).select('id').single()
+    : await supabase.from('finance_payments').insert(payload).select('id').single();
   if (result.error) throw result.error;
+
+  if (month) {
+    await setRecurringPaid({
+      payment: {
+        id: result.data.id as string,
+        createdAt: '',
+        name: input.name,
+        amount: input.amount,
+        category: input.category,
+        dueDay: input.dueDay,
+        frequency: input.frequency,
+        reminderEnabled: input.reminderEnabled,
+        paidThisMonth: input.paidThisMonth,
+        folderId: input.folderId,
+      },
+      month,
+      paid: input.paidThisMonth,
+    });
+  }
 }
 
 export async function deleteRecurringExpense(id: string): Promise<void> {

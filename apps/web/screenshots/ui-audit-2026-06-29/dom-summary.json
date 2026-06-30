@@ -1,0 +1,1790 @@
+[
+  {
+    "viewport": "desktop",
+    "route": "/",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\desktop-start.png",
+    "path": "/",
+    "title": "Rootine OS",
+    "visibleText": "R Q Planer Zaplanuj dzień, zadania, nawyki i cele w jednym miejscu. czerwiec 2026 Dzisiaj + Nowe zadanie Zadania UKRYJ ZAKOŃCZONE Dzisiaj Jutro Tydzień Miesiąc Wszystkie Brak zadań Dodaj pierwsze zadanie na dziś. NAWYKI 0 / 0 0% Wykonano 0 z 0 dzisiejszych nawyków. Brak nawyków w Celach. ZOBACZ SZCZEGÓŁY Dzisiaj Jutro Tydzień Miesiąc Wszystkie PON WT ŚR CZW PT SOB NDZ 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30",
+    "bodyW": 1440,
+    "bodyH": 900,
+    "clientW": 1440,
+    "clientH": 900,
+    "overflowX": false,
+    "focusableCount": 39,
+    "buttons": [
+      {
+        "text": "",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Q",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "",
+        "aria": "Poprzedni okres",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "czerwiec 2026",
+        "aria": null,
+        "cls": "date-navigator-label"
+      },
+      {
+        "text": "",
+        "aria": "Następny okres",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "Dzisiaj",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm"
+      },
+      {
+        "text": "+ Nowe zadanie",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "",
+        "aria": "Ustawienia planera",
+        "cls": "icon-btn planner-settings-btn"
+      },
+      {
+        "text": "UKRYJ ZAKOŃCZONE",
+        "aria": null,
+        "cls": "hide-completed-toggle"
+      },
+      {
+        "text": "Dzisiaj",
+        "aria": null,
+        "cls": "filter-chip is-active"
+      },
+      {
+        "text": "Jutro",
+        "aria": null,
+        "cls": "filter-chip"
+      },
+      {
+        "text": "Tydzień",
+        "aria": null,
+        "cls": "filter-chip"
+      },
+      {
+        "text": "Miesiąc",
+        "aria": null,
+        "cls": "filter-chip"
+      },
+      {
+        "text": "Wszystkie",
+        "aria": null,
+        "cls": "filter-chip"
+      },
+      {
+        "text": "",
+        "aria": "Szybko dodaj zadanie na dziś",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "",
+        "aria": "Ustaw termin i szczegóły zadania",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "ZOBACZ SZCZEGÓŁY",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Dzisiaj",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Jutro",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Tydzień",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Miesiąc",
+        "aria": null,
+        "cls": "is-active"
+      },
+      {
+        "text": "Wszystkie",
+        "aria": null,
+        "cls": ""
+      }
+    ],
+    "cards": 3
+  },
+  {
+    "viewport": "desktop",
+    "route": "/sport",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\desktop-sport.png",
+    "path": "/sport",
+    "title": "Rootine OS",
+    "visibleText": "R Q Sport Planuj, analizuj i poprawiaj swoje treningi. Cykle treningowe Zaplanuj blok + Nowy trening Brak aktywnego cyklu treningowego Zaplanuj wieloetapowy cykl, np. blok hipertrofii albo przygotowanie do zawodów. + Zaplanuj cykl treningowy Ten tydzień 29 czerwca – 5 lipca 2026 PON 29.06 DZIŚ + WTO 30.06 + ŚRO 1.07 + CZW 2.07 + PIĄ 3.07 + SOB 4.07 + NIE 5.07 + Szablony i planowanie + Nowy szablon Nie masz jeszcze szablonów Utwórz pierwszy szablon, aby szybciej planować treningi. + Nowy szablon Historia treningów Zobacz całą historię Historia pojawi się po zakończeniu pierwszej sesji. Rekordy Zobacz wszystkie rekordy Rekordy pojawią się po zapisaniu treningów Możesz też dodać je ręcznie. + Dodaj rekord",
+    "bodyW": 1440,
+    "bodyH": 900,
+    "clientW": 1440,
+    "clientH": 900,
+    "overflowX": false,
+    "focusableCount": 37,
+    "buttons": [
+      {
+        "text": "",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Q",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "Cykle treningowe",
+        "aria": null,
+        "cls": "btn btn-ghost"
+      },
+      {
+        "text": "Zaplanuj blok",
+        "aria": null,
+        "cls": "btn btn-secondary"
+      },
+      {
+        "text": "+ Nowy trening",
+        "aria": null,
+        "cls": "btn btn-primary"
+      },
+      {
+        "text": "+ Zaplanuj cykl treningowy",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm"
+      },
+      {
+        "text": "",
+        "aria": "Poprzedni tydzień",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "",
+        "aria": "Następny tydzień",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+ Nowy szablon",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm"
+      },
+      {
+        "text": "+ Nowy szablon",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "Zobacz całą historię",
+        "aria": null,
+        "cls": "btn btn-ghost btn-sm"
+      },
+      {
+        "text": "Zobacz wszystkie rekordy",
+        "aria": null,
+        "cls": "btn btn-ghost btn-sm"
+      },
+      {
+        "text": "+ Dodaj rekord",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      }
+    ],
+    "cards": 3
+  },
+  {
+    "viewport": "desktop",
+    "route": "/diet",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\desktop-diet.png",
+    "path": "/diet",
+    "title": "Rootine OS",
+    "visibleText": "R Q Dieta Dziennik posiłków, makroskładniki i nawodnienie w jednym miejscu. pon., 29 cze 2026 Dzisiaj + Dodaj wpis Własne posiłki Ustawienia Sniadanie 0 kcal B 0g W 0g T 0g Dodaj PRODUKT ILOŚĆ KCAL B W T Brak wpisów Obiad 0 kcal B 0g W 0g T 0g Dodaj PRODUKT ILOŚĆ KCAL B W T Brak wpisów Kolacja 0 kcal B 0g W 0g T 0g Dodaj PRODUKT ILOŚĆ KCAL B W T Brak wpisów Przekaski 0 kcal B 0g W 0g T 0g Dodaj PRODUKT ILOŚĆ KCAL B W T Brak wpisów Podsumowanie cel dzienny Dzień Tydzień Miesiąc Zakres 0 / 2500 kcal Pozostało 2500 kcal Nawodnienie 0.0 / 2.5 L Białko 0/180g Węglowodany 0/240g Tłuszcze 0/70g Szczegółowe podsumowanie Nawodnienie 0.0 / 2.5 L +200 ml +300 ml +500 ml Rytm posiłków 0 wpisów dzisiaj 0% 0/4 kategorii uzupełnionych Następny posiłek Sniadanie Dodaj wpis Do uzupełnienia: 240 g węglowodanów 0 / 2500 kcal",
+    "bodyW": 1440,
+    "bodyH": 900,
+    "clientW": 1440,
+    "clientH": 900,
+    "overflowX": false,
+    "focusableCount": 43,
+    "buttons": [
+      {
+        "text": "",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Q",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "",
+        "aria": "Poprzedni okres",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "pon., 29 cze 2026",
+        "aria": null,
+        "cls": "date-navigator-label"
+      },
+      {
+        "text": "",
+        "aria": "Następny okres",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "Dzisiaj",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm"
+      },
+      {
+        "text": "+ Dodaj wpis",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "Własne posiłki",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm"
+      },
+      {
+        "text": "Ustawienia",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm"
+      },
+      {
+        "text": "Dodaj",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm diet-add-btn"
+      },
+      {
+        "text": "Brak wpisów",
+        "aria": null,
+        "cls": "diet-empty-row"
+      },
+      {
+        "text": "Dodaj",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm diet-add-btn"
+      },
+      {
+        "text": "Brak wpisów",
+        "aria": null,
+        "cls": "diet-empty-row"
+      },
+      {
+        "text": "Dodaj",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm diet-add-btn"
+      },
+      {
+        "text": "Brak wpisów",
+        "aria": null,
+        "cls": "diet-empty-row"
+      },
+      {
+        "text": "Dodaj",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm diet-add-btn"
+      },
+      {
+        "text": "Brak wpisów",
+        "aria": null,
+        "cls": "diet-empty-row"
+      },
+      {
+        "text": "Dzień",
+        "aria": null,
+        "cls": "active"
+      },
+      {
+        "text": "Tydzień",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Miesiąc",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Zakres",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Szczegółowe podsumowanie",
+        "aria": null,
+        "cls": "diet-summary-details"
+      },
+      {
+        "text": "+200 ml",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm "
+      },
+      {
+        "text": "+300 ml",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm "
+      },
+      {
+        "text": "+500 ml",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm "
+      },
+      {
+        "text": "Dodaj wpis",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm"
+      }
+    ],
+    "cards": 0
+  },
+  {
+    "viewport": "desktop",
+    "route": "/finance",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\desktop-finance.png",
+    "path": "/finance",
+    "title": "Rootine OS",
+    "visibleText": "R Q Finanse Przegląd finansów, budżetu i płatności w jednym miejscu. czerwiec 2026 Dzisiaj + Nowa płatność Środki 0 zł 0 aktywnych źródeł Oszczędności 0 zł 0 cele oszczędnościowe Budżet 0% 0 zł wydane z 0 zł Płatności 0 zł Pozostało w czerwiec 2026 Środki Płatności Budżet Oszczędności JDG Historia Płatności 0 zł Opłacone 0 zł Najbliższa - Po terminie 0 Brak płatności w tym miesiącu. Dodaj pierwszą płatność albo skonfiguruj cykliczne koszty. czerwiec 2026 · suma płatności 0 zł",
+    "bodyW": 1440,
+    "bodyH": 900,
+    "clientW": 1440,
+    "clientH": 900,
+    "overflowX": false,
+    "focusableCount": 33,
+    "buttons": [
+      {
+        "text": "",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Q",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "",
+        "aria": "Poprzedni okres",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "czerwiec 2026",
+        "aria": null,
+        "cls": "date-navigator-label"
+      },
+      {
+        "text": "",
+        "aria": "Następny okres",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "Dzisiaj",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm"
+      },
+      {
+        "text": "+ Nowa płatność",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm finance-header-cta"
+      },
+      {
+        "text": "Środki\n0 zł\n0 aktywnych źródeł",
+        "aria": null,
+        "cls": "finance-summary-tile "
+      },
+      {
+        "text": "Oszczędności\n0 zł\n0 cele oszczędnościowe",
+        "aria": null,
+        "cls": "finance-summary-tile "
+      },
+      {
+        "text": "Budżet\n0%\n0 zł wydane z 0 zł",
+        "aria": null,
+        "cls": "finance-summary-tile "
+      },
+      {
+        "text": "Płatności\n0 zł\nPozostało w czerwiec 2026",
+        "aria": null,
+        "cls": "finance-summary-tile is-active"
+      },
+      {
+        "text": "Środki",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Płatności",
+        "aria": null,
+        "cls": "is-active"
+      },
+      {
+        "text": "Budżet",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Oszczędności",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "JDG",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Historia",
+        "aria": null,
+        "cls": ""
+      }
+    ],
+    "cards": 0
+  },
+  {
+    "viewport": "desktop",
+    "route": "/goals",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\desktop-goals.png",
+    "path": "/goals",
+    "title": "Rootine OS",
+    "visibleText": "R Q Cele Roadmapy, kamienie milowe i działania na dziś w jednym widoku. Nowy cel Brak celów Dodaj pierwszy cel, aby zacząć rozbijać go na działania. Archiwalne cele Brak aktywnego celu Dodaj cel, aby zobaczyć roadmapę i plan tygodnia.",
+    "bodyW": 1440,
+    "bodyH": 900,
+    "clientW": 1440,
+    "clientH": 900,
+    "overflowX": false,
+    "focusableCount": 21,
+    "buttons": [
+      {
+        "text": "",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Q",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "Nowy cel",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "",
+        "aria": "Kategorie",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "Archiwalne cele",
+        "aria": null,
+        "cls": "goals-archive-link"
+      }
+    ],
+    "cards": 2
+  },
+  {
+    "viewport": "desktop",
+    "route": "/office",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\desktop-office.png",
+    "path": "/office",
+    "title": "Rootine OS",
+    "visibleText": "R Q Biuro Sprawy, dokumenty i terminy w jednym miejscu. Nowa sprawa Do zrobienia 0 aktywnych spraw › W trakcie 0 w realizacji › Terminy w tym miesiącu 0 0 pilne › Urlop 26 dni z 26 dni rocznie › KATEGORIE Wszystkie OK 0 Zadania urzędowe OK 0 Dokumenty OK 0 Samochód OK 0 Ubezpieczenia OK 0 Urlopy OK 0 Dodaj kategorię MOJE SPRAWY Sortuj: Termin ↑ Brak spraw Dodaj pierwszą sprawę, dokument lub termin przyciskiem w nagłówku. NADCHODZĄCE TERMINY Brak terminów Nadchodzące terminy pojawią się tutaj. Zobacz wszystkie terminy › DOKUMENTY 0 Brak dokumentów Dokumenty powiązane ze sprawami pojawią się tutaj. Zobacz wszystkie dokumenty ›",
+    "bodyW": 1440,
+    "bodyH": 900,
+    "clientW": 1440,
+    "clientH": 900,
+    "overflowX": false,
+    "focusableCount": 30,
+    "buttons": [
+      {
+        "text": "",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Q",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "Nowa sprawa",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm office-new-task-btn"
+      },
+      {
+        "text": "Urlop\n26 dni\nz 26 dni rocznie\n›",
+        "aria": null,
+        "cls": "office-metric office-metric-button"
+      },
+      {
+        "text": "Wszystkie\nOK\n0",
+        "aria": null,
+        "cls": "office-category-row is-active"
+      },
+      {
+        "text": "Zadania urzędowe\nOK\n0",
+        "aria": null,
+        "cls": "office-category-row"
+      },
+      {
+        "text": "Dokumenty\nOK\n0",
+        "aria": null,
+        "cls": "office-category-row"
+      },
+      {
+        "text": "Samochód\nOK\n0",
+        "aria": null,
+        "cls": "office-category-row"
+      },
+      {
+        "text": "Ubezpieczenia\nOK\n0",
+        "aria": null,
+        "cls": "office-category-row"
+      },
+      {
+        "text": "Urlopy\nOK\n0",
+        "aria": null,
+        "cls": "office-category-row"
+      },
+      {
+        "text": "Dodaj kategorię",
+        "aria": null,
+        "cls": "office-add-category-btn"
+      },
+      {
+        "text": "Sortuj: Termin ↑",
+        "aria": null,
+        "cls": "office-sort-btn"
+      },
+      {
+        "text": "Zobacz wszystkie terminy ›",
+        "aria": null,
+        "cls": "office-panel-footer"
+      },
+      {
+        "text": "Zobacz wszystkie dokumenty ›",
+        "aria": null,
+        "cls": "office-panel-footer"
+      }
+    ],
+    "cards": 4
+  },
+  {
+    "viewport": "desktop",
+    "route": "/travel",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\desktop-travel.png",
+    "path": "/travel",
+    "title": "Rootine OS",
+    "visibleText": "R Q Podróże Wszystkie wyjazdy i szczegóły podróży w jednym miejscu. Nowa podróż Wszystkie Planowane Trwające Zakończone Archiwum Moje podróże Brak podróży w tej kategorii Dodaj podróż Planowane Trwające Zakończone Archiwum podróży › Brak wybranej podróży Dodaj lub wybierz podróż z listy.",
+    "bodyW": 1440,
+    "bodyH": 900,
+    "clientW": 1440,
+    "clientH": 900,
+    "overflowX": false,
+    "focusableCount": 26,
+    "buttons": [
+      {
+        "text": "",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Q",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "Nowa podróż",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "",
+        "aria": "Dodaj podróż",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "Dodaj podróż",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "Planowane",
+        "aria": null,
+        "cls": "is-active"
+      },
+      {
+        "text": "Trwające",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Zakończone",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Archiwum podróży\n›",
+        "aria": null,
+        "cls": "travel-archive-btn"
+      }
+    ],
+    "cards": 2
+  },
+  {
+    "viewport": "desktop",
+    "route": "/notes",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\desktop-notes.png",
+    "path": "/notes",
+    "title": "Rootine OS",
+    "visibleText": "R Q Notatki Wszystkie notatki, pomysły i szybkie zapisy w jednym miejscu. Nowa notatka KATEGORIE Wszystkie notatki 0 Szybkie notatki 0 Projekty 0 Spotkania 0 Osobiste 0 Inspiracje 0 Do przeczytania 0 Archiwum 0 Dodaj kategorię Wszystkie notatki Ostatnio edytowane Ostatnio utworzone Tytuł A-Z Brak notatek Utwórz pierwszą notatkę w tej kategorii. Nowa notatka",
+    "bodyW": 1440,
+    "bodyH": 900,
+    "clientW": 1440,
+    "clientH": 900,
+    "overflowX": false,
+    "focusableCount": 33,
+    "buttons": [
+      {
+        "text": "",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Q",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "",
+        "aria": "Grid",
+        "cls": "is-active"
+      },
+      {
+        "text": "",
+        "aria": "Lista",
+        "cls": ""
+      },
+      {
+        "text": "Nowa notatka",
+        "aria": null,
+        "cls": "btn btn-primary"
+      },
+      {
+        "text": "Wszystkie notatki\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-pink is-active"
+      },
+      {
+        "text": "Szybkie notatki\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-teal "
+      },
+      {
+        "text": "Projekty\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-blue "
+      },
+      {
+        "text": "Spotkania\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-teal "
+      },
+      {
+        "text": "Osobiste\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-violet "
+      },
+      {
+        "text": "Inspiracje\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-amber "
+      },
+      {
+        "text": "Do przeczytania\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-amber "
+      },
+      {
+        "text": "Archiwum\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-gray "
+      },
+      {
+        "text": "Dodaj kategorię",
+        "aria": null,
+        "cls": "notes-add-category"
+      },
+      {
+        "text": "Nowa notatka",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      }
+    ],
+    "cards": 2
+  },
+  {
+    "viewport": "desktop",
+    "route": "/work",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\desktop-work.png",
+    "path": "/work",
+    "title": "Rootine OS",
+    "visibleText": "R Q Praca Wszystkie firmy, projekty, zadania i notatki w jednym miejscu. Nowe zadanie Firma Nowy projekt Lista Tablica Kalendarz Oś czasu Filtry Sortuj: Priorytet Brak firm Dodaj pierwsza firme lub kontekst pracy. Dodaj firme Szczegóły zadania Brak zadania NAJBLIŻSZE TERMINY Zobacz kalendarz Brak najbliższych terminów Zadania z terminami pojawią się tutaj.",
+    "bodyW": 1440,
+    "bodyH": 900,
+    "clientW": 1440,
+    "clientH": 900,
+    "overflowX": false,
+    "focusableCount": 32,
+    "buttons": [
+      {
+        "text": "",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Q",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "Nowe zadanie",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "",
+        "aria": "Dodaj firmę",
+        "cls": "icon-btn work-icon-btn"
+      },
+      {
+        "text": "",
+        "aria": "Edytuj firmę",
+        "cls": "icon-btn work-icon-btn"
+      },
+      {
+        "text": "Nowy projekt",
+        "aria": null,
+        "cls": "work-new-project"
+      },
+      {
+        "text": "Lista",
+        "aria": null,
+        "cls": "is-active"
+      },
+      {
+        "text": "Tablica",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Kalendarz",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Oś czasu",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Filtry",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Sortuj: Priorytet",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "",
+        "aria": "Ustawienia",
+        "cls": ""
+      },
+      {
+        "text": "Dodaj firme",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "Zobacz kalendarz",
+        "aria": null,
+        "cls": ""
+      }
+    ],
+    "cards": 2
+  },
+  {
+    "viewport": "desktop",
+    "route": "/settings",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\desktop-settings.png",
+    "path": "/settings",
+    "title": "Rootine OS",
+    "visibleText": "R Q Ustawienia Profil, konto, bezpieczeństwo, moduły i integracje aplikacji. Profil Konto Bezpieczeństwo Moduły Integracje MOTYW I KOLOR AKCENTU Rootine OS korzysta z jednego motywu Graphite Cool Ice, synchronizowanego między urządzeniami. Graphite KONTO E-MAIL — EKSPORT DANYCH Pobierz wszystkie swoje dane jako plik JSON (RODO — prawo do przenoszenia danych). Pobierz moje dane USUŃ KONTO Trwale usuwa wszystkie Twoje dane i konto. Tej operacji nie można cofnąć. USUŃ KONTO",
+    "bodyW": 1440,
+    "bodyH": 900,
+    "clientW": 1440,
+    "clientH": 900,
+    "overflowX": false,
+    "focusableCount": 26,
+    "buttons": [
+      {
+        "text": "",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Q",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "Graphite",
+        "aria": null,
+        "cls": "theme-card active"
+      },
+      {
+        "text": "Pobierz moje dane",
+        "aria": null,
+        "cls": "btn-primary"
+      },
+      {
+        "text": "USUŃ KONTO",
+        "aria": null,
+        "cls": ""
+      }
+    ],
+    "cards": 5
+  },
+  {
+    "viewport": "mobile",
+    "route": "/",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\mobile-start.png",
+    "path": "/",
+    "title": "Rootine OS",
+    "visibleText": "Planer Zaplanuj dzień, zadania, nawyki i cele w jednym miejscu. czerwiec 2026 Dzisiaj + Nowe zadanie Zadania UKRYJ ZAKOŃCZONE Dzisiaj Jutro Tydzień Miesiąc Wszystkie Brak zadań Dodaj pierwsze zadanie na dziś. NAWYKI 0 / 0 0% Wykonano 0 z 0 dzisiejszych nawyków. Brak nawyków w Celach. ZOBACZ SZCZEGÓŁY Dzisiaj Jutro Tydzień Miesiąc Wszystkie PON WT ŚR CZW PT SOB NDZ 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 Planer Sport Dieta Finanse Więcej",
+    "bodyW": 390,
+    "bodyH": 844,
+    "clientW": 390,
+    "clientH": 844,
+    "overflowX": false,
+    "focusableCount": 39,
+    "buttons": [
+      {
+        "text": "36°CBezchmurnie36°C · Bezchmurnie",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "",
+        "aria": "Poprzedni okres",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "czerwiec 2026",
+        "aria": null,
+        "cls": "date-navigator-label"
+      },
+      {
+        "text": "",
+        "aria": "Następny okres",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "Dzisiaj",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm"
+      },
+      {
+        "text": "+ Nowe zadanie",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "",
+        "aria": "Ustawienia planera",
+        "cls": "icon-btn planner-settings-btn"
+      },
+      {
+        "text": "UKRYJ ZAKOŃCZONE",
+        "aria": null,
+        "cls": "hide-completed-toggle"
+      },
+      {
+        "text": "Dzisiaj",
+        "aria": null,
+        "cls": "filter-chip is-active"
+      },
+      {
+        "text": "Jutro",
+        "aria": null,
+        "cls": "filter-chip"
+      },
+      {
+        "text": "Tydzień",
+        "aria": null,
+        "cls": "filter-chip"
+      },
+      {
+        "text": "Miesiąc",
+        "aria": null,
+        "cls": "filter-chip"
+      },
+      {
+        "text": "Wszystkie",
+        "aria": null,
+        "cls": "filter-chip"
+      },
+      {
+        "text": "",
+        "aria": "Szybko dodaj zadanie na dziś",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "",
+        "aria": "Ustaw termin i szczegóły zadania",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "ZOBACZ SZCZEGÓŁY",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Dzisiaj",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Jutro",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Tydzień",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Miesiąc",
+        "aria": null,
+        "cls": "is-active"
+      },
+      {
+        "text": "Wszystkie",
+        "aria": null,
+        "cls": ""
+      }
+    ],
+    "cards": 3
+  },
+  {
+    "viewport": "mobile",
+    "route": "/sport",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\mobile-sport.png",
+    "path": "/sport",
+    "title": "Rootine OS",
+    "visibleText": "Sport Planuj, analizuj i poprawiaj swoje treningi. Cykle treningowe Zaplanuj blok + Nowy trening Brak aktywnego cyklu treningowego Zaplanuj wieloetapowy cykl, np. blok hipertrofii albo przygotowanie do zawodów. + Zaplanuj cykl treningowy Ten tydzień 29 czerwca – 5 lipca 2026 PON 29.06 DZIŚ + WTO 30.06 + ŚRO 1.07 + CZW 2.07 + PIĄ 3.07 + SOB 4.07 + NIE 5.07 + Szablony i planowanie + Nowy szablon Nie masz jeszcze szablonów Utwórz pierwszy szablon, aby szybciej planować treningi. + Nowy szablon Historia treningów Zobacz całą historię Historia pojawi się po zakończeniu pierwszej sesji. Rekordy Zobacz wszystkie rekordy Rekordy pojawią się po zapisaniu treningów Możesz też dodać je ręcznie. + Dodaj rekord Planer Sport Dieta Finanse Więcej",
+    "bodyW": 390,
+    "bodyH": 844,
+    "clientW": 390,
+    "clientH": 844,
+    "overflowX": false,
+    "focusableCount": 37,
+    "buttons": [
+      {
+        "text": "36°CBezchmurnie36°C · Bezchmurnie",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "Cykle treningowe",
+        "aria": null,
+        "cls": "btn btn-ghost"
+      },
+      {
+        "text": "Zaplanuj blok",
+        "aria": null,
+        "cls": "btn btn-secondary"
+      },
+      {
+        "text": "+ Nowy trening",
+        "aria": null,
+        "cls": "btn btn-primary"
+      },
+      {
+        "text": "+ Zaplanuj cykl treningowy",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm"
+      },
+      {
+        "text": "",
+        "aria": "Poprzedni tydzień",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "",
+        "aria": "Następny tydzień",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+",
+        "aria": null,
+        "cls": "sport-day-add"
+      },
+      {
+        "text": "+ Nowy szablon",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm"
+      },
+      {
+        "text": "+ Nowy szablon",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "Zobacz całą historię",
+        "aria": null,
+        "cls": "btn btn-ghost btn-sm"
+      },
+      {
+        "text": "Zobacz wszystkie rekordy",
+        "aria": null,
+        "cls": "btn btn-ghost btn-sm"
+      },
+      {
+        "text": "+ Dodaj rekord",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      }
+    ],
+    "cards": 3
+  },
+  {
+    "viewport": "mobile",
+    "route": "/goals",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\mobile-goals.png",
+    "path": "/goals",
+    "title": "Rootine OS",
+    "visibleText": "Cele Roadmapy, kamienie milowe i działania na dziś w jednym widoku. Nowy cel Brak celów Dodaj pierwszy cel, aby zacząć rozbijać go na działania. Archiwalne cele Brak aktywnego celu Dodaj cel, aby zobaczyć roadmapę i plan tygodnia. Planer Sport Dieta Finanse Więcej",
+    "bodyW": 390,
+    "bodyH": 844,
+    "clientW": 390,
+    "clientH": 844,
+    "overflowX": false,
+    "focusableCount": 21,
+    "buttons": [
+      {
+        "text": "36°CBezchmurnie36°C · Bezchmurnie",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "Nowy cel",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "",
+        "aria": "Kategorie",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "Archiwalne cele",
+        "aria": null,
+        "cls": "goals-archive-link"
+      }
+    ],
+    "cards": 2
+  },
+  {
+    "viewport": "mobile",
+    "route": "/finance",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\mobile-finance.png",
+    "path": "/finance",
+    "title": "Rootine OS",
+    "visibleText": "Finanse Przegląd finansów, budżetu i płatności w jednym miejscu. czerwiec 2026 Dzisiaj + Nowa płatność Środki 0 zł 0 aktywnych źródeł Oszczędności 0 zł 0 cele oszczędnościowe Budżet 0% 0 zł wydane z 0 zł Płatności 0 zł Pozostało w czerwiec 2026 Środki Płatności Budżet Oszczędności JDG Historia Płatności 0 zł Opłacone 0 zł Najbliższa - Po terminie 0 Brak płatności w tym miesiącu. Dodaj pierwszą płatność albo skonfiguruj cykliczne koszty. czerwiec 2026 · suma płatności 0 zł Planer Sport Dieta Finanse Więcej",
+    "bodyW": 390,
+    "bodyH": 844,
+    "clientW": 390,
+    "clientH": 844,
+    "overflowX": false,
+    "focusableCount": 33,
+    "buttons": [
+      {
+        "text": "36°CBezchmurnie36°C · Bezchmurnie",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "",
+        "aria": "Poprzedni okres",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "czerwiec 2026",
+        "aria": null,
+        "cls": "date-navigator-label"
+      },
+      {
+        "text": "",
+        "aria": "Następny okres",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "Dzisiaj",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm"
+      },
+      {
+        "text": "+ Nowa płatność",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm finance-header-cta"
+      },
+      {
+        "text": "Środki\n0 zł\n0 aktywnych źródeł",
+        "aria": null,
+        "cls": "finance-summary-tile "
+      },
+      {
+        "text": "Oszczędności\n0 zł\n0 cele oszczędnościowe",
+        "aria": null,
+        "cls": "finance-summary-tile "
+      },
+      {
+        "text": "Budżet\n0%\n0 zł wydane z 0 zł",
+        "aria": null,
+        "cls": "finance-summary-tile "
+      },
+      {
+        "text": "Płatności\n0 zł\nPozostało w czerwiec 2026",
+        "aria": null,
+        "cls": "finance-summary-tile is-active"
+      },
+      {
+        "text": "Środki",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Płatności",
+        "aria": null,
+        "cls": "is-active"
+      },
+      {
+        "text": "Budżet",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Oszczędności",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "JDG",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Historia",
+        "aria": null,
+        "cls": ""
+      }
+    ],
+    "cards": 0
+  },
+  {
+    "viewport": "mobile",
+    "route": "/settings",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\mobile-settings.png",
+    "path": "/settings",
+    "title": "Rootine OS",
+    "visibleText": "Ustawienia Profil, konto, bezpieczeństwo, moduły i integracje aplikacji. Profil Konto Bezpieczeństwo Moduły Integracje MOTYW I KOLOR AKCENTU Rootine OS korzysta z jednego motywu Graphite Cool Ice, synchronizowanego między urządzeniami. Graphite KONTO E-MAIL — EKSPORT DANYCH Pobierz wszystkie swoje dane jako plik JSON (RODO — prawo do przenoszenia danych). Pobierz moje dane USUŃ KONTO Trwale usuwa wszystkie Twoje dane i konto. Tej operacji nie można cofnąć. USUŃ KONTO Planer Sport Dieta Finanse Więcej",
+    "bodyW": 390,
+    "bodyH": 844,
+    "clientW": 390,
+    "clientH": 844,
+    "overflowX": false,
+    "focusableCount": 26,
+    "buttons": [
+      {
+        "text": "36°CBezchmurnie36°C · Bezchmurnie",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "Graphite",
+        "aria": null,
+        "cls": "theme-card active"
+      },
+      {
+        "text": "Pobierz moje dane",
+        "aria": null,
+        "cls": "btn-primary"
+      },
+      {
+        "text": "USUŃ KONTO",
+        "aria": null,
+        "cls": ""
+      }
+    ],
+    "cards": 5
+  },
+  {
+    "viewport": "tablet",
+    "route": "/",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\tablet-start.png",
+    "path": "/",
+    "title": "Rootine OS",
+    "visibleText": "Planer Zaplanuj dzień, zadania, nawyki i cele w jednym miejscu. czerwiec 2026 Dzisiaj + Nowe zadanie Zadania UKRYJ ZAKOŃCZONE Dzisiaj Jutro Tydzień Miesiąc Wszystkie Brak zadań Dodaj pierwsze zadanie na dziś. NAWYKI 0 / 0 0% Wykonano 0 z 0 dzisiejszych nawyków. Brak nawyków w Celach. ZOBACZ SZCZEGÓŁY Dzisiaj Jutro Tydzień Miesiąc Wszystkie PON WT ŚR CZW PT SOB NDZ 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 Planer Sport Dieta Finanse Więcej",
+    "bodyW": 820,
+    "bodyH": 1180,
+    "clientW": 820,
+    "clientH": 1180,
+    "overflowX": false,
+    "focusableCount": 39,
+    "buttons": [
+      {
+        "text": "36°CBezchmurnie36°C · Bezchmurnie",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "",
+        "aria": "Poprzedni okres",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "czerwiec 2026",
+        "aria": null,
+        "cls": "date-navigator-label"
+      },
+      {
+        "text": "",
+        "aria": "Następny okres",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "Dzisiaj",
+        "aria": null,
+        "cls": "btn btn-secondary btn-sm"
+      },
+      {
+        "text": "+ Nowe zadanie",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "",
+        "aria": "Ustawienia planera",
+        "cls": "icon-btn planner-settings-btn"
+      },
+      {
+        "text": "UKRYJ ZAKOŃCZONE",
+        "aria": null,
+        "cls": "hide-completed-toggle"
+      },
+      {
+        "text": "Dzisiaj",
+        "aria": null,
+        "cls": "filter-chip is-active"
+      },
+      {
+        "text": "Jutro",
+        "aria": null,
+        "cls": "filter-chip"
+      },
+      {
+        "text": "Tydzień",
+        "aria": null,
+        "cls": "filter-chip"
+      },
+      {
+        "text": "Miesiąc",
+        "aria": null,
+        "cls": "filter-chip"
+      },
+      {
+        "text": "Wszystkie",
+        "aria": null,
+        "cls": "filter-chip"
+      },
+      {
+        "text": "",
+        "aria": "Szybko dodaj zadanie na dziś",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "",
+        "aria": "Ustaw termin i szczegóły zadania",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "ZOBACZ SZCZEGÓŁY",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Dzisiaj",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Jutro",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Tydzień",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Miesiąc",
+        "aria": null,
+        "cls": "is-active"
+      },
+      {
+        "text": "Wszystkie",
+        "aria": null,
+        "cls": ""
+      }
+    ],
+    "cards": 3
+  },
+  {
+    "viewport": "tablet",
+    "route": "/goals",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\tablet-goals.png",
+    "path": "/goals",
+    "title": "Rootine OS",
+    "visibleText": "Cele Roadmapy, kamienie milowe i działania na dziś w jednym widoku. Nowy cel Brak celów Dodaj pierwszy cel, aby zacząć rozbijać go na działania. Archiwalne cele Brak aktywnego celu Dodaj cel, aby zobaczyć roadmapę i plan tygodnia. Planer Sport Dieta Finanse Więcej",
+    "bodyW": 820,
+    "bodyH": 1180,
+    "clientW": 820,
+    "clientH": 1180,
+    "overflowX": false,
+    "focusableCount": 21,
+    "buttons": [
+      {
+        "text": "36°CBezchmurnie36°C · Bezchmurnie",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "Nowy cel",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "",
+        "aria": "Kategorie",
+        "cls": "icon-btn"
+      },
+      {
+        "text": "Archiwalne cele",
+        "aria": null,
+        "cls": "goals-archive-link"
+      }
+    ],
+    "cards": 2
+  },
+  {
+    "viewport": "tablet",
+    "route": "/work",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\tablet-work.png",
+    "path": "/work",
+    "title": "Rootine OS",
+    "visibleText": "Praca Wszystkie firmy, projekty, zadania i notatki w jednym miejscu. Nowe zadanie Firma Nowy projekt Lista Tablica Kalendarz Oś czasu Filtry Sortuj: Priorytet Brak firm Dodaj pierwsza firme lub kontekst pracy. Dodaj firme Szczegóły zadania Brak zadania NAJBLIŻSZE TERMINY Zobacz kalendarz Brak najbliższych terminów Zadania z terminami pojawią się tutaj. Planer Sport Dieta Finanse Więcej",
+    "bodyW": 820,
+    "bodyH": 1180,
+    "clientW": 820,
+    "clientH": 1180,
+    "overflowX": false,
+    "focusableCount": 32,
+    "buttons": [
+      {
+        "text": "36°CBezchmurnie36°C · Bezchmurnie",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "Nowe zadanie",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "",
+        "aria": "Dodaj firmę",
+        "cls": "icon-btn work-icon-btn"
+      },
+      {
+        "text": "",
+        "aria": "Edytuj firmę",
+        "cls": "icon-btn work-icon-btn"
+      },
+      {
+        "text": "Nowy projekt",
+        "aria": null,
+        "cls": "work-new-project"
+      },
+      {
+        "text": "Lista",
+        "aria": null,
+        "cls": "is-active"
+      },
+      {
+        "text": "Tablica",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Kalendarz",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Oś czasu",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Filtry",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "Sortuj: Priorytet",
+        "aria": null,
+        "cls": ""
+      },
+      {
+        "text": "",
+        "aria": "Ustawienia",
+        "cls": ""
+      },
+      {
+        "text": "Dodaj firme",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      },
+      {
+        "text": "Zobacz kalendarz",
+        "aria": null,
+        "cls": ""
+      }
+    ],
+    "cards": 2
+  },
+  {
+    "viewport": "tablet",
+    "route": "/notes",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\ui-audit-2026-06-29\\tablet-notes.png",
+    "path": "/notes",
+    "title": "Rootine OS",
+    "visibleText": "Notatki Wszystkie notatki, pomysły i szybkie zapisy w jednym miejscu. Nowa notatka KATEGORIE Wszystkie notatki 0 Szybkie notatki 0 Projekty 0 Spotkania 0 Osobiste 0 Inspiracje 0 Do przeczytania 0 Archiwum 0 Dodaj kategorię Wszystkie notatki Ostatnio edytowane Ostatnio utworzone Tytuł A-Z Brak notatek Utwórz pierwszą notatkę w tej kategorii. Nowa notatka Planer Sport Dieta Finanse Więcej",
+    "bodyW": 820,
+    "bodyH": 1180,
+    "clientW": 820,
+    "clientH": 1180,
+    "overflowX": false,
+    "focusableCount": 33,
+    "buttons": [
+      {
+        "text": "36°CBezchmurnie36°C · Bezchmurnie",
+        "aria": "Pogoda: 36°C, Bezchmurnie",
+        "cls": "sb-weather"
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "aria": null,
+        "cls": "sb-profile"
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "aria": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "cls": "sb-item sb-item-sm sb-lock"
+      },
+      {
+        "text": "",
+        "aria": "Grid",
+        "cls": "is-active"
+      },
+      {
+        "text": "",
+        "aria": "Lista",
+        "cls": ""
+      },
+      {
+        "text": "Nowa notatka",
+        "aria": null,
+        "cls": "btn btn-primary"
+      },
+      {
+        "text": "Wszystkie notatki\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-pink is-active"
+      },
+      {
+        "text": "Szybkie notatki\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-teal "
+      },
+      {
+        "text": "Projekty\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-blue "
+      },
+      {
+        "text": "Spotkania\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-teal "
+      },
+      {
+        "text": "Osobiste\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-violet "
+      },
+      {
+        "text": "Inspiracje\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-amber "
+      },
+      {
+        "text": "Do przeczytania\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-amber "
+      },
+      {
+        "text": "Archiwum\n0",
+        "aria": null,
+        "cls": "notes-category notes-tone-gray "
+      },
+      {
+        "text": "Dodaj kategorię",
+        "aria": null,
+        "cls": "notes-add-category"
+      },
+      {
+        "text": "Nowa notatka",
+        "aria": null,
+        "cls": "btn btn-primary btn-sm"
+      }
+    ],
+    "cards": 2
+  }
+]

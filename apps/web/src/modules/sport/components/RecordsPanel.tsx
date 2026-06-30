@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ModuleCard, ModuleHeader } from '@/components/layout/primitives';
 import { EmptyState, Modal, Field, MoreMenu, ConfirmDelete } from '@/components/common';
 import { useRecords, useCreateRecord, useUpdateRecord, useDeleteRecord, useExercises, useSports } from '@/features/sport/hooks';
@@ -27,7 +27,12 @@ export function RecordsPanel() {
       )}
       <RecordFormModal open={creating} onClose={() => setCreating(false)} />
       <RecordFormModal open={!!editing} onClose={() => setEditing(null)} existing={editing} />
-      <FullRecordsModal open={fullOpen} onClose={() => setFullOpen(false)} onAdd={() => setCreating(true)} onEdit={setEditing} />
+      <FullRecordsModal
+        open={fullOpen}
+        onClose={() => setFullOpen(false)}
+        onAdd={() => { setFullOpen(false); setCreating(true); }}
+        onEdit={(record) => { setFullOpen(false); setEditing(record); }}
+      />
     </ModuleCard>
   );
 }
@@ -72,6 +77,17 @@ function RecordFormModal({ open, onClose, existing }: { open: boolean; onClose: 
   const [occurredOn, setOccurredOn] = useState(existing?.occurred_on ?? new Date().toISOString().split('T')[0]);
   const [exerciseId, setExerciseId] = useState(existing?.exercise_id ?? '');
   const [sportId, setSportId] = useState(existing?.sport_id ?? '');
+
+  useEffect(() => {
+    if (!open) return;
+    setTitle(existing?.title ?? '');
+    setMetricType(existing?.metric_type ?? 'max_weight');
+    setValue(existing?.value_numeric ?? 0);
+    setUnit(existing?.unit ?? 'kg');
+    setOccurredOn(existing?.occurred_on ?? new Date().toISOString().split('T')[0]);
+    setExerciseId(existing?.exercise_id ?? '');
+    setSportId(existing?.sport_id ?? '');
+  }, [existing?.id, existing?.metric_type, existing?.occurred_on, existing?.sport_id, existing?.exercise_id, existing?.title, existing?.unit, existing?.value_numeric, open]);
 
   if (!open) return null;
 

@@ -1,5 +1,5 @@
-﻿import { useState, useEffect, useLayoutEffect, useMemo, useRef, type MouseEvent as ReactMouseEvent } from 'react';
-import { ConfirmDelete, Field, Modal, PageHeader } from '@/components/common';
+﻿import { useState, useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties, type MouseEvent as ReactMouseEvent } from 'react';
+import { ConfirmDelete, DateNavigator, EmptyState, Field, FilterChips, Modal, PageHeader, ViewSegmentedControl } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import { useHabits, useHabitLogs, useCreateHabit, useUpdateHabit, useDeleteHabit, useSetHabitStatus, useSetHabitVisibility, useSetHabitEntry, useToggleHabitLog } from '@/features/habits/hooks';
 import { ALL_WEEKDAYS, habitOccursOn, habitScheduleLabel, habitStats, todayStr as habitsTodayStr } from '@/features/habits/dates';
@@ -769,18 +769,23 @@ interface CalendarProps {
   tasks: SupabaseTask[];
   activeDate?: string | null;
   hideCompleted: boolean;
-  onToggleHideCompleted: () => void;
+  view: 'month' | 'week' | 'day';
+  cursor: Date;
+  justMovedId?: string | null;
+  onViewChange: (view: 'month' | 'week' | 'day') => void;
+  onPreviousPeriod: () => void;
+  onNextPeriod: () => void;
+  onToday: () => void;
   onDayClick: (dateStr: string, anchor: AnchorRect) => void;
+  onSelectDate: (dateStr: string) => void;
   onTaskClick: (task: SupabaseTask) => void;
   onToggleTask: (id: string, done: boolean) => void;
   onMoveTask: (task: SupabaseTask, dateStr: string) => void;
 }
 
-function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onDayClick, onTaskClick, onToggleTask, onMoveTask }: CalendarProps) {
+function Calendar({ tasks, activeDate, hideCompleted, view, cursor, justMovedId, onViewChange, onPreviousPeriod, onNextPeriod, onToday, onDayClick, onSelectDate, onTaskClick, onToggleTask, onMoveTask }: CalendarProps) {
   const now = new Date();
   const calendarRef = useRef<HTMLDivElement | null>(null);
-  const [view, setView] = useState<'month'|'week'|'day'>('month');
-  const [cursor, setCursor] = useState(() => new Date(now.getFullYear(), now.getMonth(), now.getDate()));
   const [dragTaskId, setDragTaskId] = useState<string | null>(null);
   const [dropTargetDate, setDropTargetDate] = useState<string | null>(null);
   const [overflowDates, setOverflowDates] = useState<Set<string>>(() => new Set());
@@ -788,18 +793,6 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
   const todayDateStr = toDateStr(now.getFullYear(), now.getMonth(), now.getDate());
-
-  function prev() {
-    if (view === 'month') setCursor(c => new Date(c.getFullYear(), c.getMonth() - 1, 1));
-    else if (view === 'week') setCursor(c => addDaysToDate(c, -7));
-    else setCursor(c => addDaysToDate(c, -1));
-  }
-  function next() {
-    if (view === 'month') setCursor(c => new Date(c.getFullYear(), c.getMonth() + 1, 1));
-    else if (view === 'week') setCursor(c => addDaysToDate(c, 7));
-    else setCursor(c => addDaysToDate(c, 1));
-  }
-  function goToday() { setCursor(new Date(now.getFullYear(), now.getMonth(), now.getDate())); }
 
   const first = new Date(year, month, 1);
   const last  = new Date(year, month+1, 0);
@@ -811,7 +804,6 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
 
   const weekStart = startOfWeekDate(cursor);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDaysToDate(weekStart, i));
-  const weekEnd = weekDays[6];
 
   useLayoutEffect(() => {
     function measureTaskOverflow() {
@@ -847,10 +839,16 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
       .filter(t => !hideCompleted || !t.done)
       .sort((a, b) => Number(a.done) - Number(b.done) || a.created_at.localeCompare(b.created_at));
     const dayTasks = allDayTasks;
+    const visibleDayTasks = compact ? dayTasks.slice(0, 3) : dayTasks;
+    const hiddenDayTasksCount = Math.max(0, dayTasks.length - visibleDayTasks.length);
     return (
       <div key={dateStr}
         className={`day-cell${compact ? ' is-compact' : ''}${isCellToday ? ' is-today' : ''}${isActive ? ' is-active' : ''}${isDropTarget ? ' is-drop-target' : ''}${hasTaskOverflow ? ' has-task-overflow' : ''}`}
-        onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); onDayClick(dateStr, { left: r.left, right: r.right, top: r.top, bottom: r.bottom }); }}
+        onClick={(e) => {
+          const r = e.currentTarget.getBoundingClientRect();
+          onSelectDate(dateStr);
+          onDayClick(dateStr, { left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+        }}
         onDragOver={(e) => {
           if (!dragTaskId) return;
           e.preventDefault();
@@ -891,10 +889,10 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
           </div>
         </div>
         <div className="day-cell-tasks" data-date={dateStr}>
-        {dayTasks.map(t => (
+        {visibleDayTasks.map(t => (
           <div
             key={t.id}
-            className={`ev ev-task ${t.done ? 'is-done' : ''}`}
+            className={`ev ev-task ${t.done ? 'is-done' : ''}${dragTaskId === t.id ? ' is-dragging' : ''}${justMovedId === t.id ? ' just-moved' : ''}`}
             draggable
             onDragStart={(e) => {
               e.stopPropagation();
@@ -911,11 +909,10 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
               onTaskClick(t);
             }}
             style={{
-              opacity:t.done ? .75 : 1,
+              opacity: dragTaskId === t.id ? undefined : (t.done ? .75 : 1),
               textDecoration:t.done?'line-through':'none',
-              cursor:'grab',
+              cursor: dragTaskId === t.id ? 'grabbing' : 'grab',
               zIndex: dragTaskId === t.id ? 6 : 1,
-              transform: dragTaskId === t.id ? 'scale(1.01)' : 'none',
             }}
             title="Edytuj zadanie"
           >
@@ -935,6 +932,19 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
             {t.scheduled_time && <span className="ev-task-time">{t.scheduled_time}</span>}
           </div>
         ))}
+        {hiddenDayTasksCount > 0 && (
+          <button
+            type="button"
+            className="day-more-tasks"
+            onClick={(e) => {
+              e.stopPropagation();
+              const r = e.currentTarget.closest('.day-cell')?.getBoundingClientRect();
+              onDayClick(dateStr, r ? { left: r.left, right: r.right, top: r.top, bottom: r.bottom } : { left: 0, right: 0, top: 0, bottom: 0 });
+            }}
+          >
+            +{hiddenDayTasksCount} więcej
+          </button>
+        )}
         </div>
         {hasTaskOverflow && (
           <span className="day-scroll-hint" aria-hidden="true">
@@ -953,61 +963,305 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
 
   return (
     <div ref={calendarRef} style={{ display:'flex', flexDirection:'column', height:'100%', minHeight: 0 }}>
-      {/* cal head */}
-      <div className="planner-calendar-head" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16, flexShrink:0, flexWrap:'wrap', gap:8 }}>
-        <span className="planner-calendar-title" style={{ fontFamily:'var(--display)', fontSize:24, fontWeight:600, letterSpacing:'-.01em' }}>
-          {view === 'month' && <>{MONTH_FULL[month]} <span style={{ color:'var(--ink-3)', fontWeight:500 }}>{year}</span></>}
-          {view === 'day' && <>{cursor.getDate()} {MONTH_FULL[cursor.getMonth()]} <span style={{ color:'var(--ink-3)', fontWeight:500 }}>{cursor.getFullYear()}</span></>}
-          {view === 'week' && (
-            weekStart.getMonth() === weekEnd.getMonth()
-              ? <>{weekStart.getDate()}–{weekEnd.getDate()} {MONTH_FULL[weekStart.getMonth()]} <span style={{ color:'var(--ink-3)', fontWeight:500 }}>{weekEnd.getFullYear()}</span></>
-              : <>{weekStart.getDate()} {MONTH_SHORT[weekStart.getMonth()]} – {weekEnd.getDate()} {MONTH_SHORT[weekEnd.getMonth()]} <span style={{ color:'var(--ink-3)', fontWeight:500 }}>{weekEnd.getFullYear()}</span></>
-          )}
-        </span>
-        <div className="planner-calendar-controls" style={{ display:'flex', alignItems:'center', gap:6 }}>
-          <button
-            type="button"
-            className={`hide-completed-toggle${hideCompleted ? ' is-active' : ''}`}
-            onClick={onToggleHideCompleted}
-            aria-pressed={hideCompleted}
-            title="Ukryj zakończone zadania"
-          >
-            Ukryj zakończone
-          </button>
-          <div style={{ display:'flex', gap:2, background:'var(--surface-inset)', padding:3, borderRadius:10, border:'1px solid var(--border-soft)' }}>
-            {(['month','week','day'] as const).map(v => (
-              <button key={v} onClick={()=>setView(v)} style={{
-                fontFamily:'var(--mono)', fontSize:9.5, letterSpacing:'.08em', textTransform:'uppercase', fontWeight:600,
-                padding:'5px 10px', borderRadius:7, border:0, cursor:'pointer', transition:'.14s',
-                background: view===v ? 'var(--surface)' : 'transparent',
-                color: view===v ? 'var(--ink)' : 'var(--ink-3)',
-                boxShadow: view===v ? 'var(--sh-1)' : 'none',
-              }}>{v==='month'?'Miesiąc':v==='week'?'Tydzień':'Dzień'}</button>
-            ))}
+      <div data-impeccable-variants="913f4661" data-impeccable-variant-count="3" style={{ display: "contents" }}>
+        {/* impeccable-variants-start 913f4661 */}
+        {/* Original */}
+        <div data-impeccable-variant="original">
+          <div className="planner-calendar-head planner-calendar-head-compact">
+            <DateNavigator
+              mode={view}
+              value={cursor}
+              onPrevious={onPreviousPeriod}
+              onNext={onNextPeriod}
+              onToday={onToday}
+            />
+            <div className="planner-calendar-controls">
+              <ViewSegmentedControl
+                items={[
+                  { id: 'day', label: 'Dzisiaj' },
+                  { id: 'week', label: 'Tydzień' },
+                  { id: 'month', label: 'Miesiąc' },
+                ]}
+                value={view}
+                onChange={(nextView) => {
+                  if (nextView === 'day') onToday();
+                  onViewChange(nextView as 'month' | 'week' | 'day');
+                }}
+                ariaLabel="Widok kalendarza"
+              />
+            </div>
           </div>
-          <button onClick={prev} style={{ width:28,height:28,borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',display:'grid',placeItems:'center',cursor:'pointer',color:'var(--ink-2)' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-          </button>
-          <button onClick={next} style={{ width:28,height:28,borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',display:'grid',placeItems:'center',cursor:'pointer',color:'var(--ink-2)' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-          </button>
-          <button onClick={goToday} style={{ fontFamily:'var(--mono)',fontSize:10,letterSpacing:'.08em',textTransform:'uppercase',fontWeight:600,padding:'6px 12px',borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',color:'var(--ink)',cursor:'pointer' }}>
-            Dziś
-          </button>
         </div>
+        {/* Variants: insert below this line */}
+        <div
+          data-impeccable-variant="1"
+          data-impeccable-params='[{"id":"density","kind":"range","min":0.85,"max":1.15,"step":0.05,"default":0.95,"label":"Density"}]'
+          style={{ display: "contents" }}
+        >
+          <div className="planner-calendar-head planner-calendar-head-compact live-calendar-tab live-calendar-tab--rail">
+            <DateNavigator
+              mode={view}
+              value={cursor}
+              onPrevious={onPreviousPeriod}
+              onNext={onNextPeriod}
+              onToday={onToday}
+            />
+            <div className="planner-calendar-controls">
+              <ViewSegmentedControl
+                items={[
+                  { id: 'day', label: 'Dzisiaj' },
+                  { id: 'week', label: 'Tydzień' },
+                  { id: 'month', label: 'Miesiąc' },
+                ]}
+                value={view}
+                onChange={(nextView) => {
+                  if (nextView === 'day') onToday();
+                  onViewChange(nextView as 'month' | 'week' | 'day');
+                }}
+                ariaLabel="Widok kalendarza"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          data-impeccable-variant="2"
+          data-impeccable-params='[{"id":"density","kind":"range","min":0.85,"max":1.15,"step":0.05,"default":1,"label":"Density"}]'
+          style={{ display: "contents" }}
+        >
+          <div className="planner-calendar-head planner-calendar-head-compact live-calendar-tab live-calendar-tab--split">
+            <DateNavigator
+              mode={view}
+              value={cursor}
+              onPrevious={onPreviousPeriod}
+              onNext={onNextPeriod}
+              onToday={onToday}
+            />
+            <div className="planner-calendar-controls">
+              <ViewSegmentedControl
+                items={[
+                  { id: 'day', label: 'Dzisiaj' },
+                  { id: 'week', label: 'Tydzień' },
+                  { id: 'month', label: 'Miesiąc' },
+                ]}
+                value={view}
+                onChange={(nextView) => {
+                  if (nextView === 'day') onToday();
+                  onViewChange(nextView as 'month' | 'week' | 'day');
+                }}
+                ariaLabel="Widok kalendarza"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          data-impeccable-variant="3"
+          data-impeccable-params='[{"id":"density","kind":"range","min":0.85,"max":1.15,"step":0.05,"default":0.9,"label":"Density"}]'
+          style={{ display: "contents" }}
+        >
+          <div className="planner-calendar-head planner-calendar-head-compact live-calendar-tab live-calendar-tab--dock">
+            <DateNavigator
+              mode={view}
+              value={cursor}
+              onPrevious={onPreviousPeriod}
+              onNext={onNextPeriod}
+              onToday={onToday}
+            />
+            <div className="planner-calendar-controls">
+              <ViewSegmentedControl
+                items={[
+                  { id: 'day', label: 'Dzisiaj' },
+                  { id: 'week', label: 'Tydzień' },
+                  { id: 'month', label: 'Miesiąc' },
+                ]}
+                value={view}
+                onChange={(nextView) => {
+                  if (nextView === 'day') onToday();
+                  onViewChange(nextView as 'month' | 'week' | 'day');
+                }}
+                ariaLabel="Widok kalendarza"
+              />
+            </div>
+          </div>
+        </div>
+        <style data-impeccable-css="913f4661">{`
+          @scope ([data-impeccable-variant="1"]) {
+            :scope > .live-calendar-tab {
+              --live-density: var(--p-density, 0.95);
+              margin: calc(var(--live-density) * -10px) 0 calc(var(--live-density) * 13px);
+              min-height: calc(var(--live-density) * 34px) !important;
+              padding: 0;
+              align-items: flex-start !important;
+            }
+
+            :scope > .live-calendar-tab .date-navigator,
+            :scope > .live-calendar-tab .view-segmented-control {
+              height: calc(var(--live-density) * 34px) !important;
+              padding: 2px !important;
+              border-radius: 10px !important;
+              background: rgba(8, 13, 19, 0.56) !important;
+              border-color: rgba(148, 163, 184, 0.11) !important;
+              box-shadow: none !important;
+            }
+
+            :scope > .live-calendar-tab .date-navigator .icon-btn,
+            :scope > .live-calendar-tab .view-segmented-control button {
+              min-height: calc(var(--live-density) * 28px) !important;
+              height: calc(var(--live-density) * 28px) !important;
+              border-radius: 8px !important;
+            }
+
+            :scope > .live-calendar-tab .date-navigator .icon-btn {
+              width: calc(var(--live-density) * 28px) !important;
+              min-width: calc(var(--live-density) * 28px) !important;
+            }
+
+            :scope > .live-calendar-tab .date-navigator-label,
+            :scope > .live-calendar-tab .date-navigator .btn,
+            :scope > .live-calendar-tab .view-segmented-control button {
+              font-size: 11px !important;
+              font-weight: 760 !important;
+            }
+
+            :scope > .live-calendar-tab .date-navigator-label {
+              min-height: calc(var(--live-density) * 28px) !important;
+              min-width: calc(var(--live-density) * 124px) !important;
+            }
+          }
+
+          @scope ([data-impeccable-variant="2"]) {
+            :scope > .live-calendar-tab {
+              --live-density: var(--p-density, 1);
+              margin: calc(var(--live-density) * -13px) 0 calc(var(--live-density) * 10px);
+              min-height: calc(var(--live-density) * 36px) !important;
+              align-items: flex-start !important;
+            }
+
+            :scope > .live-calendar-tab .date-navigator {
+              height: calc(var(--live-density) * 36px) !important;
+              padding: 3px !important;
+              border-radius: 11px 11px 9px 9px !important;
+              background: rgba(10, 17, 26, 0.78) !important;
+              border-color: rgba(125, 211, 252, 0.16) !important;
+              box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+            }
+
+            :scope > .live-calendar-tab .view-segmented-control {
+              height: calc(var(--live-density) * 34px) !important;
+              padding: 2px !important;
+              border-radius: 999px !important;
+              background: transparent !important;
+              border-color: rgba(148, 163, 184, 0.10) !important;
+            }
+
+            :scope > .live-calendar-tab .date-navigator .icon-btn,
+            :scope > .live-calendar-tab .view-segmented-control button {
+              min-height: calc(var(--live-density) * 28px) !important;
+              height: calc(var(--live-density) * 28px) !important;
+              border-radius: 999px !important;
+            }
+
+            :scope > .live-calendar-tab .date-navigator .icon-btn {
+              width: calc(var(--live-density) * 28px) !important;
+              min-width: calc(var(--live-density) * 28px) !important;
+            }
+
+            :scope > .live-calendar-tab .date-navigator-label,
+            :scope > .live-calendar-tab .date-navigator .btn,
+            :scope > .live-calendar-tab .view-segmented-control button {
+              font-size: 11px !important;
+              font-weight: 760 !important;
+            }
+          }
+
+          @scope ([data-impeccable-variant="3"]) {
+            :scope > .live-calendar-tab {
+              --live-density: var(--p-density, 0.9);
+              margin: calc(var(--live-density) * -8px) -4px calc(var(--live-density) * 14px);
+              min-height: calc(var(--live-density) * 38px) !important;
+              padding: 3px 4px !important;
+              border-bottom: 1px solid rgba(148, 163, 184, 0.09);
+            }
+
+            :scope > .live-calendar-tab .date-navigator,
+            :scope > .live-calendar-tab .view-segmented-control {
+              height: calc(var(--live-density) * 34px) !important;
+              padding: 2px !important;
+              border-radius: 10px !important;
+              background: rgba(10, 17, 26, 0.42) !important;
+              border-color: transparent !important;
+              box-shadow: none !important;
+            }
+
+            :scope > .live-calendar-tab .date-navigator .icon-btn,
+            :scope > .live-calendar-tab .view-segmented-control button {
+              min-height: calc(var(--live-density) * 28px) !important;
+              height: calc(var(--live-density) * 28px) !important;
+              border-radius: 8px !important;
+            }
+
+            :scope > .live-calendar-tab .date-navigator .icon-btn {
+              width: calc(var(--live-density) * 28px) !important;
+              min-width: calc(var(--live-density) * 28px) !important;
+            }
+
+            :scope > .live-calendar-tab .date-navigator-label,
+            :scope > .live-calendar-tab .date-navigator .btn,
+            :scope > .live-calendar-tab .view-segmented-control button {
+              font-size: 11px !important;
+              font-weight: 760 !important;
+            }
+
+            :scope > .live-calendar-tab .view-segmented-control button.is-active {
+              box-shadow: inset 0 0 0 1px rgba(125, 211, 252, 0.10) !important;
+            }
+          }
+        `}</style>
+        {/* impeccable-variants-end 913f4661 */}
       </div>
 
       {view === 'month' && (
         <>
           {/* day names */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:5, marginBottom:5, flexShrink:0 }}>
+          <div className="planner-weekdays" style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gap:5, marginBottom:5, flexShrink:0 }}>
             {['Pon','Wt','Śr','Czw','Pt','Sob','Ndz'].map(d => (
               <div key={d} style={{ fontFamily:'var(--mono)',fontSize:9.5,letterSpacing:'.1em',textTransform:'uppercase',color:'var(--ink-3)',paddingLeft:4 }}>{d}</div>
             ))}
           </div>
           {/* grid - flex:1 so it fills remaining card height */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gridAutoRows:'1fr', gap:5, flex:1, minHeight:0 }}>
+          <div className="planner-month-grid" style={{ display:'grid', gridTemplateColumns:'repeat(7,1fr)', gridAutoRows:'1fr', gap:5, flex:1, minHeight:0 }}>
             {monthCells.map((date, i) => date ? renderDayCell(date, true) : <div key={`blank-${i}`} style={{ opacity:0 }} />)}
+          </div>
+          <div className="planner-calendar-agenda">
+            <div className="planner-calendar-agenda-head">
+              <span>{fmtShortDate(cursorDateStr)}</span>
+              <strong>{dayTasksForAgenda.length}</strong>
+            </div>
+            {dayTasksForAgenda.length === 0 ? (
+              <div className="planner-calendar-agenda-empty">Brak zadań tego dnia.</div>
+            ) : dayTasksForAgenda.map((task) => (
+              <button
+                key={task.id}
+                type="button"
+                className="planner-calendar-agenda-row"
+                onClick={() => onTaskClick(task)}
+              >
+                <span className={`tsk-check ${task.done ? 'is-done' : ''}`} aria-hidden="true">
+                  {task.done && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
+                </span>
+                <span>{task.title}</span>
+                {task.scheduled_time && <small>{task.scheduled_time}</small>}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="planner-calendar-agenda-add"
+              onClick={(e) => {
+                const r = e.currentTarget.getBoundingClientRect();
+                onDayClick(cursorDateStr, { left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+              }}
+            >
+              + Dodaj na ten dzień
+            </button>
           </div>
         </>
       )}
@@ -1409,7 +1663,7 @@ function HabitDetailsOverlay({
                     <h4>Historia - {MONTH_FULL[historyDate.getMonth()]} {historyDate.getFullYear()}</h4>
                     <div>
                       <button type="button" onClick={() => setHistoryMonth((m) => shiftMonth(m, -1))} aria-label="Poprzedni miesiąc">‹</button>
-                      <button type="button" onClick={() => setHistoryMonth(firstOfMonth(today))}>Dziś</button>
+                      <button type="button" onClick={() => setHistoryMonth(firstOfMonth(today))}>Dzisiaj</button>
                       <button type="button" onClick={() => setHistoryMonth((m) => shiftMonth(m, 1))} aria-label="Następny miesiąc">›</button>
                     </div>
                   </div>
@@ -1700,6 +1954,14 @@ function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
   onToggleTask: (id: string, done: boolean) => void;
 }) {
   const isDone = task.done;
+  const [pop, setPop] = useState(false);
+  function toggle() {
+    if (!task.done) {
+      setPop(true);
+      window.setTimeout(() => setPop(false), 240);
+    }
+    onToggleTask(task.id, !task.done);
+  }
   const dueLabel = task.due_date
     ? (task.due_date === todayStr ? 'dziś' : task.due_date === addDaysStr(todayStr, 1) ? 'jutro' : fmtShortDate(task.due_date))
     : 'bez terminu';
@@ -1717,9 +1979,9 @@ function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
         role="checkbox"
         aria-checked={isDone}
         tabIndex={0}
-        onClick={(e) => { e.stopPropagation(); onToggleTask(task.id, !task.done); }}
-        onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.stopPropagation(); onToggleTask(task.id, !task.done); } }}
-        className={`tsk-check ${isDone ? 'is-done' : ''}`}
+        onClick={(e) => { e.stopPropagation(); toggle(); }}
+        onKeyDown={e => { if (e.key === ' ' || e.key === 'Enter') { e.stopPropagation(); toggle(); } }}
+        className={`tsk-check ${isDone ? 'is-done' : ''}${pop ? ' is-pop' : ''}`}
       >
         {isDone && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
       </div>
@@ -1742,6 +2004,14 @@ function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
 }
 
 type TaskWindow = 'today' | 'tomorrow' | 'week' | 'month' | 'all';
+
+const PLANNER_EMPTY: Record<TaskWindow, { title: string; description: string }> = {
+  today: { title: 'Czysto na dziś', description: 'Brak zadań na dziś — dodaj coś poniżej.' },
+  tomorrow: { title: 'Jutro jeszcze puste', description: 'Zaplanuj zadanie na jutro poniżej.' },
+  week: { title: 'Pusty tydzień', description: 'Brak zadań w tym tygodniu.' },
+  month: { title: 'Pusty miesiąc', description: 'Brak zadań w tym miesiącu.' },
+  all: { title: 'Brak zadań', description: 'Dodaj pierwsze zadanie poniżej.' },
+};
 
 function TodayPanel({
   tasks,
@@ -1798,15 +2068,16 @@ function TodayPanel({
   }, [monthKey, panelTasks, todayStr, tomorrowStr, weekEnd, weekStart, windowFilter]);
 
   const tabs: Array<{ id: TaskWindow; label: string; count: number }> = [
-    { id: 'today', label: 'DZISIAJ', count: counters.today },
-    { id: 'tomorrow', label: 'JUTRO', count: counters.tomorrow },
-    { id: 'week', label: 'TYDZIEŃ', count: counters.week },
-    { id: 'month', label: 'MIESIĄC', count: counters.month },
-    { id: 'all', label: 'WSZYSTKIE', count: counters.all },
+    { id: 'today', label: 'Dzisiaj', count: counters.today },
+    { id: 'tomorrow', label: 'Jutro', count: counters.tomorrow },
+    { id: 'week', label: 'Tydzień', count: counters.week },
+    { id: 'month', label: 'Miesiąc', count: counters.month },
+    { id: 'all', label: 'Wszystkie', count: counters.all },
   ];
 
   // Default due date for additions made from this panel follows the active tab.
   const panelDate = windowFilter === 'tomorrow' ? tomorrowStr : todayStr;
+  const panelDateLabel = windowFilter === 'tomorrow' ? 'jutro' : 'dziś';
 
   async function handleQuickSubmit() {
     const parsed = extractTitleAndTags(quickTitle, quickTags);
@@ -1833,25 +2104,22 @@ function TodayPanel({
       </div>
 
       <div className="task-filter-row">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`task-filter-btn${windowFilter === tab.id ? ' is-active' : ''}`}
-            onClick={() => setWindowFilter(tab.id)}
-          >
-            <span>{tab.label}</span>
-            <sup>{tab.count}</sup>
-          </button>
-        ))}
+        <FilterChips items={tabs} value={windowFilter} onChange={(id) => setWindowFilter(id as TaskWindow)} ariaLabel="Filtry zadań" />
       </div>
 
       {/* Task list - scrollable, grouped */}
       <div style={{ flex:1, overflowY:'auto', overflowX:'hidden', minHeight:0, paddingRight:2 }}>
         {isLoading ? (
-          <div style={{ textAlign:'center', padding:'24px 0', color:'var(--ink-3)', fontSize:13 }}>Ładowanie zadań...</div>
+          <div className="planner-task-skeletons" aria-hidden="true">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="planner-skel-row">
+                <span className="skeleton planner-skel-check" />
+                <span className="skeleton planner-skel-line" />
+              </div>
+            ))}
+          </div>
         ) : visibleTasks.length === 0 ? (
-          <div style={{ textAlign:'center', padding:'24px 0', color:'var(--ink-3)', fontSize:13 }}>Brak zadań. Dodaj pierwsze poniżej.</div>
+          <EmptyState compact title={PLANNER_EMPTY[windowFilter].title} description={PLANNER_EMPTY[windowFilter].description} />
         ) : (
           visibleTasks.map((task) => <PlannerTaskRow key={task.id} task={task} todayStr={todayStr} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />)
         )}
@@ -1891,8 +2159,8 @@ function TodayPanel({
               setQuickTags((prev) => prev.slice(0, -1));
             }
           }}
-          placeholder="Dodaj zadanie na dziś... #praca #pilne"
-          aria-label="Szybkie dodanie zadania na dziś"
+          placeholder={`Dodaj zadanie na ${panelDateLabel}... #praca #pilne`}
+          aria-label={`Szybkie dodanie zadania na ${panelDateLabel}`}
           disabled={isSaving}
           style={{ flex: 1, height: 36 }}
         />
@@ -1900,8 +2168,8 @@ function TodayPanel({
           type="button"
           onClick={() => void handleQuickSubmit()}
           className="icon-btn"
-          aria-label="Szybko dodaj zadanie na dziś"
-          title="Dodaj na dziś"
+          aria-label={`Szybko dodaj zadanie na ${panelDateLabel}`}
+          title={`Dodaj na ${panelDateLabel}`}
           disabled={isSaving || !quickTitle.trim()}
           style={{ width: 36, height: 36, borderRadius: 999 }}
         >
@@ -2027,6 +2295,17 @@ function placeLayeredPopover(anchor: AnchorRect, width: number, height: number, 
   left = Math.min(Math.max(pad, left), Math.max(pad, vw - width - pad));
   top = Math.min(Math.max(pad, top), Math.max(pad, vh - height - pad));
   return { left, top };
+}
+
+// Transform-origin for a popover's entrance: the point inside the panel that
+// lines up with the centre of the anchor it opened from, clamped to the panel
+// box. Lets the panel scale out of the click point instead of a fixed corner.
+function popoverOrigin(anchor: AnchorRect, left: number, top: number, width: number, height: number): string {
+  const cx = (anchor.left + anchor.right) / 2;
+  const cy = (anchor.top + anchor.bottom) / 2;
+  const ox = Math.round(Math.max(0, Math.min(width, cx - left)));
+  const oy = Math.round(Math.max(0, Math.min(height, cy - top)));
+  return `${ox}px ${oy}px`;
 }
 
 function taskOptionsSize() {
@@ -2300,23 +2579,50 @@ function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete
       <div
         ref={ref}
         className="task-options-pop"
-        style={{ left: mainPos.left, top: mainPos.top, width: popWidth, height: popHeight }}
+        style={{ left: mainPos.left, top: mainPos.top, width: popWidth, height: popHeight, '--pop-origin': popoverOrigin(anchorRect, mainPos.left, mainPos.top, popWidth, popHeight) } as CSSProperties}
         role="dialog"
         aria-label="Dodatkowe opcje zadania"
       >
+        {state.tags.length > 0 && (
+          <div className="task-options-tags">
+            {state.tags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                className="task-tag-badge"
+                title="Usuń tag"
+                onClick={() => onChange({ tags: state.tags.filter((item) => item !== tag) })}
+              >
+                #{tag}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="task-options-namebox">
           <span className="ton-ic">{IC_NOTE}</span>
           <input
             className="task-options-title"
             value={state.title}
-            placeholder="Nazwa zadania"
-            onChange={(e) => onChange({ title: e.target.value })}
+            placeholder="Nazwa zadania... #praca #pilne"
+            onChange={(e) => {
+              const consumed = consumeCompletedTags(e.target.value, state.tags);
+              onChange({ title: consumed.title, tags: consumed.tags });
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (state.title.trim() && !saving) onSave();
+              }
+              if (e.key === 'Backspace' && !state.title && state.tags.length > 0) {
+                onChange({ tags: state.tags.slice(0, -1) });
+              }
+            }}
             aria-label="Nazwa zadania"
             autoFocus={!state.editingId && !state.title}
           />
         </div>
         <div className="task-options-icons">
-          <button type="button" className={state.dueDate === quick.today ? 'is-active' : ''} title="Dziś" aria-label="Dziś" onClick={() => pickQuick(quick.today)}>{IC_SUN}</button>
+          <button type="button" className={state.dueDate === quick.today ? 'is-active' : ''} title="Dzisiaj" aria-label="Dzisiaj" onClick={() => pickQuick(quick.today)}>{IC_SUN}</button>
           <button type="button" className={state.dueDate === quick.tomorrow ? 'is-active' : ''} title="Jutro" aria-label="Jutro" onClick={() => pickQuick(quick.tomorrow)}>{IC_SUNRISE}</button>
           <button type="button" className={state.dueDate === quick.week ? 'is-active' : ''} title="Za tydzień" aria-label="Za tydzień" onClick={() => pickQuick(quick.week)}>{IC_WEEK}</button>
           <button type="button" className={state.dueDate === quick.month ? 'is-active' : ''} title="Za miesiąc" aria-label="Za miesiąc" onClick={() => pickQuick(quick.month)}>{IC_MOON}</button>
@@ -2377,7 +2683,7 @@ function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete
         </div>
       </div>
       {subpanel !== 'none' && (
-        <div ref={subRef} className="task-options-subpop" style={{ left: subPos.left, top: subPos.top }}>
+        <div ref={subRef} className="task-options-subpop" style={{ left: subPos.left, top: subPos.top, '--pop-origin': `${subLeft === preferredSubLeft ? 0 : subWidth}px 24px` } as CSSProperties}>
           {subpanel === 'time-start' && (() => {
             const isStart = true;
             const value = state.scheduledTime;
@@ -2513,7 +2819,7 @@ function CalendarQuickPopover({ state, saving, detailsOpen, onClose, onChange, o
     <div
       ref={ref}
       className={`task-quick-pop task-quick-note${detailsOpen ? ' is-under-detail' : ''}`}
-      style={{ left: quickPos.left, top: quickPos.top, width: noteWidth, height: noteHeight }}
+      style={{ left: quickPos.left, top: quickPos.top, width: noteWidth, height: noteHeight, '--pop-origin': popoverOrigin({ left: state.aLeft, right: state.aRight, top: state.aTop, bottom: state.aBottom }, quickPos.left, quickPos.top, noteWidth, noteHeight) } as CSSProperties}
       onMouseDownCapture={(e) => {
         if (!detailsOpen) return;
         e.preventDefault();
@@ -2620,8 +2926,14 @@ export function StartScreen() {
     flagged: false,
   });
   const [hideCompletedTasks, setHideCompletedTasks] = useState(false);
+  const [calendarView, setCalendarView] = useState<'month'|'week'|'day'>('month');
+  const [calendarCursor, setCalendarCursor] = useState(() => new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+  const [plannerMobileView, setPlannerMobileView] = useState<'today' | 'calendar'>('today');
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [seriesDeleteTarget, setSeriesDeleteTarget] = useState<SupabaseTask | null>(null);
+  const [justMovedId, setJustMovedId] = useState<string | null>(null);
+  const justMovedTimer = useRef<number | null>(null);
+  useEffect(() => () => { if (justMovedTimer.current) window.clearTimeout(justMovedTimer.current); }, []);
 
   const editingTask = editingTaskId ? tasks.find((task) => task.id === editingTaskId) ?? null : null;
   const editingSeriesCount = editingTask?.series_id
@@ -2712,6 +3024,8 @@ export function StartScreen() {
     await createTaskFromDraft({ ...emptyDraft(dueDate), title, tags }, 'quick_add');
   }
   function openCalendarQuick(dateStr: string, anchor: AnchorRect) {
+    const selectedDate = parseDateStr(dateStr);
+    if (selectedDate) setCalendarCursor(selectedDate);
     setCalendarQuick({
       open: true,
       aLeft: anchor.left,
@@ -2867,6 +3181,9 @@ export function StartScreen() {
   }
   function handleMoveTask(task: SupabaseTask, dateStr: string) {
     updateTask.mutate({ id: task.id, patch: { due_date: dateStr, source: 'drag_drop' } });
+    setJustMovedId(task.id);
+    if (justMovedTimer.current) window.clearTimeout(justMovedTimer.current);
+    justMovedTimer.current = window.setTimeout(() => setJustMovedId(null), 650);
   }
   async function handleDeleteSingle(task: SupabaseTask) {
     await deleteTask.mutateAsync(task.id);
@@ -2883,6 +3200,19 @@ export function StartScreen() {
     setSeriesDeleteTarget(null);
     closeTaskModal();
   }
+  function prevCalendarPeriod() {
+    if (calendarView === 'month') setCalendarCursor((value) => new Date(value.getFullYear(), value.getMonth() - 1, 1));
+    else if (calendarView === 'week') setCalendarCursor((value) => addDaysToDate(value, -7));
+    else setCalendarCursor((value) => addDaysToDate(value, -1));
+  }
+  function nextCalendarPeriod() {
+    if (calendarView === 'month') setCalendarCursor((value) => new Date(value.getFullYear(), value.getMonth() + 1, 1));
+    else if (calendarView === 'week') setCalendarCursor((value) => addDaysToDate(value, 7));
+    else setCalendarCursor((value) => addDaysToDate(value, 1));
+  }
+  function goCalendarToday() {
+    setCalendarCursor(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
+  }
   return (
     <PageLayout
       className="planner-page"
@@ -2890,11 +3220,47 @@ export function StartScreen() {
         icon={<PlannerHeaderIcon />}
         title="Planer"
         desc={'Zaplanuj dzień, zadania, nawyki i cele w jednym miejscu.'}
+        actions={(
+          <div className="planner-header-actions">
+            <button className="btn btn-primary btn-sm" type="button" onClick={() => setModalOpen(true)}>+ Nowe zadanie</button>
+            <button className="icon-btn planner-settings-btn" type="button" aria-label="Ustawienia planera" title="Ustawienia planera">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
+                <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.05.05a2.15 2.15 0 0 1-3.04 3.04l-.05-.05a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.09 1.65V21.4a2.15 2.15 0 0 1-4.3 0v-.09a1.8 1.8 0 0 0-1.09-1.65 1.8 1.8 0 0 0-1.98.36l-.05.05a2.15 2.15 0 0 1-3.04-3.04l.05-.05A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.65-1.09h-.09a2.15 2.15 0 0 1 0-4.3h.09A1.8 1.8 0 0 0 4.6 8a1.8 1.8 0 0 0-.36-1.98l-.05-.05a2.15 2.15 0 1 1 3.04-3.04l.05.05A1.8 1.8 0 0 0 9.26 2.6 1.8 1.8 0 0 0 10.35.95V.86a2.15 2.15 0 0 1 4.3 0v.09a1.8 1.8 0 0 0 1.09 1.65 1.8 1.8 0 0 0 1.98-.36l.05-.05a2.15 2.15 0 1 1 3.04 3.04l-.05.05A1.8 1.8 0 0 0 19.4 8c.25.66.88 1.09 1.59 1.09h.15a2.15 2.15 0 0 1 0 4.3h-.15A1.8 1.8 0 0 0 19.4 15Z" />
+              </svg>
+            </button>
+          </div>
+        )}
       />}
     >
 
       <div className="planner-shell">
-        <div className="planner-layout">
+        <div className="planner-mobile-modebar" role="tablist" aria-label="Widok planera">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={plannerMobileView === 'today'}
+            className={plannerMobileView === 'today' ? 'is-active' : ''}
+            onClick={() => setPlannerMobileView('today')}
+          >
+            Dziś
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={plannerMobileView === 'calendar'}
+            className={plannerMobileView === 'calendar' ? 'is-active' : ''}
+            onClick={() => {
+              setPlannerMobileView('calendar');
+              if (calendarView === 'day') {
+                setCalendarView('month');
+              }
+            }}
+          >
+            Kalendarz
+          </button>
+        </div>
+        <div className="planner-layout" data-mobile-view={plannerMobileView}>
           <aside className="planner-sidebar">
             <div className="card planner-tasks-card">
               <TodayPanel
@@ -2914,10 +3280,20 @@ export function StartScreen() {
           <section className="card planner-calendar-card">
             <Calendar
               tasks={tasks}
-              activeDate={calendarQuick.open ? calendarQuick.date : taskOptions.open ? taskOptions.dueDate : null}
+              activeDate={calendarQuick.open ? calendarQuick.date : taskOptions.open ? taskOptions.dueDate : toDateStr(calendarCursor.getFullYear(), calendarCursor.getMonth(), calendarCursor.getDate())}
               hideCompleted={hideCompletedTasks}
-              onToggleHideCompleted={() => setHideCompletedTasks((prev) => !prev)}
+              view={calendarView}
+              cursor={calendarCursor}
+              justMovedId={justMovedId}
+              onViewChange={setCalendarView}
+              onPreviousPeriod={prevCalendarPeriod}
+              onNextPeriod={nextCalendarPeriod}
+              onToday={goCalendarToday}
               onDayClick={openCalendarQuick}
+              onSelectDate={(dateStr) => {
+                const selectedDate = parseDateStr(dateStr);
+                if (selectedDate) setCalendarCursor(selectedDate);
+              }}
               onTaskClick={openTask}
               onToggleTask={(id, done) => toggleTask.mutate({ id, done })}
               onMoveTask={handleMoveTask}
@@ -2925,6 +3301,12 @@ export function StartScreen() {
           </section>
         </div>
       </div>
+
+      <button className="planner-mobile-fab" type="button" onClick={() => setModalOpen(true)} aria-label="Nowe zadanie">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </button>
 
       <TaskOptionsPopover
         state={taskOptions}

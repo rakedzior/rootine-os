@@ -1,4 +1,12 @@
 import { supabase } from '@/lib/supabase';
+import { QA_AUTH_ENABLED, QA_USER_ID } from '@/features/auth/qaAuth';
+import {
+  createQaExercise, createQaScheduledWorkout, createQaScheduledWorkouts, createQaSport, createQaTemplate,
+  createQaTrainingPlanSeries, deleteQaScheduledWorkout, deleteQaTemplate, deleteQaTrainingPlanSeries,
+  findQaScheduledWorkoutsOnDate, getQaTemplateFull,
+  listQaExercises, listQaScheduledWorkouts, listQaSports, listQaTemplates, replaceQaTemplateExercises,
+  listQaTrainingPlanSeries, updateQaScheduledWorkout, updateQaTemplate,
+} from './qaSportStore';
 import type {
   Sport, Exercise, WorkoutTemplate, WorkoutTemplateExercise, WorkoutTemplateSet, WorkoutTemplateFull,
   TrainingBlock, TrainingBlockDayAssignment, TrainingPlanSeries, ScheduledWorkout,
@@ -9,6 +17,7 @@ import type {
 export async function uid(): Promise<string> {
   const { data } = await supabase.auth.getUser();
   const id = data.user?.id;
+  if (!id && QA_AUTH_ENABLED) return QA_USER_ID;
   if (!id) throw new Error('Brak sesji użytkownika');
   return id;
 }
@@ -20,12 +29,14 @@ export function today(): string {
 // ── sports ───────────────────────────────────────────────────
 
 export async function listSports(): Promise<Sport[]> {
+  if (QA_AUTH_ENABLED) return listQaSports();
   const { data, error } = await supabase.from('sports').select('*').is('deleted_at', null).order('sort_order');
   if (error) throw error;
   return (data ?? []) as Sport[];
 }
 
 export async function createSport(name: string, opts: { icon_key?: string; color_token?: string } = {}): Promise<Sport> {
+  if (QA_AUTH_ENABLED) return createQaSport(name, opts);
   const user_id = await uid();
   const { data, error } = await supabase.from('sports').insert({ user_id, name, ...opts }).select('*').single();
   if (error) throw error;
@@ -52,6 +63,13 @@ export async function deleteSport(id: string): Promise<void> {
 // ── exercises ────────────────────────────────────────────────
 
 export async function listExercises(opts: { sportId?: string; search?: string } = {}): Promise<Exercise[]> {
+  if (QA_AUTH_ENABLED) {
+    const search = opts.search?.trim().toLocaleLowerCase('pl-PL');
+    return listQaExercises().filter((exercise) =>
+      (!opts.sportId || exercise.sport_id === opts.sportId) &&
+      (!search || exercise.name.toLocaleLowerCase('pl-PL').includes(search))
+    );
+  }
   let q = supabase.from('exercises').select('*').is('deleted_at', null).eq('is_archived', false).order('name');
   if (opts.sportId) q = q.eq('sport_id', opts.sportId);
   if (opts.search) q = q.ilike('name', `%${opts.search}%`);
@@ -61,6 +79,7 @@ export async function listExercises(opts: { sportId?: string; search?: string } 
 }
 
 export async function createExercise(input: Partial<Exercise> & { name: string }): Promise<Exercise> {
+  if (QA_AUTH_ENABLED) return createQaExercise(input);
   const user_id = await uid();
   const { data, error } = await supabase.from('exercises').insert({ user_id, ...input }).select('*').single();
   if (error) throw error;
@@ -76,6 +95,7 @@ export async function updateExercise(id: string, patch: Partial<Exercise>): Prom
 // ── workout templates ───────────────────────────────────────
 
 export async function listTemplates(): Promise<WorkoutTemplate[]> {
+  if (QA_AUTH_ENABLED) return listQaTemplates();
   const { data, error } = await supabase
     .from('workout_templates').select('*').is('deleted_at', null).eq('is_archived', false)
     .order('sort_order').order('created_at', { ascending: false });
@@ -84,6 +104,7 @@ export async function listTemplates(): Promise<WorkoutTemplate[]> {
 }
 
 export async function getTemplateFull(id: string): Promise<WorkoutTemplateFull> {
+  if (QA_AUTH_ENABLED) return getQaTemplateFull(id);
   const { data: template, error: tErr } = await supabase.from('workout_templates').select('*').eq('id', id).single();
   if (tErr) throw tErr;
   const { data: exs, error: eErr } = await supabase
@@ -105,6 +126,7 @@ export async function getTemplateFull(id: string): Promise<WorkoutTemplateFull> 
 }
 
 export async function createTemplate(input: Partial<WorkoutTemplate> & { name: string }): Promise<WorkoutTemplate> {
+  if (QA_AUTH_ENABLED) return createQaTemplate(input);
   const user_id = await uid();
   const { data, error } = await supabase.from('workout_templates').insert({ user_id, ...input }).select('*').single();
   if (error) throw error;
@@ -112,12 +134,14 @@ export async function createTemplate(input: Partial<WorkoutTemplate> & { name: s
 }
 
 export async function updateTemplate(id: string, patch: Partial<WorkoutTemplate>): Promise<WorkoutTemplate> {
+  if (QA_AUTH_ENABLED) return updateQaTemplate(id, patch);
   const { data, error } = await supabase.from('workout_templates').update(patch).eq('id', id).select('*').single();
   if (error) throw error;
   return data as WorkoutTemplate;
 }
 
 export async function deleteTemplate(id: string): Promise<void> {
+  if (QA_AUTH_ENABLED) return deleteQaTemplate(id);
   const { error } = await supabase.from('workout_templates').update({ deleted_at: new Date().toISOString() }).eq('id', id);
   if (error) throw error;
 }
@@ -146,6 +170,7 @@ export interface TemplateExerciseInput {
 
 /** Replaces every exercise/set on a template — simplest consistent model for a template editor "save". */
 export async function replaceTemplateExercises(templateId: string, exercises: TemplateExerciseInput[]): Promise<void> {
+  if (QA_AUTH_ENABLED) return replaceQaTemplateExercises(templateId, exercises);
   const user_id = await uid();
   const { data: oldExs, error: oldErr } = await supabase.from('workout_template_exercises').select('id').eq('template_id', templateId);
   if (oldErr) throw oldErr;
@@ -174,6 +199,7 @@ export async function replaceTemplateExercises(templateId: string, exercises: Te
 // ── scheduled workouts ───────────────────────────────────────
 
 export async function listScheduledWorkouts(startDate: string, endDate: string): Promise<ScheduledWorkout[]> {
+  if (QA_AUTH_ENABLED) return listQaScheduledWorkouts(startDate, endDate);
   const { data, error } = await supabase
     .from('scheduled_workouts').select('*').is('deleted_at', null)
     .gte('scheduled_date', startDate).lte('scheduled_date', endDate)
@@ -185,6 +211,7 @@ export async function listScheduledWorkouts(startDate: string, endDate: string):
 export type NewScheduledWorkoutRow = Omit<ScheduledWorkout, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'deleted_at'>;
 
 export async function createScheduledWorkout(input: Partial<NewScheduledWorkoutRow> & { scheduled_date: string; title: string }): Promise<ScheduledWorkout> {
+  if (QA_AUTH_ENABLED) return createQaScheduledWorkout(input);
   const user_id = await uid();
   const { data, error } = await supabase.from('scheduled_workouts').insert({ user_id, source_type: 'manual', status: 'planned', order_index: 0, is_override: false, metadata: {}, ...input }).select('*').single();
   if (error) throw error;
@@ -193,6 +220,7 @@ export async function createScheduledWorkout(input: Partial<NewScheduledWorkoutR
 
 export async function createScheduledWorkouts(inputs: (Partial<NewScheduledWorkoutRow> & { scheduled_date: string; title: string })[]): Promise<ScheduledWorkout[]> {
   if (!inputs.length) return [];
+  if (QA_AUTH_ENABLED) return createQaScheduledWorkouts(inputs);
   const user_id = await uid();
   const { data, error } = await supabase
     .from('scheduled_workouts')
@@ -203,6 +231,7 @@ export async function createScheduledWorkouts(inputs: (Partial<NewScheduledWorko
 }
 
 export async function updateScheduledWorkout(id: string, patch: Partial<ScheduledWorkout>): Promise<ScheduledWorkout> {
+  if (QA_AUTH_ENABLED) return updateQaScheduledWorkout(id, patch);
   const { data, error } = await supabase.from('scheduled_workouts').update(patch).eq('id', id).select('*').single();
   if (error) throw error;
   return data as ScheduledWorkout;
@@ -213,6 +242,7 @@ export async function moveScheduledWorkout(id: string, scheduledDate: string, or
 }
 
 export async function deleteScheduledWorkout(id: string): Promise<void> {
+  if (QA_AUTH_ENABLED) return deleteQaScheduledWorkout(id);
   const { error } = await supabase.from('scheduled_workouts').update({ deleted_at: new Date().toISOString() }).eq('id', id);
   if (error) throw error;
 }
@@ -225,6 +255,7 @@ export async function deleteScheduledWorkoutsByBlock(blockId: string, fromDate?:
 }
 
 export async function findExistingOnDate(scheduledDate: string): Promise<ScheduledWorkout[]> {
+  if (QA_AUTH_ENABLED) return findQaScheduledWorkoutsOnDate(scheduledDate);
   const { data, error } = await supabase.from('scheduled_workouts').select('*').is('deleted_at', null).eq('scheduled_date', scheduledDate);
   if (error) throw error;
   return (data ?? []) as ScheduledWorkout[];
@@ -282,12 +313,14 @@ export async function createDayAssignments(blockId: string, rows: Omit<TrainingB
 // ── training plan series ─────────────────────────────────────
 
 export async function listTrainingPlanSeries(): Promise<TrainingPlanSeries[]> {
+  if (QA_AUTH_ENABLED) return listQaTrainingPlanSeries();
   const { data, error } = await supabase.from('training_plan_series').select('*').is('deleted_at', null).order('start_date', { ascending: false });
   if (error) throw error;
   return (data ?? []) as TrainingPlanSeries[];
 }
 
 export async function createTrainingPlanSeries(input: Partial<TrainingPlanSeries> & { name: string; start_date: string; end_date: string }): Promise<TrainingPlanSeries> {
+  if (QA_AUTH_ENABLED) return createQaTrainingPlanSeries(input);
   const user_id = await uid();
   const { data, error } = await supabase.from('training_plan_series').insert({ user_id, ...input }).select('*').single();
   if (error) throw error;
@@ -295,6 +328,7 @@ export async function createTrainingPlanSeries(input: Partial<TrainingPlanSeries
 }
 
 export async function deleteTrainingPlanSeries(id: string, scope: 'futureOnly' | 'all'): Promise<void> {
+  if (QA_AUTH_ENABLED) return deleteQaTrainingPlanSeries(id, scope);
   const nowIso = new Date().toISOString();
   if (scope === 'all') {
     const { error } = await supabase.from('scheduled_workouts').update({ deleted_at: nowIso }).eq('series_id', id);

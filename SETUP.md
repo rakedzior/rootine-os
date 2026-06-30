@@ -26,7 +26,11 @@ npm run dev                 # http://localhost:5173
 - MFA TOTP: opcjonalne, włączane w ustawieniach.
 
 ## Hosting
-- Netlify czyta `netlify.toml` (build w `apps/web`, nagłówki CSP/HSTS).
+- Cloudflare Pages:
+  - root directory: `apps/web`
+  - build command: `npm run build`
+  - build output directory: `dist`
+  - SPA fallback and security headers live in `apps/web/public/_redirects` and `apps/web/public/_headers`.
 
 ## Verification
 

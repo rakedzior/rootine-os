@@ -27,7 +27,11 @@ export function HistoryPanel() {
           {recent.map(s => <HistoryRow key={s.id} session={s} onOpen={() => setDetailId(s.id)} />)}
         </div>
       )}
-      <FullHistoryModal open={fullOpen} onClose={() => setFullOpen(false)} onOpenDetail={setDetailId} />
+      <FullHistoryModal
+        open={fullOpen}
+        onClose={() => setFullOpen(false)}
+        onOpenDetail={(id) => { setFullOpen(false); setDetailId(id); }}
+      />
       <SessionDetailModal sessionId={detailId} onClose={() => setDetailId(null)} />
     </ModuleCard>
   );

@@ -141,5 +141,9 @@ export async function completeSession(sessionId: string, summary: SessionSummary
 }
 
 export async function cancelSession(sessionId: string): Promise<void> {
+  const full = await repo.getSessionFull(sessionId);
   await repo.updateSession(sessionId, { status: 'cancelled', ended_at: new Date().toISOString() });
+  if (full.scheduled_workout_id) {
+    await repo.updateScheduledWorkout(full.scheduled_workout_id, { status: 'planned' });
+  }
 }

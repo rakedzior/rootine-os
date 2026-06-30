@@ -1335,6 +1335,16 @@
   grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
 }
 
+@media (max-width: 1180px) {
+  .travel-page > .page-body {
+    overflow: auto;
+  }
+
+  .travel-dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .travel-prep-card,
 .travel-alert-card,
 .travel-next-step,

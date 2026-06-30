@@ -1,0 +1,321 @@
+[
+  {
+    "route": "/",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29-r2\\mobile-start.png",
+    "bodyW": 390,
+    "clientW": 390,
+    "bodyH": 844,
+    "clientH": 844,
+    "overflowX": false,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 179,
+      "right": 390,
+      "bottom": 179
+    },
+    "main": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "right": 390,
+      "bottom": 844
+    },
+    "offenders": [
+      {
+        "tag": "DIV",
+        "cls": "",
+        "text": "DzisiajJutroTydzieńMiesiącWszystkiePonWtŚrCzwPtSobNdz123456789101112131415161718",
+        "rect": {
+          "x": 43,
+          "y": 441,
+          "w": 375,
+          "h": 202,
+          "right": 418
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "planner-calendar-head planner-calendar-head-compact",
+        "text": "DzisiajJutroTydzieńMiesiącWszystkie",
+        "rect": {
+          "x": 43,
+          "y": 441,
+          "w": 375,
+          "h": 42,
+          "right": 418
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "planner-calendar-controls",
+        "text": "DzisiajJutroTydzieńMiesiącWszystkie",
+        "rect": {
+          "x": 43,
+          "y": 441,
+          "w": 375,
+          "h": 42,
+          "right": 418
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "view-segmented-control",
+        "text": "DzisiajJutroTydzieńMiesiącWszystkie",
+        "rect": {
+          "x": 43,
+          "y": 441,
+          "w": 375,
+          "h": 42,
+          "right": 418
+        }
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "",
+        "text": "Wszystkie",
+        "rect": {
+          "x": 326,
+          "y": 447,
+          "w": 87,
+          "h": 30,
+          "right": 413
+        }
+      },
+      {
+        "tag": "SPAN",
+        "cls": "",
+        "text": "Wszystkie",
+        "rect": {
+          "x": 339,
+          "y": 456,
+          "w": 61,
+          "h": 12,
+          "right": 400
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "planner-weekdays",
+        "text": "PonWtŚrCzwPtSobNdz",
+        "rect": {
+          "x": 43,
+          "y": 491,
+          "w": 375,
+          "h": 14,
+          "right": 418
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "",
+        "text": "Ndz",
+        "rect": {
+          "x": 369,
+          "y": 491,
+          "w": 49,
+          "h": 14,
+          "right": 418
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "planner-month-grid",
+        "text": "123456789101112131415161718192021222324252627282930",
+        "rect": {
+          "x": 43,
+          "y": 512,
+          "w": 375,
+          "h": 131,
+          "right": 418
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-cell is-compact",
+        "text": "7",
+        "rect": {
+          "x": 369,
+          "y": 512,
+          "w": 49,
+          "h": 38,
+          "right": 418
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-cell-head",
+        "text": "7",
+        "rect": {
+          "x": 375,
+          "y": 518,
+          "w": 37,
+          "h": 20,
+          "right": 412
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-number",
+        "text": "7",
+        "rect": {
+          "x": 385,
+          "y": 521,
+          "w": 10,
+          "h": 15,
+          "right": 395
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-cell is-compact",
+        "text": "14",
+        "rect": {
+          "x": 369,
+          "y": 539,
+          "w": 49,
+          "h": 38,
+          "right": 418
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-cell-head",
+        "text": "14",
+        "rect": {
+          "x": 375,
+          "y": 545,
+          "w": 37,
+          "h": 20,
+          "right": 412
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-number",
+        "text": "14",
+        "rect": {
+          "x": 380,
+          "y": 548,
+          "w": 19,
+          "h": 15,
+          "right": 399
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-cell is-compact",
+        "text": "21",
+        "rect": {
+          "x": 369,
+          "y": 566,
+          "w": 49,
+          "h": 38,
+          "right": 418
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-cell-head",
+        "text": "21",
+        "rect": {
+          "x": 375,
+          "y": 572,
+          "w": 37,
+          "h": 20,
+          "right": 412
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-number",
+        "text": "21",
+        "rect": {
+          "x": 380,
+          "y": 575,
+          "w": 19,
+          "h": 15,
+          "right": 399
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-cell is-compact",
+        "text": "28",
+        "rect": {
+          "x": 369,
+          "y": 594,
+          "w": 49,
+          "h": 38,
+          "right": 418
+        }
+      },
+      {
+        "tag": "DIV",
+        "cls": "day-cell-head",
+        "text": "28",
+        "rect": {
+          "x": 375,
+          "y": 600,
+          "w": 37,
+          "h": 20,
+          "right": 412
+        }
+      }
+    ]
+  },
+  {
+    "route": "/sport",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29-r2\\mobile-sport.png",
+    "bodyW": 390,
+    "clientW": 390,
+    "bodyH": 844,
+    "clientH": 844,
+    "overflowX": false,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 224,
+      "right": 390,
+      "bottom": 224
+    },
+    "main": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "right": 390,
+      "bottom": 844
+    },
+    "offenders": []
+  },
+  {
+    "route": "/finance",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29-r2\\mobile-finance.png",
+    "bodyW": 390,
+    "clientW": 390,
+    "bodyH": 844,
+    "clientH": 844,
+    "overflowX": false,
+    "header": {
+      "x": 0,
+      "y": 2,
+      "w": 390,
+      "h": 174,
+      "right": 390,
+      "bottom": 176
+    },
+    "main": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "right": 390,
+      "bottom": 844
+    },
+    "offenders": []
+  }
+]

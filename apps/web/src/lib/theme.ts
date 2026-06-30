@@ -1,6 +1,7 @@
 /**
- * Theme management — white-lotus (beige), dark, green.
- * Applies data-theme to <html>; persists to localStorage.
+ * Theme management.
+ * Rootine OS uses one app-wide Graphite Cool Ice interface. Legacy theme ids
+ * are accepted for compatibility and normalized to `dark`.
  */
 import { fetchPreferences, updatePreferences } from '@/features/config/profile';
 
@@ -10,32 +11,37 @@ const ROOT = document.documentElement;
 const KEY = 'rootine-theme';
 const DEFAULT_THEME: Theme = 'dark';
 
+function normalizeTheme(_theme?: Theme | null): Theme {
+  return DEFAULT_THEME;
+}
+
 export function applyTheme(theme: Theme, animate = false) {
+  const normalized = normalizeTheme(theme);
   if (animate) {
     ROOT.classList.add('theme-switching');
     setTimeout(() => ROOT.classList.remove('theme-switching'), 60);
   }
-  ROOT.setAttribute('data-theme', theme === 'white-lotus' ? 'light' : theme);
-  localStorage.setItem(KEY, theme);
+  ROOT.setAttribute('data-theme', normalized);
+  localStorage.setItem(KEY, normalized);
 }
 
 export function applyStoredTheme() {
   const stored = localStorage.getItem(KEY) as Theme | null;
-  applyTheme(stored ?? DEFAULT_THEME);
+  applyTheme(normalizeTheme(stored));
 }
 
 export function getCurrentTheme(): Theme {
   const stored = localStorage.getItem(KEY) as Theme | null;
-  return stored ?? DEFAULT_THEME;
+  return normalizeTheme(stored);
 }
 
 export function setTheme(theme: Theme) {
-  applyTheme(theme, true);
-  // Cross-device sync (fire-and-forget); localStorage already applied above.
-  void updatePreferences({ theme }).catch(() => {});
+  const normalized = normalizeTheme(theme);
+  applyTheme(normalized, true);
+  void updatePreferences({ theme: normalized }).catch(() => {});
 }
 
-/** Loads theme from server prefs (with localStorage as instant fallback). */
+/** Loads theme from server prefs, migrating older palette choices to Graphite. */
 export async function loadUserTheme(): Promise<Theme> {
   applyStoredTheme();
   const local = getCurrentTheme();
@@ -43,13 +49,10 @@ export async function loadUserTheme(): Promise<Theme> {
     const prefs = await fetchPreferences();
     const server = prefs?.theme as Theme | undefined;
     if (!server) return local;
-    // Legacy: column seeded literal 'light' but user has a real local pick → migrate up.
-    if ((server as string) === 'light' && local !== 'white-lotus') {
-      void updatePreferences({ theme: local }).catch(() => {});
-      return local;
-    }
-    applyTheme(server);
-    return server;
+    const normalized = normalizeTheme(server);
+    applyTheme(normalized);
+    if (server !== normalized) void updatePreferences({ theme: normalized }).catch(() => {});
+    return normalized;
   } catch {
     return local;
   }

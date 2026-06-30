@@ -66,7 +66,7 @@ test('creates, completes, and deletes an office task', async ({ page }) => {
   const title = `E2E office task ${Date.now()}`;
 
   await page.goto('/office');
-  await page.getByRole('button', { name: /nowe zadanie/i }).click();
+  await page.getByRole('button', { name: /nowa sprawa/i }).click();
   await page.getByPlaceholder(/paszport/i).fill(title);
   await page.getByRole('button', { name: /^dodaj$/i }).click();
 
@@ -120,6 +120,7 @@ test('uploads, opens, and removes an office document file', async ({ page }) => 
     }
 
     await documentRow.getByRole('button').filter({ hasText: /plik/i }).click();
+    await page.getByRole('dialog').getByRole('button', { name: /^usuń$/i }).click();
     await expect(documentRow.getByText(/dodaj plik/i)).toBeVisible();
 
     const { data, error } = await seeded.client.from('documents').select('file_path').eq('id', seeded.id).single();

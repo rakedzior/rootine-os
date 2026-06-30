@@ -4,46 +4,6 @@ import { logAudit } from '@/lib/audit';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/lib/supabase';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-
-function buildOAuthState(userId: string): string {
-  return btoa(JSON.stringify({
-    userId,
-    returnTo: `${window.location.origin}/settings/integrations`,
-  }));
-}
-
-function buildGoogleOAuthUrl(userId: string): string {
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
-  if (!clientId) return '';
-  const redirectUri = `${SUPABASE_URL}/functions/v1/oauth-google`;
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: 'code',
-    scope: 'https://www.googleapis.com/auth/calendar.readonly',
-    access_type: 'offline',
-    prompt: 'consent',
-    state: buildOAuthState(userId),
-  });
-  return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
-}
-
-function buildStravaOAuthUrl(userId: string): string {
-  const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID as string | undefined;
-  if (!clientId) return '';
-  const redirectUri = `${SUPABASE_URL}/functions/v1/oauth-strava`;
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: 'code',
-    approval_prompt: 'force',
-    scope: 'activity:read_all',
-    state: buildOAuthState(userId),
-  });
-  return `https://www.strava.com/oauth/authorize?${params}`;
-}
-
 export function IntegrationsSettings() {
   const intQ = useIntegrations();
   const disconnect = useDisconnectIntegration();
@@ -68,19 +28,15 @@ export function IntegrationsSettings() {
   const strava = intQ.data?.find((i) => i.provider === 'strava');
 
   async function handleConnect(provider: 'google_calendar' | 'strava') {
-    const { data } = await supabase.auth.getUser();
-    const userId = data.user?.id;
-    if (!userId) return;
-    const url = provider === 'google_calendar' ? buildGoogleOAuthUrl(userId) : buildStravaOAuthUrl(userId);
-    if (!url) {
-      toast.error(
-        provider === 'google_calendar'
-          ? 'Ustaw VITE_GOOGLE_CLIENT_ID w .env'
-          : 'Ustaw VITE_STRAVA_CLIENT_ID w .env',
-      );
+    const functionName = provider === 'google_calendar' ? 'oauth-google' : 'oauth-strava';
+    const { data, error } = await supabase.functions.invoke<{ url: string }>(functionName, {
+      body: { returnTo: `${window.location.origin}/settings/integrations` },
+    });
+    if (error || !data?.url) {
+      toast.error('Nie udało się rozpocząć połączenia OAuth.');
       return;
     }
-    window.location.href = url;
+    window.location.href = data.url;
   }
 
   async function handleDisconnect(provider: 'google_calendar' | 'strava') {
@@ -155,7 +111,7 @@ export function IntegrationsSettings() {
         <div style={{ fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.6 }}>
           <strong style={{ color: 'var(--ink-2)' }}>Konfiguracja (jednorazowo):</strong>
           <ol style={{ paddingLeft: 18, margin: '8px 0 0' }}>
-            <li>Google: utwórz projekt w Google Cloud Console → włącz Calendar API → utwórz OAuth 2.0 Client ID → dodaj <code>VITE_GOOGLE_CLIENT_ID</code> do Netlify env</li>
+            <li>Google: utwórz projekt w Google Cloud Console → włącz Calendar API → utwórz OAuth 2.0 Client ID → dodaj <code>VITE_GOOGLE_CLIENT_ID</code> do Cloudflare Pages env</li>
             <li>Strava: utwórz aplikację na strava.com/settings/api → dodaj <code>VITE_STRAVA_CLIENT_ID</code></li>
             <li>W Supabase Secrets: <code>GOOGLE_CLIENT_SECRET</code>, <code>STRAVA_CLIENT_SECRET</code>, <code>TOKEN_ENC_KEY</code>, <code>APP_URL</code></li>
             <li>Deploy Edge Functions: <code>supabase functions deploy --no-verify-jwt</code></li>

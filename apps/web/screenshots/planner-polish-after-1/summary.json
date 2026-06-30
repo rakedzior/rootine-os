@@ -1,0 +1,87 @@
+{
+  "bodyW": 390,
+  "clientW": 390,
+  "mainScrollH": 1242,
+  "mainClientH": 844,
+  "tasks": {
+    "rect": {
+      "x": 18,
+      "y": 244,
+      "w": 354,
+      "h": 342,
+      "bottom": 585
+    },
+    "css": {
+      "height": "341.5px",
+      "minHeight": "0px",
+      "overflow": "hidden",
+      "display": "flex",
+      "gridTemplateColumns": "none"
+    }
+  },
+  "filters": {
+    "rect": {
+      "x": 39,
+      "y": 305,
+      "w": 312,
+      "h": 38,
+      "bottom": 343
+    },
+    "css": {
+      "height": "38px",
+      "minHeight": "38px",
+      "overflow": "hidden",
+      "display": "grid",
+      "gridTemplateColumns": "59.1562px 59.1562px 59.1562px 59.1562px 59.1562px"
+    }
+  },
+  "empty": {
+    "rect": {
+      "x": 39,
+      "y": 355,
+      "w": 310,
+      "h": 139,
+      "bottom": 493
+    },
+    "css": {
+      "height": "138.5px",
+      "minHeight": "112px",
+      "overflow": "visible",
+      "display": "flex",
+      "gridTemplateColumns": "none"
+    }
+  },
+  "habits": {
+    "rect": {
+      "x": 18,
+      "y": 599,
+      "w": 334,
+      "h": 199,
+      "bottom": 798
+    },
+    "css": {
+      "height": "198.75px",
+      "minHeight": "164px",
+      "overflow": "hidden",
+      "display": "flex",
+      "gridTemplateColumns": "none"
+    }
+  },
+  "calendar": {
+    "rect": {
+      "x": 18,
+      "y": 812,
+      "w": 354,
+      "h": 430,
+      "bottom": 1242
+    },
+    "css": {
+      "height": "430px",
+      "minHeight": "430px",
+      "overflow": "hidden",
+      "display": "grid",
+      "gridTemplateColumns": "304px"
+    }
+  },
+  "offenders": []
+}

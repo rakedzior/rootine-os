@@ -219,7 +219,10 @@ export function useUpsertMealForCategory(date?: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (category: MealCategory) => upsertMealForCategory(category, date),
-    onSuccess: () => qc.invalidateQueries({ queryKey: mealsKey(date) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: MEAL_CATEGORIES_KEY });
+      qc.invalidateQueries({ queryKey: mealsKey(date) });
+    },
   });
 }
 
@@ -283,8 +286,8 @@ export function useMoveCategoryEntries() {
   return useMutation({
     mutationFn: ({ categoryId, targetCategoryId }: { categoryId: string; targetCategoryId: string }) => moveCategoryEntries(categoryId, targetCategoryId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: TODAY_MEALS_KEY });
-      qc.invalidateQueries({ queryKey: TODAY_ITEMS_KEY });
+      qc.invalidateQueries({ queryKey: ['meals'] });
+      qc.invalidateQueries({ queryKey: ['meal_items'] });
       qc.invalidateQueries({ queryKey: MEAL_ITEMS_HISTORY_KEY });
     },
   });
@@ -295,7 +298,7 @@ export function useDeleteCategoryEntries() {
   return useMutation({
     mutationFn: (categoryId: string) => deleteCategoryEntries(categoryId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: TODAY_ITEMS_KEY });
+      qc.invalidateQueries({ queryKey: ['meal_items'] });
       qc.invalidateQueries({ queryKey: MEAL_ITEMS_HISTORY_KEY });
     },
   });

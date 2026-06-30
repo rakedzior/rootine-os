@@ -1,0 +1,147 @@
+[
+  {
+    "route": "/",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29-r5\\mobile-start.png",
+    "bodyW": 390,
+    "clientW": 390,
+    "overflowX": false,
+    "offenders": [],
+    "nav": {
+      "x": 18,
+      "w": 138,
+      "right": 156
+    },
+    "label": {
+      "text": "czerwiec 2026",
+      "x": 64,
+      "w": 118,
+      "right": 182
+    }
+  },
+  {
+    "route": "/finance",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29-r5\\mobile-finance.png",
+    "bodyW": 390,
+    "clientW": 390,
+    "overflowX": false,
+    "offenders": [],
+    "nav": {
+      "x": 18,
+      "w": 203,
+      "right": 221
+    },
+    "label": {
+      "text": "czerwiec 2026",
+      "x": 68,
+      "w": 103,
+      "right": 171
+    }
+  },
+  {
+    "route": "/sport",
+    "file": "C:\\dev\\rootine-os\\apps\\web\\screenshots\\system-pass-2026-06-29-r5\\mobile-sport.png",
+    "bodyW": 390,
+    "clientW": 390,
+    "overflowX": false,
+    "offenders": [
+      {
+        "tag": "DIV",
+        "cls": "sport-day-col",
+        "text": "ŚRO1.07+",
+        "right": 527,
+        "x": 371,
+        "w": 156
+      },
+      {
+        "tag": "DIV",
+        "cls": "sport-day-head",
+        "text": "ŚRO1.07",
+        "right": 516,
+        "x": 382,
+        "w": 134
+      },
+      {
+        "tag": "SPAN",
+        "cls": "sport-day-name",
+        "text": "ŚRO",
+        "right": 402,
+        "x": 382,
+        "w": 20
+      },
+      {
+        "tag": "SPAN",
+        "cls": "sport-day-date",
+        "text": "1.07",
+        "right": 432,
+        "x": 408,
+        "w": 24
+      },
+      {
+        "tag": "DIV",
+        "cls": "sport-day-cards",
+        "text": "",
+        "right": 516,
+        "x": 382,
+        "w": 134
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "sport-day-add",
+        "text": "+",
+        "right": 516,
+        "x": 382,
+        "w": 134
+      },
+      {
+        "tag": "DIV",
+        "cls": "sport-day-col",
+        "text": "CZW2.07+",
+        "right": 691,
+        "x": 535,
+        "w": 156
+      },
+      {
+        "tag": "DIV",
+        "cls": "sport-day-head",
+        "text": "CZW2.07",
+        "right": 680,
+        "x": 546,
+        "w": 134
+      },
+      {
+        "tag": "SPAN",
+        "cls": "sport-day-name",
+        "text": "CZW",
+        "right": 566,
+        "x": 546,
+        "w": 20
+      },
+      {
+        "tag": "SPAN",
+        "cls": "sport-day-date",
+        "text": "2.07",
+        "right": 596,
+        "x": 572,
+        "w": 24
+      },
+      {
+        "tag": "DIV",
+        "cls": "sport-day-cards",
+        "text": "",
+        "right": 680,
+        "x": 546,
+        "w": 134
+      },
+      {
+        "tag": "BUTTON",
+        "cls": "sport-day-add",
+        "text": "+",
+        "right": 680,
+        "x": 546,
+        "w": 134
+      }
+    ],
+    "nav": null,
+    "label": null
+  }
+]

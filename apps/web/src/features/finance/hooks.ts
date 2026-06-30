@@ -89,7 +89,7 @@ export function useDeleteFinanceSavingsGoal() {
 export function useSaveRecurringExpense() {
   const invalidate = useInvalidateFinance();
   return useMutation({
-    mutationFn: ({ id, input }: { id?: string; input: RecurringExpenseInput }) => saveRecurringExpense(input, id),
+    mutationFn: ({ id, input, month }: { id?: string; input: RecurringExpenseInput; month?: string }) => saveRecurringExpense(input, id, month),
     onSuccess: () => onFinanceChange(invalidate, 'finance.recurring_expense'),
   });
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ConfirmDelete, Field, PageHeader } from '@/components/common';
+import { AppTabs, ConfirmDelete, DateNavigator, Field, PageHeader } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import {
   type Account,
@@ -47,8 +47,10 @@ type IconName =
   | 'check' | 'settings' | 'history' | 'calendar' | 'note' | 'arrow' | 'close' | 'reset';
 
 const SEGMENTS: Array<{ id: FinanceSegment; label: string }> = [
+  { id: 'accounts', label: 'Środki' },
   { id: 'due', label: 'Płatności' },
   { id: 'budget', label: 'Budżet' },
+  { id: 'savings', label: 'Oszczędności' },
   { id: 'jdg', label: 'JDG' },
   { id: 'history', label: 'Historia' },
 ];
@@ -109,6 +111,11 @@ function shiftMonth(month: string, delta: number) {
 function monthLabel(month: string) {
   const [year, m] = month.split('-').map(Number);
   return `${MONTHS[m - 1]} ${year}`;
+}
+
+function monthToDate(month: string) {
+  const [year, m] = month.split('-').map(Number);
+  return new Date(year, m - 1, 1);
 }
 
 function daysInMonth(month: string) {
@@ -253,6 +260,14 @@ export function FinanceScreen() {
     if (key === 'due') setSegment('due');
   };
 
+  const changeSegment = (next: string) => {
+    const value = next as FinanceSegment;
+    setSegment(value);
+    if (value === 'accounts' || value === 'savings' || value === 'budget' || value === 'due') {
+      setActiveSummary(value);
+    }
+  };
+
   const addForSegment = () => {
     if (segment === 'accounts') setAccountEditorToken((value) => value + 1);
     if (segment === 'due') setPaymentDrawer({ open: true });
@@ -270,11 +285,16 @@ export function FinanceScreen() {
         title="Finanse"
         desc="Przegląd finansów, budżetu i płatności w jednym miejscu."
         actions={(
-          <div className="finance-month-control">
-            <button className="icon-btn" type="button" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Poprzedni miesiąc"><Icon name="arrow" flip /></button>
-            <input className="input finance-month-input" type="month" value={month} onChange={(event) => setMonth(event.target.value || currentYearMonth())} />
-            <button className="icon-btn" type="button" onClick={() => setMonth(shiftMonth(month, 1))} aria-label="Następny miesiąc"><Icon name="arrow" /></button>
-          </div>
+          <>
+            <DateNavigator
+              mode="month"
+              value={monthToDate(month)}
+              onPrevious={() => setMonth(shiftMonth(month, -1))}
+              onNext={() => setMonth(shiftMonth(month, 1))}
+              onToday={() => setMonth(currentYearMonth())}
+            />
+            <button className="btn btn-primary btn-sm finance-header-cta" type="button" onClick={addForSegment}>{ctaLabel(segment)}</button>
+          </>
         )}
       />}
     >
@@ -289,23 +309,24 @@ export function FinanceScreen() {
       <div className="finance-workspace">
         <main className="finance-month-panel">
           <div className="finance-segment-toolbar">
-            <nav className="finance-segment-tabs">
-              {SEGMENTS.map((item) => <button key={item.id} className={segment === item.id ? 'is-active' : ''} type="button" onClick={() => setSegment(item.id)}>{item.label}</button>)}
-            </nav>
+            <AppTabs items={SEGMENTS} value={segment} onChange={changeSegment} variant="compact" ariaLabel="Sekcje finansów" />
             <div className="finance-segment-side">
               <SegmentKpiRail segment={segment} month={month} accounts={activeAccounts} payments={payments} goals={finance.savingsGoals} totals={totals} jdgItems={finance.jdgItems} jdgMonths={finance.jdgMonths} />
-              <button className="btn btn-primary btn-sm finance-segment-cta" type="button" onClick={addForSegment}>{ctaLabel(segment)}</button>
             </div>
           </div>
           <div className="finance-segment-body">
             {financeQuery.isLoading && <FinanceEmpty title="Ładuję finanse..." desc="Pobieram dane z Supabase." />}
             {financeQuery.isError && <FinanceEmpty title="Nie udało się pobrać finansów." desc={financeQuery.error instanceof Error ? financeQuery.error.message : 'Spróbuj ponownie za chwilę.'} />}
-            {!financeQuery.isLoading && !financeQuery.isError && segment === 'accounts' && <AccountsSegment editorToken={accountEditorToken} accounts={finance.accounts} />}
-            {segment === 'due' && <PaymentsSegment month={month} payments={payments} onEdit={(row) => setPaymentDrawer({ open: true, row })} />}
-            {segment === 'budget' && <BudgetSegment categories={monthBudget} onEdit={(category) => setBudgetDrawer({ open: true, category })} />}
-            {segment === 'savings' && <SavingsSegment goals={finance.savingsGoals} onEdit={(goal) => setSavingsDrawer({ open: true, goal })} />}
-            {segment === 'jdg' && <JdgSegment month={month} jdgItems={finance.jdgItems} jdgMonths={finance.jdgMonths} onEdit={(item) => setJdgDrawer({ open: true, item })} />}
-            {segment === 'history' && <HistorySegment month={month} payments={payments} />}
+            {!financeQuery.isLoading && !financeQuery.isError && (
+              <>
+                {segment === 'accounts' && <AccountsSegment editorToken={accountEditorToken} accounts={finance.accounts} />}
+                {segment === 'due' && <PaymentsSegment month={month} payments={payments} onEdit={(row) => setPaymentDrawer({ open: true, row })} />}
+                {segment === 'budget' && <BudgetSegment categories={monthBudget} onEdit={(category) => setBudgetDrawer({ open: true, category })} />}
+                {segment === 'savings' && <SavingsSegment goals={finance.savingsGoals} onEdit={(goal) => setSavingsDrawer({ open: true, goal })} />}
+                {segment === 'jdg' && <JdgSegment month={month} jdgItems={finance.jdgItems} jdgMonths={finance.jdgMonths} onEdit={(item) => setJdgDrawer({ open: true, item })} />}
+                {segment === 'history' && <HistorySegment month={month} payments={payments} />}
+              </>
+            )}
           </div>
         </main>
 
@@ -320,12 +341,12 @@ export function FinanceScreen() {
 }
 
 function ctaLabel(segment: FinanceSegment) {
-  if (segment === 'accounts') return '+ Źródło';
-  if (segment === 'due') return '+ Płatność';
-  if (segment === 'budget') return '+ Kategoria';
+  if (segment === 'accounts') return '+ Nowe źródło';
+  if (segment === 'due') return '+ Nowa płatność';
+  if (segment === 'budget') return '+ Nowa kategoria';
   if (segment === 'savings') return '+ Nowy cel';
-  if (segment === 'jdg') return '+ Obowiązek';
-  return 'Eksportuj';
+  if (segment === 'jdg') return '+ Obowiązek JDG';
+  return 'Eksportuj historię';
 }
 
 function SummaryTile({ label, value, note, active, action, onClick }: { label: string; value: string; note: string; active: boolean; action?: IconName; onClick: () => void }) {
@@ -461,8 +482,8 @@ function PaymentsSegment({ month, payments, onEdit }: { month: string; payments:
               <Badge>{row.type}</Badge>
               <StatusBadge status={row.status} />
               <span className="finance-line-actions">
-                <button className="icon-btn" type="button" onClick={(event) => { event.stopPropagation(); onEdit(row); }}><Icon name="edit" /></button>
-                <button className="icon-btn" type="button" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}><Icon name="trash" /></button>
+                <button className="icon-btn" type="button" aria-label={`Edytuj płatność ${row.name}`} onClick={(event) => { event.stopPropagation(); onEdit(row); }}><Icon name="edit" /></button>
+                <button className="icon-btn" type="button" aria-label={`Usuń płatność ${row.name}`} onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}><Icon name="trash" /></button>
               </span>
             </div>
           ))}
@@ -622,6 +643,7 @@ function AccountsSegment({ editorToken, accounts }: { editorToken: number; accou
   const saveAccount = useSaveAccount();
   const deleteAccount = useDeleteFinanceAccount();
   const [editing, setEditing] = useState<Account | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Account | null>(null);
   const active = accounts.filter((account) => !account.archived);
   const total = active.reduce((sum, account) => sum + account.balance, 0);
 
@@ -639,17 +661,37 @@ function AccountsSegment({ editorToken, accounts }: { editorToken: number; accou
             <span><strong>{account.name}</strong><small>{ACCOUNT_TYPE_LABELS[account.type] ?? account.type}</small></span>
             <b>{fmtMoney(account.balance, account.currency)}</b>
             <span className="finance-line-actions">
-              <span className="icon-btn"><Icon name="edit" /></span>
-              <span className="icon-btn" onClick={(event) => { event.stopPropagation(); deleteAccount.mutate(account.id); }}><Icon name="trash" /></span>
+              <span className="icon-btn" aria-hidden="true"><Icon name="edit" /></span>
+              <span
+                className="icon-btn"
+                role="button"
+                tabIndex={0}
+                aria-label={`Usuń źródło ${account.name}`}
+                onClick={(event) => { event.stopPropagation(); setDeleteTarget(account); }}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' && event.key !== ' ') return;
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setDeleteTarget(account);
+                }}
+              ><Icon name="trash" /></span>
             </span>
           </button>
         ))}
       </div>
-      <button className="btn btn-secondary finance-inline-add" type="button" onClick={() => setEditing(blankAccount())}>+ Dodaj źródło</button>
       <AccountEditor account={editing} onClose={() => setEditing(null)} onSave={(payload) => {
         saveAccount.mutate({ id: editing?.id || undefined, input: payload });
         setEditing(null);
       }} />
+      <ConfirmDelete
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        label={deleteTarget?.name ?? 'źródło środków'}
+        onConfirm={() => {
+          if (deleteTarget) deleteAccount.mutate(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+      />
     </div>
   );
 }
@@ -662,7 +704,7 @@ function PaymentDrawer({ open, row, month, onClose }: { open: boolean; row: Paym
     amount: String(row.amount),
     category: row.category,
     dueDate: row.dueDate,
-    paymentType: row.source === 'reminder' ? 'one_time' : (row.raw as RecurringExpense).frequency === 'jdg' ? 'jdg' : 'monthly',
+    paymentType: row.source === 'reminder' ? 'one_time' : (row.raw as RecurringExpense).frequency,
     status: row.paid ? 'paid' : 'due',
     reminder: true,
     showPlanner: false,
@@ -693,12 +735,12 @@ function PaymentDrawer({ open, row, month, onClose }: { open: boolean; row: Paym
         amount,
         category: form.category,
         dueDay: Number(form.dueDate.slice(-2)),
-        frequency: (form.paymentType === 'jdg' ? 'jdg' : form.paymentType === 'yearly' ? 'yearly' : 'monthly') as RecurringExpense['frequency'],
+        frequency: form.paymentType as RecurringExpense['frequency'],
         reminderEnabled: form.reminder,
         paidThisMonth: form.status === 'paid',
         folderId: undefined,
       };
-      saveRecurring.mutate({ id: row?.source === 'recurring' ? (row.raw as RecurringExpense).id : undefined, input: payload });
+      saveRecurring.mutate({ id: row?.source === 'recurring' ? (row.raw as RecurringExpense).id : undefined, input: payload, month });
     }
     onClose();
   };

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, DetailPanel, ProgressBar, PriorityBadge, StatusBadge } from '@/components/common';
+import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, DetailPanel, ProgressBar, PriorityBadge, StatusBadge, ViewSegmentedControl } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import {
   useAddCompany,
@@ -233,12 +233,20 @@ export function PracaScreen() {
     });
   }, [contextTasks]);
 
-  const selectedTask = sortedTasks.find((task) => task.id === selectedTaskId) ?? sortedTasks.find((task) => task.status !== 'done') ?? sortedTasks[0];
+  const visibleTasks = useMemo(
+    () => sortedTasks.filter((task) => !selectedProjectId || task.projectId === selectedProjectId),
+    [selectedProjectId, sortedTasks],
+  );
+  const selectedTask = visibleTasks.find((task) => task.id === selectedTaskId) ?? visibleTasks.find((task) => task.status !== 'done') ?? visibleTasks[0];
 
   useEffect(() => {
     if (!selectedTaskId && selectedTask) setSelectedTaskId(selectedTask.id);
-    if (selectedTaskId && !sortedTasks.some((task) => task.id === selectedTaskId)) setSelectedTaskId(sortedTasks[0]?.id ?? null);
-  }, [selectedTask, selectedTaskId, sortedTasks]);
+    if (selectedTaskId && !visibleTasks.some((task) => task.id === selectedTaskId)) setSelectedTaskId(visibleTasks[0]?.id ?? null);
+  }, [selectedTask, selectedTaskId, visibleTasks]);
+
+  useEffect(() => {
+    setSelectedTaskId(null);
+  }, [selectedProjectId]);
 
   const deadlines = buildDeadlines(contextTasks, contextProjects);
 
@@ -249,6 +257,7 @@ export function PracaScreen() {
         icon={<WorkIcon name="briefcase" />}
         title="Praca"
         desc="Wszystkie firmy, projekty, zadania i notatki w jednym miejscu."
+        actions={<button className="btn btn-primary btn-sm" type="button" onClick={() => setShowTaskModal(true)}><WorkIcon name="plus" /> Nowe zadanie</button>}
       />}
     >
 
@@ -301,16 +310,21 @@ export function PracaScreen() {
 
           <section className="work-task-board">
             <div className="work-viewbar">
-              <div className="work-view-tabs">
-                <button className="is-active" type="button"><WorkIcon name="list" /> Lista</button>
-                <button type="button"><WorkIcon name="board" /> Tablica</button>
-                <button type="button"><WorkIcon name="calendar" /> Kalendarz</button>
-                <button type="button"><WorkIcon name="timeline" /> Oś czasu</button>
-              </div>
+              <ViewSegmentedControl
+                items={[
+                  { id: 'list', label: 'Lista', icon: <WorkIcon name="list" /> },
+                  { id: 'board', label: 'Tablica', icon: <WorkIcon name="board" />, disabled: true },
+                  { id: 'calendar', label: 'Kalendarz', icon: <WorkIcon name="calendar" />, disabled: true },
+                  { id: 'timeline', label: 'Oś czasu', icon: <WorkIcon name="timeline" />, disabled: true },
+                ]}
+                value="list"
+                onChange={() => undefined}
+                ariaLabel="Widok zadań"
+              />
               <div className="work-view-actions">
-                <button type="button"><WorkIcon name="filter" /> Filtry</button>
-                <button type="button">Sortuj: Priorytet</button>
-                <button type="button" aria-label="Ustawienia"><WorkIcon name="settings" /></button>
+                <button type="button" disabled><WorkIcon name="filter" /> Filtry</button>
+                <button type="button" disabled>Sortuj: Priorytet</button>
+                <button type="button" disabled aria-label="Ustawienia"><WorkIcon name="settings" /></button>
               </div>
             </div>
 
@@ -318,16 +332,14 @@ export function PracaScreen() {
               <EmptyState title="Ladowanie danych" desc="Pobieram firmy, projekty i zadania." />
             ) : workContexts.length === 0 ? (
               <EmptyState title="Brak firm" desc="Dodaj pierwsza firme lub kontekst pracy." cta="Dodaj firme" onCta={() => setShowContextModal(true)} />
-            ) : sortedTasks.length === 0 ? (
+            ) : visibleTasks.length === 0 ? (
               <EmptyState title="Brak zadań" desc="Dodaj pierwsze zadanie do bieżącej firmy." cta="Dodaj zadanie" onCta={() => setShowTaskModal(true)} />
             ) : (
               <div className="work-task-table">
                 <div className="work-task-head">
                   <span>Zadanie</span><span>Projekt</span><span>Priorytet</span><span>Status</span><span>Termin</span><span>Przypisane</span><span />
                 </div>
-                {sortedTasks
-                  .filter((task) => !selectedProjectId || task.projectId === selectedProjectId)
-                  .map((task) => (
+                {visibleTasks.map((task) => (
                     <WorkTaskRow
                       key={task.id}
                       task={task}
@@ -499,12 +511,12 @@ function DeadlinesPanel({ deadlines }: { deadlines: { task: WorkTask; project?: 
   return (
     <section className="work-panel">
       <div className="work-panel-head">
-        <h2>Najbliższe deadline'y</h2>
+        <h2>Najbliższe terminy</h2>
         <button type="button">Zobacz kalendarz <WorkIcon name="chevron" /></button>
       </div>
       <div className="work-deadline-list">
         {deadlines.length === 0 ? (
-          <div className="work-empty-small">Brak najbliższych terminów.</div>
+          <EmptyState compact title="Brak najbliższych terminów" desc="Zadania z terminami pojawią się tutaj." />
         ) : deadlines.map(({ task, project, left }) => (
           <div className="work-deadline" key={task.id}>
             <time>
