@@ -27,34 +27,35 @@ Status legend:
 
 ## Current Next Step
 
-- [ ] Step 23: Technical UI audit. `NEXT`
+- [ ] Step 24: Harden edge cases. `NEXT`
 
 ```text
-/impeccable critique
+/impeccable harden
 
-Audit the whole app for accessibility, responsiveness, performance and technical UI quality.
+Harden the app UI for real-world edge cases.
 
 Context:
-The global design system should already be defined. This step is only for evaluating this tab against that system.
+The app should work well with incomplete data, long labels, many records, no records, different screen sizes and user interaction edge cases.
 
-Please review:
-1. Page hierarchy.
-2. Main module clarity.
-3. Card and panel consistency.
-4. Button and action clarity.
-5. Empty states.
-6. Loading states.
-7. Error states.
-8. Spacing and rhythm.
-9. Responsive behavior.
-10. Whether the page uses available viewport space efficiently.
-11. Whether the tab matches the global design system.
-12. Any elements that feel visually disconnected from the rest of the app.
+Please harden:
+1. Long Polish labels.
+2. Long English labels.
+3. Long task names.
+4. Long workout names.
+5. Long document names.
+6. Long project names.
+7. Empty lists.
+8. Very large lists.
+9. Missing data.
+10. Loading states.
+11. Error states.
+12. Disabled states.
 
 Important constraints:
-- Do not redesign yet.
-- Identify specific issues first.
-- Keep the global design system as the standard.
+- Do not change business logic.
+- Do not change data models.
+- Do not change routing.
+- Keep the finalized visual design intact.
 ```
 
 ---
@@ -100,8 +101,8 @@ Important constraints:
 
 ### Phase 6: Audit, Harden, Optimize
 
-- [ ] Step 23: Technical UI audit. `NEXT`
-- [ ] Step 24: Harden edge cases.
+- [x] Step 23: Technical UI audit.
+- [ ] Step 24: Harden edge cases. `NEXT`
 - [ ] Step 25: Optimize after design is stable.
 
 ### Optional Phase 7

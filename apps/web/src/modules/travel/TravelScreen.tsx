@@ -421,7 +421,14 @@ function TravelTabs({ active, onChange }: { active: TravelTab; onChange: (tab: T
   return (
     <div className="travel-tabs" role="tablist">
       {tabs.map((tab) => (
-        <button key={tab.id} type="button" className={active === tab.id ? 'is-active' : ''} onClick={() => onChange(tab.id)}>
+        <button
+          key={tab.id}
+          type="button"
+          role="tab"
+          aria-selected={active === tab.id}
+          className={active === tab.id ? 'is-active' : ''}
+          onClick={() => onChange(tab.id)}
+        >
           <TravelIcon name={tab.icon} /> {tab.label}
         </button>
       ))}

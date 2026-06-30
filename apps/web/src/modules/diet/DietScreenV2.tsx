@@ -507,7 +507,19 @@ function MealSection({ category, items, active, date, onActivate, onAdd, onEdit 
           {items.map((item) => (
             <button key={item.id} className="diet-entry-row" onClick={(event) => { event.stopPropagation(); onEdit(item); }}>
               <span className="diet-entry-name">
-                <span className="diet-row-delete" role="button" tabIndex={0} onClick={(event) => { event.stopPropagation(); remove.mutate(item.id); }}><X size={13} /></span>
+                <span
+                  className="diet-row-delete"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Usuń ${item.name}`}
+                  onClick={(event) => { event.stopPropagation(); remove.mutate(item.id); }}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    remove.mutate(item.id);
+                  }}
+                ><X size={13} /></span>
                 <span className="diet-entry-thumb"><Utensils size={15} /></span>
                 <span>{item.name}</span>
               </span>

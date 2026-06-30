@@ -10515,3 +10515,96 @@ textarea.input {
     text-align: center;
   }
 }
+
+/* ============================================================ STEP 23: TECHNICAL UI AUDIT */
+.sr-only,
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+:where([role="button"], [role="tab"], .diet-row-delete) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where([role="button"], [role="tab"], .diet-row-delete):focus-visible {
+  outline: none;
+  box-shadow: var(--ui-control-focus);
+}
+
+:where([role="tab"][aria-selected="true"]) {
+  color: var(--acc-ink);
+  border-color: var(--acc-line);
+  background: var(--ui-control-bg-active);
+}
+
+:where(.module-page, .modal, .modal-box, .drawer, .finance-drawer, .diet-drawer) {
+  overflow-wrap: anywhere;
+}
+
+:where(img, video, canvas, svg) {
+  max-width: 100%;
+}
+
+:where(.btn, button, [role="button"], [role="tab"], .icon-btn, input, select, textarea) {
+  touch-action: manipulation;
+}
+
+:where(.loading-state, .skeleton, .spinner) {
+  forced-color-adjust: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  :where(.skeleton, .spinner) {
+    animation: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  :root {
+    --ui-control-focus: 0 0 0 3px Highlight;
+  }
+
+  :where(.btn, .icon-btn, .input, .select, .textarea, .card, .lay-card, .modal, .modal-box) {
+    border-color: CanvasText;
+  }
+
+  :where(.btn-primary, .btn.btn-primary, .auth-btn) {
+    forced-color-adjust: none;
+    color: HighlightText;
+    background: Highlight;
+    border-color: Highlight;
+  }
+
+  :where(.badge, .status-chip, .work-status, .travel-status, .finance-badge) {
+    border-color: CanvasText;
+  }
+}
+
+@media (max-width: 420px) {
+  :where(.module-page > .page-body, .page-body > .lay-page) {
+    min-width: 0;
+  }
+
+  :where(.btn, button, [role="button"], [role="tab"]) {
+    min-width: 0;
+  }
+}
