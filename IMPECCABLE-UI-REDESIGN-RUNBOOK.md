@@ -27,12 +27,12 @@ Status legend:
 
 ## Current Next Step
 
-- [ ] Step 22: Final whole-app polish. `NEXT`
+- [ ] Step 23: Technical UI audit. `NEXT`
 
 ```text
 /impeccable critique
 
-Apply a final whole-app UI consistency pass.
+Audit the whole app for accessibility, responsiveness, performance and technical UI quality.
 
 Context:
 The global design system should already be defined. This step is only for evaluating this tab against that system.
@@ -96,11 +96,11 @@ Important constraints:
 ### Phase 5: Whole-App Consistency Pass
 
 - [x] Step 21: Full app design critique.
-- [ ] Step 22: Final whole-app polish. `NEXT`
+- [x] Step 22: Final whole-app polish.
 
 ### Phase 6: Audit, Harden, Optimize
 
-- [ ] Step 23: Technical UI audit.
+- [ ] Step 23: Technical UI audit. `NEXT`
 - [ ] Step 24: Harden edge cases.
 - [ ] Step 25: Optimize after design is stable.
 

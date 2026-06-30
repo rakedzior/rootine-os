@@ -368,7 +368,7 @@ function TripWorkspace({ trip, activeTab, packingState, onTabChange, onTogglePac
         <div className="travel-module-topbar">
           <TravelTabs active={activeTab} onChange={onTabChange} />
           <button className="btn btn-primary btn-sm travel-tab-add" type="button" aria-label={addLabelForTab(activeTab)} title={addLabelForTab(activeTab)}>
-            <TravelIcon name="plus" /> Dodaj
+            <TravelIcon name="plus" /> {addLabelForTab(activeTab)}
           </button>
         </div>
 

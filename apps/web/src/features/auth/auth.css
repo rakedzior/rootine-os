@@ -123,3 +123,70 @@
 .oauth-btn:hover {
   transform: translateY(-1px);
 }
+
+/* Step 22: auth aligns with the final whole-app UI contract. */
+.auth-wrap {
+  --ui-card-radius: 16px;
+  --ui-control-border: var(--border);
+  --ui-control-border-hover: var(--border-strong);
+  --ui-control-bg: color-mix(in srgb, var(--surface) 84%, transparent);
+  --ui-control-bg-hover: color-mix(in srgb, var(--surface-2) 78%, transparent);
+  --ui-control-bg-active: color-mix(in srgb, var(--acc) 12%, var(--surface));
+}
+
+.auth-card {
+  border-radius: var(--ui-card-radius);
+  border-color: var(--border-soft);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, transparent), color-mix(in srgb, var(--bg-0) 88%, transparent)),
+    var(--surface);
+  box-shadow: var(--sh-pop);
+}
+
+.auth-title {
+  letter-spacing: 0;
+}
+
+.auth-sub,
+.auth-field label,
+.auth-divider,
+.pw-label {
+  letter-spacing: .06em;
+}
+
+.auth-input,
+.oauth-btn {
+  border-color: var(--ui-control-border);
+  background: var(--ui-control-bg);
+}
+
+.auth-input:hover,
+.oauth-btn:hover {
+  border-color: var(--ui-control-border-hover);
+  background: var(--ui-control-bg-hover);
+}
+
+.auth-btn {
+  color: var(--on-acc);
+  border-color: var(--acc-line);
+  background: var(--acc);
+}
+
+.auth-btn:hover {
+  border-color: var(--acc-line);
+  background: var(--acc-solid);
+}
+
+.auth-banner {
+  border-radius: var(--ui-control-radius);
+}
+
+@media (max-width: 520px) {
+  .auth-wrap {
+    padding: 20px 12px;
+  }
+
+  .auth-card {
+    padding: 20px 18px;
+  }
+}

@@ -10161,3 +10161,357 @@ textarea.input {
     justify-content: center;
   }
 }
+
+/* ============================================================ STEP 22: FINAL WHOLE-APP POLISH */
+:root {
+  --text-tertiary: var(--text-muted);
+  --ui-card-bg:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, transparent), color-mix(in srgb, var(--surface-base) 94%, transparent)),
+    var(--surface);
+  --ui-card-bg-hover:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 74%, transparent), color-mix(in srgb, var(--surface-base) 92%, transparent)),
+    var(--surface-2);
+  --ui-status-h: 24px;
+  --ui-status-px: 9px;
+  --ui-table-row-h: 52px;
+}
+
+.module-page :where(
+  .lay-card,
+  .card,
+  .planner-tasks-card,
+  .planner-habits-card,
+  .planner-calendar-card,
+  .finance-card,
+  .finance-month-panel,
+  .finance-context-card,
+  .finance-accounts-panel,
+  .finance-account-list-panel,
+  .finance-jdg-card,
+  .finance-jdg-note-card,
+  .diet-meal-card,
+  .diet-side-card,
+  .diet-summary-card,
+  .diet-chart-card,
+  .diet-rhythm-card,
+  .goals-roadmap-card,
+  .goals-week-card,
+  .goals-actions-card,
+  .office-sidebar,
+  .office-cases-panel,
+  .office-mini-panel,
+  .travel-card,
+  .work-context-panel,
+  .work-task-board,
+  .work-panel,
+  .notes-card,
+  .notes-shell-panel,
+  .notes-board-panel,
+  .sport-panel,
+  .sport-week-card
+) {
+  min-width: 0;
+  border-color: var(--border-soft);
+  border-radius: var(--ui-card-radius);
+  background: var(--ui-card-bg);
+  box-shadow: var(--sh-1);
+}
+
+.module-page :where(
+  .planner-tasks-card,
+  .planner-habits-card,
+  .planner-calendar-card,
+  .finance-card,
+  .finance-month-panel,
+  .finance-context-card,
+  .diet-meal-card,
+  .diet-side-card,
+  .goals-roadmap-card,
+  .goals-week-card,
+  .goals-actions-card,
+  .office-mini-panel,
+  .travel-card,
+  .work-panel,
+  .notes-card,
+  .sport-panel
+) :where(.card-head, .section-head, .finance-card-head, .finance-panel-head, .travel-card-head, .work-panel-head, .office-panel-head, .diet-panel-head, .lay-card-head) {
+  min-width: 0;
+  gap: 12px;
+}
+
+.module-page :where(
+  .card-title,
+  .lay-card-title,
+  .finance-card-title,
+  .finance-panel-head h2,
+  .travel-card-head h2,
+  .travel-card-head h3,
+  .work-panel-head h2,
+  .office-panel-title,
+  .diet-panel-head strong,
+  .notes-panel-title
+) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+:where(
+  .sub-tabs,
+  .subtabs,
+  .finance-segment-tabs,
+  .finance-history-filters,
+  .work-view-tabs,
+  .travel-tabs,
+  .notes-view-toggle,
+  .diet-analytics-tabs,
+  .diet-result-tabs,
+  .planner-tasks-card .task-filter-row,
+  .travel-rail-filters,
+  .travel-pack-categories
+) {
+  border-color: var(--border-soft);
+  border-radius: var(--ui-control-radius);
+  background: color-mix(in srgb, var(--surface-base) 68%, transparent);
+}
+
+:where(
+  .sub-tabs button,
+  .subtabs button,
+  .finance-segment-tabs button,
+  .finance-history-filters button,
+  .work-view-tabs button,
+  .travel-tabs button,
+  .notes-view-toggle button,
+  .diet-analytics-tabs button,
+  .diet-result-tabs button,
+  .planner-tasks-card .task-filter-btn,
+  .travel-rail-filters button,
+  .travel-pack-categories button
+) {
+  min-height: var(--ui-control-h-sm);
+  border-radius: calc(var(--ui-control-radius) - 2px);
+  border-color: transparent;
+  font-family: var(--font-sans);
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+:where(
+  .sub-tabs button:hover,
+  .subtabs button:hover,
+  .finance-segment-tabs button:hover,
+  .finance-history-filters button:hover,
+  .work-view-tabs button:hover,
+  .travel-tabs button:hover,
+  .notes-view-toggle button:hover,
+  .diet-analytics-tabs button:hover,
+  .diet-result-tabs button:hover,
+  .planner-tasks-card .task-filter-btn:hover,
+  .travel-rail-filters button:hover,
+  .travel-pack-categories button:hover
+) {
+  color: var(--text-primary);
+  border-color: var(--ui-control-border-hover);
+  background: var(--ui-control-bg-hover);
+}
+
+:where(
+  .sub-tabs button.active,
+  .subtabs button.active,
+  .finance-segment-tabs button.is-active,
+  .finance-history-filters button.is-active,
+  .work-view-tabs button.is-active,
+  .travel-tabs button.is-active,
+  .notes-view-toggle button.is-active,
+  .diet-analytics-tabs button.is-active,
+  .diet-result-tabs button.active,
+  .planner-tasks-card .task-filter-btn.is-active,
+  .travel-rail-filters button.is-active,
+  .travel-pack-categories button.is-active
+) {
+  color: var(--acc-ink);
+  border-color: var(--acc-line);
+  background: var(--ui-control-bg-active);
+  box-shadow: none;
+}
+
+:where(
+  .badge,
+  .status-chip,
+  .status-todo,
+  .status-active,
+  .status-waiting,
+  .status-done,
+  .status-overdue,
+  .status-warn,
+  .status-cancelled,
+  .status-blocked,
+  .work-priority,
+  .work-status,
+  .travel-status,
+  .finance-badge,
+  .goals-status,
+  .office-panel-title span
+) {
+  min-height: var(--ui-status-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  border-radius: var(--r-pill);
+  padding: 3px var(--ui-status-px);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+:where(.empty-state, .lay-empty) {
+  min-height: 150px;
+  justify-content: center;
+  border: 1px dashed var(--border-soft);
+  border-radius: var(--ui-card-radius);
+  background: color-mix(in srgb, var(--surface-base) 48%, transparent);
+}
+
+:where(.empty-state h3, .empty-state .es-title, .lay-empty-title) {
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  letter-spacing: 0;
+}
+
+:where(.empty-state p, .empty-state .es-desc, .lay-empty-desc) {
+  color: var(--text-muted);
+}
+
+:where(
+  .data-table,
+  .finance-payments-table,
+  .finance-budget-table,
+  .finance-jdg-table,
+  .finance-history-table,
+  .work-task-table,
+  .office-documents-table,
+  .sport-sets-table,
+  .diet-meal-table-scroll,
+  .diet-category-table-scroll
+) {
+  border-color: var(--border-soft);
+  border-radius: var(--ui-card-radius);
+  background: color-mix(in srgb, var(--surface-base) 46%, transparent);
+  scrollbar-gutter: stable;
+}
+
+:where(
+  .finance-payment-line,
+  .finance-budget-row:not(.is-head),
+  .finance-jdg-table-row,
+  .finance-history-table-row,
+  .work-task-row,
+  .office-case-row,
+  .office-document-row,
+  .travel-detail-list article,
+  .travel-timeline button,
+  .goals-task-row,
+  .notes-list-row,
+  .sport-history-row
+) {
+  min-height: var(--ui-table-row-h);
+}
+
+:where(
+  .input,
+  .select,
+  .textarea,
+  .fi,
+  .filter-select,
+  .travel-filter,
+  .work-company-bar select
+) {
+  border-color: var(--ui-control-border);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-control-bg);
+}
+
+:where(
+  .input:focus,
+  .input:focus-visible,
+  .select:focus,
+  .select:focus-visible,
+  .textarea:focus,
+  .textarea:focus-visible,
+  .fi:focus,
+  .fi:focus-visible,
+  .filter-select:focus-within,
+  .travel-filter:focus-within
+) {
+  outline: none;
+  border-color: var(--acc-line);
+  box-shadow: var(--ui-control-focus);
+}
+
+:where(
+  .finance-card-actions,
+  .finance-row-actions,
+  .office-panel-head,
+  .travel-card-head,
+  .work-view-actions,
+  .notes-editor-actions,
+  .diet-panel-head,
+  .sport-form-actions
+) {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1180px) {
+  .module-page,
+  .module-page > .page-body {
+    overflow: auto;
+  }
+
+  .page-body > :where(
+    .planner-shell,
+    .finance-workspace,
+    .goals-os,
+    .office-dashboard-shell,
+    .notes-workspace,
+    .work-shell,
+    .travel-dashboard,
+    .diet-shell
+  ) {
+    height: auto;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 680px) {
+  :where(.modal, .modal-box) {
+    max-width: calc(100vw - 24px);
+  }
+
+  :where(.modal-body) {
+    padding: 16px;
+  }
+
+  :where(
+    .finance-card-actions,
+    .finance-row-actions,
+    .work-view-actions,
+    .travel-card-head,
+    .office-panel-head,
+    .diet-panel-head,
+    .sport-form-actions
+  ) > :where(.btn, button, label.btn) {
+    min-width: 0;
+  }
+
+  :where(.btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-neutral, .btn-danger, .btn-success) {
+    white-space: normal;
+    text-align: center;
+  }
+}
