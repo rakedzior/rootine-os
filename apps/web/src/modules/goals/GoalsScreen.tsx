@@ -152,7 +152,7 @@ function mapGoal(row: GoalRow, taskRows: GoalTaskRow[], milestoneRows: Milestone
     tasks: buildGoalTaskTree(taskRows, row.id),
     milestones: milestoneRows.filter((milestone) => milestone.goal_id === row.id).map(mapMilestone),
     archived: row.archived,
-    emoji: row.emoji || 'target',
+    emoji: row.emoji || '🎯',
     completedAt: row.completed_at ?? undefined,
   };
 }

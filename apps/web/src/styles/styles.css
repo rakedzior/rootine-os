@@ -11222,3 +11222,352 @@ textarea.input {
     box-shadow: none;
   }
 }
+
+/* ============================================================ TARGETED UI HARDENING PASS */
+:root {
+  --ui-title-size: clamp(22px, 1.7vw, 30px);
+  --ui-section-title-size: 15px;
+  --ui-body-size: 13px;
+  --ui-meta-size: 11px;
+}
+
+:where(.module-page, .page-body, .lay-page) {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+:where(
+  .planner-shell,
+  .finance-workspace,
+  .goals-os,
+  .notes-workspace,
+  .office-dashboard-shell,
+  .travel-dashboard,
+  .work-shell,
+  .diet-shell,
+  .sport-layout,
+  .lay-page
+) {
+  max-inline-size: 100%;
+  min-block-size: 0;
+}
+
+:where(
+  .page-head-text h1,
+  .page-header h1,
+  .page-head-main h1,
+  .goals-detail-header h2,
+  .notes-board-title h2,
+  .travel-card-head h2,
+  .travel-card-head h3,
+  .finance-card-title,
+  .module-title
+) {
+  font-family: var(--font-display);
+  font-size: var(--ui-title-size);
+  font-weight: 650;
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+:where(
+  .card-title,
+  .lay-card-title,
+  .section-head h2,
+  .section-head h3,
+  .office-panel-title,
+  .work-panel-head h2,
+  .diet-panel-head strong,
+  .goals-roadmap-card .card-title,
+  .goals-week-card .card-title,
+  .goals-actions-card .card-title,
+  .notes-panel-title
+) {
+  font-family: var(--font-display);
+  font-size: var(--ui-section-title-size);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+:where(
+  .kicker,
+  .lay-eyebrow,
+  .kpi-label,
+  .filter-select > span,
+  .field label,
+  .form-group label,
+  .auth-field label,
+  .card-title,
+  .badge,
+  .status-chip,
+  .work-status,
+  .travel-status,
+  .finance-badge,
+  .work-priority
+) {
+  letter-spacing: .06em;
+}
+
+:where(
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-neutral,
+  .btn-danger,
+  .btn-success,
+  button,
+  [role="button"],
+  [role="tab"]
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+:where(
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-neutral,
+  .btn-danger,
+  .btn-success
+) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.18;
+}
+
+:where(
+  .sub-tabs,
+  .subtabs,
+  .finance-segment-tabs,
+  .finance-history-filters,
+  .work-view-tabs,
+  .travel-tabs,
+  .notes-view-toggle,
+  .diet-analytics-tabs,
+  .diet-result-tabs,
+  .planner-tasks-card .task-filter-row,
+  .travel-rail-filters,
+  .travel-pack-categories,
+  .travel-module-topbar .travel-tabs
+) {
+  display: flex;
+  align-items: center;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  gap: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+:where(
+  .sub-tabs,
+  .subtabs,
+  .finance-segment-tabs,
+  .finance-history-filters,
+  .work-view-tabs,
+  .travel-tabs,
+  .notes-view-toggle,
+  .diet-analytics-tabs,
+  .diet-result-tabs,
+  .planner-tasks-card .task-filter-row,
+  .travel-rail-filters,
+  .travel-pack-categories,
+  .travel-module-topbar .travel-tabs
+)::-webkit-scrollbar {
+  display: none;
+}
+
+:where(
+  .sub-tabs button,
+  .subtabs button,
+  .finance-segment-tabs button,
+  .finance-history-filters button,
+  .work-view-tabs button,
+  .travel-tabs button,
+  .notes-view-toggle button,
+  .diet-analytics-tabs button,
+  .diet-result-tabs button,
+  .planner-tasks-card .task-filter-btn,
+  .travel-rail-filters button,
+  .travel-pack-categories button,
+  .travel-module-topbar .travel-tabs button
+) {
+  flex: 0 1 auto;
+  min-inline-size: max-content;
+  max-inline-size: min(100%, 28ch);
+  min-block-size: var(--ui-control-h-sm);
+  padding-inline: 10px;
+  line-height: 1.15;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+:where(
+  svg,
+  .icon-btn svg,
+  .btn svg,
+  [role="button"] svg,
+  [role="tab"] svg,
+  .page-head-icon svg,
+  .kpi-icon svg,
+  .sub-tab-icon svg,
+  .work-project-icon svg,
+  .travel-trip-icon svg,
+  .finance-icon-tile svg,
+  .office-metric-icon svg,
+  .goals-folder-emoji svg
+) {
+  flex: 0 0 auto;
+  min-inline-size: 0;
+}
+
+:where(.page-head-icon, .kpi-icon, .sub-tab-icon, .work-project-icon, .travel-trip-icon, .finance-icon-tile, .office-metric-icon) {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+  text-indent: 0;
+  line-height: 1;
+}
+
+:where(.page-head-icon, .kpi-icon, .work-project-icon, .travel-trip-icon, .finance-icon-tile, .office-metric-icon) > :not(svg) {
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
+  font-size: 0;
+}
+
+:where(.goals-folder-emoji) {
+  overflow: hidden;
+  line-height: 1;
+  text-align: center;
+}
+
+:where(
+  .planner-calendar-title,
+  .planner-task-title,
+  .task-title,
+  .todo-item .t,
+  .habit-row .info .n,
+  .goals-task-title,
+  .goals-folder-main strong,
+  .goals-folder-main small,
+  .goals-week-task span,
+  .goals-week-task small,
+  .notes-category strong,
+  .notes-list-row-main strong,
+  .notes-list-row-main small,
+  .notes-tile strong,
+  .notes-tile p,
+  .sport-workout-title,
+  .sport-workout-subtitle,
+  .sport-template-tile-name,
+  .sport-template-tile-subtitle,
+  .sport-history-row-title,
+  .sport-record-title,
+  .diet-entry-name span:last-child,
+  .diet-meal-title strong,
+  .diet-category-name-cell strong,
+  .finance-payment-name strong,
+  .finance-payment-name small,
+  .finance-category-cell,
+  .finance-budget-name,
+  .finance-history-row span,
+  .finance-history-row strong,
+  .office-category-info strong,
+  .office-category-sub,
+  .office-case-main strong,
+  .office-case-main span,
+  .office-document-row span,
+  .travel-trip-item strong,
+  .travel-trip-item small,
+  .travel-detail-list article,
+  .travel-warning-row,
+  .work-project-card strong,
+  .work-project-card small,
+  .work-task-row,
+  .work-task-title
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+}
+
+:where(
+  .planner-calendar-card,
+  .planner-tasks-card,
+  .finance-card,
+  .finance-month-panel,
+  .goals-command-panel,
+  .goals-main-stage,
+  .notes-sidebar,
+  .notes-board-panel,
+  .notes-editor,
+  .office-sidebar,
+  .office-cases-panel,
+  .office-mini-panel,
+  .travel-card,
+  .travel-rail,
+  .travel-detail-main,
+  .work-context-panel,
+  .work-task-board,
+  .work-panel,
+  .diet-meal-card,
+  .diet-side-card,
+  .sport-panel,
+  .sport-week-card
+) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  min-block-size: 0;
+}
+
+@media (max-width: 1280px) {
+  :where(
+    .planner-shell,
+    .finance-workspace,
+    .goals-os,
+    .notes-workspace,
+    .office-dashboard-shell,
+    .travel-dashboard,
+    .work-shell,
+    .diet-shell,
+    .sport-layout
+  ) {
+    overflow: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  :where(.page-head-actions, .card-head, .section-head, .finance-card-head, .travel-card-head, .work-panel-head, .office-panel-head, .diet-panel-head) {
+    align-items: stretch;
+  }
+
+  :where(.page-head-actions, .modal-footer, .modal-actions, .action-row) > :where(.btn, button, [role="button"]) {
+    flex: 1 1 min(100%, 148px);
+  }
+
+  :where(
+    .sub-tabs button,
+    .subtabs button,
+    .finance-segment-tabs button,
+    .finance-history-filters button,
+    .work-view-tabs button,
+    .travel-tabs button,
+    .diet-analytics-tabs button,
+    .diet-result-tabs button,
+    .planner-tasks-card .task-filter-btn,
+    .travel-rail-filters button,
+    .travel-pack-categories button
+  ) {
+    min-inline-size: min(100%, 96px);
+    max-inline-size: min(100%, 18ch);
+  }
+}
