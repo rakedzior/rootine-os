@@ -27,48 +27,34 @@ Status legend:
 
 ## Current Next Step
 
-- [ ] Step 10: Standardize buttons, inputs and actions. `NEXT`
+- [ ] Step 22: Final whole-app polish. `NEXT`
 
 ```text
-/impeccable layout
+/impeccable critique
 
-Focus only on buttons, inputs, forms and action controls across the app.
+Apply a final whole-app UI consistency pass.
 
 Context:
-The app contains many actions: adding tasks, editing items, deleting items, selecting workouts, changing statuses, opening details, saving forms and managing records. These controls must look and behave consistently.
+The global design system should already be defined. This step is only for evaluating this tab against that system.
 
-Your task:
-Standardize all button, input, form and action styles.
-
-Please standardize:
-1. Primary buttons.
-2. Secondary buttons.
-3. Ghost buttons.
-4. Icon buttons.
-5. Danger/delete buttons.
-6. Success/confirm buttons.
-7. Disabled buttons.
-8. Button height.
-9. Button padding.
-10. Button radius.
-11. Button typography.
-12. Button hover, active and focus states.
-13. Input height.
-14. Input padding.
-15. Input border.
-16. Input focus state.
-17. Placeholder styling.
-18. Labels and helper text.
-19. Form group spacing.
-20. Inline action groups.
-21. Three-button action rows.
-22. Small detail/edit/delete icon actions.
+Please review:
+1. Page hierarchy.
+2. Main module clarity.
+3. Card and panel consistency.
+4. Button and action clarity.
+5. Empty states.
+6. Loading states.
+7. Error states.
+8. Spacing and rhythm.
+9. Responsive behavior.
+10. Whether the page uses available viewport space efficiently.
+11. Whether the tab matches the global design system.
+12. Any elements that feel visually disconnected from the rest of the app.
 
 Important constraints:
-- Do not change business logic.
-- Do not remove actions.
-- Make action hierarchy clearer.
-- Prefer shared components and tokens.
+- Do not redesign yet.
+- Identify specific issues first.
+- Keep the global design system as the standard.
 ```
 
 ---
@@ -92,25 +78,25 @@ Important constraints:
 
 - [x] Step 8: Standardize top navigation and subtabs.
 - [x] Step 9: Standardize cards and modules.
-- [ ] Step 10: Standardize buttons, inputs and actions. `NEXT`
-- [ ] Step 11: Re-extract after global cleanup.
+- [x] Step 10: Standardize buttons, inputs and actions.
+- [x] Step 11: Re-extract after global cleanup.
 
 ### Phase 4: Polish Tab By Tab
 
-- [ ] Step 12: Start / Planner tab: critique, layout, polish.
-- [ ] Step 13: Sport tab: critique, layout, polish.
-- [ ] Step 14: Nutrition tab: critique, layout, polish.
-- [ ] Step 15: Goals tab: critique, layout, polish.
-- [ ] Step 16: Notes tab: critique, layout, polish.
-- [ ] Step 17: Office / Admin tab: critique, layout, polish.
-- [ ] Step 18: Work tab: critique, layout, polish.
-- [ ] Step 19: Travel tab: critique, layout, polish.
-- [ ] Step 20: Documents tab: critique, layout, polish.
+- [x] Step 12: Start / Planner tab: critique, layout, polish.
+- [x] Step 13: Sport tab: critique, layout, polish.
+- [x] Step 14: Nutrition tab: critique, layout, polish.
+- [x] Step 15: Goals tab: critique, layout, polish.
+- [x] Step 16: Notes tab: critique, layout, polish.
+- [x] Step 17: Office / Admin tab: critique, layout, polish.
+- [x] Step 18: Work tab: critique, layout, polish.
+- [x] Step 19: Travel tab: critique, layout, polish.
+- [x] Step 20: Documents tab: critique, layout, polish.
 
 ### Phase 5: Whole-App Consistency Pass
 
-- [ ] Step 21: Full app design critique.
-- [ ] Step 22: Final whole-app polish.
+- [x] Step 21: Full app design critique.
+- [ ] Step 22: Final whole-app polish. `NEXT`
 
 ### Phase 6: Audit, Harden, Optimize
 

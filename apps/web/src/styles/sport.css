@@ -245,3 +245,430 @@
 .sport-history-row {
   border-radius: var(--r-mid);
 }
+
+/* Step 10 controls: keep sport-specific actions on the shared control system. */
+.sport-os .btn,
+.sport-active-session .btn {
+  min-height: var(--ui-control-h);
+  border-radius: var(--ui-control-radius);
+  font-family: var(--font-sans);
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.sport-os .btn-sm,
+.sport-active-session .btn-sm {
+  min-height: var(--ui-control-h-sm);
+}
+
+.sport-os .input,
+.sport-os .select,
+.sport-os .textarea,
+.sport-active-session .input,
+.sport-active-session .select,
+.sport-active-session .textarea {
+  min-height: var(--ui-control-h);
+  border-radius: var(--ui-control-radius);
+  border-color: var(--ui-control-border);
+  background: var(--ui-control-bg);
+}
+
+.sport-form,
+.sport-form-row {
+  gap: 14px;
+}
+
+.sport-form-actions,
+.sport-active-session-actions,
+.sport-cycle-detail-status-actions,
+.sport-template-exercise-actions,
+.sport-workout-actions {
+  gap: 8px;
+}
+
+.sport-weekday-picker button {
+  min-height: var(--ui-control-h-sm);
+  border-radius: calc(var(--ui-control-radius) - 2px);
+  border-color: var(--ui-control-border);
+  background: var(--ui-control-bg);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-weight: 650;
+}
+
+.sport-weekday-picker button:hover,
+.sport-weekday-picker button.active {
+  border-color: var(--acc-line);
+  background: var(--ui-control-bg-active);
+  color: var(--acc-ink);
+}
+
+/* Step 13: Sport tab layout and polish. */
+.sport-os,
+.sport-os > .page-body {
+  min-width: 0;
+}
+
+.sport-os > .page-body > .lay-page {
+  width: 100%;
+  gap: var(--gap);
+  overflow: hidden;
+}
+
+.sport-os .lay-card-head,
+.sport-week-head,
+.sport-cycle-banner-head {
+  min-width: 0;
+}
+
+.sport-week-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: clamp(248px, 34vh, 360px);
+  padding: clamp(14px, 1.5vw, var(--pad));
+}
+
+.sport-week-head {
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+.sport-week-title {
+  font-size: clamp(20px, 1.45vw, var(--fs-h2));
+}
+
+.sport-week-nav {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sport-week-grid-v2 {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-columns: repeat(7, minmax(112px, 1fr));
+  gap: 10px;
+}
+
+.sport-day-col {
+  min-width: 0;
+  min-height: 0;
+  padding: 10px;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.sport-day-head,
+.sport-workout-meta {
+  flex-wrap: wrap;
+}
+
+.sport-day-cards {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.sport-day-add {
+  min-height: var(--ui-control-h-sm);
+  border-radius: calc(var(--ui-control-radius) - 2px);
+  font-weight: 700;
+}
+
+.sport-workout-card {
+  min-width: 0;
+  gap: 8px;
+  padding: 9px;
+  background: color-mix(in srgb, var(--surface) 86%, var(--surface-inset));
+}
+
+.sport-workout-title,
+.sport-workout-subtitle,
+.sport-template-tile-name,
+.sport-template-tile-subtitle,
+.sport-history-row-title,
+.sport-record-title {
+  overflow-wrap: anywhere;
+}
+
+.sport-drag-handle {
+  border-radius: var(--r-sm);
+}
+
+.sport-drag-handle:hover {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
+.sport-workout-actions .icon-btn {
+  width: 30px;
+  height: 30px;
+}
+
+.sport-bottom-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: var(--gap);
+}
+
+.sport-panel {
+  overflow: hidden;
+}
+
+.sport-panel > .lay-card-body {
+  min-height: 0;
+  overflow: auto;
+}
+
+.sport-template-list,
+.sport-history-list,
+.sport-records-list {
+  gap: 8px;
+  padding-right: 2px;
+}
+
+.sport-template-tile,
+.sport-history-row,
+.sport-record-row,
+.sport-cycle-row,
+.sport-cycle-phase-row {
+  border: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--surface-inset) 82%, transparent);
+  padding: 10px 12px;
+}
+
+.sport-template-tile:hover,
+.sport-history-row:hover,
+.sport-record-row:hover,
+.sport-cycle-row:hover,
+.sport-cycle-phase-row:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.sport-template-tile,
+.sport-history-row,
+.sport-record-row {
+  min-width: 0;
+}
+
+.sport-template-tile > div:first-child,
+.sport-history-row > div:first-child,
+.sport-record-row > div:first-child {
+  min-width: 0;
+}
+
+.sport-record-value,
+.sport-history-row-volume {
+  max-width: 44%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sport-cycle-banner {
+  align-items: stretch;
+}
+
+.sport-cycle-banner-side {
+  justify-content: center;
+  max-width: 36%;
+}
+
+.sport-cycle-banner-week,
+.sport-history-row-meta,
+.sport-cycle-phase-goal,
+.sport-cycle-detail-meta {
+  overflow-wrap: anywhere;
+}
+
+.sport-cycle-detail-status-actions,
+.sport-cycle-section-head {
+  flex-wrap: wrap;
+}
+
+.sport-cycle-weeks-table {
+  min-width: 520px;
+}
+
+.sport-active-session {
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+.sport-active-session-head {
+  gap: 12px;
+  min-width: 0;
+}
+
+.sport-active-session-title {
+  overflow-wrap: anywhere;
+}
+
+.sport-active-session-actions,
+.sport-rest-banner {
+  flex-wrap: wrap;
+}
+
+.sport-active-session-body {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: var(--gap);
+}
+
+.sport-active-exercise {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sport-active-set {
+  grid-template-columns: 64px repeat(3, minmax(56px, 1fr)) 34px;
+  gap: 6px;
+}
+
+.sport-active-set .input {
+  min-width: 0;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.sport-active-add-exercise {
+  flex-wrap: wrap;
+}
+
+.sport-active-add-exercise .input {
+  min-width: min(100%, 280px);
+}
+
+.sport-active-add-exercise .btn {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 1180px) {
+  .sport-week-card {
+    min-height: 0;
+  }
+
+  .sport-week-grid-v2 {
+    grid-template-columns: repeat(auto-fit, minmax(164px, 1fr));
+  }
+
+  .sport-day-col {
+    min-height: 148px;
+  }
+
+  .sport-bottom-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+    grid-auto-rows: auto;
+  }
+
+  .sport-bottom-grid > .lay-card,
+  .sport-panel {
+    height: auto;
+  }
+}
+
+@media (max-width: 860px) {
+  .sport-os > .page-body > .lay-page {
+    overflow: visible;
+  }
+
+  .sport-cycle-banner,
+  .sport-cycle-banner-empty {
+    flex-direction: column;
+  }
+
+  .sport-cycle-banner-side {
+    align-items: flex-start;
+    max-width: none;
+    text-align: left;
+  }
+
+  .sport-record-value,
+  .sport-history-row-volume {
+    max-width: 50%;
+  }
+}
+
+@media (max-width: 640px) {
+  .sport-week-grid-v2,
+  .sport-bottom-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sport-day-col {
+    min-height: 136px;
+  }
+
+  .sport-template-tile,
+  .sport-history-row,
+  .sport-record-row {
+    align-items: flex-start;
+  }
+
+  .sport-active-session {
+    padding: 14px;
+  }
+
+  .sport-active-session-actions,
+  .sport-rest-banner,
+  .sport-active-add-exercise,
+  .sport-active-session-footer .btn {
+    width: 100%;
+  }
+
+  .sport-active-session-actions .btn,
+  .sport-rest-banner .btn,
+  .sport-active-add-exercise .btn {
+    flex: 1 1 150px;
+  }
+
+  .sport-active-add-exercise .input {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .sport-week-nav,
+  .sport-form-actions,
+  .sport-cycle-detail-status-actions {
+    width: 100%;
+  }
+
+  .sport-week-nav .icon-btn,
+  .sport-week-datepick-wrap {
+    flex: 1 1 0;
+  }
+
+  .sport-week-datepick-wrap .icon-btn {
+    width: 100%;
+  }
+
+  .sport-workout-card,
+  .sport-template-tile,
+  .sport-history-row,
+  .sport-record-row {
+    gap: 8px;
+  }
+
+  .sport-workout-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .sport-record-row,
+  .sport-history-row {
+    flex-direction: column;
+  }
+
+  .sport-record-value,
+  .sport-history-row-volume {
+    max-width: none;
+  }
+
+  .sport-active-set {
+    grid-template-columns: 1fr 1fr 1fr 34px;
+  }
+
+  .sport-active-set-index {
+    grid-column: 1 / -1;
+  }
+}

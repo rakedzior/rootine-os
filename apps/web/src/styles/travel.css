@@ -1700,3 +1700,428 @@
   width: 14px;
   height: 14px;
 }
+
+/* Step 10 controls: travel actions, filters and tab add button share app controls. */
+.travel-page .btn,
+.travel-dashboard .btn,
+.travel-os .btn {
+  min-height: var(--ui-control-h);
+  border-radius: var(--ui-control-radius);
+  font-family: var(--font-sans);
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.travel-page .btn-sm,
+.travel-dashboard .btn-sm,
+.travel-os .btn-sm {
+  min-height: var(--ui-control-h-sm);
+}
+
+.travel-filter select,
+.travel-archive-btn,
+.travel-rail-filters button,
+.travel-pack-categories button,
+.travel-actions-card button,
+.travel-stay-card > button,
+.travel-timeline button {
+  border-color: var(--ui-control-border);
+  border-radius: var(--ui-control-radius);
+  font-family: var(--font-sans);
+  font-weight: 650;
+  letter-spacing: 0;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+}
+
+.travel-filter select,
+.travel-archive-btn,
+.travel-actions-card button {
+  min-height: var(--ui-control-h);
+  background: var(--ui-control-bg);
+}
+
+.travel-rail-filters button,
+.travel-pack-categories button,
+.travel-timeline button {
+  min-height: var(--ui-control-h-sm);
+  background: transparent;
+}
+
+.travel-filter select:hover,
+.travel-archive-btn:hover,
+.travel-rail-filters button:hover,
+.travel-pack-categories button:hover,
+.travel-actions-card button:hover,
+.travel-stay-card > button:hover {
+  border-color: var(--ui-control-border-hover);
+  background: var(--ui-control-bg-hover);
+  color: var(--text-primary);
+}
+
+.travel-rail-filters button.is-active,
+.travel-pack-categories button.is-active,
+.travel-module-topbar .travel-tabs button.is-active {
+  color: var(--acc-ink);
+  border-color: var(--acc-line);
+  background: var(--ui-control-bg-active);
+}
+
+.travel-tab-add {
+  min-width: var(--ui-control-h);
+  padding-inline: var(--ui-control-px-sm);
+}
+
+/* Step 19: Travel tab layout and polish. */
+.module-page.travel-page,
+.module-page.travel-page > .page-body {
+  min-width: 0;
+}
+
+.module-page.travel-page > .page-body > .travel-dashboard {
+  width: 100%;
+  padding: var(--page-pad);
+}
+
+.travel-dashboard {
+  grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
+  gap: var(--gap);
+}
+
+.travel-central,
+.travel-main-trip,
+.travel-main-grid,
+.travel-list-card,
+.travel-trip-list,
+.travel-card {
+  min-width: 0;
+  min-height: 0;
+}
+
+.travel-card,
+.travel-main-trip,
+.travel-list-card,
+.travel-plan-card,
+.travel-stay-card,
+.travel-budget-card,
+.travel-packing-card,
+.travel-notes-card,
+.travel-documents-card,
+.travel-transport-card,
+.travel-prep-card,
+.travel-alert-card {
+  border-color: var(--border-soft);
+  border-radius: var(--ui-card-radius);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, transparent), color-mix(in srgb, var(--surface-base) 94%, transparent)),
+    var(--surface);
+  box-shadow: var(--sh-1);
+}
+
+.travel-list-card {
+  padding: clamp(14px, 1.2vw, 16px);
+}
+
+.travel-card-head {
+  min-width: 0;
+}
+
+.travel-card-head h2,
+.travel-card-head h3,
+.travel-plan-card h3,
+.travel-stay-card h3,
+.travel-notes-card h3 {
+  overflow-wrap: anywhere;
+}
+
+.travel-trip-list {
+  gap: 8px;
+  scrollbar-gutter: stable;
+}
+
+.travel-trip-item {
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 10px;
+  min-height: 64px;
+  padding: 10px;
+  border-radius: var(--ui-card-radius);
+}
+
+.travel-trip-copy strong,
+.travel-trip-copy small {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.travel-status {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.travel-rail-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin-top: 12px;
+  padding: 4px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--ui-card-radius);
+  background: color-mix(in srgb, var(--surface-base) 70%, transparent);
+}
+
+.travel-rail-filters button {
+  min-width: 0;
+  justify-content: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.travel-archive-btn {
+  min-height: var(--ui-control-h);
+  border-radius: var(--ui-control-radius);
+}
+
+.travel-module-topbar {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 12px 16px 10px;
+}
+
+.travel-module-topbar .travel-tabs {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.travel-module-topbar .travel-tabs button {
+  flex: 0 0 auto;
+  min-width: max-content;
+  padding-inline: 12px;
+}
+
+.travel-tab-add {
+  min-height: var(--ui-control-h-sm);
+  align-self: stretch;
+}
+
+.travel-trip-top {
+  padding: 4px 16px 14px;
+}
+
+.travel-main-head {
+  min-width: 0;
+}
+
+.travel-main-head > div {
+  min-width: 0;
+}
+
+.travel-main-head h2,
+.travel-main-head p {
+  overflow-wrap: anywhere;
+}
+
+.travel-main-grid {
+  gap: 12px;
+  padding: 14px 16px 16px;
+  scrollbar-gutter: stable;
+}
+
+.travel-main-grid.is-overview {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.travel-plan-card,
+.travel-stay-card,
+.travel-budget-card,
+.travel-packing-card,
+.travel-notes-card,
+.travel-documents-card,
+.travel-transport-card,
+.travel-prep-card,
+.travel-alert-card {
+  padding: clamp(14px, 1.2vw, 16px);
+}
+
+.travel-alert-card {
+  border-color: color-mix(in srgb, var(--danger) 24%, var(--border-soft));
+}
+
+.travel-warning-row {
+  min-height: 54px;
+  padding: 9px 0;
+  border-radius: 0;
+}
+
+.travel-warning-row small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.travel-prep-list {
+  max-height: 230px;
+  scrollbar-gutter: stable;
+}
+
+.travel-prep-list button,
+.travel-detail-list article,
+.travel-timeline button {
+  min-width: 0;
+}
+
+.travel-prep-list span,
+.travel-prep-list strong,
+.travel-detail-list strong,
+.travel-detail-list small,
+.travel-timeline strong,
+.travel-timeline small,
+.travel-notes-card p,
+.travel-plan-note p,
+.travel-stay strong,
+.travel-stay span,
+.travel-stay small {
+  overflow-wrap: anywhere;
+}
+
+.travel-detail-list article {
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  border-color: var(--border-soft);
+  background: color-mix(in srgb, var(--surface-base) 62%, transparent);
+}
+
+.travel-detail-list em {
+  justify-self: end;
+}
+
+.travel-budget-numbers {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.travel-budget-numbers strong {
+  overflow-wrap: anywhere;
+}
+
+.travel-pack-categories {
+  gap: 6px;
+}
+
+.travel-pack-categories button,
+.travel-pack-list button {
+  min-width: 0;
+}
+
+.travel-empty-main {
+  min-height: 360px;
+}
+
+@media (max-width: 1280px) {
+  .travel-page,
+  .travel-page > .page-body {
+    overflow: auto;
+  }
+
+  .travel-page > .page-body > .travel-dashboard {
+    height: auto;
+    overflow: visible;
+    grid-template-columns: 1fr;
+  }
+
+  .travel-list-card {
+    height: auto;
+    max-height: none;
+  }
+
+  .travel-trip-list {
+    max-height: 320px;
+  }
+
+  .travel-main-trip {
+    min-height: 640px;
+  }
+}
+
+@media (max-width: 900px) {
+  .travel-module-topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .travel-tab-add {
+    justify-self: stretch;
+  }
+
+  .travel-main-grid.is-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .travel-main-grid {
+    overflow: visible;
+  }
+
+  .travel-prep-list {
+    max-height: none;
+  }
+
+  .travel-budget-numbers,
+  .travel-detail-list article {
+    grid-template-columns: 1fr;
+  }
+
+  .travel-detail-list em {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 560px) {
+  .module-page.travel-page > .page-body > .travel-dashboard {
+    padding: 12px;
+  }
+
+  .travel-filter {
+    min-width: 0;
+  }
+
+  .travel-trip-item {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .travel-trip-item .travel-status {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .travel-rail-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .travel-trip-top,
+  .travel-main-grid {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .travel-main-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .travel-stay {
+    grid-template-columns: 1fr;
+  }
+
+  .travel-stay img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .travel-warning-row,
+  .travel-prep-list button,
+  .travel-timeline button {
+    grid-template-columns: 1fr;
+  }
+}

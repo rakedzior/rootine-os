@@ -518,17 +518,17 @@ function OfficeDocumentsModal({ open, onClose, documents }: { open: boolean; onC
     <>
     <Modal open={open} onClose={onClose} title="Dokumenty" size="lg">
       {documents.length === 0 ? <EmptyState title="Brak dokumentów" /> : (
-        <table className="table">
+        <table className="table office-documents-table">
           <thead><tr><th>Nazwa</th><th>Kategoria</th><th>Numer</th><th>Ważny do</th><th>Plik</th></tr></thead>
           <tbody>
             {documents.map(doc => (
               <tr key={doc.id}>
-                <td style={{ fontWeight: 700 }}>{doc.name}</td>
+                <td className="office-doc-name">{doc.name}</td>
                 <td>{doc.category}</td>
                 <td>{doc.documentNumber ?? '—'}</td>
                 <td>{fmtDate(doc.expiryDate)}</td>
                 <td>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <div className="office-doc-actions">
                     {doc.filePath ? (
                       <>
                         <button className="btn btn-secondary btn-sm" type="button" disabled={createFileUrl.isPending} onClick={() => void openFile(doc)}>Otwórz</button>

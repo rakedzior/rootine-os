@@ -190,3 +190,30 @@
 [2m17:28:03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/components/common/index.tsx[22m Could not Fast Refresh (export removed)
 [2m17:28:03[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/features/weather/WeatherWidget.tsx, /src/modules/sport/SportScreen.tsx, /src/modules/sport/components/TemplatesPanel.tsx, /src/modules/sport/components/WeekStrip.tsx, /src/modules/sport/components/ActiveSessionScreen.tsx, /src/modules/sport/components/AddToPlanDrawer.tsx, /src/modules/sport/components/HistoryPanel.tsx, /src/modules/sport/components/RecordsPanel.tsx, /src/modules/sport/components/WorkoutEditModal.tsx, /src/modules/sport/components/ActiveCycleBanner.tsx and 16 more[22m
 [2m17:28:03[22m [36m[1m[vite][22m[39m server restarted.
+[2m17:35:28[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/styles.css[22m
+[2m17:35:29[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/styles.css[22m
+[2m17:35:41[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/sport.css[22m
+[2m17:35:41[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/sport.css[22m
+[2m17:35:53[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/notes.css[22m
+[2m17:36:31[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/features/auth/auth.css[22m
+[2m17:37:23[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/styles.css[22m
+[2m17:46:49[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m17:47:21[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m17:48:05[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m17:48:15[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m17:48:20[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m17:48:21[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m17:48:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m17:48:47[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m17:49:05[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m17:49:20[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/styles.css[22m
+[2m17:49:47[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/common/index.tsx[22m
+[2m17:52:42[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/styles.css[22m
+[2m17:55:45[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/sport.css[22m
+[2m17:55:45[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/sport.css[22m
+[2m18:02:55[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/styles.css[22m
+[2m18:15:08[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/styles.css[22m
+[2m18:25:28[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/notes.css[22m
+[2m18:28:45[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/styles.css[22m
+[2m18:49:39[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/modules/office/BiuroScreen.tsx[22m
+[2m18:50:09[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles/styles.css[22m

@@ -1,4 +1,106 @@
-import { useEffect, useId, useRef, useState, type ReactNode, type FC } from 'react';
+import { useEffect, useId, useRef, useState, type ComponentPropsWithoutRef, type CSSProperties, type ReactNode, type FC } from 'react';
+
+function cx(...parts: Array<string | false | null | undefined>) {
+  return parts.filter(Boolean).join(' ');
+}
+
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'neutral' | 'danger' | 'success';
+type ControlSize = 'sm' | 'md' | 'lg';
+
+interface ButtonProps extends ComponentPropsWithoutRef<'button'> {
+  variant?: ButtonVariant;
+  size?: ControlSize;
+}
+
+export function Button({ variant = 'secondary', size = 'md', className, type = 'button', ...props }: ButtonProps) {
+  return (
+    <button
+      type={type}
+      className={cx('btn', `btn-${variant}`, size !== 'md' && `btn-${size}`, className)}
+      {...props}
+    />
+  );
+}
+
+interface IconButtonProps extends ComponentPropsWithoutRef<'button'> {
+  active?: boolean;
+  danger?: boolean;
+  label?: string;
+}
+
+export function IconButton({
+  active,
+  danger,
+  label,
+  className,
+  type = 'button',
+  title,
+  'aria-label': ariaLabel,
+  ...props
+}: IconButtonProps) {
+  return (
+    <button
+      type={type}
+      aria-label={ariaLabel ?? label}
+      title={title ?? label}
+      className={cx('icon-btn', active && 'is-active', danger && 'danger', className)}
+      {...props}
+    />
+  );
+}
+
+interface ActionRowProps extends ComponentPropsWithoutRef<'div'> {
+  align?: 'start' | 'end' | 'between' | 'stretch';
+  density?: 'compact' | 'normal';
+}
+
+export function ActionRow({ align = 'end', density = 'normal', className, ...props }: ActionRowProps) {
+  return <div className={cx('action-row', className)} data-align={align} data-density={density} {...props} />;
+}
+
+export function TextInput({ className, ...props }: ComponentPropsWithoutRef<'input'>) {
+  return <input className={cx('input', className)} {...props} />;
+}
+
+export function SelectInput({ className, ...props }: ComponentPropsWithoutRef<'select'>) {
+  return <select className={cx('select', className)} {...props} />;
+}
+
+export function TextAreaInput({ className, ...props }: ComponentPropsWithoutRef<'textarea'>) {
+  return <textarea className={cx('textarea', className)} {...props} />;
+}
+
+interface FormGridProps extends ComponentPropsWithoutRef<'div'> {
+  columns?: 1 | 2 | 3 | 4;
+}
+
+export function FormGrid({ columns = 2, className, style, ...props }: FormGridProps) {
+  return (
+    <div
+      className={cx('form-grid', className)}
+      style={{ '--form-grid-columns': columns, ...style } as CSSProperties}
+      {...props}
+    />
+  );
+}
+
+export function FormStack({ className, ...props }: ComponentPropsWithoutRef<'div'>) {
+  return <div className={cx('form-stack', className)} {...props} />;
+}
+
+interface LoadingStateProps {
+  label?: string;
+  compact?: boolean;
+}
+
+export function LoadingState({ label = 'Ladowanie...', compact }: LoadingStateProps) {
+  return (
+    <div className={cx('loading-state', compact && 'is-compact')} role="status" aria-live="polite">
+      <span className="spinner" aria-hidden="true" />
+      <span>{label}</span>
+    </div>
+  );
+}
 
 // ─── MODAL ───────────────────────────────────────────────────
 
@@ -78,11 +180,11 @@ export function Modal({ open, onClose, title, children, size, footer }: ModalPro
       >
         <div className="modal-head">
           <span className="modal-title" id={titleId}>{title}</span>
-          <button className="modal-close" onClick={onClose} aria-label="Zamknij">
+          <IconButton className="modal-close" onClick={onClose} aria-label="Zamknij">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 6 6 18M6 6l12 12"/>
             </svg>
-          </button>
+          </IconButton>
         </div>
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-footer">{footer}</div>}
@@ -130,8 +232,8 @@ export function EmptyState({ icon, title, desc, cta, onCta, secondary, onSeconda
       {icon ?? <DefaultEmptyIcon />}
       <h3>{title}</h3>
       {desc && <p>{desc}</p>}
-      {cta && <button className="btn btn-primary btn-sm" onClick={onCta} style={{ marginTop: 4 }}>{cta}</button>}
-      {secondary && <button className="btn btn-ghost btn-sm" onClick={onSecondary}>{secondary}</button>}
+      {cta && <Button variant="primary" size="sm" onClick={onCta} style={{ marginTop: 4 }}>{cta}</Button>}
+      {secondary && <Button variant="ghost" size="sm" onClick={onSecondary}>{secondary}</Button>}
     </div>
   );
 }
@@ -311,9 +413,9 @@ export function DetailPanel({ title, subtitle, badges, fields, actions, onClose,
           {subtitle && <span>{subtitle}</span>}
         </div>
         {onClose && (
-          <button className="icon-btn" onClick={onClose} aria-label="Zamknij">
+          <IconButton onClick={onClose} aria-label="Zamknij">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
-          </button>
+          </IconButton>
         )}
       </div>
       {badges && <div className="detail-panel-badges">{badges}</div>}
@@ -347,14 +449,13 @@ export function PriorityBadge({ priority }: { priority: string }) {
 interface IcoBtnProps { icon: ReactNode; onClick?: () => void; title?: string; danger?: boolean; }
 export function IconBtn({ icon, onClick, title, danger }: IcoBtnProps) {
   return (
-    <button
-      className="icon-btn"
+    <IconButton
       onClick={onClick}
-      title={title}
-      style={danger ? { color: 'var(--p-high)' } : {}}
+      label={title}
+      danger={danger}
     >
       {icon}
-    </button>
+    </IconButton>
   );
 }
 
@@ -404,9 +505,9 @@ export function MoreMenu({ items, label = 'Więcej' }: { items: MoreMenuItem[]; 
   }, []);
   return (
     <div className="more-menu-wrap" ref={ref}>
-      <button className="icon-btn" onClick={() => setOpen((v) => !v)} aria-label={label} aria-haspopup="menu" aria-expanded={open}>
+      <IconButton onClick={() => setOpen((v) => !v)} aria-label={label} aria-haspopup="menu" aria-expanded={open}>
         <IcoMore />
-      </button>
+      </IconButton>
       {open && (
         <div className="more-menu" role="menu">
           {items.map((it, i) => (
@@ -423,12 +524,22 @@ export function MoreMenu({ items, label = 'Więcej' }: { items: MoreMenuItem[]; 
 
 // ─── FIELD ────────────────────────────────────────────────────
 
-interface FieldProps { label: string; children: ReactNode; required?: boolean; }
-export function Field({ label, children, required }: FieldProps) {
+interface FieldProps {
+  label: ReactNode;
+  children: ReactNode;
+  required?: boolean;
+  helper?: ReactNode;
+  error?: ReactNode;
+  htmlFor?: string;
+  className?: string;
+}
+export function Field({ label, children, required, helper, error, htmlFor, className }: FieldProps) {
   return (
-    <div className="field">
-      <label>{label}{required && <span style={{ color: 'var(--p-high)', marginLeft: 2 }}>*</span>}</label>
+    <div className={cx('field', Boolean(error) && 'has-error', className)}>
+      <label htmlFor={htmlFor}>{label}{required && <span className="field-required-mark">*</span>}</label>
       {children}
+      {helper && <span className="field-helper">{helper}</span>}
+      {error && <span className="field-error" role="alert">{error}</span>}
     </div>
   );
 }
@@ -438,8 +549,8 @@ export function Field({ label, children, required }: FieldProps) {
 interface SectionHeadProps { title: string; action?: ReactNode; }
 export function SectionHead({ title, action }: SectionHeadProps) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-      <span style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--ink-3)' }}>{title}</span>
+    <div className="section-head">
+      <h3>{title}</h3>
       {action}
     </div>
   );

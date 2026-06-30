@@ -1213,3 +1213,384 @@
 .work-task-row {
   min-height: 52px;
 }
+
+/* Step 10 controls: normalize work selectors, view actions and modal actions. */
+.work-os .btn,
+.work-shell .btn {
+  min-height: var(--ui-control-h);
+  border-radius: var(--ui-control-radius);
+  font-family: var(--font-sans);
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.work-os .btn-sm,
+.work-shell .btn-sm {
+  min-height: var(--ui-control-h-sm);
+}
+
+.work-company-bar select,
+.work-view-tabs button,
+.work-view-actions button,
+.work-panel-head button {
+  min-height: var(--ui-control-h);
+  border-radius: var(--ui-control-radius);
+  border-color: var(--ui-control-border);
+  background: var(--ui-control-bg);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0;
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+}
+
+.work-view-tabs button,
+.work-view-actions button {
+  min-height: var(--ui-control-h-sm);
+  background: transparent;
+}
+
+.work-icon-btn {
+  width: var(--ui-control-h);
+  height: var(--ui-control-h);
+  min-width: var(--ui-control-h);
+  min-height: var(--ui-control-h);
+  border-radius: var(--ui-control-radius);
+}
+
+.work-company-bar select:hover,
+.work-view-tabs button:hover,
+.work-view-actions button:hover,
+.work-panel-head button:hover {
+  color: var(--text-primary);
+  border-color: var(--ui-control-border-hover);
+  background: var(--ui-control-bg-hover);
+}
+
+.work-view-tabs button.is-active {
+  color: var(--acc-ink);
+  border-color: var(--acc-line);
+  background: var(--ui-control-bg-active);
+}
+
+/* Step 18: Work tab layout and polish. */
+.module-page.work-os,
+.module-page.work-os > .page-body {
+  min-width: 0;
+}
+
+.module-page.work-os > .page-body > .work-shell {
+  width: 100%;
+  padding: var(--page-pad);
+}
+
+.work-shell {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 370px);
+  gap: var(--gap);
+}
+
+.work-main,
+.work-side,
+.work-context-panel,
+.work-task-board,
+.work-panel {
+  min-width: 0;
+}
+
+.work-context-panel,
+.work-task-board,
+.work-panel {
+  border-color: var(--border-soft);
+  border-radius: var(--ui-card-radius);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, transparent), color-mix(in srgb, var(--surface-base) 94%, transparent)),
+    var(--surface);
+  box-shadow: var(--sh-1);
+}
+
+.work-context-panel {
+  padding: clamp(12px, 1.2vw, 16px);
+}
+
+.work-company-bar {
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.work-company-bar label {
+  flex: 1 1 260px;
+}
+
+.work-project-strip {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+  overflow-x: visible;
+}
+
+.work-project-card,
+.work-new-project {
+  min-height: 104px;
+  border-color: var(--border-soft);
+  border-radius: var(--ui-card-radius);
+}
+
+.work-project-card {
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+}
+
+.work-project-card em,
+.work-project-card b {
+  white-space: nowrap;
+}
+
+.work-project-copy strong,
+.work-project-copy small {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.work-viewbar {
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px;
+}
+
+.work-view-tabs {
+  flex: 1 1 360px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.work-view-actions {
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.work-task-table {
+  border-radius: var(--ui-card-radius);
+}
+
+.work-task-head,
+.work-task-row {
+  grid-template-columns: minmax(300px, 1.6fr) minmax(140px, .78fr) minmax(104px, .5fr) minmax(112px, .52fr) minmax(126px, .58fr) 52px 36px;
+  min-width: 920px;
+}
+
+.work-task-title {
+  min-width: 0;
+}
+
+.work-task-title strong,
+.work-project-pill,
+.work-due {
+  min-width: 0;
+}
+
+.work-task-title strong {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.work-project-pill,
+.work-due {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.work-priority,
+.work-status {
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.work-assignee,
+.work-row-more {
+  justify-self: center;
+}
+
+.work-row-more {
+  border-radius: var(--ui-control-radius);
+}
+
+.work-add-row {
+  min-height: var(--ui-control-h);
+  border-radius: var(--ui-control-radius);
+}
+
+.work-side {
+  gap: var(--gap);
+  scrollbar-gutter: stable;
+}
+
+.work-side .work-panel:first-child {
+  flex: 1 1 auto;
+}
+
+.work-panel {
+  padding: clamp(14px, 1.2vw, 16px);
+}
+
+.work-side .detail-panel-title strong,
+.work-detail-description,
+.work-detail-note-box p,
+.work-deadline div strong,
+.work-deadline small {
+  overflow-wrap: anywhere;
+}
+
+.work-detail-note-box,
+.work-empty-small {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--ui-card-radius);
+  background: color-mix(in srgb, var(--surface-base) 76%, transparent);
+}
+
+.work-deadline-list {
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--ui-card-radius);
+  background: color-mix(in srgb, var(--surface-base) 64%, transparent);
+}
+
+.work-deadline {
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  padding: 10px;
+}
+
+.work-deadline + .work-deadline {
+  border-top: 1px solid var(--border-soft);
+}
+
+.work-empty-small {
+  padding: 14px;
+}
+
+@media (max-width: 1280px) {
+  .work-os,
+  .work-os > .page-body {
+    overflow: auto;
+  }
+
+  .work-shell {
+    height: auto;
+    overflow: visible;
+    grid-template-columns: 1fr;
+  }
+
+  .work-side {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+    max-height: none;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .work-project-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .work-view-tabs,
+  .work-view-actions {
+    width: 100%;
+  }
+
+  .work-view-actions {
+    justify-content: flex-start;
+  }
+
+  .work-task-table {
+    padding: 10px;
+  }
+
+  .work-task-head {
+    display: none;
+  }
+
+  .work-task-row {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 10px;
+    padding: 12px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--ui-card-radius);
+    margin-top: 8px;
+  }
+
+  .work-task-title,
+  .work-project-pill,
+  .work-due {
+    grid-column: 1 / -1;
+  }
+
+  .work-priority,
+  .work-status {
+    justify-self: start;
+  }
+
+  .work-assignee,
+  .work-row-more {
+    grid-row: auto;
+  }
+
+  .work-side {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .module-page.work-os > .page-body > .work-shell {
+    padding: 12px;
+  }
+
+  .work-company-bar,
+  .work-viewbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .work-icon-btn {
+    width: var(--ui-control-h);
+  }
+
+  .work-view-tabs,
+  .work-view-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .work-view-actions button:last-child {
+    grid-column: span 2;
+  }
+
+  .work-task-row {
+    grid-template-columns: 1fr;
+  }
+
+  .work-assignee,
+  .work-row-more {
+    justify-self: start;
+  }
+
+  .work-deadline {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .work-deadline em {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
