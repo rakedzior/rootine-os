@@ -27,35 +27,39 @@ Status legend:
 
 ## Current Next Step
 
-- [ ] Step 24: Harden edge cases. `NEXT`
+- [ ] Step 25: Optimize after design is stable. `NEXT`
 
 ```text
-/impeccable harden
+/impeccable optimize
 
-Harden the app UI for real-world edge cases.
+Optimize the app after the UI redesign is stable.
 
 Context:
-The app should work well with incomplete data, long labels, many records, no records, different screen sizes and user interaction edge cases.
+The design system, tab layouts and visual consistency should now be complete. This step is for cleanup and performance optimization.
 
-Please harden:
-1. Long Polish labels.
-2. Long English labels.
-3. Long task names.
-4. Long workout names.
-5. Long document names.
-6. Long project names.
-7. Empty lists.
-8. Very large lists.
-9. Missing data.
-10. Loading states.
-11. Error states.
-12. Disabled states.
+Please optimize:
+1. Duplicated CSS.
+2. Unused CSS.
+3. Repeated layout rules.
+4. Repeated color values.
+5. Repeated typography rules.
+6. Repeated card styles.
+7. Repeated button styles.
+8. Repeated responsive rules.
+9. Overly complex selectors.
+10. Heavy visual effects.
+11. Unnecessary layout nesting.
+12. Rendering performance.
+13. Maintainability of shared styles.
+14. Design-token usage.
+15. Component reuse.
 
 Important constraints:
+- Preserve the finalized design.
 - Do not change business logic.
-- Do not change data models.
-- Do not change routing.
-- Keep the finalized visual design intact.
+- Do not change database logic.
+- Do not remove necessary styles.
+- Keep the app visually identical or better after optimization.
 ```
 
 ---
@@ -102,8 +106,8 @@ Important constraints:
 ### Phase 6: Audit, Harden, Optimize
 
 - [x] Step 23: Technical UI audit.
-- [ ] Step 24: Harden edge cases. `NEXT`
-- [ ] Step 25: Optimize after design is stable.
+- [x] Step 24: Harden edge cases.
+- [ ] Step 25: Optimize after design is stable. `NEXT`
 
 ### Optional Phase 7
 

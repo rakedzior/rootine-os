@@ -10608,3 +10608,268 @@ textarea.input {
     min-width: 0;
   }
 }
+
+/* ============================================================ STEP 24: EDGE CASE HARDENING */
+:where(
+  .module-page,
+  .page-body,
+  .lay-page,
+  .card,
+  .lay-card,
+  .modal,
+  .modal-box,
+  .modal-body,
+  .drawer,
+  .finance-drawer,
+  .diet-drawer,
+  .planner-shell,
+  .finance-workspace,
+  .goals-os,
+  .notes-workspace,
+  .office-dashboard-shell,
+  .travel-dashboard,
+  .work-shell,
+  .diet-shell,
+  .sport-layout
+) {
+  min-width: 0;
+}
+
+:where(
+  .page-head-main,
+  .page-head-actions,
+  .module-header,
+  .module-head-wrap,
+  .card-head,
+  .section-head,
+  .finance-card-head,
+  .travel-card-head,
+  .work-panel-head,
+  .office-panel-head,
+  .diet-panel-head,
+  .lay-card-head,
+  .modal-footer,
+  .modal-actions,
+  .action-row
+) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:where(
+  .module-title,
+  .page-head-main h1,
+  .page-head-main p,
+  .card-title,
+  .section-head h2,
+  .section-head h3,
+  .detail-panel-title strong,
+  .detail-panel-title span,
+  .modal-title,
+  .empty-state h3,
+  .empty-state p,
+  .lay-empty-title,
+  .lay-empty-desc,
+  .finance-card-title,
+  .finance-payment-name strong,
+  .finance-payment-name small,
+  .finance-budget-main span:last-child,
+  .finance-history-row span,
+  .finance-history-row strong,
+  .goals-folder-main strong,
+  .goals-folder-main small,
+  .goals-detail-header h2,
+  .goals-detail-header p,
+  .goals-task-title,
+  .notes-category strong,
+  .notes-category small,
+  .notes-tile strong,
+  .notes-tile p,
+  .notes-list-row-main strong,
+  .notes-list-row-main small,
+  .office-category-info strong,
+  .office-category-sub,
+  .office-case-main strong,
+  .office-case-main span,
+  .office-document-row span,
+  .office-documents-table td,
+  .travel-card-head h2,
+  .travel-card-head h3,
+  .travel-trip-item strong,
+  .travel-trip-item small,
+  .travel-detail-list article,
+  .travel-timeline button,
+  .travel-pack-item,
+  .work-project-card strong,
+  .work-project-card small,
+  .work-task-row,
+  .work-task-title,
+  .sport-workout-title,
+  .sport-workout-subtitle,
+  .sport-template-tile-name,
+  .sport-template-tile-subtitle,
+  .sport-history-row-title,
+  .sport-record-title,
+  .sport-template-exercise strong,
+  .sport-active-session-title,
+  .diet-meal-title strong,
+  .diet-entry-name span:last-child,
+  .diet-category-name-cell strong
+) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+:where(
+  .badge,
+  .status-chip,
+  .work-priority,
+  .work-status,
+  .travel-status,
+  .finance-badge,
+  .goals-status,
+  [class*="status-"]
+) {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:where(
+  .btn,
+  button,
+  [role="button"],
+  [role="tab"],
+  .filter-select,
+  .input,
+  .select,
+  .textarea,
+  .fi
+) {
+  max-width: 100%;
+}
+
+:where(.btn, button, [role="button"], [role="tab"]) > :where(svg, .icon, [class*="icon"]) {
+  flex: 0 0 auto;
+}
+
+:where(
+  .field-error,
+  .form-error,
+  .form-helper,
+  .helper-text,
+  .auth-err,
+  [role="alert"]
+) {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+:where(
+  .empty-state,
+  .lay-empty,
+  .loading-state
+) > * {
+  max-width: 100%;
+}
+
+:where(
+  .finance-payment-list,
+  .finance-budget-list,
+  .finance-history-list,
+  .goals-folder-list,
+  .goals-task-tree,
+  .notes-category-list,
+  .notes-card-grid,
+  .notes-list-rows,
+  .office-category-list,
+  .office-case-list,
+  .office-document-list,
+  .travel-timeline,
+  .travel-detail-list,
+  .work-task-table,
+  .sport-week-days,
+  .sport-history-list,
+  .sport-record-list,
+  .diet-entry-list,
+  .diet-category-table-scroll
+) {
+  min-width: 0;
+  scrollbar-gutter: stable;
+}
+
+:where(
+  .planner-calendar-card,
+  .planner-calendar-card .cal-grid,
+  .planner-calendar-card [class*="calendar-grid"],
+  .sport-week-days,
+  .goals-roadmap-track,
+  .goals-week-grid,
+  .finance-payments-table,
+  .finance-budget-table,
+  .finance-history-table,
+  .office-documents-table,
+  .diet-meal-table-scroll,
+  .diet-category-table-scroll
+) {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  :where(
+    .sub-tabs,
+    .subtabs,
+    .finance-segment-tabs,
+    .finance-history-filters,
+    .work-view-tabs,
+    .travel-tabs,
+    .notes-view-toggle,
+    .diet-analytics-tabs,
+    .diet-result-tabs,
+    .travel-rail-filters,
+    .travel-pack-categories
+  ) {
+    max-width: 100%;
+  }
+
+  :where(
+    .modal-footer,
+    .modal-actions,
+    .action-row,
+    .page-head-actions,
+    .finance-drawer-footer,
+    .sport-form-actions,
+    .diet-datebar-actions
+  ) > :where(.btn, button, [role="button"]) {
+    flex: 1 1 min(100%, 144px);
+  }
+
+  :where(
+    .badge,
+    .status-chip,
+    .work-priority,
+    .work-status,
+    .travel-status,
+    .finance-badge,
+    .goals-status,
+    [class*="status-"]
+  ) {
+    max-inline-size: min(100%, 24ch);
+  }
+}
+
+@media (max-width: 380px) {
+  :where(.modal, .modal-box) {
+    max-width: calc(100vw - 16px);
+  }
+
+  :where(.module-page > .page-body) {
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+  }
+
+  :where(.btn, button, [role="button"], [role="tab"]) {
+    padding-inline: 10px;
+  }
+}
