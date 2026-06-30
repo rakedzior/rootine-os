@@ -27,39 +27,18 @@ Status legend:
 
 ## Current Next Step
 
-- [ ] Step 25: Optimize after design is stable. `NEXT`
+- [ ] Step 26: Add subtle motion. `NEXT`
 
 ```text
-/impeccable optimize
+/impeccable animate
 
-Optimize the app after the UI redesign is stable.
+Add subtle, purposeful motion to the app.
 
-Context:
-The design system, tab layouts and visual consistency should now be complete. This step is for cleanup and performance optimization.
-
-Please optimize:
-1. Duplicated CSS.
-2. Unused CSS.
-3. Repeated layout rules.
-4. Repeated color values.
-5. Repeated typography rules.
-6. Repeated card styles.
-7. Repeated button styles.
-8. Repeated responsive rules.
-9. Overly complex selectors.
-10. Heavy visual effects.
-11. Unnecessary layout nesting.
-12. Rendering performance.
-13. Maintainability of shared styles.
-14. Design-token usage.
-15. Component reuse.
-
-Important constraints:
-- Preserve the finalized design.
-- Do not change business logic.
-- Do not change database logic.
-- Do not remove necessary styles.
-- Keep the app visually identical or better after optimization.
+Requirements:
+- Motion should be calm, premium and minimal.
+- Do not add flashy effects.
+- Do not hurt performance.
+- Respect reduced motion.
 ```
 
 ---
@@ -107,11 +86,11 @@ Important constraints:
 
 - [x] Step 23: Technical UI audit.
 - [x] Step 24: Harden edge cases.
-- [ ] Step 25: Optimize after design is stable. `NEXT`
+- [x] Step 25: Optimize after design is stable.
 
 ### Optional Phase 7
 
-- [ ] Step 26: Add subtle motion.
+- [ ] Step 26: Add subtle motion. `NEXT`
 - [ ] Step 27: Add small delight moments.
 
 ---

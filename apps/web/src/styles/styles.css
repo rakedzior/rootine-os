@@ -10873,3 +10873,147 @@ textarea.input {
     padding-inline: 10px;
   }
 }
+
+/* ============================================================ STEP 25: POST-REDESIGN OPTIMIZATION */
+.module-page :where(
+  .lay-card,
+  .card,
+  .planner-tasks-card,
+  .planner-habits-card,
+  .planner-calendar-card,
+  .finance-card,
+  .finance-month-panel,
+  .finance-context-card,
+  .finance-accounts-panel,
+  .finance-account-list-panel,
+  .finance-jdg-card,
+  .finance-jdg-note-card,
+  .diet-meal-card,
+  .diet-side-card,
+  .diet-summary-card,
+  .diet-chart-card,
+  .diet-rhythm-card,
+  .goals-roadmap-card,
+  .goals-week-card,
+  .goals-actions-card,
+  .office-sidebar,
+  .office-cases-panel,
+  .office-mini-panel,
+  .travel-card,
+  .work-context-panel,
+  .work-task-board,
+  .work-panel,
+  .notes-card,
+  .notes-shell-panel,
+  .notes-board-panel,
+  .sport-panel,
+  .sport-week-card
+) {
+  contain: inline-size;
+}
+
+:where(
+  .finance-payment-list,
+  .finance-budget-list,
+  .finance-history-list,
+  .finance-payments-table,
+  .finance-budget-table,
+  .finance-jdg-table,
+  .finance-history-table,
+  .goals-folder-list,
+  .goals-task-tree,
+  .notes-category-list,
+  .notes-card-grid,
+  .notes-list-rows,
+  .office-category-list,
+  .office-case-list,
+  .office-document-list,
+  .travel-timeline,
+  .travel-detail-list,
+  .work-task-table,
+  .sport-week-days,
+  .sport-history-list,
+  .sport-record-list,
+  .diet-entry-list,
+  .diet-category-table-scroll
+) {
+  overscroll-behavior: contain;
+}
+
+:where(
+  .finance-payment-line,
+  .finance-budget-row:not(.is-head),
+  .finance-history-table-row,
+  .finance-history-row,
+  .work-task-row,
+  .office-case-row,
+  .office-document-row,
+  .goals-folder-row,
+  .goals-task-row,
+  .notes-category,
+  .notes-list-row,
+  .travel-timeline button,
+  .travel-detail-list article,
+  .sport-workout-card,
+  .sport-history-row,
+  .sport-record-row,
+  .diet-entry-row,
+  .diet-category-row
+) {
+  contain: layout style;
+}
+
+@supports (content-visibility: auto) {
+  @media (min-width: 721px) {
+    :where(
+      .finance-payment-line,
+      .finance-budget-row:not(.is-head),
+      .finance-history-table-row,
+      .finance-history-row,
+      .work-task-row,
+      .office-case-row,
+      .office-document-row,
+      .goals-task-row,
+      .notes-list-row,
+      .travel-timeline button,
+      .sport-history-row,
+      .sport-record-row,
+      .diet-entry-row
+    ) {
+      content-visibility: auto;
+      contain-intrinsic-size: auto 56px;
+    }
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  :where(
+    .card.is-link:hover,
+    .kpi-card-action:hover .kpi-card,
+    .finance-summary-tile:hover,
+    .finance-card:hover,
+    .diet-meal-card:hover,
+    .planner-calendar-card:hover,
+    .goals-week-task:hover,
+    .habit-chip:not(:disabled):hover,
+    .btn-primary:hover,
+    .btn-neutral:hover,
+    .btn-danger:hover
+  ) {
+    transform: none;
+  }
+}
+
+@media (max-width: 720px) {
+  :where(
+    .topbar,
+    .mobile-nav,
+    .modal-overlay,
+    .sheet-overlay,
+    .habit-detail-overlay,
+    .diet-summary-overlay
+  ) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
