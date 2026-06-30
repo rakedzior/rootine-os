@@ -2,7 +2,7 @@
    ROOTINE OS — Sport tab styles (extends styles.css tokens)
    ============================================================ */
 
-.sport-bottom-grid { margin-top: var(--gap); }
+.sport-utilities-grid { margin-top: 0; }
 
 /* icon+text buttons (.btn-ghost/.btn-secondary) have no global svg sizing rule
    outside .btn-primary/.icon-btn — without this, unsized Ico* svgs render at
@@ -162,6 +162,133 @@
 .sport-cycle-banner-week { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); font-weight: 600; }
 .sport-cycle-banner-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; text-align: right; }
 
+/* ---- sport cockpit layout ---- */
+.sport-cockpit {
+  gap: 18px;
+  overflow: auto;
+}
+
+.sport-cockpit-grid {
+  display: grid;
+  grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.sport-cockpit-primary {
+  display: grid;
+  grid-template-rows: minmax(260px, auto) auto;
+  gap: 14px;
+  min-width: 0;
+}
+
+.sport-today-card {
+  min-height: 260px;
+  justify-content: space-between;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-raised) 96%, var(--accent-ice)), var(--surface));
+}
+
+.sport-today-kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--acc-ink);
+  font-weight: 700;
+}
+
+.sport-today-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sport-today-title {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.08;
+  letter-spacing: -.02em;
+  font-weight: 720;
+  text-wrap: balance;
+}
+
+.sport-today-subtitle {
+  margin: 8px 0 0;
+  max-width: 42ch;
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.sport-today-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sport-today-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sport-today-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-mid);
+  background: var(--surface-inset);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--t);
+}
+
+.sport-today-row:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.sport-today-row strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.sport-today-row small {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-3);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.sport-today-empty {
+  border: 1px dashed var(--border);
+  border-radius: var(--r-mid);
+  padding: 12px;
+  color: var(--ink-3);
+  font-size: 13px;
+  line-height: 1.4;
+  background: var(--surface-inset);
+}
+
+.sport-today-utility {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 2px;
+}
+
 /* ---- cycle manager list ---- */
 .sport-cycle-list { display: flex; flex-direction: column; gap: 6px; }
 .sport-cycle-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: var(--r-sm); background: var(--surface-inset); border: 1px solid transparent; cursor: pointer; transition: var(--t); text-align: left; width: 100%; }
@@ -197,7 +324,7 @@
   .sport-template-exercise-toggle { flex-wrap: wrap; }
 }
 
-/* Graphite Cool Ice alignment: let lower modules fill available height. */
+/* Graphite Cool Ice alignment: let Sport keep one governed raster. */
 .sport-os > .page-body > .lay-page {
   flex: 1 1 auto;
   min-height: 0;
@@ -207,26 +334,42 @@
 
 .sport-week-card,
 .sport-cycle-banner,
+.sport-today-card,
 .sport-panel {
   border-color: var(--border-soft);
   border-radius: var(--r-card);
-  background:
-    radial-gradient(circle at 14% 0%, color-mix(in srgb, var(--accent-ice) 5%, transparent), transparent 38%),
-    color-mix(in srgb, var(--surface-raised) 92%, transparent);
+  background: color-mix(in srgb, var(--surface-raised) 94%, var(--surface));
   box-shadow: var(--sh-1);
 }
 
-.sport-bottom-grid {
-  flex: 1 1 auto;
+.sport-week-card {
   min-height: 0;
-  align-items: stretch;
-  grid-auto-rows: minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
 }
 
-.sport-bottom-grid > .lay-card,
+.sport-week-card .sport-week-grid-v2 {
+  flex: 1 1 auto;
+}
+
+.sport-cycle-banner {
+  padding: 16px;
+  gap: 14px;
+}
+
+.sport-cycle-banner-title {
+  font-size: 16px;
+}
+
+.sport-utilities-grid {
+  flex: 0 0 auto;
+  align-items: start;
+}
+
+.sport-utilities-grid > .lay-card,
 .sport-panel {
   min-height: 0;
-  height: 100%;
+  max-height: 280px;
   display: flex;
   flex-direction: column;
 }
@@ -244,4 +387,65 @@
 .sport-record-row,
 .sport-history-row {
   border-radius: var(--r-mid);
+}
+
+@media (max-width: 1180px) {
+  .sport-cockpit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sport-cockpit-primary {
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+    grid-template-rows: auto;
+  }
+}
+
+@media (max-width: 720px) {
+  .sport-cockpit {
+    gap: 14px;
+  }
+
+  .sport-cockpit-primary {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .sport-today-card {
+    min-height: 0;
+  }
+
+  .sport-today-title {
+    font-size: 21px;
+  }
+
+  .sport-today-actions .btn {
+    flex: 1 1 150px;
+  }
+
+  .sport-week-card {
+    padding: 16px;
+  }
+
+  .sport-week-grid-v2 {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scroll-snap-type: x proximity;
+  }
+
+  .sport-day-col {
+    flex: 0 0 min(74vw, 260px);
+    min-height: 150px;
+    scroll-snap-align: start;
+  }
+
+  .sport-utilities-grid {
+    gap: 12px;
+  }
+
+  .sport-utilities-grid > .lay-card,
+  .sport-panel {
+    max-height: none;
+  }
 }

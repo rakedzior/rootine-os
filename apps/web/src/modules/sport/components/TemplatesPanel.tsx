@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ModuleCard, ModuleHeader } from '@/components/layout/primitives';
-import { ConfirmDelete, EmptyState, MoreMenu } from '@/components/common';
+import { ConfirmDelete, MoreMenu } from '@/components/common';
 import { toast } from '@/lib/toast';
 import {
   useTemplates, useSports, useExercises, useCreateTemplate, useUpdateTemplate,
@@ -54,9 +54,12 @@ export function TemplatesPanel() {
 
   return (
     <ModuleCard className="sport-panel">
-      <ModuleHeader title="Szablony i planowanie" actions={<button className="btn btn-secondary btn-sm" onClick={() => setCreating(true)}>+ Nowy szablon</button>} />
+      <ModuleHeader title="Szablony" actions={<button className="btn btn-secondary btn-sm" onClick={() => setCreating(true)}>+ Dodaj szablon</button>} />
       {templates.length === 0 ? (
-        <EmptyState title="Nie masz jeszcze szablonów" desc="Utwórz pierwszy szablon, aby szybciej planować treningi." cta="+ Nowy szablon" onCta={() => setCreating(true)} />
+        <div className="sport-template-empty-compact">
+          <strong>Nie masz jeszcze szablonów</strong>
+          <span>Dodaj pierwszy plan i używaj go z tygodnia na tydzień.</span>
+        </div>
       ) : (
         <div className="sport-template-list">
           {templates.map(t => (

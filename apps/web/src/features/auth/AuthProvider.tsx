@@ -2,13 +2,12 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { loadUserTheme } from '@/lib/theme';
+import { QA_AUTH_ENABLED, QA_USER_EMAIL, QA_USER_ID } from './qaAuth';
 
 interface AuthState {
   session: Session | null;
   loading: boolean;
 }
-
-const QA_AUTH_ENABLED = import.meta.env.DEV && import.meta.env.VITE_ROOTINE_QA_AUTH === '1';
 
 const qaSession = {
   access_token: 'rootine-qa-access-token',
@@ -16,10 +15,10 @@ const qaSession = {
   expires_in: 3600,
   token_type: 'bearer',
   user: {
-    id: 'rootine-qa-user',
+    id: QA_USER_ID,
     aud: 'authenticated',
     role: 'authenticated',
-    email: 'qa@rootine.local',
+    email: QA_USER_EMAIL,
     email_confirmed_at: new Date(0).toISOString(),
     confirmed_at: new Date(0).toISOString(),
     app_metadata: {},

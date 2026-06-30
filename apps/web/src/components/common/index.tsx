@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type FC } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type FC } from 'react';
+import { createPortal } from 'react-dom';
 
 // ─── MODAL ───────────────────────────────────────────────────
 
@@ -9,9 +10,10 @@ interface ModalProps {
   children: ReactNode;
   size?: 'sm' | 'md' | 'lg';
   footer?: ReactNode;
+  className?: string;
 }
 
-export function Modal({ open, onClose, title, children, size, footer }: ModalProps) {
+export function Modal({ open, onClose, title, children, size, footer, className }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -61,15 +63,16 @@ export function Modal({ open, onClose, title, children, size, footer }: ModalPro
   if (!open) return null;
 
   const sizeClass = size === 'lg' ? 'modal-lg' : size === 'sm' ? 'modal-sm' : '';
+  const modalClassName = ['modal', sizeClass, className].filter(Boolean).join(' ');
 
-  return (
+  return createPortal(
     <div
       className="modal-overlay"
       ref={overlayRef}
       onMouseDown={e => { if (e.target === overlayRef.current) onClose(); }}
     >
       <div
-        className={`modal ${sizeClass}`}
+        className={modalClassName}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -87,7 +90,8 @@ export function Modal({ open, onClose, title, children, size, footer }: ModalPro
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-footer">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -160,9 +164,15 @@ interface SubTab { id: string; label: string; icon?: () => ReactNode; }
 interface SubTabsProps { tabs: SubTab[]; active: string; onChange: (id: string) => void; }
 export function SubTabs({ tabs, active, onChange }: SubTabsProps) {
   return (
-    <div className="sub-tabs">
+    <div className="sub-tabs" role="group" aria-label="Podzakładki">
       {tabs.map(t => (
-        <button key={t.id} className={active === t.id ? 'active' : ''} onClick={() => onChange(t.id)}>
+        <button
+          key={t.id}
+          type="button"
+          className={active === t.id ? 'active' : ''}
+          aria-pressed={active === t.id}
+          onClick={() => onChange(t.id)}
+        >
           {t.icon && <span className="sub-tab-icon">{t.icon()}</span>}
           {t.label}
         </button>
@@ -592,26 +602,62 @@ export const IcoMore: FC = () => (
 export interface MoreMenuItem { label: string; onClick: () => void; danger?: boolean; disabled?: boolean; }
 export function MoreMenu({ items, label = 'Więcej' }: { items: MoreMenuItem[]; label?: string }) {
   const [open, setOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  function positionMenu() {
+    const button = ref.current?.querySelector('button');
+    if (!button) return;
+    const rect = button.getBoundingClientRect();
+    const width = 180;
+    const estimatedHeight = Math.min(220, Math.max(52, items.length * 44 + 12));
+    const left = Math.min(window.innerWidth - width - 12, Math.max(12, rect.right - width));
+    const anchorTop = Math.min(window.innerHeight - 12, Math.max(12, rect.top));
+    const anchorBottom = Math.min(window.innerHeight - 12, Math.max(12, rect.bottom));
+    const hasRoomBelow = anchorBottom + estimatedHeight + 10 <= window.innerHeight;
+    const preferredTop = hasRoomBelow ? anchorBottom + 8 : anchorTop - estimatedHeight - 8;
+    const top = Math.min(window.innerHeight - estimatedHeight - 12, Math.max(12, preferredTop));
+    setMenuStyle({ position: 'fixed', top, left, width });
+  }
+
   useEffect(() => {
-    function handler(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    function handler(e: MouseEvent) {
+      const target = e.target as Node;
+      if (ref.current?.contains(target) || menuRef.current?.contains(target)) return;
+      setOpen(false);
+    }
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    positionMenu();
+    const handler = () => positionMenu();
+    window.addEventListener('resize', handler);
+    window.addEventListener('scroll', handler, true);
+    return () => {
+      window.removeEventListener('resize', handler);
+      window.removeEventListener('scroll', handler, true);
+    };
+  }, [open, items.length]);
+
   return (
     <div className="more-menu-wrap" ref={ref}>
-      <button className="icon-btn" onClick={() => setOpen((v) => !v)} aria-label={label} aria-haspopup="menu" aria-expanded={open}>
+      <button className="icon-btn" onClick={() => { setOpen((v) => !v); window.requestAnimationFrame(positionMenu); }} aria-label={label} aria-haspopup="menu" aria-expanded={open}>
         <IcoMore />
       </button>
-      {open && (
-        <div className="more-menu" role="menu">
+      {open && createPortal(
+        <div className="more-menu more-menu-portal" role="menu" ref={menuRef} style={menuStyle}>
           {items.map((it, i) => (
             <button key={i} role="menuitem" className={it.danger ? 'danger' : ''} disabled={it.disabled}
               onClick={() => { setOpen(false); it.onClick(); }}>
               {it.label}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

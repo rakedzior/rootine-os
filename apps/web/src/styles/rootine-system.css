@@ -1326,3 +1326,5249 @@
     animation-duration: 1ms !important;
   }
 }
+
+/* Final Sport cockpit override. Keep at EOF: older generated Sport rules above
+   still describe the pre-cockpit dashboard and must not win in cascade. */
+.module-page.sport-os > .page-body > .sport-cockpit,
+.sport-os > .page-body > .sport-cockpit {
+  display: flex !important;
+  flex-direction: column !important;
+  grid-template-rows: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+  gap: 18px !important;
+}
+
+.sport-os .sport-cockpit-grid {
+  display: grid !important;
+  grid-template-columns: minmax(340px, 420px) minmax(0, 1fr) !important;
+  gap: 18px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 518px !important;
+  height: auto !important;
+  flex: 0 0 auto !important;
+}
+
+.sport-os .sport-cockpit-primary {
+  display: grid !important;
+  grid-template-rows: minmax(260px, auto) auto !important;
+  gap: 14px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  flex: 0 0 auto !important;
+}
+
+.sport-os .sport-today-card,
+.sport-os .sport-cycle-banner,
+.sport-os .sport-week-card {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.sport-os .sport-week-card {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+.sport-os .sport-week-card .sport-week-grid-v2 {
+  flex: 1 1 auto !important;
+}
+
+.sport-os .sport-utilities-grid {
+  display: grid !important;
+  grid-template-columns: 1.1fr .9fr .9fr !important;
+  gap: 18px !important;
+  align-items: start !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  flex: 0 0 auto !important;
+}
+
+.sport-os .sport-utilities-grid > .lay-card,
+.sport-os .sport-panel {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: 280px !important;
+}
+
+@media (max-width: 1180px) {
+  .sport-os .sport-cockpit-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+  }
+
+  .sport-os .sport-cockpit-primary {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr) !important;
+    grid-template-rows: auto !important;
+  }
+
+  .sport-os .sport-today-card,
+  .sport-os .sport-cycle-banner,
+  .sport-os .sport-week-card {
+    height: auto !important;
+  }
+
+  .sport-os .sport-utilities-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .module-page.sport-os > .page-body > .sport-cockpit,
+  .sport-os > .page-body > .sport-cockpit {
+    gap: 14px !important;
+    overflow: visible !important;
+  }
+
+  .sport-os .sport-cockpit-primary {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .sport-os .sport-today-card {
+    min-height: 0 !important;
+  }
+
+  .sport-os .sport-week-card {
+    min-height: 260px !important;
+  }
+
+  .sport-os .sport-week-grid-v2 {
+    display: flex !important;
+    grid-auto-flow: initial !important;
+    grid-auto-columns: initial !important;
+    grid-template-columns: none !important;
+    gap: 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-bottom: 4px !important;
+    scroll-snap-type: x proximity;
+  }
+
+  .sport-os .sport-day-col {
+    flex: 0 0 min(74vw, 260px) !important;
+    min-height: 150px !important;
+    scroll-snap-align: start;
+  }
+
+  .sport-os .sport-utilities-grid > .lay-card,
+  .sport-os .sport-panel {
+    max-height: none !important;
+  }
+}
+
+.sport-os .sport-utilities-grid .empty-state {
+  padding: 26px 16px 20px !important;
+  gap: 8px !important;
+}
+
+.sport-os .sport-utilities-grid .empty-state h3,
+.sport-os .sport-utilities-grid .empty-state .es-title {
+  font-size: 16px !important;
+  line-height: 1.22 !important;
+}
+
+.sport-os .sport-utilities-grid .empty-state p,
+.sport-os .sport-utilities-grid .empty-state .es-desc {
+  margin-bottom: 10px !important;
+}
+
+/* Sport template editor: keep the long exercise builder centered and scrollable. */
+.modal-overlay:has(.sport-template-modal) {
+  align-items: center !important;
+  justify-content: center !important;
+  padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom)) !important;
+  overflow: hidden !important;
+}
+
+.sport-template-modal {
+  width: min(920px, calc(100vw - 36px)) !important;
+  max-width: min(920px, calc(100vw - 36px)) !important;
+  max-height: min(86dvh, 820px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.sport-template-modal .modal-head {
+  flex: 0 0 auto !important;
+  padding: 22px 28px 14px !important;
+}
+
+.sport-template-modal .modal-title {
+  font-size: 24px !important;
+  line-height: 1.12 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.sport-template-modal .modal-close {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.sport-template-modal .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+  padding: 0 28px 18px !important;
+}
+
+.sport-template-modal .modal-footer {
+  flex: 0 0 auto !important;
+  padding: 14px 28px 18px !important;
+  background: color-mix(in srgb, var(--surface-overlay) 92%, transparent) !important;
+}
+
+@media (max-width: 720px) {
+  .modal-overlay:has(.sport-template-modal) {
+    padding: 12px !important;
+  }
+
+  .sport-template-modal {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 24px) !important;
+    border-radius: 18px !important;
+  }
+
+  .sport-template-modal .modal-head {
+    padding: 18px 18px 10px !important;
+  }
+
+  .sport-template-modal .modal-body {
+    padding: 0 18px 14px !important;
+  }
+
+  .sport-template-modal .modal-footer {
+    padding: 12px 18px 16px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .sport-template-modal .modal-footer .btn {
+    flex: 1 1 140px !important;
+  }
+}
+
+/* Sport cockpit layout: left planning rail, dominant week board, history + weekly goals. */
+.sport-os .sport-cockpit {
+  max-width: none !important;
+  padding: 24px !important;
+}
+
+.sport-os .sport-dashboard-layout {
+  display: grid !important;
+  grid-template-columns: minmax(320px, 384px) minmax(520px, 1fr) minmax(340px, 520px) !important;
+  grid-template-areas:
+    "left week week"
+    "left history goals" !important;
+  gap: 18px !important;
+  align-items: stretch !important;
+}
+
+.sport-os .sport-dashboard-left {
+  grid-area: left !important;
+  display: grid !important;
+  grid-template-rows: auto auto minmax(0, 1fr) !important;
+  gap: 18px !important;
+  min-width: 0 !important;
+}
+
+.sport-os .sport-dashboard-week {
+  grid-area: week !important;
+  min-width: 0 !important;
+}
+
+.sport-os .sport-dashboard-history {
+  grid-area: history !important;
+  min-width: 0 !important;
+}
+
+.sport-os .sport-week-goals-card {
+  grid-area: goals !important;
+  min-width: 0 !important;
+}
+
+.sport-os .sport-today-card,
+.sport-os .sport-cycle-banner,
+.sport-os .sport-panel,
+.sport-os .sport-week-card,
+.sport-os .sport-week-goals-card {
+  background:
+    radial-gradient(circle at 20% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 34%),
+    var(--surface) !important;
+  border: 1px solid color-mix(in srgb, var(--border-strong) 72%, transparent) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .22) !important;
+}
+
+.sport-os .sport-today-card {
+  min-height: 284px !important;
+  justify-content: space-between !important;
+  gap: 20px !important;
+}
+
+.sport-os .sport-today-kicker {
+  display: none !important;
+}
+
+.sport-os .sport-today-head {
+  gap: 10px !important;
+}
+
+.sport-os .sport-today-title {
+  font-size: 24px !important;
+  line-height: 1.16 !important;
+  max-width: none !important;
+}
+
+.sport-os .sport-today-subtitle {
+  color: var(--ink-2) !important;
+  font-size: 14px !important;
+  max-width: 34ch !important;
+}
+
+.sport-os .sport-today-actions {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.sport-os .sport-today-actions .btn {
+  height: 50px !important;
+  justify-content: center !important;
+}
+
+.sport-os .sport-today-list {
+  gap: 8px !important;
+}
+
+.sport-os .sport-today-empty {
+  margin-top: 8px !important;
+  padding: 12px 14px !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--surface-inset) 82%, transparent) !important;
+  color: var(--ink-2) !important;
+  font-size: 13px !important;
+}
+
+.sport-os .sport-cycle-banner {
+  min-height: 214px !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  padding: 22px !important;
+}
+
+.sport-os .sport-cycle-banner-empty {
+  align-items: stretch !important;
+}
+
+.sport-os .sport-cycle-banner-title {
+  font-size: 21px !important;
+  line-height: 1.2 !important;
+}
+
+.sport-os .sport-cycle-banner .btn {
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+.sport-os .sport-dashboard-left .sport-panel {
+  min-height: 320px !important;
+}
+
+.sport-os .sport-dashboard-left .module-header,
+.sport-os .sport-dashboard-history .module-header,
+.sport-os .sport-week-goals-head {
+  align-items: center !important;
+  margin-bottom: 16px !important;
+}
+
+.sport-os .sport-dashboard-left .module-header h2,
+.sport-os .sport-dashboard-history .module-header h2,
+.sport-os .sport-week-goals-card h3 {
+  font-size: 22px !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+}
+
+.sport-os .sport-dashboard-left .sport-template-list {
+  gap: 8px !important;
+}
+
+.sport-os .sport-dashboard-left .sport-template-tile {
+  min-height: 50px !important;
+  border-color: color-mix(in srgb, var(--border-soft) 78%, transparent) !important;
+  background: color-mix(in srgb, var(--surface-inset) 78%, transparent) !important;
+}
+
+.sport-os .sport-template-empty-compact {
+  display: grid !important;
+  gap: 8px !important;
+  min-height: 156px !important;
+  align-content: center !important;
+  justify-items: center !important;
+  text-align: center !important;
+  color: var(--ink-3) !important;
+}
+
+.sport-os .sport-template-empty-compact strong {
+  color: var(--ink) !important;
+  font-size: 17px !important;
+  line-height: 1.22 !important;
+}
+
+.sport-os .sport-template-empty-compact span {
+  max-width: 26ch !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+}
+
+.sport-os .sport-week-card {
+  min-height: 500px !important;
+  padding: 26px 30px !important;
+}
+
+.sport-os .sport-week-head {
+  align-items: flex-start !important;
+  margin-bottom: 22px !important;
+}
+
+.sport-os .sport-week-title {
+  font-size: 25px !important;
+  line-height: 1.16 !important;
+}
+
+.sport-os .sport-week-range {
+  font-size: 15px !important;
+}
+
+.sport-os .sport-week-nav .icon-btn,
+.sport-os .sport-week-datepick-wrap .icon-btn {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 12px !important;
+}
+
+.sport-os .sport-week-grid-v2 {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(118px, 1fr)) !important;
+  gap: 14px !important;
+  overflow: visible !important;
+}
+
+.sport-os .sport-day-col {
+  min-height: 372px !important;
+  padding: 16px 14px 12px !important;
+  border-radius: 15px !important;
+  background: color-mix(in srgb, var(--surface-raised) 68%, transparent) !important;
+}
+
+.sport-os .sport-day-col.is-today {
+  border-color: color-mix(in srgb, var(--accent) 82%, transparent) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 38%, transparent), 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent) !important;
+}
+
+.sport-os .sport-day-cards:empty::before {
+  content: "Brak treningu";
+  display: grid;
+  place-items: center;
+  min-height: 210px;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.sport-os .sport-day-add {
+  height: 40px !important;
+  border-radius: 10px !important;
+  border-style: dashed !important;
+}
+
+.sport-os .sport-dashboard-history .sport-panel,
+.sport-os .sport-week-goals-card {
+  min-height: 338px !important;
+}
+
+.sport-os .sport-dashboard-history .empty-state {
+  min-height: 210px !important;
+  justify-content: center !important;
+}
+
+.sport-os .sport-week-goals-card {
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 26px !important;
+}
+
+.sport-os .sport-week-goals-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 18px !important;
+  margin: 8px 0 26px !important;
+}
+
+.sport-os .sport-week-goal-row {
+  display: grid !important;
+  grid-template-columns: 112px minmax(120px, 1fr) 52px !important;
+  align-items: center !important;
+  gap: 14px !important;
+  color: var(--ink-2) !important;
+}
+
+.sport-os .sport-week-goal-row span {
+  color: var(--ink) !important;
+  font-weight: 650 !important;
+}
+
+.sport-os .sport-week-goal-row strong {
+  color: var(--ink-2) !important;
+  font-size: 13px !important;
+  text-align: right !important;
+}
+
+.sport-os .sport-week-goal-bar {
+  height: 14px !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--surface-inset) 86%, transparent) !important;
+  border: 1px solid var(--border-soft) !important;
+  overflow: hidden !important;
+}
+
+.sport-os .sport-week-goal-bar i {
+  display: block !important;
+  height: 100% !important;
+  border-radius: inherit !important;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong)) !important;
+}
+
+.sport-os .sport-week-goals-card .btn {
+  width: min(250px, 100%) !important;
+  align-self: center !important;
+  justify-content: center !important;
+  margin-top: auto !important;
+}
+
+.sport-os .sport-workout-card.is-completed {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border-soft)) !important;
+  background: color-mix(in srgb, var(--surface-raised) 62%, #2f526f 38%) !important;
+}
+
+.sport-os .sport-workout-complete-toggle {
+  color: color-mix(in srgb, var(--ink-3) 86%, white 14%) !important;
+}
+
+.sport-os .sport-workout-complete-toggle.is-completed {
+  background: color-mix(in srgb, var(--accent) 72%, #1e3348 28%) !important;
+  border-color: color-mix(in srgb, var(--accent) 76%, transparent) !important;
+  color: #07111a !important;
+}
+
+.sport-os .sport-week-goals-note {
+  margin-top: auto !important;
+  color: var(--ink-3) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+}
+
+.sport-template-exercise-detail-hint {
+  margin-left: auto !important;
+  color: var(--accent) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+
+.sport-template-modal .sport-template-exercise {
+  padding: 8px 10px !important;
+  border-radius: 12px !important;
+}
+
+.sport-template-modal .sport-template-exercise-toggle strong {
+  font-size: 13px !important;
+}
+
+.sport-template-modal .sport-template-exercise-summary {
+  font-size: 10px !important;
+}
+
+@media (max-width: 1180px) {
+  .sport-os .sport-dashboard-layout {
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr) !important;
+    grid-template-areas:
+      "left week"
+      "history goals" !important;
+  }
+
+  .sport-os .sport-week-grid-v2 {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 12px !important;
+  }
+
+  .sport-os .sport-day-col {
+    flex: 0 0 190px !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .sport-os .sport-cockpit {
+    padding: 14px !important;
+  }
+
+  .sport-os .sport-dashboard-layout {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "left"
+      "week"
+      "history"
+      "goals" !important;
+  }
+
+  .sport-os .sport-dashboard-left {
+    grid-template-rows: none !important;
+  }
+
+  .sport-os .sport-today-actions,
+  .sport-os .sport-week-goal-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sport-os .sport-week-goal-row strong {
+    text-align: left !important;
+  }
+}
+
+/* Sport readability correction: keep graphite, but avoid the too-black cockpit pass. */
+.sport-os {
+  background:
+    radial-gradient(circle at 70% 0%, rgba(125, 211, 252, .11), transparent 34%),
+    linear-gradient(180deg, #152232 0%, #111d2b 48%, #101a27 100%) !important;
+}
+
+.sport-os .sport-today-card,
+.sport-os .sport-cycle-banner,
+.sport-os .sport-panel,
+.sport-os .sport-week-card,
+.sport-os .sport-week-goals-card {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-raised) 86%, #34506a 14%), color-mix(in srgb, var(--surface) 86%, #2b4258 14%)) !important;
+  border-color: color-mix(in srgb, var(--border-strong) 94%, #89d7ff 6%) !important;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .14) !important;
+}
+
+.sport-os .sport-day-col {
+  background: color-mix(in srgb, var(--surface-raised) 72%, #314a62 28%) !important;
+  border-color: color-mix(in srgb, var(--border-soft) 88%, #89d7ff 12%) !important;
+}
+
+.sport-os .sport-day-col.is-today {
+  background: color-mix(in srgb, var(--surface-raised) 64%, #315d80 36%) !important;
+}
+
+.sport-os .sport-today-empty,
+.sport-os .sport-template-tile,
+.sport-os .sport-week-goal-bar {
+  background: color-mix(in srgb, var(--surface-inset) 62%, #2a4056 38%) !important;
+}
+
+.sport-os .btn-secondary,
+.sport-os .btn-ghost {
+  background: color-mix(in srgb, var(--surface-raised) 76%, #324b63 24%) !important;
+  border-color: color-mix(in srgb, var(--border-strong) 86%, #89d7ff 14%) !important;
+  color: var(--ink) !important;
+}
+
+.sport-os .btn-secondary:hover,
+.sport-os .btn-ghost:hover {
+  background: color-mix(in srgb, var(--surface-elevated) 86%, #31506b 14%) !important;
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border-strong)) !important;
+}
+
+/* Simplified training cycle creation. */
+.modal-overlay:has(.sport-cycle-editor-modal) {
+  z-index: 5000 !important;
+}
+
+.sport-cycle-editor-modal {
+  width: min(680px, calc(100vw - 32px)) !important;
+  max-width: min(680px, calc(100vw - 32px)) !important;
+  position: relative !important;
+  z-index: 1001 !important;
+  opacity: 1 !important;
+  animation: none !important;
+  background: linear-gradient(180deg, #263749 0%, #203143 100%) !important;
+  border-color: rgba(166, 210, 238, .28) !important;
+  box-shadow: 0 34px 86px rgba(0, 0, 0, .54), inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+}
+
+.sport-cycle-editor-modal::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  background: linear-gradient(180deg, #263749 0%, #203143 100%) !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+}
+
+.sport-cycle-editor-modal > * {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.sport-cycle-editor-form {
+  gap: 16px !important;
+}
+
+.sport-cycle-editor-modal .modal-title {
+  color: var(--ink) !important;
+}
+
+.sport-cycle-editor-modal .modal-body {
+  color: var(--ink) !important;
+}
+
+.sport-cycle-editor-modal .modal-footer {
+  background: #1e2d3e !important;
+}
+
+.sport-cycle-editor-modal .modal-footer .btn-secondary {
+  background: color-mix(in srgb, var(--surface-raised) 88%, #2b4054 12%) !important;
+  border-color: var(--border-soft) !important;
+  color: var(--ink-2) !important;
+}
+
+.sport-cycle-editor-intro {
+  margin: -2px 0 2px !important;
+  color: color-mix(in srgb, var(--ink-2) 86%, white 14%) !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+}
+
+.sport-cycle-editor-modal .field label {
+  display: block !important;
+  margin-bottom: 7px !important;
+  color: color-mix(in srgb, var(--ink-3) 78%, white 22%) !important;
+}
+
+.sport-cycle-goal-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.sport-cycle-goal-option,
+.sport-cycle-duration-options button,
+.sport-cycle-frequency-options button {
+  min-height: 40px !important;
+  border: 1px solid var(--border-soft) !important;
+  border-radius: 11px !important;
+  background: color-mix(in srgb, var(--surface-raised) 78%, #273b50 22%) !important;
+  color: color-mix(in srgb, var(--ink-2) 82%, white 18%) !important;
+  font: inherit !important;
+  font-weight: 650 !important;
+  cursor: pointer !important;
+  transition: border-color .18s ease, background .18s ease, color .18s ease !important;
+}
+
+.sport-cycle-goal-option:hover,
+.sport-cycle-duration-options button:hover,
+.sport-cycle-frequency-options button:hover {
+  border-color: var(--border-strong) !important;
+  color: var(--ink) !important;
+}
+
+.sport-cycle-goal-option.is-active,
+.sport-cycle-duration-options button.is-active,
+.sport-cycle-frequency-options button.is-active {
+  background: color-mix(in srgb, var(--accent) 22%, #20354b) !important;
+  border-color: color-mix(in srgb, var(--accent) 78%, transparent) !important;
+  color: var(--ink) !important;
+}
+
+.sport-cycle-editor-modal .input,
+.sport-cycle-editor-modal .select,
+.sport-cycle-editor-modal .textarea {
+  background: color-mix(in srgb, var(--surface-inset) 74%, #1c3044 26%) !important;
+  border-color: color-mix(in srgb, var(--border-soft) 86%, transparent) !important;
+  color: var(--ink) !important;
+}
+
+.sport-cycle-quick-row {
+  display: grid !important;
+  grid-template-columns: 180px minmax(0, 1fr) !important;
+  gap: 12px !important;
+}
+
+.sport-cycle-duration-options,
+.sport-cycle-frequency-options {
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.sport-cycle-duration-options {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.sport-cycle-frequency-options {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+.sport-cycle-advanced {
+  border-top: 1px solid var(--border-soft) !important;
+  padding-top: 12px !important;
+}
+
+.sport-cycle-advanced summary {
+  cursor: pointer !important;
+  color: var(--accent) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+.sport-cycle-advanced-body {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding-top: 12px !important;
+}
+
+@media (max-width: 640px) {
+  .sport-cycle-goal-grid,
+  .sport-cycle-quick-row,
+  .sport-cycle-duration-options,
+  .sport-cycle-frequency-options {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Training cycles: simple week planning, no coaching-periodization UI. */
+.sport-cycle-manager-modal,
+.sport-cycle-detail-modal {
+  width: min(960px, calc(100vw - 36px)) !important;
+  max-width: min(960px, calc(100vw - 36px)) !important;
+  position: relative !important;
+  opacity: 1 !important;
+  animation: none !important;
+  background: linear-gradient(180deg, #243447 0%, #1e2d3e 100%) !important;
+  border-color: rgba(166, 210, 238, .26) !important;
+  box-shadow: 0 34px 86px rgba(0, 0, 0, .5) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+}
+
+.sport-cycle-manager-modal::before,
+.sport-cycle-detail-modal::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  background: linear-gradient(180deg, #243447 0%, #1e2d3e 100%) !important;
+  pointer-events: none !important;
+}
+
+.sport-cycle-manager-modal > *,
+.sport-cycle-detail-modal > * {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.sport-cycle-manager-modal .modal-body,
+.sport-cycle-detail-modal .modal-body {
+  padding-top: 0 !important;
+}
+
+.sport-cycle-manager {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+}
+
+.sport-cycle-manager-hero {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 18px !important;
+  align-items: center !important;
+  padding: 18px !important;
+  border: 1px solid color-mix(in srgb, var(--border-soft) 82%, #89d7ff 18%) !important;
+  border-radius: 16px !important;
+  background: color-mix(in srgb, var(--surface-raised) 72%, #31506a 28%) !important;
+}
+
+.sport-cycle-manager-kicker {
+  display: block !important;
+  margin-bottom: 8px !important;
+  color: var(--accent) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+
+.sport-cycle-manager-hero h3 {
+  margin: 0 !important;
+  color: var(--ink) !important;
+  font-size: 22px !important;
+  line-height: 1.15 !important;
+}
+
+.sport-cycle-manager-hero p {
+  margin: 8px 0 0 !important;
+  max-width: 68ch !important;
+  color: color-mix(in srgb, var(--ink-2) 86%, white 14%) !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+}
+
+.sport-cycle-manager-list {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.sport-cycle-manager-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+  width: 100% !important;
+  min-height: 70px !important;
+  padding: 14px 16px !important;
+  border: 1px solid color-mix(in srgb, var(--border-soft) 86%, transparent) !important;
+  border-radius: 14px !important;
+  background: color-mix(in srgb, var(--surface-inset) 62%, #2b4056 38%) !important;
+  color: var(--ink) !important;
+  text-align: left !important;
+  cursor: pointer !important;
+}
+
+.sport-cycle-manager-row:hover {
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--border-strong)) !important;
+  background: color-mix(in srgb, var(--surface-raised) 74%, #33536d 26%) !important;
+}
+
+.sport-cycle-manager-row-main {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+}
+
+.sport-cycle-manager-row-main strong {
+  color: var(--ink) !important;
+  font-size: 15px !important;
+  line-height: 1.2 !important;
+}
+
+.sport-cycle-manager-row-main span {
+  color: var(--ink-3) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+}
+
+.sport-cycle-detail-modal {
+  width: min(1080px, calc(100vw - 36px)) !important;
+  max-width: min(1080px, calc(100vw - 36px)) !important;
+}
+
+.sport-cycle-detail {
+  gap: 18px !important;
+}
+
+.sport-cycle-detail-head {
+  padding-bottom: 2px !important;
+}
+
+.sport-cycle-detail-status-actions {
+  width: fit-content !important;
+  max-width: 100% !important;
+  padding: 10px !important;
+  border: 1px solid var(--border-soft) !important;
+  border-radius: 14px !important;
+  background: color-mix(in srgb, var(--surface-inset) 60%, #2a4056 40%) !important;
+}
+
+.sport-cycle-week-planner {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr) !important;
+  gap: 16px !important;
+  align-items: start !important;
+}
+
+.sport-cycle-plan-composer {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  position: sticky !important;
+  top: 0 !important;
+  padding: 16px !important;
+  border: 1px solid color-mix(in srgb, var(--border-soft) 82%, #89d7ff 18%) !important;
+  border-radius: 16px !important;
+  background: color-mix(in srgb, var(--surface-raised) 76%, #304b64 24%) !important;
+}
+
+.sport-cycle-plan-composer h4 {
+  margin: 0 !important;
+  color: var(--ink) !important;
+  font-size: 18px !important;
+  line-height: 1.18 !important;
+}
+
+.sport-cycle-plan-composer p {
+  margin: 6px 0 0 !important;
+  color: color-mix(in srgb, var(--ink-2) 86%, white 14%) !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+}
+
+.sport-cycle-plan-mode {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 6px !important;
+  padding: 4px !important;
+  border: 1px solid var(--border-soft) !important;
+  border-radius: 12px !important;
+  background: color-mix(in srgb, var(--surface-inset) 72%, transparent) !important;
+}
+
+.sport-cycle-plan-mode button {
+  min-height: 34px !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  background: transparent !important;
+  color: var(--ink-2) !important;
+  font: inherit !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+}
+
+.sport-cycle-plan-mode button.is-active {
+  background: color-mix(in srgb, var(--accent) 22%, #21384e) !important;
+  color: var(--ink) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 58%, transparent) !important;
+}
+
+.sport-cycle-plan-mode button:disabled {
+  cursor: not-allowed !important;
+  opacity: .45 !important;
+}
+
+.sport-cycle-day-picker {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 5px !important;
+  padding: 4px !important;
+  border: 1px solid var(--border-soft) !important;
+  border-radius: 12px !important;
+  background: color-mix(in srgb, var(--surface-inset) 72%, transparent) !important;
+}
+
+.sport-cycle-day-picker button {
+  min-height: 32px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--ink-2) !important;
+  font: inherit !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+}
+
+.sport-cycle-day-picker button.is-active {
+  background: color-mix(in srgb, var(--accent) 24%, #21384e) !important;
+  color: var(--ink) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 62%, transparent) !important;
+}
+
+.sport-cycle-selected-date {
+  margin-top: -4px !important;
+  color: var(--ink-3) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+}
+
+.sport-cycle-plan-actions {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+
+.sport-cycle-plan-actions .btn {
+  justify-content: center !important;
+}
+
+.sport-cycle-week-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.sport-cycle-week-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 7px !important;
+  min-height: 136px !important;
+  padding: 14px !important;
+  border: 1px solid color-mix(in srgb, var(--border-soft) 86%, transparent) !important;
+  border-radius: 14px !important;
+  background: color-mix(in srgb, var(--surface-inset) 58%, #2a4056 42%) !important;
+  color: var(--ink) !important;
+  text-align: left !important;
+  cursor: pointer !important;
+}
+
+.sport-cycle-week-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 44%, var(--border-strong)) !important;
+}
+
+.sport-cycle-week-card.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 80%, transparent) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 44%, transparent) !important;
+}
+
+.sport-cycle-week-card.has-plan {
+  background: color-mix(in srgb, var(--surface-raised) 68%, #2f526f 32%) !important;
+}
+
+.sport-cycle-week-number,
+.sport-cycle-week-dates {
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  line-height: 1.2 !important;
+}
+
+.sport-cycle-week-number {
+  color: var(--accent) !important;
+  font-weight: 800 !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+}
+
+.sport-cycle-week-dates {
+  color: var(--ink-3) !important;
+}
+
+.sport-cycle-week-card strong {
+  margin-top: 4px !important;
+  color: var(--ink) !important;
+  font-size: 15px !important;
+  line-height: 1.25 !important;
+}
+
+.sport-cycle-week-card > span:last-child {
+  color: color-mix(in srgb, var(--ink-2) 86%, white 14%) !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+@media (max-width: 760px) {
+  .sport-cycle-manager-modal,
+  .sport-cycle-detail-modal {
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 24px) !important;
+  }
+
+  .sport-cycle-manager-hero,
+  .sport-cycle-manager-row,
+  .sport-cycle-week-planner {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sport-cycle-plan-composer {
+    position: static !important;
+  }
+}
+
+/* ROOTINE_CSS_V13_GLOBAL_MODULE_RASTER_START
+   One desktop raster across modules: the page body owns the edge gutter,
+   while the top-level workspace behaves as a layout grid, not an extra inset. */
+.module-page:is(.goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) > .page-head,
+.module-page:is(.goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) > header.page-head {
+  padding-inline: var(--rt-layout-edge-x) !important;
+}
+
+.module-page:is(.goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) > .page-body {
+  padding: var(--rt-layout-edge-y) var(--rt-layout-edge-x) !important;
+}
+
+.module-page:is(.goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) > .page-body > :is(
+  .lay-page,
+  .goals-os,
+  .diet-shell,
+  .finance-summary-strip,
+  .finance-workspace,
+  .travel-dashboard,
+  .office-dashboard-shell,
+  .work-shell,
+  .notes-workspace,
+  .settings-shell,
+  .col
+) {
+  width: 100% !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.module-page:is(.diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) > .page-body > :is(
+  .diet-shell,
+  .finance-summary-strip,
+  .finance-workspace,
+  .travel-dashboard,
+  .office-dashboard-shell,
+  .work-shell,
+  .notes-workspace,
+  .settings-shell,
+  .col
+) {
+  padding-inline: 0 !important;
+}
+
+.module-page.settings-os {
+  gap: 0 !important;
+}
+
+.module-page.settings-os > .page-head {
+  height: auto !important;
+  min-height: 88px !important;
+  max-height: none !important;
+  flex: 0 0 auto !important;
+  padding: 18px var(--rt-layout-edge-x) !important;
+}
+
+.module-page.settings-os > section.col {
+  width: calc(100% - (var(--rt-layout-edge-x) * 2)) !important;
+  max-width: none !important;
+  margin: var(--rt-layout-edge-y) var(--rt-layout-edge-x) 48px !important;
+  padding-inline: 0 !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 760px) {
+  .module-page:is(.goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) > .page-body {
+    padding: var(--rt-layout-edge-y) var(--rt-layout-edge-x) calc(var(--rt-mobile-nav-h) + 18px) !important;
+  }
+
+  .module-page.settings-os > section.col {
+    width: calc(100% - (var(--rt-layout-edge-x) * 2)) !important;
+    margin: var(--rt-layout-edge-y) var(--rt-layout-edge-x) calc(var(--rt-mobile-nav-h) + 18px) !important;
+  }
+}
+/* ROOTINE_CSS_V13_GLOBAL_MODULE_RASTER_END */
+
+/* ROOTINE_CSS_V14_SPORT_SELECTION_AND_MENU_FIX_START */
+.more-menu.more-menu-portal {
+  right: auto !important;
+  bottom: auto !important;
+  min-width: 180px !important;
+  max-height: calc(100dvh - 24px) !important;
+  overflow: auto !important;
+  z-index: 5200 !important;
+}
+
+.sport-os .sport-workout-card {
+  display: grid !important;
+  grid-template-columns: 10px minmax(0, 1fr) auto !important;
+  align-items: start !important;
+  gap: 5px !important;
+  min-height: 84px !important;
+  padding: 8px !important;
+  overflow: visible !important;
+}
+
+.sport-os .sport-week-grid-v2 {
+  grid-template-columns: repeat(7, minmax(148px, 1fr)) !important;
+}
+
+.sport-os .sport-workout-card.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 78%, transparent) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 38%, transparent) !important;
+}
+
+.sport-os .sport-drag-handle {
+  width: 10px !important;
+  min-width: 10px !important;
+  height: 24px !important;
+  padding: 0 !important;
+  opacity: .46 !important;
+}
+
+.sport-os .sport-workout-main {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.sport-os .sport-workout-title {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+}
+
+.sport-os .sport-workout-subtitle {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.sport-os .sport-workout-meta {
+  flex-wrap: wrap !important;
+  gap: 5px !important;
+}
+
+.sport-os .sport-workout-meta .badge {
+  max-width: 100% !important;
+  height: 22px !important;
+  padding-inline: 8px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.sport-os .sport-workout-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  width: 26px !important;
+  min-width: 26px !important;
+}
+
+.sport-os .sport-workout-actions .icon-btn {
+  width: 26px !important;
+  min-width: 26px !important;
+  height: 26px !important;
+  min-height: 26px !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
+}
+
+.sport-os .sport-today-row.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 58%, transparent) !important;
+  background: color-mix(in srgb, var(--surface-raised) 62%, #315d80 38%) !important;
+}
+/* ROOTINE_CSS_V14_SPORT_SELECTION_AND_MENU_FIX_END */
+
+/* ROOTINE_CSS_V15_SPORT_REFERENCE_LAYOUT_START
+   Reference-inspired structure only: left cockpit, dominant week board, compact utilities. */
+.sport-os .sport-cockpit {
+  padding: 18px !important;
+}
+
+.sport-os .sport-dashboard-layout {
+  grid-template-columns: minmax(360px, 410px) minmax(0, 1fr) minmax(360px, 460px) !important;
+  grid-template-areas:
+    "left week week"
+    "left history goals" !important;
+  gap: 16px !important;
+}
+
+.sport-os .sport-dashboard-left {
+  gap: 16px !important;
+}
+
+.sport-os .sport-today-card {
+  min-height: 324px !important;
+  padding: 24px !important;
+  gap: 18px !important;
+}
+
+.sport-os .sport-today-head {
+  align-items: flex-start !important;
+}
+
+.sport-os .sport-today-title {
+  font-size: 23px !important;
+  line-height: 1.15 !important;
+  letter-spacing: 0 !important;
+}
+
+.sport-os .sport-today-subtitle {
+  margin-top: 7px !important;
+  max-width: 40ch !important;
+  font-size: 13px !important;
+}
+
+.sport-os .sport-today-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+}
+
+.sport-os .sport-today-actions .btn {
+  flex: 1 1 132px !important;
+  height: 46px !important;
+  min-width: 0 !important;
+  padding-inline: 14px !important;
+  border-radius: 11px !important;
+  white-space: nowrap !important;
+}
+
+.sport-os .sport-today-list {
+  display: grid !important;
+  gap: 8px !important;
+  padding: 10px !important;
+  border: 1px solid color-mix(in srgb, var(--border-soft) 76%, transparent) !important;
+  border-radius: 14px !important;
+  background: color-mix(in srgb, var(--surface-inset) 62%, transparent) !important;
+}
+
+.sport-os .sport-today-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto 32px !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-height: 50px !important;
+  padding: 7px 8px !important;
+  border-radius: 12px !important;
+  background: color-mix(in srgb, var(--surface-raised) 64%, transparent) !important;
+}
+
+.sport-os .sport-today-row-main {
+  display: grid !important;
+  grid-template-columns: 28px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 9px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  text-align: left !important;
+  cursor: pointer !important;
+}
+
+.sport-os .sport-today-row-icon {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 9px !important;
+  color: var(--accent) !important;
+  background: color-mix(in srgb, var(--accent) 14%, transparent) !important;
+}
+
+.sport-os .sport-today-row-icon svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.sport-os .sport-today-row strong,
+.sport-os .sport-today-row small {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.sport-os .sport-today-row .badge {
+  max-width: 118px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.sport-os .sport-today-row .more-menu-wrap,
+.sport-os .sport-today-row .icon-btn {
+  width: 30px !important;
+  min-width: 30px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+}
+
+.sport-os .sport-cycle-banner {
+  min-height: 190px !important;
+  padding: 22px !important;
+}
+
+.sport-os .sport-dashboard-left .sport-panel {
+  min-height: 300px !important;
+  padding: 22px !important;
+}
+
+.sport-os .sport-dashboard-left .module-header h2,
+.sport-os .sport-dashboard-history .module-header h2,
+.sport-os .sport-week-goals-card h3 {
+  font-size: 21px !important;
+}
+
+.sport-os .sport-week-card {
+  min-height: 560px !important;
+  padding: 26px !important;
+}
+
+.sport-os .sport-week-head {
+  margin-bottom: 20px !important;
+}
+
+.sport-os .sport-week-title {
+  font-size: 24px !important;
+  letter-spacing: 0 !important;
+}
+
+.sport-os .sport-week-nav {
+  gap: 10px !important;
+}
+
+.sport-os .sport-week-nav .icon-btn,
+.sport-os .sport-week-datepick-wrap .icon-btn {
+  width: 44px !important;
+  height: 44px !important;
+}
+
+.sport-os .sport-week-grid-v2 {
+  grid-template-columns: repeat(7, minmax(156px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.sport-os .sport-day-col {
+  min-height: 420px !important;
+  padding: 15px 13px 12px !important;
+  gap: 12px !important;
+}
+
+.sport-os .sport-day-cards {
+  display: grid !important;
+  gap: 10px !important;
+  align-content: start !important;
+}
+
+.sport-os .sport-day-cards:empty::before {
+  min-height: 238px !important;
+}
+
+.sport-os .sport-workout-card {
+  grid-template-columns: 12px minmax(0, 1fr) 30px !important;
+  min-height: 108px !important;
+  padding: 10px !important;
+  gap: 8px !important;
+  border-radius: 12px !important;
+}
+
+.sport-os .sport-workout-title {
+  font-size: 13px !important;
+  line-height: 1.22 !important;
+}
+
+.sport-os .sport-workout-meta {
+  margin-top: 8px !important;
+}
+
+.sport-os .sport-workout-actions {
+  width: 30px !important;
+  min-width: 30px !important;
+}
+
+.sport-os .sport-workout-actions .icon-btn {
+  width: 30px !important;
+  min-width: 30px !important;
+  height: 30px !important;
+  min-height: 30px !important;
+}
+
+.sport-os .sport-dashboard-history .sport-panel,
+.sport-os .sport-week-goals-card {
+  min-height: 330px !important;
+}
+
+.sport-os .sport-week-goals-card {
+  padding: 24px !important;
+}
+
+@media (max-width: 1420px) {
+  .sport-os .sport-dashboard-layout {
+    grid-template-columns: minmax(320px, 390px) minmax(0, 1fr) !important;
+    grid-template-areas:
+      "left week"
+      "left goals"
+      "history history" !important;
+  }
+
+  .sport-os .sport-week-grid-v2 {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 12px !important;
+    padding-bottom: 4px !important;
+  }
+
+  .sport-os .sport-day-col {
+    flex: 0 0 190px !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .sport-os .sport-cockpit {
+    padding: 12px !important;
+  }
+
+  .sport-os .sport-dashboard-layout {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "left"
+      "week"
+      "goals"
+      "history" !important;
+  }
+
+  .sport-os .sport-today-card {
+    min-height: 0 !important;
+    padding: 18px !important;
+  }
+
+  .sport-os .sport-today-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sport-os .sport-today-row {
+    grid-template-columns: minmax(0, 1fr) 32px !important;
+  }
+
+  .sport-os .sport-today-row .badge {
+    display: none !important;
+  }
+
+  .sport-os .sport-week-card {
+    min-height: 0 !important;
+    padding: 18px !important;
+  }
+
+  .sport-os .sport-week-head {
+    gap: 14px !important;
+  }
+
+  .sport-os .sport-day-col {
+    flex: 0 0 min(78vw, 280px) !important;
+    min-height: 320px !important;
+  }
+}
+/* ROOTINE_CSS_V15_SPORT_REFERENCE_LAYOUT_END */
+
+/* ROOTINE_CSS_V16_SPORT_SCREENSHOT_LAYOUT_START
+   Sport only: reference layout and controls, preserving the existing graphite theme. */
+.sport-os .page-head {
+  width: calc(100% - 24px) !important;
+  margin: 10px 12px 0 !important;
+  padding: 18px 22px !important;
+  box-sizing: border-box !important;
+  border: 1px solid color-mix(in srgb, var(--border-strong) 72%, transparent) !important;
+  border-radius: 18px !important;
+  background: var(--surface) !important;
+}
+
+.sport-os .page-head-actions .btn-primary {
+  height: 50px !important;
+  min-width: 166px !important;
+  border-radius: 11px !important;
+}
+
+.sport-os .sport-cockpit {
+  padding: 16px 12px 20px !important;
+}
+
+.sport-os .sport-dashboard-layout {
+  display: grid !important;
+  grid-template-columns: minmax(340px, 410px) minmax(0, 1fr) minmax(340px, 470px) !important;
+  grid-template-areas:
+    "left week week"
+    "left history goals" !important;
+  gap: 14px !important;
+  align-items: stretch !important;
+}
+
+.sport-os .sport-dashboard-left {
+  display: grid !important;
+  grid-template-rows: auto auto minmax(0, 1fr) !important;
+  gap: 14px !important;
+  min-width: 0 !important;
+}
+
+.sport-os .sport-dashboard-week,
+.sport-os .sport-dashboard-history,
+.sport-os .sport-week-goals-card {
+  min-width: 0 !important;
+}
+
+.sport-os .sport-today-card,
+.sport-os .sport-cycle-banner,
+.sport-os .sport-panel,
+.sport-os .sport-week-card,
+.sport-os .sport-week-goals-card {
+  border-radius: 14px !important;
+  box-shadow: var(--sh-1) !important;
+}
+
+.sport-os .sport-today-card {
+  min-height: 326px !important;
+  padding: 22px !important;
+  gap: 18px !important;
+}
+
+.sport-os .sport-today-head {
+  align-items: flex-start !important;
+}
+
+.sport-os .sport-today-title {
+  font-size: 22px !important;
+  line-height: 1.12 !important;
+  letter-spacing: 0 !important;
+}
+
+.sport-os .sport-today-subtitle {
+  margin-top: 8px !important;
+  max-width: 38ch !important;
+  font-size: 13px !important;
+}
+
+.sport-os .sport-today-actions {
+  display: grid !important;
+  grid-template-columns: minmax(132px, 1fr) minmax(132px, 1fr) 46px !important;
+  gap: 10px !important;
+  align-items: stretch !important;
+}
+
+.sport-os .sport-today-actions .btn,
+.sport-os .sport-today-actions .icon-btn {
+  height: 46px !important;
+  min-height: 46px !important;
+  border-radius: 10px !important;
+  white-space: nowrap !important;
+}
+
+.sport-os .sport-today-actions .icon-btn {
+  width: 46px !important;
+  min-width: 46px !important;
+}
+
+.sport-os .sport-status-action svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.sport-os .sport-today-list {
+  display: grid !important;
+  gap: 8px !important;
+  padding: 10px !important;
+  border: 1px solid color-mix(in srgb, var(--border-soft) 78%, transparent) !important;
+  border-radius: 12px !important;
+  background: color-mix(in srgb, var(--surface-inset) 66%, transparent) !important;
+}
+
+.sport-os .sport-today-row {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto 30px !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 52px !important;
+  padding: 8px !important;
+  border-radius: 10px !important;
+}
+
+.sport-os .sport-today-row-main {
+  display: grid !important;
+  grid-template-columns: 30px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 9px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  text-align: left !important;
+}
+
+.sport-os .sport-today-row-icon,
+.sport-os .sport-workout-kind {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 9px !important;
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent) !important;
+  background: color-mix(in srgb, var(--accent) 13%, transparent) !important;
+  color: var(--accent) !important;
+}
+
+.sport-os .sport-today-row-icon svg,
+.sport-os .sport-workout-kind svg {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+.sport-os .sport-cycle-banner {
+  min-height: 190px !important;
+  padding: 22px !important;
+}
+
+.sport-os .sport-dashboard-left .sport-panel {
+  min-height: 262px !important;
+  padding: 22px !important;
+}
+
+.sport-os .sport-week-card {
+  min-height: 500px !important;
+  padding: 26px !important;
+}
+
+.sport-os .sport-week-head {
+  align-items: flex-start !important;
+  margin-bottom: 20px !important;
+}
+
+.sport-os .sport-week-title {
+  font-size: 24px !important;
+  letter-spacing: 0 !important;
+}
+
+.sport-os .sport-week-range {
+  font-size: 15px !important;
+}
+
+.sport-os .sport-week-nav {
+  gap: 10px !important;
+}
+
+.sport-os .sport-week-nav .icon-btn,
+.sport-os .sport-week-datepick-wrap .icon-btn {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 10px !important;
+}
+
+.sport-os .sport-week-grid-v2 {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  overflow: visible !important;
+}
+
+.sport-os .sport-day-col {
+  min-height: 364px !important;
+  padding: 14px 12px 12px !important;
+  gap: 10px !important;
+  border-radius: 12px !important;
+}
+
+.sport-os .sport-day-head {
+  min-height: 28px !important;
+}
+
+.sport-os .sport-day-cards {
+  display: grid !important;
+  gap: 10px !important;
+  align-content: start !important;
+  min-height: 0 !important;
+}
+
+.sport-os .sport-day-cards:empty::before {
+  content: none !important;
+}
+
+.sport-os .sport-day-empty {
+  display: grid !important;
+  place-items: center !important;
+  gap: 12px !important;
+  min-height: 238px !important;
+  color: var(--ink-3) !important;
+  font-size: 13px !important;
+  text-align: center !important;
+}
+
+.sport-os .sport-day-empty svg {
+  width: 24px !important;
+  height: 24px !important;
+  opacity: .72 !important;
+}
+
+.sport-os .sport-day-add {
+  height: 42px !important;
+  margin-top: auto !important;
+  border-radius: 10px !important;
+}
+
+.sport-os .sport-workout-card {
+  display: grid !important;
+  grid-template-columns: 30px minmax(0, 1fr) !important;
+  gap: 9px !important;
+  min-height: 128px !important;
+  padding: 10px !important;
+  border-radius: 11px !important;
+}
+
+.sport-os .sport-workout-main {
+  min-width: 0 !important;
+}
+
+.sport-os .sport-workout-title,
+.sport-os .sport-workout-subtitle {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.sport-os .sport-workout-meta {
+  margin-top: 8px !important;
+  gap: 7px !important;
+}
+
+.sport-os .sport-workout-actions {
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 0 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  border-top: 1px solid color-mix(in srgb, var(--border-soft) 68%, transparent) !important;
+  margin-top: 2px !important;
+}
+
+.sport-os .sport-workout-actions .icon-btn,
+.sport-os .sport-workout-actions .more-menu-wrap > .icon-btn {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.sport-os .sport-workout-actions > :not(:first-child) {
+  border-left: 1px solid color-mix(in srgb, var(--border-soft) 60%, transparent) !important;
+}
+
+.sport-os .sport-dashboard-history .sport-panel,
+.sport-os .sport-week-goals-card {
+  min-height: 294px !important;
+}
+
+.sport-os .sport-dashboard-history .empty-state {
+  min-height: 190px !important;
+  justify-content: center !important;
+}
+
+.sport-os .sport-week-goals-card {
+  padding: 24px !important;
+}
+
+.sport-os .sport-week-goals-list {
+  gap: 16px !important;
+  margin: 8px 0 22px !important;
+}
+
+.sport-os .sport-week-goal-row {
+  grid-template-columns: minmax(82px, 112px) minmax(92px, 1fr) 54px !important;
+  gap: 12px !important;
+}
+
+@media (max-width: 1420px) {
+  .sport-os .sport-dashboard-layout {
+    grid-template-columns: minmax(300px, 370px) minmax(0, 1fr) !important;
+    grid-template-areas:
+      "left week"
+      "left goals"
+      "history history" !important;
+  }
+
+  .sport-os .sport-week-grid-v2 {
+    display: flex !important;
+    gap: 12px !important;
+    overflow-x: auto !important;
+    padding-bottom: 4px !important;
+    scroll-snap-type: x proximity !important;
+  }
+
+  .sport-os .sport-day-col {
+    flex: 0 0 188px !important;
+    scroll-snap-align: start !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .sport-os .page-head {
+    width: calc(100% - 20px) !important;
+    margin: 8px 10px 0 !important;
+    padding: 16px !important;
+  }
+
+  .sport-os .sport-cockpit {
+    padding: 12px 10px 18px !important;
+  }
+
+  .sport-os .sport-dashboard-layout {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "left"
+      "week"
+      "goals"
+      "history" !important;
+  }
+
+  .sport-os .sport-dashboard-left {
+    grid-template-rows: none !important;
+  }
+
+  .sport-os .sport-today-actions {
+    grid-template-columns: 1fr 1fr 46px !important;
+  }
+
+  .sport-os .sport-today-actions .btn {
+    padding-inline: 10px !important;
+  }
+
+  .sport-os .sport-week-card {
+    min-height: 0 !important;
+    padding: 18px !important;
+  }
+
+  .sport-os .sport-week-head {
+    flex-direction: column !important;
+    gap: 14px !important;
+  }
+
+  .sport-os .sport-day-col {
+    flex: 0 0 min(78vw, 280px) !important;
+    min-height: 320px !important;
+  }
+
+  .sport-os .sport-day-empty {
+    min-height: 176px !important;
+  }
+
+  .sport-os .sport-workout-card {
+    min-height: 118px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .sport-os .sport-today-actions {
+    grid-template-columns: 1fr 46px !important;
+  }
+
+  .sport-os .sport-today-actions .sport-action-start,
+  .sport-os .sport-today-actions .btn-primary {
+    grid-column: 1 / -1 !important;
+  }
+
+  .sport-os .sport-today-row {
+    grid-template-columns: minmax(0, 1fr) 30px !important;
+  }
+
+  .sport-os .sport-today-row .badge {
+    display: none !important;
+  }
+
+  .sport-os .sport-week-goal-row {
+    grid-template-columns: 1fr 52px !important;
+  }
+
+  .sport-os .sport-week-goal-bar {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+  }
+}
+/* ROOTINE_CSS_V16_SPORT_SCREENSHOT_LAYOUT_END */
+
+/* ROOTINE_CSS_V17_SPORT_FULL_HEIGHT_AND_STATUS_CASE_START */
+.sport-os .badge.status-todo {
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-family: var(--font-sans) !important;
+  font-size: 11px !important;
+}
+
+.module-page.sport-os > .page-body {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.module-page.sport-os > .page-body > .sport-cockpit,
+.sport-os > .page-body > .sport-cockpit {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.sport-os .sport-dashboard-layout {
+  height: 100% !important;
+  min-height: 0 !important;
+  grid-template-rows: minmax(0, 1fr) minmax(260px, 0.58fr) !important;
+}
+
+.sport-os .sport-dashboard-left,
+.sport-os .sport-dashboard-week,
+.sport-os .sport-dashboard-history,
+.sport-os .sport-week-goals-card {
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+.sport-os .sport-today-card,
+.sport-os .sport-cycle-banner,
+.sport-os .sport-dashboard-left .sport-panel,
+.sport-os .sport-week-card,
+.sport-os .sport-dashboard-history .sport-panel,
+.sport-os .sport-week-goals-card {
+  min-height: 0 !important;
+}
+
+.sport-os .sport-week-card,
+.sport-os .sport-dashboard-history .sport-panel,
+.sport-os .sport-week-goals-card {
+  height: 100% !important;
+}
+
+.sport-os .sport-week-grid-v2 {
+  min-height: 0 !important;
+}
+
+.sport-os .sport-day-col {
+  min-height: 0 !important;
+}
+
+.sport-os .sport-day-empty {
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
+@media (max-width: 1420px) {
+  .module-page.sport-os > .page-body {
+    overflow: auto !important;
+  }
+
+  .module-page.sport-os > .page-body > .sport-cockpit,
+  .sport-os > .page-body > .sport-cockpit,
+  .sport-os .sport-dashboard-layout,
+  .sport-os .sport-dashboard-left,
+  .sport-os .sport-dashboard-week,
+  .sport-os .sport-dashboard-history,
+  .sport-os .sport-week-goals-card {
+    height: auto !important;
+  }
+
+  .sport-os .sport-week-card,
+  .sport-os .sport-dashboard-history .sport-panel,
+  .sport-os .sport-week-goals-card {
+    height: auto !important;
+  }
+
+  .sport-os .sport-week-card {
+    min-height: 500px !important;
+  }
+
+  .sport-os .sport-day-col {
+    min-height: 364px !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .sport-os .sport-week-card {
+    min-height: 0 !important;
+  }
+
+  .sport-os .sport-day-col {
+    min-height: 320px !important;
+  }
+}
+/* ROOTINE_CSS_V17_SPORT_FULL_HEIGHT_AND_STATUS_CASE_END */
+
+/* ============================================================
+   Rootine OS global typography system
+   Imported last to make typography role-based instead of tab-based.
+   ============================================================ */
+
+:root,
+[data-theme],
+.auth-wrap {
+  --rt-font-ui: Inter, "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --rt-font-display: Sora, Inter, "Plus Jakarta Sans", system-ui, sans-serif;
+  --rt-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --rt-type-display-size: 1.875rem;
+  --rt-type-display-size-mobile: 1.75rem;
+  --rt-type-section-size: 1.125rem;
+  --rt-type-title-size: 0.9375rem;
+  --rt-type-body-size: 0.875rem;
+  --rt-type-body-sm-size: 0.8125rem;
+  --rt-type-caption-size: 0.75rem;
+  --rt-type-label-size: 0.6875rem;
+  --rt-type-micro-size: 0.625rem;
+  --rt-type-metric-lg-size: 1.75rem;
+  --rt-type-metric-md-size: 1.375rem;
+
+  --rt-leading-display: 1.08;
+  --rt-leading-section: 1.25;
+  --rt-leading-title: 1.3;
+  --rt-leading-body: 1.48;
+  --rt-leading-compact: 1.35;
+  --rt-leading-label: 1.2;
+
+  --rt-weight-body: 500;
+  --rt-weight-medium: 600;
+  --rt-weight-title: 700;
+  --rt-weight-section: 740;
+  --rt-weight-display: 760;
+  --rt-weight-metric: 760;
+
+  --rt-track-tight: -0.02em;
+  --rt-track-normal: 0;
+  --rt-track-label: 0.08em;
+
+  /* Compatibility aliases used by the existing app. */
+  --font-sans: var(--rt-font-ui);
+  --font-display: var(--rt-font-display);
+  --font-mono: var(--rt-font-mono);
+  --sans: var(--rt-font-ui);
+  --mono: var(--rt-font-mono);
+  --rt-type-title: var(--rt-type-display-size);
+  --rt-type-title-mobile: var(--rt-type-display-size-mobile);
+  --rt-type-section: var(--rt-type-section-size);
+  --rt-type-body: var(--rt-type-body-size);
+  --rt-type-label: var(--rt-type-label-size);
+}
+
+html {
+  font-kerning: normal;
+  text-size-adjust: 100%;
+}
+
+body,
+.app-shell,
+.auth-wrap,
+.module-page,
+.modal,
+.modal-box,
+.sheet,
+.popover,
+.dropdown {
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-body-size) !important;
+  line-height: var(--rt-leading-body) !important;
+  font-weight: var(--rt-weight-body) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+  font-optical-sizing: auto;
+}
+
+/* App title and primary navigation */
+:where(.sb-brand-text, .app-title, .brand-title, .auth-brand h1) {
+  font-family: var(--rt-font-display) !important;
+  font-size: var(--rt-type-title-size) !important;
+  line-height: var(--rt-leading-title) !important;
+  font-weight: var(--rt-weight-title) !important;
+  letter-spacing: var(--rt-track-tight) !important;
+  color: var(--rt-text-primary) !important;
+}
+
+:where(.sb-brand-text b, .brand-title b) {
+  font-weight: var(--rt-weight-display) !important;
+  color: var(--rt-text-strong) !important;
+}
+
+:where(.sb-item, .sb-item-sm, .mobile-nav a, .nav a, .settings-os .nav button) {
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-body-sm-size) !important;
+  line-height: var(--rt-leading-compact) !important;
+  font-weight: var(--rt-weight-medium) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+}
+
+:where(.sb-item.is-active, .sb-item.active, .sb-item[aria-current="page"], .mobile-nav a.active, .nav a.active) {
+  font-weight: var(--rt-weight-title) !important;
+}
+
+:where(.sb-item-label, .mobile-nav a span, .nav a span, .sb-profile-id strong, .sb-profile-id small) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Sub-navigation, filters and compact controls */
+:where(
+  .tabs button,
+  .tab,
+  .app-tabs button,
+  .sub-tabs button,
+  .subtabs button,
+  .filter-chip,
+  .view-segmented-control button,
+  .date-navigator button,
+  .finance-segment-tabs button,
+  .work-view-tabs button,
+  .travel-tabs button,
+  .notes-view-toggle button,
+  .diet-analytics-tabs button
+) {
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-caption-size) !important;
+  line-height: var(--rt-leading-label) !important;
+  font-weight: var(--rt-weight-medium) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+}
+
+:where(
+  .tabs button.active,
+  .tab-active,
+  .app-tabs button.is-active,
+  .sub-tabs button.active,
+  .subtabs button.active,
+  .filter-chip.is-active,
+  .view-segmented-control button.is-active,
+  .finance-segment-tabs button.is-active,
+  .work-view-tabs button.is-active,
+  .travel-tabs button.is-active,
+  .notes-view-toggle button.is-active,
+  .diet-analytics-tabs button.is-active
+) {
+  font-weight: var(--rt-weight-title) !important;
+}
+
+/* Page titles and descriptions */
+:where(.page-head-text h1, .page-header h1, .module-title, .module-title h1, .page-title) {
+  font-family: var(--rt-font-display) !important;
+  font-size: var(--rt-type-display-size) !important;
+  line-height: var(--rt-leading-display) !important;
+  font-weight: var(--rt-weight-display) !important;
+  letter-spacing: var(--rt-track-tight) !important;
+  color: var(--rt-text-strong) !important;
+  text-wrap: balance;
+}
+
+:where(.page-head-text p, .page-header .ph-context, .module-subtitle, .page-subtitle, .auth-brand p) {
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-body-size) !important;
+  line-height: var(--rt-leading-body) !important;
+  font-weight: var(--rt-weight-body) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+  color: rgba(176, 190, 205, 0.84) !important;
+  max-width: 72ch;
+  text-wrap: pretty;
+}
+
+/* Section, card and module titles */
+:where(
+  .section-head h2,
+  .section-head h3,
+  .lay-card-title,
+  .card-head h2,
+  .card-head h3,
+  .modal-title,
+  .drawer-title,
+  .sheet-title,
+  .goals-tree-head h2,
+  .goals-detail-header h2,
+  .sport-week-title,
+  .sport-cycle-detail-head h2
+) {
+  font-family: var(--rt-font-display) !important;
+  font-size: var(--rt-type-section-size) !important;
+  line-height: var(--rt-leading-section) !important;
+  font-weight: var(--rt-weight-section) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+  color: rgba(232, 238, 246, 0.94) !important;
+  text-wrap: balance;
+}
+
+:where(
+  .card-title,
+  .module-card-title,
+  .panel-title,
+  .office-panel-title,
+  .diet-meal-title,
+  .work-project-card b,
+  .notes-note-card strong,
+  .travel-trip-item strong,
+  .office-case-main strong,
+  .goals-folder-main strong,
+  .goals-roadmap-box strong,
+  .finance-payment-line strong,
+  .sport-workout-title,
+  .sport-today-title,
+  .sport-record-title,
+  .sport-template-tile-name
+) {
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-title-size) !important;
+  line-height: var(--rt-leading-title) !important;
+  font-weight: var(--rt-weight-title) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+  color: var(--rt-text-primary) !important;
+}
+
+/* Body, descriptions and helper copy */
+:where(
+  p,
+  .card p,
+  .lay-card p,
+  .module-card p,
+  .modal-body p,
+  .detail-panel p,
+  .goals-tree-desc,
+  .goals-detail-header p,
+  .work-task-row,
+  .office-case-row,
+  .travel-warning-row,
+  .finance-payment-line,
+  .finance-budget-row,
+  .notes-note-body,
+  .diet-entry-row,
+  .sport-session-detail-notes
+) {
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-body-size) !important;
+  line-height: var(--rt-leading-body) !important;
+  font-weight: var(--rt-weight-body) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+}
+
+:where(
+  small,
+  .help-text,
+  .hint,
+  .helper,
+  .description,
+  .muted,
+  .subtle,
+  .ph-context,
+  .lay-card-subtitle,
+  .card-subtitle,
+  .sport-workout-subtitle,
+  .sport-history-row-meta,
+  .sport-record-date,
+  .finance-summary-tile small,
+  .office-case-main span,
+  .office-deadline-row small,
+  .travel-trip-item small,
+  .goals-folder-main small,
+  .goals-week-task small,
+  .notes-note-card small
+) {
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-caption-size) !important;
+  line-height: var(--rt-leading-compact) !important;
+  font-weight: 520 !important;
+  letter-spacing: var(--rt-track-normal) !important;
+  color: rgba(159, 174, 190, 0.82) !important;
+}
+
+/* Labels, metadata and timestamps */
+:where(
+  .text-label,
+  .field label,
+  .form-label,
+  .label,
+  .kicker,
+  .lay-eyebrow,
+  .eyebrow,
+  .meta-label,
+  .card-label,
+  .section-label,
+  .goals-section-title,
+  .planner-weekday,
+  .day-name,
+  .sport-day-name,
+  .sport-cycle-manager-kicker
+) {
+  font-family: var(--rt-font-mono) !important;
+  font-size: var(--rt-type-label-size) !important;
+  line-height: var(--rt-leading-label) !important;
+  font-weight: var(--rt-weight-title) !important;
+  letter-spacing: var(--rt-track-label) !important;
+  text-transform: uppercase;
+  color: rgba(132, 147, 165, 0.96) !important;
+}
+
+:where(
+  time,
+  .meta,
+  .metadata,
+  .timestamp,
+  .date,
+  .due-date,
+  .calendar-event__time,
+  .ev-task-time,
+  .finance-history-table-row time,
+  .office-case-row time,
+  .office-document-row time,
+  .sport-week-range,
+  .sport-day-date,
+  .sport-cycle-detail-meta,
+  .goals-tree-meta span,
+  .goals-week-total
+) {
+  font-family: var(--rt-font-mono) !important;
+  font-size: var(--rt-type-caption-size) !important;
+  line-height: var(--rt-leading-compact) !important;
+  font-weight: var(--rt-weight-medium) !important;
+  letter-spacing: 0.02em !important;
+  color: rgba(159, 174, 190, 0.82) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Buttons and action labels */
+:where(
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger,
+  .auth-btn,
+  .modal-close,
+  .icon-btn,
+  .more-menu button,
+  .goals-more-menu button,
+  .task-options-pop button,
+  .task-options-subpop button
+) {
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-body-sm-size) !important;
+  line-height: 1.2 !important;
+  font-weight: var(--rt-weight-title) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+:where(.btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-danger, .auth-btn) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:where(.btn-sm, .btn.btn-sm) {
+  font-size: var(--rt-type-caption-size) !important;
+}
+
+/* Inputs and placeholders */
+:where(
+  .input,
+  .select,
+  .textarea,
+  .form-input,
+  .form-select,
+  .form-textarea,
+  .auth-input,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea
+) {
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-body-size) !important;
+  line-height: var(--rt-leading-body) !important;
+  font-weight: var(--rt-weight-medium) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+  color: var(--rt-text-primary) !important;
+}
+
+:where(.input::placeholder, .textarea::placeholder, .auth-input::placeholder, input::placeholder, textarea::placeholder) {
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-body-size) !important;
+  font-weight: var(--rt-weight-body) !important;
+  color: rgba(167, 180, 194, 0.66) !important;
+  opacity: 1 !important;
+}
+
+/* Stat values and numeric summaries */
+:where(
+  .kpi-card strong,
+  .kpi-value,
+  .metric-value,
+  .stat-value,
+  .summary-value,
+  .finance-summary-tile strong,
+  .office-metric-copy strong,
+  .travel-kpi strong,
+  .notes-kpi strong,
+  .finance-mini-kpi strong,
+  .goals-folder-pct,
+  .goals-week-footer strong,
+  .sport-record-value,
+  .sport-history-row-volume,
+  .sport-week-goal-value
+) {
+  font-family: var(--rt-font-display) !important;
+  font-size: var(--rt-type-metric-lg-size) !important;
+  line-height: 1.05 !important;
+  font-weight: var(--rt-weight-metric) !important;
+  letter-spacing: var(--rt-track-tight) !important;
+  color: var(--rt-text-strong) !important;
+  font-variant-numeric: tabular-nums;
+}
+
+:where(
+  .kpi-card span,
+  .kpi-label,
+  .metric-label,
+  .stat-label,
+  .summary-label,
+  .finance-summary-tile span,
+  .office-metric-copy span,
+  .travel-kpi span,
+  .notes-kpi small,
+  .finance-mini-kpi small
+) {
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-caption-size) !important;
+  line-height: var(--rt-leading-compact) !important;
+  font-weight: var(--rt-weight-medium) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+  color: rgba(167, 180, 194, 0.86) !important;
+}
+
+/* Badges, status labels and messages */
+:where(
+  .badge,
+  .finance-badge,
+  .status-badge,
+  .priority-badge,
+  .count-badge,
+  .work-priority,
+  .work-status,
+  .travel-status,
+  [class*="status-"]
+) {
+  font-family: var(--rt-font-mono) !important;
+  font-size: var(--rt-type-micro-size) !important;
+  line-height: 1 !important;
+  font-weight: var(--rt-weight-title) !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+:where(
+  .form-error,
+  .error,
+  .error-text,
+  .sport-form-error,
+  .toast,
+  .alert,
+  .message,
+  .success-message,
+  .warning-message,
+  .danger-message
+) {
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-body-sm-size) !important;
+  line-height: var(--rt-leading-body) !important;
+  font-weight: var(--rt-weight-medium) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+}
+
+/* Empty states */
+:where(.empty-state h3, .empty-state .es-title, .lay-empty-title) {
+  font-family: var(--rt-font-display) !important;
+  font-size: var(--rt-type-section-size) !important;
+  line-height: var(--rt-leading-section) !important;
+  font-weight: var(--rt-weight-section) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+  color: rgba(224, 232, 241, 0.90) !important;
+}
+
+:where(.empty-state p, .empty-state .es-desc, .lay-empty-desc) {
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-body-sm-size) !important;
+  line-height: var(--rt-leading-body) !important;
+  font-weight: var(--rt-weight-body) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+  color: rgba(159, 174, 190, 0.82) !important;
+  max-width: 36ch !important;
+  text-wrap: pretty;
+}
+
+/* Long Polish and English labels should wrap or truncate predictably. */
+:where(
+  .page-head-text,
+  .page-header,
+  .lay-card-head-text,
+  .card-head,
+  .field,
+  .modal-body,
+  .detail-panel,
+  .work-task-row,
+  .office-case-row,
+  .travel-trip-item,
+  .notes-note-card,
+  .goals-folder-row,
+  .sport-workout-card
+) {
+  min-width: 0;
+}
+
+:where(
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  label,
+  .card-title,
+  .lay-card-title,
+  .module-card-title,
+  .panel-title,
+  .field label,
+  .btn,
+  .filter-chip,
+  .sub-tabs button,
+  .subtabs button,
+  .badge,
+  .status-badge
+) {
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 760px) {
+  :where(.page-head-text h1, .page-header h1, .module-title, .module-title h1, .page-title) {
+    font-size: var(--rt-type-display-size-mobile) !important;
+    line-height: 1.1 !important;
+  }
+
+  :where(.btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-danger, .auth-btn) {
+    white-space: normal;
+  }
+}
+
+/* ============================================================
+   Rootine OS global color system
+   Final color authority: deep blue glass + subtle green accent.
+   ============================================================ */
+
+:root,
+[data-theme],
+.auth-wrap {
+  color-scheme: dark;
+
+  --rt-color-bg-deep: #050b13;
+  --rt-color-bg-page: #081320;
+  --rt-color-bg-soft: #0d1a29;
+  --rt-color-bg-panel: #102235;
+  --rt-color-bg-panel-2: #142a40;
+
+  --rt-color-shell-top: #1a3046;
+  --rt-color-shell-mid: #13273a;
+  --rt-color-shell-bottom: #0d1b2b;
+
+  --rt-color-surface-base: #0f1d2c;
+  --rt-color-surface-card: rgba(18, 35, 52, 0.88);
+  --rt-color-surface-raised: rgba(22, 43, 63, 0.90);
+  --rt-color-surface-elevated: rgba(28, 53, 76, 0.92);
+  --rt-color-surface-overlay: rgba(21, 39, 57, 0.96);
+  --rt-color-surface-glass: rgba(17, 34, 51, 0.78);
+  --rt-color-surface-field: rgba(7, 17, 28, 0.76);
+  --rt-color-surface-field-hover: rgba(12, 25, 40, 0.88);
+  --rt-color-surface-disabled: rgba(70, 86, 103, 0.13);
+  --rt-color-surface-loading: rgba(147, 197, 253, 0.075);
+
+  --rt-color-border-faint: rgba(160, 184, 206, 0.075);
+  --rt-color-border-soft: rgba(160, 184, 206, 0.12);
+  --rt-color-border: rgba(166, 195, 220, 0.17);
+  --rt-color-border-strong: rgba(177, 210, 236, 0.25);
+  --rt-color-border-active: rgba(126, 232, 183, 0.50);
+
+  --rt-color-text-strong: #f3f8fb;
+  --rt-color-text-primary: #e8f0f6;
+  --rt-color-text-secondary: #adbdca;
+  --rt-color-text-muted: #8192a2;
+  --rt-color-text-label: #8ca0b2;
+  --rt-color-text-disabled: #607283;
+  --rt-color-text-inverse: #06130e;
+
+  --rt-color-accent: #7ee8b7;
+  --rt-color-accent-strong: #a7f3d0;
+  --rt-color-accent-muted: rgba(126, 232, 183, 0.76);
+  --rt-color-accent-soft: rgba(126, 232, 183, 0.12);
+  --rt-color-accent-hover: rgba(126, 232, 183, 0.18);
+  --rt-color-accent-ring: rgba(126, 232, 183, 0.22);
+
+  --rt-color-info: #7dd3fc;
+  --rt-color-info-strong: #38bdf8;
+  --rt-color-info-soft: rgba(125, 211, 252, 0.12);
+
+  --rt-color-success: #7ee8b7;
+  --rt-color-success-bg: rgba(126, 232, 183, 0.12);
+  --rt-color-warning: #f6d76b;
+  --rt-color-warning-bg: rgba(246, 215, 107, 0.12);
+  --rt-color-danger: #ff8f9a;
+  --rt-color-danger-bg: rgba(255, 143, 154, 0.12);
+
+  --rt-color-hover-bg: rgba(30, 55, 77, 0.86);
+  --rt-color-selected-bg: rgba(31, 65, 72, 0.90);
+  --rt-color-focus-ring: 0 0 0 3px rgba(126, 232, 183, 0.18), 0 0 0 1px rgba(126, 232, 183, 0.42);
+  --rt-color-empty-icon-bg: rgba(126, 232, 183, 0.08);
+  --rt-color-empty-icon-border: rgba(126, 232, 183, 0.20);
+
+  /* Canonical legacy aliases: keep older module CSS on the same palette. */
+  --rt-bg: var(--rt-color-bg-page);
+  --rt-bg-deep: var(--rt-color-bg-deep);
+  --rt-bg-soft: var(--rt-color-bg-soft);
+  --rt-shell-top: var(--rt-color-shell-top);
+  --rt-shell-mid: var(--rt-color-shell-mid);
+  --rt-shell-bottom: var(--rt-color-shell-bottom);
+  --rt-surface-base: var(--rt-color-surface-base);
+  --rt-surface-raised: var(--rt-color-surface-raised);
+  --rt-surface-elevated: var(--rt-color-surface-elevated);
+  --rt-surface-overlay: var(--rt-color-surface-overlay);
+  --rt-surface-soft: var(--rt-color-surface-glass);
+  --rt-surface-soft-strong: var(--rt-color-surface-raised);
+  --rt-surface-hover: var(--rt-color-hover-bg);
+  --rt-surface-active: var(--rt-color-selected-bg);
+  --rt-field-top: #0d1d2d;
+  --rt-field-bottom: var(--rt-color-surface-field);
+  --rt-field-hover-top: #11253a;
+  --rt-field-hover-bottom: var(--rt-color-surface-field-hover);
+  --rt-field-focus-top: #143047;
+  --rt-field-focus-bottom: #0b2031;
+
+  --rt-border-faint: var(--rt-color-border-faint);
+  --rt-border-soft: var(--rt-color-border-soft);
+  --rt-border-default: var(--rt-color-border);
+  --rt-border-strong: var(--rt-color-border-strong);
+  --rt-border-ice: var(--rt-color-border-active);
+  --rt-border-system: var(--rt-color-border);
+  --rt-border-system-strong: var(--rt-color-border-strong);
+
+  --rt-text-strong: var(--rt-color-text-strong);
+  --rt-text-primary: var(--rt-color-text-primary);
+  --rt-text-secondary: var(--rt-color-text-secondary);
+  --rt-text-muted: var(--rt-color-text-muted);
+  --rt-text-label: var(--rt-color-text-label);
+  --rt-text-disabled: var(--rt-color-text-disabled);
+  --rt-text-inverse: var(--rt-color-text-inverse);
+
+  --rt-accent-system: var(--rt-color-accent);
+  --rt-accent-system-soft: var(--rt-color-accent-soft);
+  --rt-ice: var(--rt-color-accent);
+  --rt-ice-soft: var(--rt-color-accent-strong);
+  --rt-ice-strong: var(--rt-color-accent-strong);
+  --rt-ice-muted: var(--rt-color-accent-muted);
+  --rt-ice-faint: var(--rt-color-accent-soft);
+  --rt-ice-ring: var(--rt-color-accent-ring);
+  --rt-success: var(--rt-color-success);
+  --rt-success-bg: var(--rt-color-success-bg);
+  --rt-warning: var(--rt-color-warning);
+  --rt-warning-bg: var(--rt-color-warning-bg);
+  --rt-danger: var(--rt-color-danger);
+  --rt-danger-bg: var(--rt-color-danger-bg);
+
+  --bg-0: var(--rt-color-bg-page);
+  --bg-1: var(--rt-color-bg-soft);
+  --surface: var(--rt-color-surface-base);
+  --surface-2: var(--rt-color-surface-raised);
+  --surface-3: var(--rt-color-surface-elevated);
+  --surface-inset: var(--rt-color-surface-field);
+  --surface-base: var(--rt-color-bg-page);
+  --surface-raised: var(--rt-color-surface-card);
+  --surface-elevated: var(--rt-color-surface-elevated);
+  --surface-overlay: var(--rt-color-surface-overlay);
+  --surface-calendar: var(--rt-color-bg-soft);
+  --border: var(--rt-color-border);
+  --border-soft: var(--rt-color-border-soft);
+  --border-strong: var(--rt-color-border-strong);
+  --border-subtle: var(--rt-color-border);
+  --border-active: var(--rt-color-border-active);
+  --ink: var(--rt-color-text-primary);
+  --ink-2: var(--rt-color-text-secondary);
+  --ink-3: var(--rt-color-text-muted);
+  --ink-4: var(--rt-color-text-disabled);
+  --text-primary: var(--rt-color-text-primary);
+  --text-secondary: var(--rt-color-text-secondary);
+  --text-muted: var(--rt-color-text-muted);
+  --text-disabled: var(--rt-color-text-disabled);
+  --acc: var(--rt-color-accent);
+  --acc-ink: var(--rt-color-accent-muted);
+  --acc-soft: var(--rt-color-accent-soft);
+  --acc-line: rgba(126, 232, 183, 0.28);
+  --acc-solid: var(--rt-color-accent-strong);
+  --acc-a: var(--rt-color-accent);
+  --acc-a-ink: var(--rt-color-accent-muted);
+  --acc-a-soft: var(--rt-color-accent-soft);
+  --acc-b: var(--rt-color-info);
+  --acc-b-ink: rgba(186, 230, 253, 0.88);
+  --acc-b-soft: var(--rt-color-info-soft);
+  --accent: var(--rt-color-accent);
+  --accent-strong: var(--rt-color-accent-strong);
+  --accent-ice: var(--rt-color-accent);
+  --accent-ice-strong: var(--rt-color-accent-strong);
+  --accent-teal: var(--rt-color-accent);
+  --accent-special: var(--rt-color-info);
+  --accent-hot: var(--rt-color-danger);
+  --on-acc: var(--rt-color-text-inverse);
+  --success: var(--rt-color-success);
+  --success-ink: #c9ffe4;
+  --success-soft: var(--rt-color-success-bg);
+  --warn: var(--rt-color-warning);
+  --warn-ink: #fff2b6;
+  --warn-soft: var(--rt-color-warning-bg);
+  --danger: var(--rt-color-danger);
+  --danger-ink: #ffd1d6;
+  --danger-soft: var(--rt-color-danger-bg);
+  --info: var(--rt-color-info);
+  --info-ink: #bae6fd;
+  --info-soft: var(--rt-color-info-soft);
+  --status-success: var(--rt-color-success);
+  --status-warning: var(--rt-color-warning);
+  --status-danger: var(--rt-color-danger);
+  --ev-blue: var(--rt-color-info);
+  --ev-blue-bg: var(--rt-color-info-soft);
+  --ev-green: var(--rt-color-success);
+  --ev-green-bg: var(--rt-color-success-bg);
+  --ev-clay: var(--rt-color-warning);
+  --ev-clay-bg: var(--rt-color-warning-bg);
+  --ev-lav: var(--rt-color-info);
+  --ev-lav-bg: var(--rt-color-info-soft);
+  --ring: var(--rt-color-focus-ring);
+  --shadow-selected: var(--rt-color-focus-ring);
+  --rt-surface-panel-system: var(--rt-color-surface-glass);
+  --rt-surface-card-system: var(--rt-color-surface-card);
+  --rt-surface-field-system: var(--rt-color-surface-field);
+}
+
+body,
+.app-shell,
+.auth-wrap {
+  color: var(--rt-color-text-primary) !important;
+  background:
+    radial-gradient(900px 620px at 48% -12%, rgba(126, 232, 183, 0.075), transparent 58%),
+    radial-gradient(760px 520px at 100% 100%, rgba(125, 211, 252, 0.055), transparent 60%),
+    linear-gradient(180deg, var(--rt-color-bg-page) 0%, var(--rt-color-bg-deep) 100%) !important;
+}
+
+.module-page,
+.page-body,
+.lay-page {
+  color: var(--rt-color-text-primary) !important;
+}
+
+:where(
+  .card,
+  .lay-card,
+  .module-card,
+  .kpi-card,
+  .finance-card,
+  .finance-month-panel,
+  .finance-context-card,
+  .finance-summary-tile,
+  .office-dashboard-shell,
+  .office-sidebar,
+  .office-cases-panel,
+  .office-mini-panel,
+  .office-metric,
+  .travel-card,
+  .travel-list-card,
+  .notes-card,
+  .notes-sidebar,
+  .notes-board-panel,
+  .work-panel,
+  .work-context-panel,
+  .work-task-board,
+  .work-detail-panel,
+  .diet-meal-card,
+  .diet-side-card,
+  .diet-summary-card,
+  .sport-panel,
+  .sport-cycle-banner,
+  .sport-week-card,
+  .planner-calendar-card,
+  .planner-tasks-card,
+  .planner-habits-card,
+  .goals-command-panel,
+  .goals-roadmap-card,
+  .goals-week-card,
+  .goals-actions-card,
+  .goals-empty-detail
+) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.026), rgba(255, 255, 255, 0.008)),
+    var(--rt-color-surface-card) !important;
+  border-color: var(--rt-color-border) !important;
+  color: var(--rt-color-text-primary) !important;
+}
+
+:where(
+  .modal,
+  .modal-box,
+  .sheet,
+  .diet-drawer,
+  .finance-drawer,
+  .popover,
+  .dropdown,
+  .more-menu,
+  .sb-profile-menu,
+  .task-options-pop,
+  .task-options-subpop,
+  .goals-more-menu,
+  .goals-icon-popover
+) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.036), rgba(255, 255, 255, 0.01)),
+    var(--rt-color-surface-overlay) !important;
+  border-color: var(--rt-color-border-strong) !important;
+  color: var(--rt-color-text-primary) !important;
+}
+
+:where(
+  .input,
+  .select,
+  .textarea,
+  .form-input,
+  .form-select,
+  .form-textarea,
+  .auth-input,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea,
+  .date-navigator,
+  .sub-tabs,
+  .subtabs,
+  .filter-chips,
+  .view-segmented-control,
+  .finance-segment-tabs,
+  .work-view-tabs,
+  .travel-tabs,
+  .notes-view-toggle,
+  .diet-analytics-tabs
+) {
+  background: var(--rt-color-surface-field) !important;
+  border-color: var(--rt-color-border-soft) !important;
+  color: var(--rt-color-text-primary) !important;
+}
+
+:where(
+  .input:hover,
+  .select:hover,
+  .textarea:hover,
+  .auth-input:hover,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):hover,
+  select:hover,
+  textarea:hover,
+  .btn-secondary:hover,
+  .btn-ghost:hover,
+  .icon-btn:hover,
+  .card.is-link:hover,
+  .card-interactive:hover,
+  .finance-summary-tile:hover,
+  .work-project-card:hover,
+  .travel-trip-item:hover,
+  .notes-note-card:hover,
+  .goals-folder-row:hover,
+  .office-category-row:hover,
+  .notes-category:hover
+) {
+  background: var(--rt-color-hover-bg) !important;
+  border-color: var(--rt-color-border-strong) !important;
+}
+
+:where(
+  .card.is-selected,
+  .card.is-active,
+  .card-selected,
+  .finance-summary-tile.is-active,
+  .notes-category.is-active,
+  .notes-note-card.is-selected,
+  .work-project-card.is-selected,
+  .travel-trip-item.is-selected,
+  .office-category-row.is-active,
+  .goals-folder-row.is-active,
+  .sport-workout-card.is-selected,
+  .sport-today-row.is-selected
+) {
+  background: var(--rt-color-selected-bg) !important;
+  border-color: var(--rt-color-border-active) !important;
+  box-shadow: inset 0 0 0 1px rgba(126, 232, 183, 0.07) !important;
+}
+
+:where(
+  .sb-item.is-active,
+  .sb-item.active,
+  .sb-item[aria-current="page"],
+  .mobile-nav a.active,
+  .nav a.active,
+  .tabs button.active,
+  .tab-active,
+  .app-tabs button.is-active,
+  .sub-tabs button.active,
+  .subtabs button.active,
+  .filter-chip.is-active,
+  .view-segmented-control button.is-active,
+  .finance-segment-tabs button.is-active,
+  .work-view-tabs button.is-active,
+  .travel-tabs button.is-active,
+  .notes-view-toggle button.is-active,
+  .diet-analytics-tabs button.is-active
+) {
+  background: var(--rt-color-accent-soft) !important;
+  border-color: var(--rt-color-border-active) !important;
+  color: var(--rt-color-text-strong) !important;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: none !important;
+  box-shadow: var(--rt-color-focus-ring) !important;
+  border-color: var(--rt-color-border-active) !important;
+}
+
+:where(.btn-primary, .btn.btn-primary, .auth-btn) {
+  background: linear-gradient(180deg, var(--rt-color-accent-strong), var(--rt-color-accent)) !important;
+  border-color: rgba(199, 255, 227, 0.62) !important;
+  color: var(--rt-color-text-inverse) !important;
+}
+
+:where(.btn-primary:hover, .btn.btn-primary:hover, .auth-btn:hover) {
+  background: linear-gradient(180deg, #c2f8dc, var(--rt-color-accent-strong)) !important;
+  border-color: rgba(216, 255, 236, 0.72) !important;
+}
+
+:where(.btn-secondary, .btn.btn-secondary, .btn-ghost, .btn.btn-ghost, .icon-btn, .sb-iconbtn) {
+  background: var(--rt-color-surface-field) !important;
+  border-color: var(--rt-color-border) !important;
+  color: var(--rt-color-text-primary) !important;
+}
+
+:where(
+  .empty-state,
+  .lay-empty,
+  .skeleton,
+  .loading,
+  .placeholder
+) {
+  color: var(--rt-color-text-muted) !important;
+}
+
+:where(.empty-state svg, .empty-state > svg:first-child, .empty-state .es-icon, .lay-empty-ic) {
+  background: var(--rt-color-empty-icon-bg) !important;
+  border-color: var(--rt-color-empty-icon-border) !important;
+  color: var(--rt-color-accent) !important;
+}
+
+:where(.skeleton, .loading-bar, .shimmer) {
+  background:
+    linear-gradient(90deg, transparent, rgba(126, 232, 183, 0.10), transparent),
+    var(--rt-color-surface-loading) !important;
+}
+
+:where(:disabled, [disabled], [aria-disabled="true"], .is-disabled, .disabled) {
+  color: var(--rt-color-text-disabled) !important;
+  border-color: var(--rt-color-border-faint) !important;
+}
+
+:where(button:disabled, .btn:disabled, .input:disabled, .select:disabled, .textarea:disabled, input:disabled, select:disabled, textarea:disabled) {
+  background: var(--rt-color-surface-disabled) !important;
+}
+
+:where(.badge-green, .badge.badge-green, .finance-badge.is-success, .toast-success, .success-message, .is-success) {
+  color: var(--success-ink) !important;
+  background: var(--rt-color-success-bg) !important;
+  border-color: rgba(126, 232, 183, 0.34) !important;
+}
+
+:where(.badge-yellow, .badge.badge-yellow, .badge-amber, .finance-badge.is-warning, .toast-warning, .warning-message, .is-warning) {
+  color: var(--warn-ink) !important;
+  background: var(--rt-color-warning-bg) !important;
+  border-color: rgba(246, 215, 107, 0.34) !important;
+}
+
+:where(.badge-red, .badge.badge-red, .finance-badge.is-danger, .toast-error, .toast-danger, .danger-message, .error, .form-error, .sport-form-error, .is-danger) {
+  color: var(--danger-ink) !important;
+  background: var(--rt-color-danger-bg) !important;
+  border-color: rgba(255, 143, 154, 0.34) !important;
+}
+
+:where(.badge-blue, .badge.badge-blue, .finance-badge.is-blue, .toast-info, .info-message, .is-info) {
+  color: var(--info-ink) !important;
+  background: var(--rt-color-info-soft) !important;
+  border-color: rgba(125, 211, 252, 0.32) !important;
+}
+
+/* Final convergence for older module-specific high-specificity color rules. */
+.module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os),
+.module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) > .page-body {
+  background: transparent !important;
+  color: var(--rt-color-text-primary) !important;
+}
+
+.module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) :is(
+  .card,
+  .lay-card,
+  .module-card,
+  .finance-card,
+  .finance-month-panel,
+  .finance-context-card,
+  .office-dashboard-shell,
+  .office-sidebar,
+  .office-cases-panel,
+  .office-mini-panel,
+  .travel-card,
+  .travel-list-card,
+  .notes-card,
+  .notes-sidebar,
+  .notes-board-panel,
+  .work-panel,
+  .work-context-panel,
+  .work-task-board,
+  .work-detail-panel,
+  .diet-meal-card,
+  .diet-side-card,
+  .diet-summary-card,
+  .sport-today-card,
+  .sport-cycle-banner,
+  .sport-panel,
+  .sport-week-card,
+  .sport-week-goals-card,
+  .planner-calendar-card,
+  .planner-tasks-card,
+  .planner-habits-card,
+  .goals-command-panel,
+  .goals-roadmap-card,
+  .goals-week-card,
+  .goals-actions-card
+) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.026), rgba(255, 255, 255, 0.008)),
+    var(--rt-color-surface-card) !important;
+  border-color: var(--rt-color-border) !important;
+  color: var(--rt-color-text-primary) !important;
+}
+
+.module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) :is(
+  .finance-summary-tile,
+  .office-metric,
+  .travel-kpi,
+  .notes-kpi,
+  .kpi-card,
+  .finance-mini-kpi,
+  .sport-day-col,
+  .sport-workout-card,
+  .sport-today-row,
+  .sport-template-tile,
+  .work-project-card,
+  .travel-trip-item,
+  .notes-note-card,
+  .notes-category,
+  .office-category-row,
+  .goals-folder-row,
+  .finance-payment-line,
+  .finance-budget-row:not(.is-head),
+  .finance-history-table-row,
+  .work-task-row,
+  .office-case-row,
+  .travel-warning-row,
+  .diet-entry-row,
+  .diet-template-row
+) {
+  background: var(--rt-color-surface-raised) !important;
+  border-color: var(--rt-color-border-soft) !important;
+  color: var(--rt-color-text-primary) !important;
+}
+
+.module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) :is(
+  .finance-summary-tile:hover,
+  .office-metric:hover,
+  .travel-kpi:hover,
+  .notes-kpi:hover,
+  .kpi-card:hover,
+  .sport-day-col:hover,
+  .sport-workout-card:hover,
+  .sport-today-row:hover,
+  .sport-template-tile:hover,
+  .work-project-card:hover,
+  .travel-trip-item:hover,
+  .notes-note-card:hover,
+  .notes-category:hover,
+  .office-category-row:hover,
+  .goals-folder-row:hover,
+  .finance-payment-line:hover,
+  .finance-budget-row:not(.is-head):hover,
+  .finance-history-table-row:hover,
+  .work-task-row:hover,
+  .office-case-row:hover,
+  .travel-warning-row:hover,
+  .diet-entry-row:hover,
+  .diet-template-row:hover
+) {
+  background: var(--rt-color-hover-bg) !important;
+  border-color: var(--rt-color-border-strong) !important;
+}
+
+.module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) :is(
+  .finance-summary-tile.is-active,
+  .sport-day-col.is-today,
+  .sport-day-col.is-drop-target,
+  .sport-workout-card.is-selected,
+  .sport-today-row.is-selected,
+  .work-project-card.is-selected,
+  .travel-trip-item.is-selected,
+  .notes-note-card.is-selected,
+  .notes-category.is-active,
+  .office-category-row.is-active,
+  .goals-folder-row.is-active,
+  .card.is-selected,
+  .card.is-active,
+  .card-selected
+) {
+  background: var(--rt-color-selected-bg) !important;
+  border-color: var(--rt-color-border-active) !important;
+  box-shadow: inset 0 0 0 1px rgba(126, 232, 183, 0.08) !important;
+}
+
+.module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) :is(
+  .btn-primary,
+  .btn.btn-primary,
+  .sport-action-start
+) {
+  background: linear-gradient(180deg, var(--rt-color-accent-strong), var(--rt-color-accent)) !important;
+  border-color: rgba(199, 255, 227, 0.62) !important;
+  color: var(--rt-color-text-inverse) !important;
+}
+
+.module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) :is(
+  .btn-secondary,
+  .btn.btn-secondary,
+  .btn-ghost,
+  .btn.btn-ghost,
+  .icon-btn,
+  .sb-iconbtn
+) {
+  background: var(--rt-color-surface-field) !important;
+  border-color: var(--rt-color-border) !important;
+  color: var(--rt-color-text-primary) !important;
+}
+
+/* ============================================================
+   Rootine OS global layout system
+   One page raster, spacing scale and responsive contract.
+   ============================================================ */
+
+:root,
+[data-theme],
+.auth-wrap {
+  --rt-density: 1;
+  --rt-space-1: 4px;
+  --rt-space-2: 8px;
+  --rt-space-3: 12px;
+  --rt-space-4: 16px;
+  --rt-space-5: 20px;
+  --rt-space-6: 24px;
+  --rt-space-7: 32px;
+  --rt-space-8: 40px;
+
+  --rt-layout-edge-x: clamp(20px, 1.65vw, 32px);
+  --rt-layout-edge-y: clamp(12px, 1.2vw, 18px);
+  --rt-layout-gap: var(--rt-space-5);
+  --rt-section-gap: var(--rt-space-6);
+  --rt-card-gap: var(--rt-space-4);
+  --rt-card-pad: var(--rt-space-5);
+  --rt-card-pad-compact: var(--rt-space-4);
+  --rt-header-h: 84px;
+  --rt-mobile-edge: 16px;
+  --rt-mobile-nav-h: calc(72px + env(safe-area-inset-bottom));
+  --rt-content-max: none;
+  --rt-rail-w: clamp(280px, 22vw, 360px);
+  --rt-side-w: clamp(300px, 24vw, 380px);
+  --rt-inspector-w: clamp(300px, 24vw, 360px);
+  --rt-grid-min: 280px;
+
+  /* Existing aliases. */
+  --page-pad: var(--rt-layout-edge-x);
+  --pad: var(--rt-card-pad);
+  --gap: var(--rt-layout-gap);
+  --app-header-height: var(--rt-header-h);
+  --lay-col-min: var(--rt-grid-min);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+.app-shell {
+  min-height: 100dvh !important;
+}
+
+.app-main {
+  min-width: 0 !important;
+  min-height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+.module-page {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.module-page > .page-head,
+.module-page > header.page-head,
+.page-head,
+.page-header {
+  flex: 0 0 auto !important;
+  width: calc(100% - (var(--rt-layout-edge-x) * 2)) !important;
+  min-height: var(--rt-header-h) !important;
+  margin: var(--rt-layout-edge-y) var(--rt-layout-edge-x) 0 !important;
+  padding: 16px var(--rt-card-pad) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: var(--rt-card-gap) !important;
+  box-sizing: border-box !important;
+}
+
+.page-head-main,
+.page-header-main {
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--rt-space-4) !important;
+}
+
+.page-head-text,
+.page-header-text {
+  min-width: 0 !important;
+  display: grid !important;
+  gap: var(--rt-space-1) !important;
+}
+
+.page-head-actions,
+.page-header-actions,
+.planner-header-actions {
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: var(--rt-space-2) !important;
+  flex-wrap: wrap !important;
+}
+
+.module-page > .page-body,
+.page-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  padding: var(--rt-layout-edge-y) var(--rt-layout-edge-x) calc(var(--rt-layout-edge-y) + 10px) !important;
+  box-sizing: border-box !important;
+  overflow: auto !important;
+}
+
+.lay-page,
+.page-body > :is(.lay-page, .planner-shell, .diet-shell, .finance-shell, .office-dashboard-shell, .travel-shell, .work-shell, .notes-shell, .goals-shell, .sport-cockpit),
+.module-page > .page-body > :is(.lay-page, .planner-shell, .diet-shell, .finance-shell, .office-dashboard-shell, .travel-shell, .work-shell, .notes-shell, .goals-shell, .sport-cockpit) {
+  width: 100% !important;
+  max-width: var(--rt-content-max) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.lay-page {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--rt-layout-gap) !important;
+}
+
+.lay-grid,
+.responsive-module-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--lay-col-min, var(--rt-grid-min))), 1fr)) !important;
+  gap: var(--rt-layout-gap) !important;
+  align-items: start !important;
+}
+
+.lay-cols,
+.page-grid {
+  display: grid !important;
+  grid-template-columns: var(--lay-cols, 1fr) !important;
+  gap: var(--rt-layout-gap) !important;
+  align-items: stretch !important;
+  min-width: 0 !important;
+}
+
+.lay-card,
+.module-card,
+.card,
+.kpi-card {
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+:where(
+  .card,
+  .lay-card,
+  .module-card,
+  .finance-card,
+  .finance-month-panel,
+  .finance-context-card,
+  .office-dashboard-shell,
+  .office-sidebar,
+  .office-cases-panel,
+  .office-mini-panel,
+  .travel-card,
+  .travel-list-card,
+  .notes-card,
+  .notes-sidebar,
+  .notes-board-panel,
+  .work-panel,
+  .work-context-panel,
+  .work-task-board,
+  .work-detail-panel,
+  .diet-meal-card,
+  .diet-side-card,
+  .diet-summary-card,
+  .sport-today-card,
+  .sport-cycle-banner,
+  .sport-panel,
+  .sport-week-card,
+  .sport-week-goals-card,
+  .planner-calendar-card,
+  .planner-tasks-card,
+  .planner-habits-card,
+  .goals-command-panel,
+  .goals-roadmap-card,
+  .goals-week-card,
+  .goals-actions-card
+) {
+  padding: var(--rt-card-pad) !important;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rt-card-gap) !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+:where(.lay-card-flush, .module-card-flush) {
+  padding: 0 !important;
+}
+
+:where(
+  .lay-card-head,
+  .card-head,
+  .section-head,
+  .module-header,
+  .panel-head,
+  .planner-calendar-head,
+  .sport-week-head,
+  .sport-week-goals-head
+) {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: var(--rt-space-3) !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+}
+
+:where(.lay-actions, .module-actions, .card-actions, .section-actions) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: var(--rt-space-2) !important;
+  flex-wrap: wrap !important;
+}
+
+:where(
+  .tabs,
+  .app-tabs,
+  .sub-tabs,
+  .subtabs,
+  .filter-chips,
+  .view-segmented-control,
+  .date-navigator,
+  .finance-segment-tabs,
+  .work-view-tabs,
+  .travel-tabs,
+  .notes-view-toggle,
+  .diet-analytics-tabs
+) {
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+:where(
+  .module-page .app-tabs,
+  .module-page .sub-tabs,
+  .module-page .subtabs,
+  .module-page .filter-chips,
+  .module-page .view-segmented-control,
+  .module-page .finance-segment-tabs,
+  .module-page .work-view-tabs,
+  .module-page .travel-tabs,
+  .module-page .notes-view-toggle,
+  .module-page .diet-analytics-tabs
+) {
+  margin: 0 !important;
+}
+
+:where(.empty-state, .lay-empty) {
+  min-height: clamp(160px, 22vh, 260px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: var(--rt-space-7) var(--rt-space-5) !important;
+  text-align: center !important;
+}
+
+:where(.lay-scroll, .scroll-area, .module-scroll, .panel-scroll) {
+  min-height: 0 !important;
+  overflow: auto !important;
+}
+
+/* Shared cockpit/dashboard reflow. These are structural, not visual redesigns. */
+.module-page.planner-page .planner-layout {
+  display: grid !important;
+  grid-template-columns: minmax(300px, var(--rt-rail-w)) minmax(0, 1fr) !important;
+  gap: var(--rt-layout-gap) !important;
+  align-items: stretch !important;
+  min-height: min(760px, calc(100dvh - var(--rt-header-h) - (var(--rt-layout-edge-y) * 4))) !important;
+}
+
+.module-page.planner-page .planner-sidebar {
+  gap: var(--rt-layout-gap) !important;
+  min-height: 0 !important;
+}
+
+.module-page.planner-page .planner-calendar-card {
+  min-height: min(760px, calc(100dvh - var(--rt-header-h) - (var(--rt-layout-edge-y) * 4))) !important;
+}
+
+.module-page.diet-os .diet-shell,
+.module-page.finance-os .finance-shell,
+.module-page.office-page .office-dashboard-grid,
+.module-page.travel-page .travel-layout,
+.module-page.work-os .work-layout,
+.module-page.notes-os .notes-layout,
+.module-page.goals-page .goals-layout {
+  gap: var(--rt-layout-gap) !important;
+  min-width: 0 !important;
+  align-items: stretch !important;
+}
+
+.module-page.diet-os .diet-shell {
+  grid-template-columns: minmax(0, 1fr) var(--rt-side-w) !important;
+}
+
+.module-page.sport-os > .page-body > .sport-cockpit,
+.sport-os > .page-body > .sport-cockpit {
+  padding: 0 !important;
+  gap: var(--rt-layout-gap) !important;
+}
+
+.module-page.sport-os .sport-dashboard-layout {
+  gap: var(--rt-layout-gap) !important;
+}
+
+.module-page.sport-os .sport-dashboard-left,
+.module-page.sport-os .sport-dashboard-history,
+.module-page.sport-os .sport-week-goals-card,
+.module-page.sport-os .sport-week-card {
+  min-height: 0 !important;
+}
+
+.module-page.sport-os .sport-week-card {
+  min-height: min(520px, calc(100dvh - var(--rt-header-h) - 140px)) !important;
+}
+
+@media (min-width: 1600px) {
+  :root,
+  [data-theme],
+  .auth-wrap {
+    --rt-layout-edge-x: clamp(28px, 2vw, 40px);
+    --rt-layout-gap: var(--rt-space-6);
+    --rt-card-pad: var(--rt-space-6);
+  }
+}
+
+@media (max-width: 1180px) {
+  :root,
+  [data-theme],
+  .auth-wrap {
+    --rt-layout-edge-x: 18px;
+    --rt-layout-edge-y: 12px;
+    --rt-layout-gap: var(--rt-space-4);
+    --rt-card-pad: var(--rt-space-4);
+    --rt-header-h: auto;
+  }
+
+  .module-page > .page-head,
+  .module-page > header.page-head,
+  .page-head,
+  .page-header {
+    min-height: 72px !important;
+    padding: 14px var(--rt-card-pad) !important;
+  }
+
+  .lay-cols,
+  .page-grid,
+  .module-page.planner-page .planner-layout,
+  .module-page.diet-os .diet-shell {
+    grid-template-columns: 1fr !important;
+  }
+
+  .module-page.planner-page .planner-layout,
+  .module-page.planner-page .planner-calendar-card,
+  .module-page.sport-os .sport-week-card {
+    min-height: 0 !important;
+  }
+}
+
+@media (max-width: 760px) {
+  :root,
+  [data-theme],
+  .auth-wrap {
+    --rt-layout-edge-x: var(--rt-mobile-edge);
+    --rt-layout-edge-y: 10px;
+    --rt-layout-gap: var(--rt-space-4);
+    --rt-section-gap: var(--rt-space-5);
+    --rt-card-gap: var(--rt-space-3);
+    --rt-card-pad: var(--rt-space-4);
+  }
+
+  .app-main {
+    overflow: visible !important;
+  }
+
+  .module-page {
+    height: auto !important;
+    min-height: 100dvh !important;
+    overflow: visible !important;
+  }
+
+  .module-page > .page-head,
+  .module-page > header.page-head,
+  .page-head,
+  .page-header {
+    width: calc(100% - (var(--rt-mobile-edge) * 2)) !important;
+    margin: 10px var(--rt-mobile-edge) 0 !important;
+    padding: 14px var(--rt-card-pad) !important;
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .page-head-main,
+  .page-header-main {
+    width: 100% !important;
+  }
+
+  .page-head-actions,
+  .page-header-actions,
+  .planner-header-actions {
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+
+  .module-page > .page-body,
+  .page-body {
+    overflow: visible !important;
+    padding: var(--rt-layout-edge-y) var(--rt-mobile-edge) calc(var(--rt-mobile-nav-h) + 18px) !important;
+  }
+
+  .lay-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  :where(.tabs, .app-tabs, .sub-tabs, .subtabs, .filter-chips, .view-segmented-control) {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    flex-wrap: nowrap !important;
+    scrollbar-width: none;
+  }
+
+  :where(.tabs, .app-tabs, .sub-tabs, .subtabs, .filter-chips, .view-segmented-control)::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  :root,
+  [data-theme],
+  .auth-wrap {
+    --rt-mobile-edge: 14px;
+    --rt-card-pad: var(--rt-space-3);
+    --rt-layout-gap: var(--rt-space-3);
+  }
+
+  .page-head-icon {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  :where(.empty-state, .lay-empty) {
+    min-height: 140px !important;
+    padding: var(--rt-space-6) var(--rt-space-3) !important;
+  }
+}
+
+/* ============================================================
+   Rootine OS global responsive behavior system
+   Shared breakpoint logic across tabs and input contexts.
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+:where(img, svg, canvas, video, iframe, table) {
+  max-width: 100%;
+}
+
+:where(.module-page, .page-body, .lay-page, .lay-grid, .lay-cols, .card, .lay-card, .module-card) {
+  min-width: 0;
+}
+
+:where(
+  .page-head-text,
+  .page-head-actions,
+  .lay-card-head-text,
+  .card-head,
+  .section-head,
+  .module-header,
+  .field,
+  .btn,
+  .filter-chip,
+  .sub-tabs button,
+  .subtabs button,
+  .app-tabs button,
+  .view-segmented-control button,
+  .finance-segment-tabs button,
+  .work-view-tabs button,
+  .travel-tabs button,
+  .notes-view-toggle button,
+  .diet-analytics-tabs button,
+  .work-task-row,
+  .office-case-row,
+  .travel-trip-item,
+  .notes-note-card,
+  .goals-folder-row,
+  .sport-workout-card
+) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+:where(.table-scroll, .sport-table-scroll, .finance-table-scroll, .notes-table-scroll, .office-table-wrap) {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+:where(table, .table, .finance-history-table, .biuro-table, .sport-sets-table, .sport-progression-table) {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Large desktop: use space, but avoid 4K sprawl. */
+@media (min-width: 1600px) {
+  :root,
+  [data-theme],
+  .auth-wrap {
+    --rt-grid-min: 320px;
+    --rt-rail-w: clamp(300px, 20vw, 380px);
+    --rt-side-w: clamp(320px, 21vw, 400px);
+    --rt-inspector-w: clamp(320px, 21vw, 380px);
+  }
+
+  .module-page > .page-body,
+  .page-body {
+    padding-bottom: var(--rt-space-6) !important;
+  }
+}
+
+/* Standard desktop: multi-column dashboards remain available. */
+@media (min-width: 1181px) and (max-width: 1599px) {
+  :root,
+  [data-theme],
+  .auth-wrap {
+    --rt-grid-min: 280px;
+    --rt-rail-w: clamp(280px, 22vw, 350px);
+    --rt-side-w: clamp(300px, 24vw, 370px);
+    --rt-inspector-w: clamp(300px, 24vw, 360px);
+  }
+
+  .module-page > .page-body,
+  .page-body {
+    overflow: auto !important;
+  }
+}
+
+/* Small laptop: collapse tertiary columns before squeezing content. */
+@media (max-width: 1180px) {
+  :root,
+  [data-theme],
+  .auth-wrap {
+    --rt-grid-min: 260px;
+    --rt-rail-w: minmax(260px, 1fr);
+    --rt-side-w: minmax(260px, 1fr);
+    --rt-inspector-w: minmax(260px, 1fr);
+  }
+
+  .module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) :is(
+    .planner-layout,
+    .diet-shell,
+    .finance-workspace,
+    .finance-summary-strip,
+    .office-dashboard-grid,
+    .travel-dashboard,
+    .travel-layout,
+    .work-shell,
+    .work-layout,
+    .notes-workspace,
+    .notes-layout,
+    .goals-os,
+    .goals-layout,
+    .sport-dashboard-layout,
+    .sport-cockpit-grid,
+    .sport-utilities-grid
+  ) {
+    grid-template-columns: 1fr !important;
+    grid-template-areas: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  .module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) :is(
+    .planner-sidebar,
+    .diet-side-col,
+    .travel-rail,
+    .travel-list-card,
+    .notes-sidebar,
+    .work-detail-panel,
+    .office-sidebar,
+    .goals-command-panel
+  ) {
+    max-height: none !important;
+    position: static !important;
+  }
+}
+
+/* Tablet: two-column only when content has enough room; otherwise stack. */
+@media (max-width: 900px) {
+  :root,
+  [data-theme],
+  .auth-wrap {
+    --rt-grid-min: 240px;
+    --rt-layout-gap: var(--rt-space-4);
+  }
+
+  .lay-grid,
+  .responsive-module-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)) !important;
+  }
+
+  :where(
+    .finance-summary-strip,
+    .office-kpi-grid,
+    .sport-cycle-kpis,
+    .finance-segment-kpis,
+    .travel-kpi-grid,
+    .notes-kpi-grid
+  ) {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)) !important;
+    gap: var(--rt-space-3) !important;
+  }
+
+  :where(.page-head-actions, .planner-header-actions) {
+    justify-content: flex-start !important;
+  }
+}
+
+/* Mobile: one-column, bottom nav, horizontal subnav, no page-level horizontal scroll. */
+@media (max-width: 760px) {
+  html,
+  body,
+  #root {
+    overflow-x: hidden;
+  }
+
+  .app-shell,
+  .app-main {
+    min-height: 100dvh !important;
+    overflow: visible !important;
+  }
+
+  .module-page > .page-body,
+  .page-body {
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  .mobile-nav {
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+
+  .module-page:is(.planner-page, .goals-page, .sport-os, .diet-os, .finance-os, .travel-page, .office-page, .work-os, .notes-os, .settings-os) :is(
+    .planner-layout,
+    .diet-shell,
+    .finance-workspace,
+    .finance-summary-strip,
+    .office-dashboard-grid,
+    .travel-dashboard,
+    .travel-layout,
+    .work-shell,
+    .work-layout,
+    .notes-workspace,
+    .notes-layout,
+    .goals-os,
+    .goals-layout,
+    .sport-dashboard-layout,
+    .sport-cockpit-grid,
+    .sport-utilities-grid,
+    .lay-grid,
+    .lay-cols
+  ) {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--rt-layout-gap) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+  }
+
+  :where(
+    .tabs,
+    .app-tabs,
+    .sub-tabs,
+    .subtabs,
+    .filter-chips,
+    .view-segmented-control,
+    .date-navigator,
+    .finance-segment-tabs,
+    .work-view-tabs,
+    .travel-tabs,
+    .notes-view-toggle,
+    .diet-analytics-tabs,
+    .planner-modebar
+  ) {
+    display: flex !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+
+  :where(
+    .tabs button,
+    .app-tabs button,
+    .sub-tabs button,
+    .subtabs button,
+    .filter-chip,
+    .view-segmented-control button,
+    .date-navigator button,
+    .finance-segment-tabs button,
+    .work-view-tabs button,
+    .travel-tabs button,
+    .notes-view-toggle button,
+    .diet-analytics-tabs button,
+    .planner-modebar button
+  ) {
+    flex: 0 0 auto !important;
+    scroll-snap-align: start;
+    min-height: 42px !important;
+  }
+
+  :where(.btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-danger, .auth-btn) {
+    min-height: 44px !important;
+  }
+
+  :where(.page-head-actions > .btn, .page-head-actions > button, .planner-header-actions > .btn, .planner-header-actions > button) {
+    flex: 1 1 min(100%, 180px) !important;
+  }
+
+  :where(
+    .input,
+    .select,
+    .textarea,
+    .auth-input,
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+    select,
+    textarea
+  ) {
+    max-width: 100% !important;
+    min-height: 44px !important;
+  }
+
+  :where(.form-grid, .form-row, .sport-form-row, .goals-add-task-row, .finance-form-grid, .travel-form-grid) {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: var(--rt-space-3) !important;
+  }
+
+  :where(.modal, .modal-box) {
+    width: min(100%, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 24px) !important;
+  }
+
+  :where(.modal-body, .modal-footer, .modal-actions) {
+    max-width: 100% !important;
+  }
+
+  :where(.planner-month-grid, .calendar-grid, .month-grid) {
+    min-width: 0 !important;
+    gap: var(--rt-space-2) !important;
+  }
+
+  :where(.day-cell, .day-cell.is-compact) {
+    min-width: 0 !important;
+  }
+}
+
+/* Phone: prioritize single primary action and prevent narrow awkward modules. */
+@media (max-width: 520px) {
+  :where(.page-head-actions, .planner-header-actions, .modal-footer, .modal-actions, .sport-form-actions) {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+  }
+
+  :where(.page-head-actions > *, .planner-header-actions > *, .modal-footer > *, .modal-actions > *, .sport-form-actions > *) {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  :where(
+    .finance-summary-strip,
+    .office-kpi-grid,
+    .sport-cycle-kpis,
+    .finance-segment-kpis,
+    .travel-kpi-grid,
+    .notes-kpi-grid
+  ) {
+    grid-template-columns: 1fr !important;
+  }
+
+  :where(.table-scroll, .sport-table-scroll, .finance-table-scroll, .notes-table-scroll, .office-table-wrap) {
+    margin-inline: calc(var(--rt-card-pad) * -1);
+    padding-inline: var(--rt-card-pad);
+    max-width: calc(100% + (var(--rt-card-pad) * 2));
+  }
+}
+
+/* Very small phones: keep layout intact, reduce only spacing. */
+@media (max-width: 380px) {
+  :root,
+  [data-theme],
+  .auth-wrap {
+    --rt-mobile-edge: 12px;
+    --rt-card-pad: 12px;
+    --rt-card-gap: 10px;
+  }
+
+  :where(.page-head-main, .page-header-main) {
+    gap: var(--rt-space-3) !important;
+  }
+}
+
+/* Short browser windows: preserve access to actions and allow page scroll. */
+@media (max-height: 760px) and (min-width: 761px) {
+  .module-page,
+  .module-page > .page-body,
+  .page-body {
+    overflow: auto !important;
+  }
+
+  .module-page > .page-head,
+  .module-page > header.page-head,
+  .page-head,
+  .page-header {
+    min-height: 68px !important;
+  }
+}
+
+/* Pointer-aware adjustments: touch gets larger targets, hover stays optional. */
+@media (pointer: coarse) {
+  :where(button, .btn, .icon-btn, .filter-chip, .sub-tabs button, .subtabs button, .app-tabs button, .view-segmented-control button, input, select, textarea) {
+    min-height: 44px !important;
+  }
+
+  :where(.icon-btn, .sb-iconbtn, .modal-close) {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+@media (hover: none) {
+  :where(.card.is-link:hover, .card-interactive:hover, .work-project-card:hover, .travel-trip-item:hover, .notes-note-card:hover, .goals-folder-row:hover) {
+    transform: none !important;
+  }
+}
+
+/* ============================================================
+   Rootine OS global navigation consistency system
+   Primary nav, mobile nav, subtabs, and segmented controls.
+   ============================================================ */
+
+:root,
+[data-theme],
+.auth-wrap {
+  --rt-nav-h: 48px;
+  --rt-nav-item-h: 40px;
+  --rt-nav-item-min-w: 42px;
+  --rt-nav-gap: 4px;
+  --rt-nav-pad-x: 8px;
+  --rt-nav-item-pad-x: 13px;
+  --rt-nav-radius: 12px;
+  --rt-nav-icon: 18px;
+
+  --rt-subnav-h: 42px;
+  --rt-subnav-item-h: 34px;
+  --rt-subnav-gap: 4px;
+  --rt-subnav-pad: 4px;
+  --rt-subnav-item-pad-x: 12px;
+  --rt-subnav-radius: 10px;
+  --rt-subnav-icon: 15px;
+
+  --rt-mobile-nav-item-h: 56px;
+}
+
+:where(.nav, .sidebar-nav) {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--rt-nav-gap) !important;
+  min-width: 0 !important;
+}
+
+:where(.nav) {
+  min-height: var(--rt-nav-h) !important;
+  padding: var(--rt-nav-pad-x) !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+:where(.nav::-webkit-scrollbar) {
+  display: none;
+}
+
+:where(.sidebar-nav) {
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+
+:where(.nav a, .sb-item, .nav-item) {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: var(--rt-space-2) !important;
+  min-width: var(--rt-nav-item-min-w) !important;
+  min-height: var(--rt-nav-item-h) !important;
+  height: var(--rt-nav-item-h) !important;
+  padding: 0 var(--rt-nav-item-pad-x) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--rt-nav-radius) !important;
+  background: transparent !important;
+  color: var(--rt-color-text-secondary) !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  transition:
+    background-color 150ms var(--rt-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    border-color 150ms var(--rt-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    color 150ms var(--rt-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) !important;
+}
+
+:where(.nav a, .nav-item) {
+  flex: 0 0 auto !important;
+}
+
+:where(.sb-item) {
+  width: 100% !important;
+}
+
+:where(.sb-item-ic, .nav-item svg, .nav a svg) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: var(--rt-nav-icon) !important;
+  min-width: var(--rt-nav-icon) !important;
+  height: var(--rt-nav-icon) !important;
+  color: currentColor !important;
+}
+
+:where(.sb-item-ic svg, .nav-item svg, .nav a svg) {
+  width: var(--rt-nav-icon) !important;
+  height: var(--rt-nav-icon) !important;
+  flex: 0 0 auto !important;
+}
+
+:where(.nav a:hover, .sb-item:hover, .nav-item:hover) {
+  background: var(--rt-color-hover-bg) !important;
+  border-color: var(--rt-color-border-soft) !important;
+  color: var(--rt-color-text-primary) !important;
+  transform: none !important;
+}
+
+:where(
+  .nav a.active,
+  .nav a[aria-current="page"],
+  .sb-item.is-active,
+  .sb-item.active,
+  .sb-item[aria-current="page"],
+  .nav-item.active,
+  .nav-item-active
+) {
+  background: var(--rt-color-accent-soft) !important;
+  border-color: var(--rt-color-border-active) !important;
+  color: var(--rt-color-text-strong) !important;
+  font-weight: var(--rt-weight-title) !important;
+  box-shadow: inset 0 0 0 1px rgba(126, 232, 183, 0.06) !important;
+}
+
+:where(
+  .nav a.active::after,
+  .nav a[aria-current="page"]::after,
+  .sb-item.is-active::before,
+  .sb-item.active::before,
+  .sb-item[aria-current="page"]::before,
+  .nav-item-active::before,
+  .mobile-nav a.active::before
+) {
+  content: none !important;
+  display: none !important;
+}
+
+:where(.nav a:focus-visible, .sb-item:focus-visible, .nav-item:focus-visible) {
+  outline: none !important;
+  box-shadow: var(--rt-color-focus-ring) !important;
+  border-color: var(--rt-color-border-active) !important;
+}
+
+:where(.nav a[aria-disabled="true"], .sb-item[aria-disabled="true"], .nav-item[aria-disabled="true"]) {
+  opacity: 0.48 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+:where(
+  .tabs,
+  .app-tabs,
+  .sub-tabs,
+  .subtabs,
+  .view-segmented-control,
+  .finance-segment-tabs,
+  .work-view-tabs,
+  .travel-tabs,
+  .notes-view-toggle,
+  .diet-analytics-tabs,
+  .planner-modebar
+) {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: var(--rt-subnav-gap) !important;
+  min-height: var(--rt-subnav-h) !important;
+  max-width: 100% !important;
+  padding: var(--rt-subnav-pad) !important;
+  border: 1px solid var(--rt-color-border-soft) !important;
+  border-radius: calc(var(--rt-subnav-radius) + var(--rt-subnav-pad)) !important;
+  background: var(--rt-color-surface-field) !important;
+  box-shadow: none !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+:where(
+  .tabs,
+  .app-tabs,
+  .sub-tabs,
+  .subtabs,
+  .view-segmented-control,
+  .finance-segment-tabs,
+  .work-view-tabs,
+  .travel-tabs,
+  .notes-view-toggle,
+  .diet-analytics-tabs,
+  .planner-modebar
+)::-webkit-scrollbar {
+  display: none;
+}
+
+:where(
+  .tabs button,
+  .tab,
+  .app-tabs button,
+  .sub-tabs button,
+  .subtabs button,
+  .view-segmented-control button,
+  .finance-segment-tabs button,
+  .work-view-tabs button,
+  .travel-tabs button,
+  .notes-view-toggle button,
+  .diet-analytics-tabs button,
+  .planner-modebar button
+) {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--rt-space-2) !important;
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  min-height: var(--rt-subnav-item-h) !important;
+  height: var(--rt-subnav-item-h) !important;
+  padding: 0 var(--rt-subnav-item-pad-x) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--rt-subnav-radius) !important;
+  background: transparent !important;
+  color: var(--rt-color-text-secondary) !important;
+  box-shadow: none !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: min(100%, 220px) !important;
+  transition:
+    background-color 150ms var(--rt-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    border-color 150ms var(--rt-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    color 150ms var(--rt-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) !important;
+}
+
+:where(.sub-tab-icon, .app-tab-icon, .view-segment-icon) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: var(--rt-subnav-icon) !important;
+  min-width: var(--rt-subnav-icon) !important;
+  height: var(--rt-subnav-icon) !important;
+  color: currentColor !important;
+  opacity: 0.9 !important;
+}
+
+:where(.sub-tab-icon svg, .app-tab-icon svg, .view-segment-icon svg) {
+  width: var(--rt-subnav-icon) !important;
+  height: var(--rt-subnav-icon) !important;
+}
+
+:where(
+  .tabs button:hover,
+  .tab:hover,
+  .app-tabs button:hover,
+  .sub-tabs button:hover,
+  .subtabs button:hover,
+  .view-segmented-control button:hover,
+  .finance-segment-tabs button:hover,
+  .work-view-tabs button:hover,
+  .travel-tabs button:hover,
+  .notes-view-toggle button:hover,
+  .diet-analytics-tabs button:hover,
+  .planner-modebar button:hover
+) {
+  background: var(--rt-color-hover-bg) !important;
+  border-color: var(--rt-color-border-soft) !important;
+  color: var(--rt-color-text-primary) !important;
+  transform: none !important;
+}
+
+:where(
+  .tabs button.active,
+  .tab-active,
+  .app-tabs button.is-active,
+  .sub-tabs button.active,
+  .subtabs button.active,
+  .view-segmented-control button.is-active,
+  .finance-segment-tabs button.is-active,
+  .work-view-tabs button.is-active,
+  .travel-tabs button.is-active,
+  .notes-view-toggle button.is-active,
+  .diet-analytics-tabs button.is-active,
+  .planner-modebar button.is-active,
+  [role="tab"][aria-selected="true"],
+  button[aria-pressed="true"]
+) {
+  background: var(--rt-color-accent-soft) !important;
+  border-color: var(--rt-color-border-active) !important;
+  color: var(--rt-color-text-strong) !important;
+  font-weight: var(--rt-weight-title) !important;
+  box-shadow: inset 0 0 0 1px rgba(126, 232, 183, 0.06) !important;
+}
+
+:where(
+  .tabs button:focus-visible,
+  .tab:focus-visible,
+  .app-tabs button:focus-visible,
+  .sub-tabs button:focus-visible,
+  .subtabs button:focus-visible,
+  .view-segmented-control button:focus-visible,
+  .finance-segment-tabs button:focus-visible,
+  .work-view-tabs button:focus-visible,
+  .travel-tabs button:focus-visible,
+  .notes-view-toggle button:focus-visible,
+  .diet-analytics-tabs button:focus-visible,
+  .planner-modebar button:focus-visible
+) {
+  outline: none !important;
+  box-shadow: var(--rt-color-focus-ring) !important;
+  border-color: var(--rt-color-border-active) !important;
+  z-index: 1;
+}
+
+:where(
+  .tabs button:disabled,
+  .app-tabs button:disabled,
+  .sub-tabs button:disabled,
+  .subtabs button:disabled,
+  .view-segmented-control button:disabled,
+  .finance-segment-tabs button:disabled,
+  .work-view-tabs button:disabled,
+  .travel-tabs button:disabled,
+  .notes-view-toggle button:disabled,
+  .diet-analytics-tabs button:disabled,
+  .planner-modebar button:disabled
+) {
+  opacity: 0.48 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+:where(.mobile-nav) {
+  display: none !important;
+}
+
+:where(.mobile-nav a) {
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+  min-height: var(--rt-mobile-nav-item-h) !important;
+  height: var(--rt-mobile-nav-item-h) !important;
+  padding: 5px var(--rt-space-2) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--rt-nav-radius) !important;
+  color: var(--rt-color-text-muted) !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+:where(.mobile-nav a svg) {
+  width: 20px !important;
+  height: 20px !important;
+  flex: 0 0 auto !important;
+  transform: none !important;
+}
+
+:where(.mobile-nav a:hover) {
+  background: var(--rt-color-hover-bg) !important;
+  color: var(--rt-color-text-primary) !important;
+}
+
+:where(.mobile-nav a.active) {
+  background: var(--rt-color-accent-soft) !important;
+  border-color: var(--rt-color-border-active) !important;
+  color: var(--rt-color-text-strong) !important;
+  font-weight: var(--rt-weight-title) !important;
+}
+
+:where(.mobile-nav a:focus-visible) {
+  outline: none !important;
+  box-shadow: var(--rt-color-focus-ring) !important;
+  border-color: var(--rt-color-border-active) !important;
+}
+
+:where(.sheet-grid a) {
+  min-height: 48px !important;
+  border-radius: var(--rt-nav-radius) !important;
+}
+
+@media (max-width: 1180px) {
+  :where(.nav) {
+    width: 100% !important;
+  }
+
+  :where(.nav a) {
+    max-width: 180px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  :root,
+  [data-theme],
+  .auth-wrap {
+    --rt-nav-item-h: 44px;
+    --rt-subnav-h: 44px;
+    --rt-subnav-item-h: 36px;
+  }
+
+  :where(.mobile-nav) {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    align-items: center !important;
+    gap: var(--rt-space-1) !important;
+    min-height: var(--rt-mobile-nav-h) !important;
+    padding: 8px max(10px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-right)) !important;
+    border-top: 1px solid var(--rt-color-border) !important;
+    background:
+      linear-gradient(180deg, rgba(10, 18, 30, 0.86), rgba(5, 11, 19, 0.94)),
+      var(--rt-color-bg-deep) !important;
+    backdrop-filter: blur(18px) saturate(140%) !important;
+  }
+
+  :where(
+    .tabs,
+    .app-tabs,
+    .sub-tabs,
+    .subtabs,
+    .view-segmented-control,
+    .finance-segment-tabs,
+    .work-view-tabs,
+    .travel-tabs,
+    .notes-view-toggle,
+    .diet-analytics-tabs,
+    .planner-modebar
+  ) {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    scroll-snap-type: x proximity;
+  }
+
+  :where(
+    .tabs button,
+    .tab,
+    .app-tabs button,
+    .sub-tabs button,
+    .subtabs button,
+    .view-segmented-control button,
+    .finance-segment-tabs button,
+    .work-view-tabs button,
+    .travel-tabs button,
+    .notes-view-toggle button,
+    .diet-analytics-tabs button,
+    .planner-modebar button
+  ) {
+    max-width: min(76vw, 240px) !important;
+    scroll-snap-align: start;
+  }
+}
+
+@media (pointer: coarse) {
+  :where(.nav a, .sb-item, .nav-item) {
+    min-height: 44px !important;
+    height: 44px !important;
+  }
+
+  :where(
+    .tabs button,
+    .tab,
+    .app-tabs button,
+    .sub-tabs button,
+    .subtabs button,
+    .view-segmented-control button,
+    .finance-segment-tabs button,
+    .work-view-tabs button,
+    .travel-tabs button,
+    .notes-view-toggle button,
+    .diet-analytics-tabs button,
+    .planner-modebar button
+  ) {
+    min-height: 40px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(
+    .nav a,
+    .sb-item,
+    .nav-item,
+    .mobile-nav a,
+    .tabs button,
+    .tab,
+    .app-tabs button,
+    .sub-tabs button,
+    .subtabs button,
+    .view-segmented-control button,
+    .finance-segment-tabs button,
+    .work-view-tabs button,
+    .travel-tabs button,
+    .notes-view-toggle button,
+    .diet-analytics-tabs button,
+    .planner-modebar button
+  ) {
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   Rootine OS global card and module surface system
+   Shared panel/card/tile family across all tabs.
+   ============================================================ */
+
+:root,
+[data-theme],
+.auth-wrap {
+  --rt-panel-radius: 16px;
+  --rt-card-radius: 14px;
+  --rt-tile-radius: 12px;
+  --rt-panel-pad: clamp(18px, 1.35vw, 22px);
+  --rt-card-pad-system: 16px;
+  --rt-tile-pad: 12px;
+  --rt-card-header-gap: 12px;
+  --rt-card-body-gap: 14px;
+  --rt-card-footer-gap: 12px;
+  --rt-panel-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+  --rt-card-shadow: 0 3px 8px rgba(0, 0, 0, 0.14);
+  --rt-tile-shadow: none;
+  --rt-surface-glass: blur(14px) saturate(132%);
+  --rt-type-card-title-size: 15px;
+  --rt-type-meta-size: 12px;
+  --rt-color-success-border: rgba(126, 232, 183, 0.34);
+  --rt-color-warning-border: rgba(246, 215, 107, 0.34);
+  --rt-color-danger-border: rgba(255, 143, 154, 0.36);
+  --rt-color-warning-text: #f8e7a0;
+  --rt-color-danger-text: #ffc0c7;
+  --rt-color-empty-bg: rgba(7, 17, 28, 0.42);
+  --rt-color-loading-bg: rgba(11, 24, 38, 0.72);
+}
+
+:where(
+  .surface-card,
+  .card,
+  .lay-card,
+  .module-card,
+  .finance-month-panel,
+  .finance-context-card,
+  .finance-accounts-panel,
+  .office-dashboard-shell,
+  .office-sidebar,
+  .office-cases-panel,
+  .office-mini-panel,
+  .travel-card,
+  .travel-list-card,
+  .notes-card,
+  .notes-sidebar,
+  .notes-board-panel,
+  .notes-editor,
+  .work-panel,
+  .work-context-panel,
+  .work-task-board,
+  .work-detail-panel,
+  .detail-panel,
+  .diet-side-card,
+  .diet-summary-card,
+  .diet-chart-card,
+  .sport-panel,
+  .sport-cycle-banner,
+  .sport-today-card,
+  .sport-week-card,
+  .sport-week-goals-card,
+  .planner-calendar-card,
+  .planner-tasks-card,
+  .planner-habits-card,
+  .goals-command-panel,
+  .goals-roadmap-card,
+  .goals-week-card,
+  .goals-actions-card,
+  .goals-empty-detail,
+  .auth-card
+) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--rt-card-body-gap) !important;
+  min-width: 0 !important;
+  color: var(--rt-color-text-primary) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.008)),
+    var(--rt-color-surface-card) !important;
+  border: 1px solid var(--rt-color-border) !important;
+  border-radius: var(--rt-panel-radius) !important;
+  box-shadow: var(--rt-panel-shadow) !important;
+  backdrop-filter: var(--rt-surface-glass) !important;
+  padding: var(--rt-panel-pad) !important;
+  overflow: hidden !important;
+}
+
+:where(
+  .kpi-card,
+  .finance-summary-tile,
+  .office-metric,
+  .theme-card,
+  .diet-meal-card,
+  .notes-note-card,
+  .notes-tile-main,
+  .work-project-card,
+  .travel-trip-item,
+  .sport-workout-card,
+  .sport-cycle-week-card,
+  .sport-template-tile,
+  .goals-folder-row,
+  .office-category-row,
+  .finance-payment-line,
+  .finance-budget-row:not(.is-head),
+  .finance-history-table-row,
+  .work-task-row
+) {
+  min-width: 0 !important;
+  color: var(--rt-color-text-primary) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0.006)),
+    rgba(13, 27, 42, 0.72) !important;
+  border: 1px solid var(--rt-color-border-soft) !important;
+  border-radius: var(--rt-card-radius) !important;
+  box-shadow: var(--rt-card-shadow) !important;
+}
+
+:where(
+  .day-cell,
+  .calendar-day,
+  .sport-day-col,
+  .notes-category,
+  .diet-template-row,
+  .travel-warning-row,
+  .office-case-row,
+  .goals-roadmap-node,
+  .goals-week-day,
+  .sport-active-set
+) {
+  min-width: 0 !important;
+  background: rgba(8, 19, 32, 0.58) !important;
+  border: 1px solid var(--rt-color-border-soft) !important;
+  border-radius: var(--rt-tile-radius) !important;
+  box-shadow: var(--rt-tile-shadow) !important;
+}
+
+:where(.lay-card-flush, .module-card-flush) {
+  padding: 0 !important;
+}
+
+:where(
+  .card-head,
+  .lay-card-head,
+  .module-card-head,
+  .section-head,
+  .panel-head,
+  .office-panel-head,
+  .travel-card-head,
+  .notes-card-head,
+  .notes-editor-head,
+  .work-panel-head,
+  .diet-panel-head,
+  .sport-week-head,
+  .sport-week-goals-head,
+  .sport-today-head,
+  .planner-calendar-head,
+  .finance-payments-head,
+  .detail-panel-head
+) {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: var(--rt-card-header-gap) !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+:where(
+  .card-head > :first-child,
+  .lay-card-head-text,
+  .module-card-head-text,
+  .office-panel-head > :first-child,
+  .travel-card-head > :first-child,
+  .notes-card-head > :first-child,
+  .work-panel-head > :first-child,
+  .diet-panel-head > :first-child,
+  .sport-today-head > :first-child,
+  .detail-panel-title
+) {
+  min-width: 0 !important;
+}
+
+:where(
+  .card-title,
+  .lay-card-title,
+  .module-card-title,
+  .office-panel-title,
+  .travel-card-title,
+  .notes-card-title,
+  .work-panel-title,
+  .diet-panel-head strong,
+  .sport-week-title,
+  .sport-today-title,
+  .planner-calendar-card h2,
+  .planner-tasks-card h2,
+  .planner-habits-card h2,
+  .detail-panel-title strong
+) {
+  margin: 0 !important;
+  color: var(--rt-color-text-strong) !important;
+  font-family: var(--rt-font-ui) !important;
+  font-size: var(--rt-type-card-title-size) !important;
+  line-height: var(--rt-leading-title) !important;
+  font-weight: var(--rt-weight-title) !important;
+  letter-spacing: var(--rt-track-normal) !important;
+  overflow-wrap: anywhere;
+}
+
+:where(
+  .card-subtitle,
+  .lay-card-subtitle,
+  .module-card-subtitle,
+  .card-meta,
+  .panel-meta,
+  .office-panel-meta,
+  .travel-card-meta,
+  .notes-card-meta,
+  .work-panel-meta,
+  .diet-panel-meta,
+  .sport-week-range,
+  .sport-today-subtitle,
+  .finance-panel-foot,
+  .detail-panel-fields,
+  .muted
+) {
+  color: var(--rt-color-text-muted) !important;
+  font-size: var(--rt-type-meta-size) !important;
+  line-height: var(--rt-leading-body) !important;
+  font-weight: var(--rt-weight-body) !important;
+}
+
+:where(
+  .card-body,
+  .lay-card-body,
+  .module-card-body,
+  .panel-body,
+  .detail-panel-fields,
+  .notes-card-grid,
+  .work-task-list,
+  .sport-template-list,
+  .sport-week-goals-list,
+  .diet-meal-body
+) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--rt-card-body-gap) !important;
+  min-width: 0 !important;
+}
+
+:where(
+  .card-footer,
+  .lay-card-footer,
+  .module-card-footer,
+  .card-actions,
+  .lay-actions,
+  .module-actions,
+  .section-actions,
+  .goals-week-footer,
+  .diet-water-actions,
+  .diet-custom-actions,
+  .finance-line-actions,
+  .sport-today-actions,
+  .sport-form-actions
+) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: var(--rt-card-footer-gap) !important;
+  flex-wrap: wrap !important;
+  min-width: 0 !important;
+}
+
+:where(
+  .card-head .icon-btn,
+  .lay-card-head .icon-btn,
+  .module-card-head .icon-btn,
+  .office-panel-head .icon-btn,
+  .travel-card-head .icon-btn,
+  .notes-card-head .icon-btn,
+  .notes-editor-head .icon-btn,
+  .work-panel-head .icon-btn,
+  .diet-panel-head .icon-btn,
+  .sport-week-head .icon-btn,
+  .sport-week-goals-head .icon-btn,
+  .planner-calendar-head .icon-btn,
+  .detail-panel-head .icon-btn
+) {
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+}
+
+:where(
+  .card.is-link,
+  .card-interactive,
+  .finance-summary-tile,
+  .office-category-row,
+  .theme-card,
+  .diet-meal-card,
+  .notes-note-card,
+  .notes-tile-main,
+  .work-project-card,
+  .travel-trip-item,
+  .sport-workout-card,
+  .sport-cycle-week-card,
+  .goals-folder-row
+) {
+  transition:
+    background-color 150ms var(--rt-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    border-color 150ms var(--rt-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    color 150ms var(--rt-motion-ease, cubic-bezier(0.22, 1, 0.36, 1)) !important;
+}
+
+:where(
+  .card.is-link,
+  .card-interactive,
+  .finance-summary-tile,
+  .office-category-row,
+  .theme-card,
+  .diet-meal-card,
+  .notes-note-card,
+  .notes-tile-main,
+  .work-project-card,
+  .travel-trip-item,
+  .sport-workout-card,
+  .sport-cycle-week-card,
+  .goals-folder-row
+):hover {
+  background: var(--rt-color-hover-bg) !important;
+  border-color: var(--rt-color-border-strong) !important;
+  box-shadow: var(--rt-card-shadow) !important;
+  transform: none !important;
+}
+
+:where(
+  .card.is-selected,
+  .card.is-active,
+  .card-selected,
+  .theme-card.active,
+  .finance-summary-tile.is-active,
+  .office-category-row.is-active,
+  .diet-meal-card.is-active,
+  .diet-template-row.is-selected,
+  .notes-category.is-active,
+  .notes-note-card.is-selected,
+  .notes-tile.is-selected .notes-tile-main,
+  .notes-list-row.is-active,
+  .work-project-card.is-selected,
+  .work-task-row.is-selected,
+  .travel-trip-item.is-selected,
+  .sport-workout-card.is-selected,
+  .sport-cycle-week-card.is-selected,
+  .sport-today-row.is-selected,
+  .goals-folder-row.is-active,
+  .goals-roadmap-node.is-active
+) {
+  background: var(--rt-color-selected-bg) !important;
+  border-color: var(--rt-color-border-active) !important;
+  color: var(--rt-color-text-strong) !important;
+  box-shadow: inset 0 0 0 1px rgba(126, 232, 183, 0.07) !important;
+}
+
+:where(
+  .is-completed,
+  .is-complete,
+  .is-done,
+  .has-plan,
+  .travel-status.is-complete,
+  .sport-active-set.is-completed,
+  .sport-workout-card.is-completed,
+  .goals-roadmap-node.is-done
+) {
+  border-color: var(--rt-color-success-border) !important;
+  background: var(--rt-color-success-bg) !important;
+}
+
+:where(
+  .card.is-error,
+  .card.has-error,
+  .panel-error,
+  .form-error,
+  .auth-err,
+  .sport-form-error,
+  .travel-warning-row.is-danger,
+  .finance-budget-row.is-over
+) {
+  border-color: var(--rt-color-danger-border) !important;
+  background: var(--rt-color-danger-bg) !important;
+  color: var(--rt-color-danger-text) !important;
+}
+
+:where(
+  .card.is-warning,
+  .panel-warning,
+  .travel-warning-row,
+  .finance-budget-row.is-warning
+) {
+  border-color: var(--rt-color-warning-border) !important;
+  background: var(--rt-color-warning-bg) !important;
+  color: var(--rt-color-warning-text) !important;
+}
+
+:where(
+  .empty-state,
+  .lay-empty,
+  .finance-empty,
+  .diet-empty-panel,
+  .sport-day-empty,
+  .sport-today-empty,
+  .sport-template-empty-compact,
+  .goals-week-empty,
+  .planner-calendar-agenda-empty,
+  .notes-empty-center
+) {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--rt-space-3) !important;
+  min-height: 148px !important;
+  padding: var(--rt-card-pad-system) !important;
+  border: 1px dashed var(--rt-color-border-soft) !important;
+  border-radius: var(--rt-card-radius) !important;
+  background: var(--rt-color-empty-bg) !important;
+  color: var(--rt-color-text-muted) !important;
+  text-align: center !important;
+}
+
+:where(.empty-state svg, .empty-state > svg:first-child, .empty-state .es-icon, .lay-empty-ic) {
+  color: var(--rt-color-text-secondary) !important;
+}
+
+:where(.empty-state h3, .empty-state .es-title, .lay-empty-title, .diet-empty-panel strong, .sport-template-empty-compact strong) {
+  margin: 0 !important;
+  color: var(--rt-color-text-primary) !important;
+  font-size: var(--rt-type-card-title-size) !important;
+  line-height: var(--rt-leading-title) !important;
+  font-weight: var(--rt-weight-title) !important;
+}
+
+:where(.empty-state p, .empty-state .es-desc, .lay-empty-desc, .diet-empty-panel span, .sport-template-empty-compact span) {
+  margin: 0 !important;
+  max-width: 54ch;
+  color: var(--rt-color-text-muted) !important;
+  font-size: var(--rt-type-body-sm-size) !important;
+  line-height: var(--rt-leading-body) !important;
+}
+
+:where(.skeleton, .loading, .loading-bar, .shimmer, .is-loading) {
+  position: relative;
+  overflow: hidden !important;
+  border-radius: var(--rt-card-radius) !important;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.055), transparent),
+    var(--rt-color-loading-bg) !important;
+  background-size: 220% 100%;
+  color: transparent !important;
+  animation: rt-card-loading 1.35s linear infinite;
+}
+
+@keyframes rt-card-loading {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
+}
+
+@media (max-width: 900px) {
+  :root,
+  [data-theme],
+  .auth-wrap {
+    --rt-panel-pad: 18px;
+    --rt-card-pad-system: 14px;
+    --rt-card-body-gap: 12px;
+  }
+}
+
+@media (max-width: 760px) {
+  :root,
+  [data-theme],
+  .auth-wrap {
+    --rt-panel-radius: 14px;
+    --rt-card-radius: 12px;
+    --rt-panel-pad: 14px;
+    --rt-card-pad-system: 12px;
+  }
+
+  :where(
+    .surface-card,
+    .card,
+    .lay-card,
+    .module-card,
+    .finance-month-panel,
+    .office-cases-panel,
+    .travel-card,
+    .notes-card,
+    .work-panel,
+    .diet-side-card,
+    .sport-panel,
+    .planner-calendar-card,
+    .planner-tasks-card,
+    .planner-habits-card,
+    .goals-roadmap-card,
+    .goals-week-card,
+    .goals-actions-card
+  ) {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  :where(
+    .card-head,
+    .lay-card-head,
+    .module-card-head,
+    .section-head,
+    .panel-head,
+    .office-panel-head,
+    .travel-card-head,
+    .notes-card-head,
+    .work-panel-head,
+    .diet-panel-head,
+    .sport-week-head,
+    .planner-calendar-head,
+    .detail-panel-head
+  ) {
+    align-items: flex-start !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.skeleton, .loading, .loading-bar, .shimmer, .is-loading) {
+    animation: none !important;
+  }
+}

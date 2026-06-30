@@ -2,6 +2,7 @@
  * features/sport/catalog.ts, so the template/exercise pickers aren't empty
  * on a fresh account. Idempotent: only inserts names that don't exist yet. */
 import { supabase } from '@/lib/supabase';
+import { QA_AUTH_ENABLED } from '@/features/auth/qaAuth';
 import * as repo from './sportRepository';
 import { EXERCISE_CATALOG, MUSCLE_LABEL, SPORTS } from '../catalog';
 
@@ -36,6 +37,7 @@ export async function ensureDefaultExercises(): Promise<void> {
 }
 
 export async function ensureSportDefaults(): Promise<true> {
+  if (QA_AUTH_ENABLED) return true;
   await ensureDefaultSports();
   await ensureDefaultExercises();
   return true;

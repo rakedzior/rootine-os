@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Modal, Field, IcoTrash, IcoPlus, IcoChevRight, IconBtn } from '@/components/common';
 import { useCreateExercise } from '@/features/sport/hooks';
+import { isBuiltInExerciseId, mergeBuiltInExercises } from '@/features/sport/builtinExerciseCatalog';
 import type { Exercise, Sport, WorkoutTemplateFull } from '@/features/sport/types';
 import type { TemplateExerciseInput } from '@/features/sport/services/sportRepository';
 import { SportField } from './SportField';
@@ -44,6 +45,7 @@ export function TemplateEditorModal({ open, onClose, sports, exercises, existing
   const [items, setItems] = useState<EditableExercise[]>([]);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [formError, setFormError] = useState<string | null>(null);
+  const exerciseOptions = useMemo(() => mergeBuiltInExercises(exercises), [exercises]);
 
   useEffect(() => {
     if (!open) return;
@@ -69,7 +71,6 @@ export function TemplateEditorModal({ open, onClose, sports, exercises, existing
 
   function pushExercise(exerciseId: string | null, exerciseName: string) {
     setItems(list => {
-      setExpanded(prev => new Set(prev).add(list.length));
       return [...list, {
         exercise_id: exerciseId, name_snapshot: exerciseName, order_index: list.length, rest_seconds: 90,
         sets: [{ set_index: 1, target_reps_min: 8, target_reps_max: 8, target_weight_kg: null, target_rir: null, rest_seconds: 90, notes: null }],
@@ -78,12 +79,16 @@ export function TemplateEditorModal({ open, onClose, sports, exercises, existing
   }
 
   function addExistingExercise(exercise: Exercise) {
-    pushExercise(exercise.id, exercise.name);
+    pushExercise(isBuiltInExerciseId(exercise.id) ? null : exercise.id, exercise.name);
   }
 
   async function addNewExercise(typedName: string) {
-    const created = await createExercise.mutateAsync({ name: typedName, sport_id: sportId || null });
-    pushExercise(created.id, created.name);
+    try {
+      const created = await createExercise.mutateAsync({ name: typedName, sport_id: sportId || null });
+      pushExercise(created.id, created.name);
+    } catch {
+      pushExercise(null, typedName.trim());
+    }
   }
 
   function removeExercise(idx: number) {
@@ -157,7 +162,7 @@ export function TemplateEditorModal({ open, onClose, sports, exercises, existing
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={existing ? 'Edytuj szablon' : 'Nowy szablon'} size="lg"
+    <Modal open={open} onClose={onClose} title={existing ? 'Edytuj szablon' : 'Nowy szablon'} size="lg" className="sport-template-modal"
       footer={<>
         <button className="btn btn-secondary" onClick={onClose}>Anuluj</button>
         <button className="btn btn-primary" disabled={!name.trim()} onClick={save}>Zapisz szablon</button>
@@ -186,6 +191,7 @@ export function TemplateEditorModal({ open, onClose, sports, exercises, existing
                       <span className={`sport-exercise-chevron${isOpen ? ' is-open' : ''}`}><IcoChevRight /></span>
                       <strong>{it.name_snapshot}</strong>
                       <span className="sport-template-exercise-summary">{setCount} {setCount === 1 ? 'seria' : 'serie'} · {repsSummary}</span>
+                      {!isOpen && <span className="sport-template-exercise-detail-hint">Szczegóły</span>}
                     </button>
                     <div className="sport-template-exercise-actions">
                       <IconBtn icon={<MoveIcon dir="up" />} onClick={() => moveExercise(idx, -1)} title="Przenieś wyżej" />
@@ -221,7 +227,7 @@ export function TemplateEditorModal({ open, onClose, sports, exercises, existing
               );
             })}
 
-            <ExercisePicker exercises={exercises} onPickExisting={addExistingExercise} onCreateNew={addNewExercise} />
+            <ExercisePicker exercises={exerciseOptions} onPickExisting={addExistingExercise} onCreateNew={addNewExercise} />
           </div>
         </Field>
       </div>

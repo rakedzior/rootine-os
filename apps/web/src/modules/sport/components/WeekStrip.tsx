@@ -2,7 +2,7 @@ import { DndContext, useDraggable, useDroppable, type DragEndEvent, PointerSenso
 import { MoreMenu, StatusBadge } from '@/components/common';
 import { addDaysStr, todayStr, WEEKDAY_LABELS_LONG } from '@/features/sport/services/sportPlannerService';
 import type { ScheduledWorkout } from '@/features/sport/types';
-import { IcoGrip, IcoCopy, IcoCalendar, IcoChevLeft, IcoChevRightLg, IcoPlay } from './icons';
+import { IcoCalendar, IcoChevLeft, IcoChevRightLg, IcoDumbbell, IcoEdit, IcoTrash } from './icons';
 
 const MONTHS_PL = ['stycznia', 'lutego', 'marca', 'kwietnia', 'maja', 'czerwca', 'lipca', 'sierpnia', 'września', 'października', 'listopada', 'grudnia'];
 
@@ -20,8 +20,11 @@ interface WeekStripProps {
   onNavigateWeek: (deltaWeeks: number) => void;
   onPickWeek: (date: string) => void;
   onAddForDay: (date: string) => void;
+  selectedWorkoutId: string | null;
+  onSelectWorkout: (workout: ScheduledWorkout) => void;
   onOpenWorkout: (workout: ScheduledWorkout) => void;
   onStartSession: (workout: ScheduledWorkout) => void;
+  onToggleComplete: (workout: ScheduledWorkout) => void;
   onCopyWorkout: (workout: ScheduledWorkout) => void;
   onDeleteWorkout: (workout: ScheduledWorkout) => void;
   onMoveWorkout: (id: string, date: string, orderIndex: number) => void;
@@ -29,7 +32,7 @@ interface WeekStripProps {
 
 export function WeekStrip({
   weekStart, workouts, onNavigateWeek, onPickWeek, onAddForDay, onOpenWorkout,
-  onStartSession, onCopyWorkout, onDeleteWorkout, onMoveWorkout,
+  selectedWorkoutId, onSelectWorkout, onStartSession, onToggleComplete, onCopyWorkout, onDeleteWorkout, onMoveWorkout,
 }: WeekStripProps) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   const days = Array.from({ length: 7 }, (_, i) => addDaysStr(weekStart, i));
@@ -75,8 +78,11 @@ export function WeekStrip({
               isToday={date === today}
               workouts={workouts.filter(w => w.scheduled_date === date).sort((a, b) => a.order_index - b.order_index)}
               onAdd={() => onAddForDay(date)}
+              selectedWorkoutId={selectedWorkoutId}
+              onSelectWorkout={onSelectWorkout}
               onOpenWorkout={onOpenWorkout}
               onStartSession={onStartSession}
+              onToggleComplete={onToggleComplete}
               onCopyWorkout={onCopyWorkout}
               onDeleteWorkout={onDeleteWorkout}
             />
@@ -87,9 +93,11 @@ export function WeekStrip({
   );
 }
 
-function DayColumn({ date, isToday, workouts, onAdd, onOpenWorkout, onStartSession, onCopyWorkout, onDeleteWorkout }: {
+function DayColumn({ date, isToday, workouts, onAdd, selectedWorkoutId, onSelectWorkout, onOpenWorkout, onStartSession, onToggleComplete, onCopyWorkout, onDeleteWorkout }: {
   date: string; isToday: boolean; workouts: ScheduledWorkout[]; onAdd: () => void;
+  selectedWorkoutId: string | null; onSelectWorkout: (w: ScheduledWorkout) => void;
   onOpenWorkout: (w: ScheduledWorkout) => void; onStartSession: (w: ScheduledWorkout) => void;
+  onToggleComplete: (w: ScheduledWorkout) => void;
   onCopyWorkout: (w: ScheduledWorkout) => void; onDeleteWorkout: (w: ScheduledWorkout) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: date });
@@ -104,9 +112,14 @@ function DayColumn({ date, isToday, workouts, onAdd, onOpenWorkout, onStartSessi
         {isToday && <span className="sport-day-today-tag">DZIŚ</span>}
       </div>
       <div className="sport-day-cards">
-        {workouts.map(w => (
-          <WorkoutCard key={w.id} workout={w} onOpen={() => onOpenWorkout(w)} onStart={() => onStartSession(w)} onCopy={() => onCopyWorkout(w)} onDelete={() => onDeleteWorkout(w)} />
-        ))}
+        {workouts.length ? workouts.map(w => (
+          <WorkoutCard key={w.id} workout={w} selected={selectedWorkoutId === w.id} onSelect={() => onSelectWorkout(w)} onOpen={() => onOpenWorkout(w)} onStart={() => onStartSession(w)} onToggleComplete={() => onToggleComplete(w)} onCopy={() => onCopyWorkout(w)} onDelete={() => onDeleteWorkout(w)} />
+        )) : (
+          <div className="sport-day-empty">
+            <IcoCalendar />
+            <span>Brak treningu</span>
+          </div>
+        )}
       </div>
       <button className="sport-day-add" onClick={onAdd}>+</button>
     </div>
@@ -117,15 +130,15 @@ const STATUS_LABEL: Record<ScheduledWorkout['status'], string> = {
   planned: 'todo', in_progress: 'active', completed: 'done', skipped: 'cancelled', cancelled: 'cancelled',
 };
 
-function WorkoutCard({ workout, onOpen, onStart, onCopy, onDelete }: {
-  workout: ScheduledWorkout; onOpen: () => void; onStart: () => void; onCopy: () => void; onDelete: () => void;
+function WorkoutCard({ workout, selected, onSelect, onOpen, onStart, onToggleComplete, onCopy, onDelete }: {
+  workout: ScheduledWorkout; selected: boolean; onSelect: () => void; onOpen: () => void; onStart: () => void; onToggleComplete: () => void; onCopy: () => void; onDelete: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: workout.id });
   const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`, zIndex: 5 } : undefined;
 
   return (
-    <div ref={setNodeRef} style={style} className={`sport-workout-card${isDragging ? ' is-dragging' : ''}`} onClick={onOpen}>
-      <button className="sport-drag-handle" {...attributes} {...listeners} aria-label="Przenieś" onClick={(e) => e.stopPropagation()}><IcoGrip /></button>
+    <div ref={setNodeRef} style={style} className={`sport-workout-card${isDragging ? ' is-dragging' : ''}${selected ? ' is-selected' : ''}${workout.status === 'completed' ? ' is-completed' : ''}`} onClick={onSelect}>
+      <button className="sport-workout-kind" {...attributes} {...listeners} aria-label="Przenies trening" onClick={(e) => e.stopPropagation()}><IcoDumbbell /></button>
       <div className="sport-workout-main">
         <div className="sport-workout-title">{workout.title}</div>
         {workout.subtitle && <div className="sport-workout-subtitle">{workout.subtitle}</div>}
@@ -135,12 +148,16 @@ function WorkoutCard({ workout, onOpen, onStart, onCopy, onDelete }: {
         </div>
       </div>
       <div className="sport-workout-actions" onClick={(e) => e.stopPropagation()}>
-        {workout.status === 'planned' && (
-          <button className="icon-btn" title="Rozpocznij" onClick={onStart}><IcoPlay /></button>
-        )}
-        <button className="icon-btn" title="Kopiuj" onClick={onCopy}><IcoCopy /></button>
+        <button className="icon-btn" title="Edytuj" aria-label="Edytuj trening" onClick={onOpen}>
+          <IcoEdit />
+        </button>
+        <button className="icon-btn" title="Usuń" aria-label="Usun trening" onClick={onDelete}>
+          <IcoTrash />
+        </button>
         <MoreMenu items={[
-          { label: 'Edytuj', onClick: onOpen },
+          ...(workout.status === 'planned' ? [{ label: 'Start treningu', onClick: onStart }] : []),
+          { label: workout.status === 'completed' ? 'Cofnij wykonanie' : 'Oznacz wykonany', onClick: onToggleComplete },
+          { label: 'Duplikuj', onClick: onCopy },
           { label: 'Usuń', onClick: onDelete, danger: true },
         ]} />
       </div>
