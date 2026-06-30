@@ -11017,3 +11017,208 @@ textarea.input {
     -webkit-backdrop-filter: none;
   }
 }
+
+/* ============================================================ STEP 26: SUBTLE MOTION */
+:root {
+  --ui-motion-fast: 120ms;
+  --ui-motion-med: 180ms;
+  --ui-motion-slow: 260ms;
+  --ui-motion-ease: cubic-bezier(.22, .61, .36, 1);
+}
+
+.app-toast {
+  transform-origin: right bottom;
+}
+
+@keyframes ui-soft-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ui-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(.992);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ui-check-pop {
+  0% {
+    transform: scale(.88);
+  }
+  62% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .app-toast {
+    animation: ui-soft-enter var(--ui-motion-med) var(--ui-motion-ease) both;
+  }
+
+  .module-page > .page-body > :where(
+    .planner-shell,
+    .finance-workspace,
+    .goals-os,
+    .notes-workspace,
+    .office-dashboard-shell,
+    .travel-dashboard,
+    .work-shell,
+    .diet-shell,
+    .sport-layout,
+    .lay-page
+  ) {
+    animation: ui-soft-enter var(--ui-motion-slow) var(--ui-motion-ease) both;
+  }
+
+  :where(.modal-box, .drawer, .finance-drawer, .diet-drawer, .sheet) {
+    animation: ui-panel-enter var(--ui-motion-slow) var(--ui-motion-ease) both;
+  }
+
+  :where(
+    .btn,
+    .icon-btn,
+    .modal-close,
+    [role="button"],
+    [role="tab"],
+    .travel-timeline button,
+    .goals-folder-row,
+    .notes-category,
+    .office-category-row,
+    .work-project-card,
+    .travel-trip-item,
+    .finance-summary-tile
+  ) {
+    transition-duration: var(--ui-motion-med);
+    transition-timing-function: var(--ui-motion-ease);
+  }
+
+  :where(
+    .btn svg,
+    .icon-btn svg,
+    .modal-close svg,
+    [role="button"] svg,
+    [role="tab"] svg
+  ) {
+    transition: transform var(--ui-motion-med) var(--ui-motion-ease);
+  }
+
+  :where(
+    .work-check.is-done,
+    .office-case-row.is-done .office-case-check,
+    .tsk-check.is-done,
+    .tsk-check-sm.is-done,
+    .todo-item.done .todo-check,
+    .habit-row.done .habit-check,
+    .habit-detail-check.is-done,
+    .goals-task-row.is-done .goals-task-check,
+    .goals-today-row.is-done .goals-task-check,
+    .sport-set-check.is-checked,
+    .travel-pack-list button.is-done span:first-child,
+    .notes-inline-checklist .is-done button,
+    .notes-modal-list button.is-done
+  ) {
+    animation: ui-check-pop var(--ui-motion-slow) var(--ui-motion-ease);
+  }
+
+  :where(
+    .progress-bar-fill,
+    .finance-progress-line i,
+    .finance-budget-progress i,
+    .finance-budget-meter > span,
+    .diet-macro-bar span,
+    .diet-macro-progress i,
+    .goals-progress-fill
+  ) {
+    transition: width 420ms var(--ui-motion-ease), transform var(--ui-motion-med) var(--ui-motion-ease);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  :where(.btn, .icon-btn, .modal-close):hover > :where(svg, .icon, [class*="icon"]) {
+    transform: translateY(-1px);
+  }
+
+  :where(
+    .empty-state:hover > svg:first-child,
+    .empty-state:hover .es-icon,
+    .lay-empty:hover .lay-empty-ic
+  ) {
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-toast {
+    animation: none !important;
+  }
+}
+
+/* ============================================================ STEP 27: SMALL DELIGHT MOMENTS */
+:where(.empty-state > svg:first-child, .empty-state .es-icon, .lay-empty-ic) {
+  transition: transform var(--ui-motion-med) var(--ui-motion-ease), border-color var(--ui-motion-med) var(--ui-motion-ease), background var(--ui-motion-med) var(--ui-motion-ease);
+}
+
+:where(
+  .notes-tile.is-selected .notes-tile-main,
+  .notes-list-row.is-active,
+  .notes-category.is-active,
+  .work-project-card.is-selected,
+  .work-task-row.is-selected,
+  .travel-trip-item.is-selected,
+  .office-category-row.is-active,
+  .goals-folder-row.is-active,
+  .finance-summary-tile.is-active,
+  .diet-meal-card.is-active,
+  .diet-template-row.is-selected,
+  .diet-search-results button.is-selected
+) {
+  outline: 1px solid color-mix(in srgb, var(--accent-ice) 18%, transparent);
+  outline-offset: -1px;
+}
+
+:where(
+  .task-sub-check,
+  .travel-pack-list button.is-done span:first-child,
+  .notes-inline-checklist .is-done button,
+  .notes-modal-list button.is-done,
+  .sport-set-check.is-checked,
+  .habit-detail-status.is-active
+) {
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 10%, transparent);
+}
+
+:where(
+  .empty-state > svg:first-child,
+  .empty-state .es-icon,
+  .lay-empty-ic
+) {
+  background: color-mix(in srgb, var(--accent-ice) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent-ice) 18%, transparent);
+}
+
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  :where(
+    .task-sub-check,
+    .travel-pack-list button.is-done span:first-child,
+    .notes-inline-checklist .is-done button,
+    .notes-modal-list button.is-done,
+    .sport-set-check.is-checked,
+    .habit-detail-status.is-active
+  ) {
+    box-shadow: none;
+  }
+}

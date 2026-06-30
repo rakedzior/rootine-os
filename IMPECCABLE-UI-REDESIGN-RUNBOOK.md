@@ -27,18 +27,10 @@ Status legend:
 
 ## Current Next Step
 
-- [ ] Step 26: Add subtle motion. `NEXT`
+- [x] All planned redesign steps are complete.
 
 ```text
-/impeccable animate
-
-Add subtle, purposeful motion to the app.
-
-Requirements:
-- Motion should be calm, premium and minimal.
-- Do not add flashy effects.
-- Do not hurt performance.
-- Respect reduced motion.
+No remaining required or optional steps.
 ```
 
 ---
@@ -90,8 +82,8 @@ Requirements:
 
 ### Optional Phase 7
 
-- [ ] Step 26: Add subtle motion. `NEXT`
-- [ ] Step 27: Add small delight moments.
+- [x] Step 26: Add subtle motion.
+- [x] Step 27: Add small delight moments.
 
 ---
 

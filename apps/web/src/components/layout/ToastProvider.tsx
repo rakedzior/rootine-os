@@ -30,6 +30,7 @@ export function ToastProvider() {
       {toasts.map((t) => (
         <div
           key={t.id}
+          className="app-toast"
           style={{
             background: BG[t.type],
             color: '#fff',
@@ -39,13 +40,11 @@ export function ToastProvider() {
             fontWeight: 500,
             boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
             maxWidth: 320,
-            animation: 'toast-in 0.18s ease',
           }}
         >
           {t.type === 'success' ? '✓ ' : t.type === 'error' ? '✗ ' : 'ℹ '}{t.message}
         </div>
       ))}
-      <style>{`@keyframes toast-in { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }`}</style>
     </div>
   );
 }
