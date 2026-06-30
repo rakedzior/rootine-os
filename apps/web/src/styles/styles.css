@@ -11571,3 +11571,669 @@ textarea.input {
     max-inline-size: min(100%, 18ch);
   }
 }
+
+/* ============================================================ TRAVEL LAYOUT HARDENING */
+.travel-page,
+.travel-page > .page-body {
+  min-width: 0;
+  min-height: 0;
+}
+
+.travel-dashboard {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  align-items: stretch;
+  grid-template-columns: minmax(250px, 310px) minmax(0, 1fr);
+}
+
+.travel-list-card,
+.travel-central,
+.travel-main-trip {
+  min-width: 0;
+  min-height: 0;
+}
+
+.travel-list-card {
+  overflow: hidden;
+}
+
+.travel-trip-list {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.travel-central {
+  display: flex;
+  flex-direction: column;
+}
+
+.travel-main-trip {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.travel-module-topbar {
+  min-width: 0;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.travel-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 4px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--ui-control-radius);
+  background: color-mix(in srgb, var(--surface-inset) 82%, transparent);
+}
+
+.travel-tabs button {
+  flex: 1 1 98px;
+  min-width: 0;
+  justify-content: center;
+  text-align: center;
+  border-radius: calc(var(--ui-control-radius) - 3px);
+}
+
+.travel-tab-add {
+  flex: 0 1 auto;
+  max-width: 220px;
+}
+
+.travel-main-grid {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  align-content: start;
+}
+
+.travel-card,
+.travel-detail-list,
+.travel-pack-categories {
+  min-width: 0;
+}
+
+.travel-detail-list {
+  overflow: auto;
+}
+
+.travel-pack-categories {
+  padding: 4px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--ui-control-radius);
+  background: color-mix(in srgb, var(--surface-inset) 82%, transparent);
+}
+
+.travel-pack-categories button {
+  border-radius: calc(var(--ui-control-radius) - 3px);
+}
+
+@media (max-width: 980px) {
+  .travel-dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .travel-list-card {
+    max-height: none;
+  }
+
+  .travel-trip-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .travel-module-topbar {
+    align-items: stretch;
+  }
+
+  .travel-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .travel-tabs button {
+    flex: 0 0 auto;
+    min-width: max-content;
+  }
+
+  .travel-tab-add {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+/* ============================================================ DIET TOP BAR HARDENING */
+.module-page.diet-os > .page-body > .diet-shell {
+  padding-top: var(--gap);
+}
+
+.diet-os .page-head-actions {
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.diet-os .page-head-actions > .diet-datebar {
+  flex: 1 1 360px;
+  min-width: min(100%, 300px);
+  max-width: 560px;
+  padding: 0;
+}
+
+.diet-os .page-head-actions .diet-datebar-nav {
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.diet-os .page-head-actions .diet-date-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.diet-os .page-head-actions .diet-datebar-nav > .btn {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.diet-os .page-head-actions .diet-datebar-nav > .icon-btn,
+.diet-os .page-head-actions .diet-date-picker {
+  flex: 0 0 var(--ui-control-h-sm);
+}
+
+.diet-shell {
+  min-width: 0;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.diet-meals-col,
+.diet-side-col {
+  min-width: 0;
+  min-height: 0;
+}
+
+.diet-meal-title strong {
+  font-size: var(--ui-section-title-size);
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.diet-meal-title small,
+.diet-entry-name span,
+.diet-entry-row,
+.diet-macro-mini,
+.diet-side-card,
+.diet-rhythm-card {
+  font-size: var(--ui-body-size);
+}
+
+.diet-meal-card {
+  min-height: auto;
+}
+
+.diet-meal-head {
+  min-width: 0;
+}
+
+.diet-meal-totals {
+  max-width: 48%;
+}
+
+.diet-entry-name,
+.diet-entry-name span:last-child {
+  min-width: 0;
+}
+
+@media (max-width: 1120px) {
+  .diet-os .page-head-actions {
+    justify-content: flex-start;
+  }
+
+  .diet-os .page-head-actions > .diet-datebar {
+    flex-basis: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .diet-os .page-head-actions .diet-datebar-nav {
+    flex-wrap: wrap;
+  }
+
+  .diet-os .page-head-actions .diet-date-label {
+    order: -1;
+    flex: 1 0 100%;
+  }
+
+  .diet-os .page-head-actions .diet-datebar-nav > .icon-btn,
+  .diet-os .page-head-actions .diet-datebar-nav > .btn,
+  .diet-os .page-head-actions .diet-date-picker {
+    flex: 1 1 72px;
+  }
+
+  .diet-meal-totals {
+    max-width: none;
+  }
+}
+
+/* ============================================================ FINANCE LEFT RAIL HARDENING */
+.finance-workspace {
+  grid-template-columns: minmax(230px, 280px) minmax(0, 1fr);
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
+}
+
+.finance-left-rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.finance-left-rail .finance-summary-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.finance-left-rail .finance-summary-tile,
+.finance-compact-card {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--ui-card-radius);
+  background: var(--ui-card-bg);
+  box-shadow: var(--sh-1);
+}
+
+.finance-left-rail .finance-summary-tile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+  padding: 11px 12px;
+  text-align: left;
+}
+
+.finance-left-rail .finance-summary-tile strong {
+  font-size: clamp(18px, 1.35vw, 22px);
+  line-height: 1.08;
+}
+
+.finance-left-rail .finance-summary-tile span,
+.finance-left-rail .finance-summary-tile small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.finance-compact-card {
+  padding: 12px;
+}
+
+.finance-compact-kpis,
+.finance-segment-kpis {
+  min-width: 0;
+}
+
+.finance-compact-kpis {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.finance-mini-kpi {
+  min-width: 0;
+}
+
+.finance-month-panel {
+  min-width: 0;
+  min-height: 0;
+}
+
+.finance-segment-toolbar {
+  min-width: 0;
+  gap: 12px;
+}
+
+.finance-segment-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-radius: var(--ui-control-radius);
+}
+
+.finance-segment-tabs button {
+  flex: 1 1 96px;
+  min-width: 0;
+  text-align: center;
+}
+
+.finance-segment-side {
+  min-width: 0;
+}
+
+.finance-segment-body {
+  min-width: 0;
+  min-height: 0;
+}
+
+@media (max-width: 1180px) {
+  .finance-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .finance-left-rail {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(220px, .8fr);
+    align-items: stretch;
+    overflow: visible;
+  }
+
+  .finance-left-rail .finance-summary-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(130px, 1fr));
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .finance-left-rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .finance-left-rail .finance-summary-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .finance-segment-tabs button {
+    flex: 0 0 auto;
+    min-width: max-content;
+  }
+}
+
+/* ============================================================ PLANNER TARGETED HARDENING */
+.planner-page,
+.planner-page .page-body {
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.planner-shell {
+  inline-size: 100%;
+  min-block-size: 0;
+}
+
+.planner-layout {
+  min-inline-size: 0;
+  min-block-size: 0;
+  grid-template-columns: minmax(286px, 32%) minmax(0, 1fr);
+}
+
+.planner-sidebar,
+.planner-tasks-card,
+.planner-habits-card,
+.planner-calendar-card {
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+.planner-panel-head {
+  min-inline-size: 0;
+  flex-wrap: wrap;
+}
+
+.planner-panel-head > span:first-child,
+.planner-calendar-title {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
+  line-height: 1.12 !important;
+  letter-spacing: 0 !important;
+}
+
+.planner-calendar-head {
+  min-inline-size: 0;
+}
+
+.planner-calendar-controls {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.planner-calendar-controls > * {
+  flex: 0 1 auto;
+}
+
+.planner-calendar-controls button,
+.hide-completed-toggle {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.15;
+}
+
+.planner-tasks-card .task-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  overflow: visible;
+  padding-bottom: 10px;
+}
+
+.planner-tasks-card .task-filter-btn {
+  flex: 1 1 72px;
+  width: auto;
+  min-inline-size: 0;
+  max-inline-size: none;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--r-xs);
+  line-height: 1.05;
+  white-space: normal;
+}
+
+.planner-tasks-card .task-filter-btn span {
+  min-inline-size: 0;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.planner-task-row {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.planner-task-title {
+  min-inline-size: 0;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.planner-task-meta {
+  min-inline-size: 0;
+  max-inline-size: min(58%, 240px) !important;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  row-gap: 4px;
+}
+
+.planner-task-meta .task-tags-row {
+  flex: 1 1 80px;
+  justify-content: flex-end;
+}
+
+.planner-task-meta .task-tag-badge {
+  max-inline-size: min(100%, 92px);
+}
+
+.planner-quick-add-row {
+  min-inline-size: 0;
+  flex-wrap: wrap;
+}
+
+.planner-quick-add-row .task-tags-row {
+  flex: 0 1 100%;
+  overflow: hidden;
+}
+
+.planner-quick-add-row .input {
+  flex: 1 1 180px !important;
+  min-inline-size: min(100%, 180px);
+}
+
+.planner-quick-add-row .icon-btn {
+  flex: 0 0 36px;
+}
+
+.planner-calendar-card .day-cell {
+  min-inline-size: 0;
+}
+
+.planner-calendar-card .day-cell-head,
+.planner-calendar-card .day-head-meta {
+  min-inline-size: 0;
+}
+
+.planner-calendar-card .day-cell.is-compact {
+  min-block-size: 0;
+  padding: clamp(6px, .7vw, 8px);
+}
+
+.planner-calendar-card .day-cell.is-compact .day-cell-tasks {
+  min-block-size: 0;
+  overflow-y: auto;
+}
+
+.planner-calendar-card .day-cell.is-compact .ev-task {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.planner-calendar-card .ev-task-title {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.planner-calendar-card .day-cell:not(.is-compact) {
+  gap: 12px;
+  padding: clamp(14px, 1.5vw, 22px);
+}
+
+.planner-calendar-card .day-cell:not(.is-compact) .day-cell-head {
+  padding-bottom: 14px;
+}
+
+.planner-calendar-card .day-cell:not(.is-compact) .day-number {
+  font-size: clamp(28px, 3.2vw, 42px);
+}
+
+.planner-calendar-card .day-cell:not(.is-compact) .day-cell-tasks {
+  gap: 8px;
+}
+
+.planner-calendar-card .day-cell:not(.is-compact) .ev-task {
+  min-height: 38px;
+  gap: 8px;
+  padding: 7px 10px;
+  font-size: var(--ui-body-size);
+  line-height: 1.2;
+}
+
+.planner-calendar-card .day-cell:not(.is-compact) .ev-task-title {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+@media (max-width: 1100px) {
+  .planner-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .planner-sidebar {
+    grid-template-rows: auto auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .planner-calendar-controls {
+    justify-content: flex-start;
+  }
+
+  .planner-tasks-card .task-filter-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 12px;
+  }
+
+  .planner-tasks-card .task-filter-btn {
+    flex: 0 0 auto;
+    min-inline-size: max-content;
+    max-inline-size: 18ch;
+  }
+
+  .planner-task-row {
+    align-items: flex-start !important;
+    flex-wrap: wrap;
+  }
+
+  .planner-task-title {
+    flex-basis: calc(100% - 32px) !important;
+  }
+
+  .planner-task-meta {
+    flex: 1 1 100%;
+    max-inline-size: 100% !important;
+    padding-inline-start: 29px;
+    justify-content: flex-start;
+  }
+
+  .planner-task-meta .task-tags-row {
+    justify-content: flex-start;
+  }
+}

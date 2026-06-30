@@ -46,7 +46,7 @@ function addDaysStr(s: string, n: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-// ── phases (mezocykle) ────────────────────────────────────────
+// ── workout plans linked to cycles ─────────────────────────────
 
 export async function listPhases(cycleId: string): Promise<TrainingCyclePhase[]> {
   const { data, error } = await supabase
@@ -75,7 +75,7 @@ export async function deletePhase(id: string): Promise<void> {
   if (error) throw error;
 }
 
-// ── weeks (mikrocykle) ────────────────────────────────────────
+// ── weeks ─────────────────────────────────────────────────────
 
 export async function listWeeks(cycleId: string): Promise<TrainingCycleWeek[]> {
   const { data, error } = await supabase

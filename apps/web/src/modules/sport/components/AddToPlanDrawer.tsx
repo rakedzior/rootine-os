@@ -299,12 +299,12 @@ function ProgressionRowEditor({ exercises, row, weeks, onChangeExercise, onChang
           <Field label="Start (kg)"><input className="input" type="number" value={row.params.starting_weight_kg} onChange={(e) => onChangeParams({ ...row.params, starting_weight_kg: +e.target.value })} /></Field>
           <Field label="Przyrost/tydz. (kg)"><input className="input" type="number" step={0.5} value={row.params.weekly_increment_kg} onChange={(e) => onChangeParams({ ...row.params, weekly_increment_kg: +e.target.value })} /></Field>
           <Field label="Powt."><input className="input" type="number" value={row.params.reps} onChange={(e) => onChangeParams({ ...row.params, reps: +e.target.value })} /></Field>
-          <Field label="Deload co (tyg.)"><input className="input" type="number" value={row.params.deload_every_weeks ?? 0} onChange={(e) => onChangeParams({ ...row.params, deload_every_weeks: +e.target.value })} /></Field>
+          <Field label="Lżejszy tydz. co"><input className="input" type="number" value={row.params.deload_every_weeks ?? 0} onChange={(e) => onChangeParams({ ...row.params, deload_every_weeks: +e.target.value })} /></Field>
         </div>
       )}
       {row.method !== 'none' && (
         <table className="sport-progression-table">
-          <thead><tr><th>Tydz.</th>{weekCols.map(w => <th key={w}>{w}{row.rows.find(r => r.week === w)?.isDeload ? ' (deload)' : ''}</th>)}</tr></thead>
+          <thead><tr><th>Tydz.</th>{weekCols.map(w => <th key={w}>{w}{row.rows.find(r => r.week === w)?.isDeload ? ' (lżej)' : ''}</th>)}</tr></thead>
           <tbody>
             <tr>
               <td>kg</td>

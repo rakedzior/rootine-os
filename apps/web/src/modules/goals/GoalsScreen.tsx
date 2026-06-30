@@ -37,6 +37,7 @@ interface Goal {
 }
 
 const DEFAULT_GOAL_CATEGORIES = ['Osobiste', 'Zdrowie', 'Finanse', 'Nauka', 'Praca'];
+const GOAL_EMOJI_FALLBACK = '🎯';
 
 function collectTasks(tasks: GoalTask[]): GoalTask[] {
   return tasks.flatMap((task) => [task, ...collectTasks(task.subtasks)]);
@@ -108,6 +109,12 @@ function normalizeStatus(status?: string | null): TaskStatus {
   return 'todo';
 }
 
+function normalizeGoalEmoji(emoji?: string | null): string {
+  const value = emoji?.trim();
+  if (!value || value.toLowerCase() === 'target') return GOAL_EMOJI_FALLBACK;
+  return value;
+}
+
 function buildGoalTaskTree(rows: GoalTaskRow[], goalId: string, parentTaskId: string | null = null): GoalTask[] {
   return rows
     .filter((task) => task.goal_id === goalId && task.parent_task_id === parentTaskId)
@@ -152,7 +159,7 @@ function mapGoal(row: GoalRow, taskRows: GoalTaskRow[], milestoneRows: Milestone
     tasks: buildGoalTaskTree(taskRows, row.id),
     milestones: milestoneRows.filter((milestone) => milestone.goal_id === row.id).map(mapMilestone),
     archived: row.archived,
-    emoji: row.emoji || '🎯',
+    emoji: normalizeGoalEmoji(row.emoji),
     completedAt: row.completed_at ?? undefined,
   };
 }

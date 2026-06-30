@@ -1,10 +1,10 @@
 import type { CycleGoal, CycleStatus, CycleWeekType } from '@/features/sport/types';
 
 export const CYCLE_GOAL_PRESETS: { value: CycleGoal; label: string }[] = [
-  { value: 'hipertrofia', label: 'Hipertrofia' },
+  { value: 'hipertrofia', label: 'Budowa mięśni' },
   { value: 'sila', label: 'Siła' },
   { value: 'redukcja', label: 'Redukcja' },
-  { value: 'wytrzymalosc', label: 'Wytrzymałość' },
+  { value: 'wytrzymalosc', label: 'Kondycja' },
   { value: 'rehabilitacja', label: 'Rehabilitacja' },
   { value: 'mobilnosc', label: 'Mobilność' },
   { value: 'powrot_po_przerwie', label: 'Powrót po przerwie' },
@@ -25,5 +25,5 @@ export const CYCLE_STATUS_BADGE_KEY: Record<CycleStatus, string> = {
 };
 
 export const CYCLE_WEEK_TYPE_LABEL: Record<CycleWeekType, string> = {
-  standard: 'Standardowy', deload: 'Deload', test: 'Testowy', special: 'Specjalny',
+  standard: 'Normalny', deload: 'Lżejszy', test: 'Sprawdzian', special: 'Inny',
 };

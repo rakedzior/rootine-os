@@ -53,7 +53,7 @@ export function CycleEditorModal({ open, onClose, sports, existing, onCreated }:
     if (existing) {
       // Keep end_date consistent with start/duration. Note: this does NOT regenerate the
       // week list (training_cycle_weeks) — changing duration after creation won't add/remove
-      // week rows, to avoid silently wiping any deload/test/special tags already set.
+      // week rows, to avoid silently wiping any labels already set on weeks.
       const end = new Date(`${startDate}T12:00:00`);
       end.setDate(end.getDate() + durationWeeks * 7 - 1);
       const end_date = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
@@ -73,7 +73,7 @@ export function CycleEditorModal({ open, onClose, sports, existing, onCreated }:
         <button className="btn btn-primary" disabled={!name.trim()} onClick={save}>Zapisz</button>
       </>}>
       <div className="sport-form">
-        <Field label="Nazwa cyklu"><input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder='np. "Hipertrofia — 8 tygodni"' /></Field>
+        <Field label="Nazwa cyklu"><input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder='np. "Plan na 8 tygodni"' /></Field>
         <div className="sport-form-row">
           <Field label="Cel cyklu">
             <select className="select" value={goal} onChange={(e) => setGoal(e.target.value)}>
@@ -86,7 +86,21 @@ export function CycleEditorModal({ open, onClose, sports, existing, onCreated }:
         </div>
         <div className="sport-form-row">
           <Field label="Data rozpoczęcia"><input className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></Field>
-          <Field label="Liczba tygodni"><input className="input" type="number" min={1} value={durationWeeks} onChange={(e) => setDurationWeeks(Math.max(1, +e.target.value))} /></Field>
+          <Field label="Liczba tygodni">
+            <div className="sport-duration-field">
+              <div className="sport-duration-presets">
+                {[8, 12].map((weeks) => (
+                  <button key={weeks} type="button" className={durationWeeks === weeks ? 'is-active' : ''} onClick={() => setDurationWeeks(weeks)}>
+                    {weeks} tyg.
+                  </button>
+                ))}
+                <button type="button" className={durationWeeks !== 8 && durationWeeks !== 12 ? 'is-active' : ''} onClick={() => setDurationWeeks(Math.max(1, durationWeeks))}>
+                  Własny
+                </button>
+              </div>
+              <input className="input" type="number" min={1} value={durationWeeks} onChange={(e) => setDurationWeeks(Math.max(1, +e.target.value))} />
+            </div>
+          </Field>
         </div>
         <div className="sport-form-row">
           <Field label="Intensywność">

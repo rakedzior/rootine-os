@@ -279,14 +279,25 @@ export function FinanceScreen() {
       />}
     >
 
-      <section className="finance-summary-strip">
-        <SummaryTile active={activeSummary === 'accounts'} label="Środki" value={fmtMoney(totals.funds)} note={`${activeAccounts.length} aktywnych źródeł`} onClick={() => openSummary('accounts')} />
-        <SummaryTile active={activeSummary === 'savings'} label="Oszczędności" value={fmtMoney(totals.savings)} note={`${finance.savingsGoals.length} cele oszczędnościowe`} onClick={() => openSummary('savings')} />
-        <SummaryTile active={activeSummary === 'budget'} label="Budżet" value={`${fmtNumber(totals.budgetPct)}%`} note={`${fmtMoney(totals.spent)} wydane z ${fmtMoney(totals.planned)}`} onClick={() => openSummary('budget')} />
-        <SummaryTile active={activeSummary === 'due'} label="Płatności" value={fmtMoney(totals.due)} note={`Pozostało w ${monthLabel(month)}`} onClick={() => openSummary('due')} />
-      </section>
-
       <div className="finance-workspace">
+        <aside className="finance-left-rail">
+          <section className="finance-summary-strip">
+            <SummaryTile active={activeSummary === 'accounts'} label="Środki" value={fmtMoney(totals.funds)} note={`${activeAccounts.length} aktywnych źródeł`} onClick={() => openSummary('accounts')} />
+            <SummaryTile active={activeSummary === 'savings'} label="Oszczędności" value={fmtMoney(totals.savings)} note={`${finance.savingsGoals.length} cele oszczędnościowe`} onClick={() => openSummary('savings')} />
+            <SummaryTile active={activeSummary === 'budget'} label="Budżet" value={`${fmtNumber(totals.budgetPct)}%`} note={`${fmtMoney(totals.spent)} wydane z ${fmtMoney(totals.planned)}`} onClick={() => openSummary('budget')} />
+            <SummaryTile active={activeSummary === 'due'} label="Płatności" value={fmtMoney(totals.due)} note={`Pozostało w ${monthLabel(month)}`} onClick={() => openSummary('due')} />
+          </section>
+
+          <section className="finance-compact-card">
+            <div className="finance-card-title">Miesiąc</div>
+            <div className="finance-compact-kpis">
+              <MiniKpi label="Opłacone" value={fmtMoney(totals.paid)} />
+              <MiniKpi label="Do zapłaty" value={fmtMoney(totals.due)} danger={totals.due > totals.paid} />
+              <MiniKpi label="Budżet" value={`${fmtNumber(totals.budgetPct)}%`} />
+            </div>
+          </section>
+        </aside>
+
         <main className="finance-month-panel">
           <div className="finance-segment-toolbar">
             <nav className="finance-segment-tabs">

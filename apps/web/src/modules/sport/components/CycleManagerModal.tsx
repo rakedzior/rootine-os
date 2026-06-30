@@ -20,7 +20,7 @@ export function CycleManagerModal({ open, onClose, sports, onOpenDetail }: Cycle
     <>
       <Modal open={open} onClose={onClose} title="Cykle treningowe" size="lg" footer={<button className="btn btn-primary btn-sm" onClick={() => setCreating(true)}>+ Nowy cykl</button>}>
         {cycles.length === 0 ? (
-          <EmptyState title="Brak cykli treningowych" desc="Zaplanuj swój pierwszy cykl, np. blok hipertrofii albo przygotowanie do zawodów." cta="+ Nowy cykl" onCta={() => setCreating(true)} />
+          <EmptyState title="Brak cykli treningowych" desc="Utwórz prosty plan na 8, 12 albo dowolną liczbę tygodni." cta="+ Nowy cykl" onCta={() => setCreating(true)} />
         ) : (
           <div className="sport-cycle-list">
             {cycles.map(c => (

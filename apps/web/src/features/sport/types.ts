@@ -359,7 +359,7 @@ export interface NewTrainingBlockInput {
   }[];
 }
 
-// ── training cycles (macrocycle wrapping one or more blocks as "phases") ──
+// ── training cycles (cycle wrapping one or more workout plans) ──
 
 export type CycleStatus = 'planned' | 'active' | 'paused' | 'completed' | 'archived';
 export type CycleGoal =
@@ -384,7 +384,7 @@ export interface TrainingCycle {
   archived_at: string | null;
 }
 
-/** A mezocykl — wraps one existing training_block (all its scheduling/progression lives there). */
+/** A workout plan linked to one existing training_block. */
 export interface TrainingCyclePhase {
   id: string;
   user_id: string;
@@ -401,7 +401,7 @@ export interface TrainingCyclePhase {
   deleted_at: string | null;
 }
 
-/** A mikrocykl — tags one calendar week of the cycle with a type/goal. */
+/** Tags one calendar week of the cycle with a simple type/goal. */
 export interface TrainingCycleWeek {
   id: string;
   user_id: string;

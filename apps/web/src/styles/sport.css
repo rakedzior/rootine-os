@@ -186,6 +186,190 @@
 .sport-cycle-weeks-table th, .sport-cycle-weeks-table td { padding: 5px 8px; text-align: left; border-bottom: 1px solid var(--border-soft); }
 .sport-cycle-weeks-table th { color: var(--ink-3); font-weight: 600; font-family: var(--font-mono); font-size: 9.5px; text-transform: uppercase; }
 
+.sport-duration-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px;
+  gap: 8px;
+  align-items: center;
+}
+
+.sport-duration-presets {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+  padding: 3px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-mid);
+  background: var(--surface-inset);
+}
+
+.sport-duration-presets button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--ui-control-h-sm);
+  border: 1px solid transparent;
+  border-radius: calc(var(--r-mid) - 4px);
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 11px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.sport-duration-presets button.is-active {
+  border-color: var(--acc-line);
+  background: var(--acc-soft);
+  color: var(--acc-ink);
+}
+
+.sport-cycle-workspace {
+  display: grid;
+  grid-template-columns: minmax(210px, 24%) minmax(0, 1fr) minmax(190px, 22%);
+  gap: var(--gap);
+  min-width: 0;
+  min-height: 0;
+}
+
+.sport-cycle-left,
+.sport-cycle-week-main,
+.sport-cycle-templates {
+  min-width: 0;
+  min-height: 0;
+}
+
+.sport-cycle-left,
+.sport-cycle-templates {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sport-cycle-week-list,
+.sport-cycle-template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sport-cycle-week-item,
+.sport-cycle-template-item {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--surface-inset) 84%, transparent);
+  color: var(--ink);
+  padding: 9px 10px;
+  text-align: left;
+}
+
+.sport-cycle-week-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  transition: var(--t);
+}
+
+.sport-cycle-week-item:hover,
+.sport-cycle-week-item.is-active {
+  border-color: var(--acc-line);
+  background: var(--acc-soft);
+}
+
+.sport-cycle-week-item span,
+.sport-cycle-template-item strong,
+.sport-cycle-workout-chip strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sport-cycle-week-item small,
+.sport-cycle-template-item small,
+.sport-cycle-workout-chip small {
+  color: var(--ink-3);
+  font-size: 10.5px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.sport-cycle-week-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-card);
+  background: color-mix(in srgb, var(--surface-inset) 72%, transparent);
+}
+
+.sport-cycle-week-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.sport-cycle-week-controls {
+  display: grid;
+  grid-template-columns: minmax(120px, 150px) minmax(150px, 1fr);
+  gap: 8px;
+  min-width: min(100%, 320px);
+}
+
+.sport-cycle-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(112px, 1fr));
+  gap: 8px;
+  min-width: 0;
+}
+
+.sport-cycle-day {
+  min-width: 0;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-mid);
+  background: var(--surface);
+  padding: 9px;
+}
+
+.sport-cycle-day-drop {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px dashed color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: var(--r-sm);
+  padding: 7px;
+  color: var(--ink-4);
+  font-size: 12px;
+}
+
+.sport-cycle-workout-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-xs);
+  background: color-mix(in srgb, var(--acc-soft) 34%, var(--surface-inset));
+  padding: 7px 8px;
+  color: var(--ink);
+}
+
+.sport-cycle-template-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 @media (max-width: 720px) {
   .sport-week-head,
   .sport-active-session-head,
@@ -564,6 +748,18 @@
   .sport-panel {
     height: auto;
   }
+
+  .sport-cycle-workspace {
+    grid-template-columns: minmax(210px, 28%) minmax(0, 1fr);
+  }
+
+  .sport-cycle-templates {
+    grid-column: 1 / -1;
+  }
+
+  .sport-cycle-days-grid {
+    grid-template-columns: repeat(auto-fit, minmax(138px, 1fr));
+  }
 }
 
 @media (max-width: 860px) {
@@ -585,6 +781,20 @@
   .sport-record-value,
   .sport-history-row-volume {
     max-width: 50%;
+  }
+
+  .sport-cycle-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sport-cycle-week-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(116px, 1fr));
+  }
+
+  .sport-cycle-week-controls {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
   }
 }
 
@@ -623,6 +833,10 @@
 
   .sport-active-add-exercise .input {
     flex-basis: 100%;
+  }
+
+  .sport-duration-field {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

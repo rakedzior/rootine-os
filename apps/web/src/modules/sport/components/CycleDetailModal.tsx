@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Modal, ProgressBar, StatusBadge, ConfirmDelete, KpiCard, MoreMenu } from '@/components/common';
 import {
-  useCycle, useCyclePhases, useCycleWeeks, useCycleProgress, useSetActiveCycle, usePauseCycle,
+  useCycle, useCyclePhases, useCycleWeeks, useCycleProgress, useCycleWorkouts, useSetActiveCycle, usePauseCycle,
   useEndCycle, useArchiveCycle, useDuplicateCycle, useDeleteCycle, useDeletePhase, useUpdateCycleWeek,
 } from '@/features/sport/cycleHooks';
-import type { Exercise, Sport, WorkoutTemplate } from '@/features/sport/types';
+import { addDaysStr, todayStr, WEEKDAY_LABELS_LONG } from '@/features/sport/services/sportPlannerService';
+import type { Exercise, ScheduledWorkout, Sport, WorkoutTemplate } from '@/features/sport/types';
 import { CYCLE_STATUS_BADGE_KEY, CYCLE_STATUS_LABEL, CYCLE_WEEK_TYPE_LABEL, cycleGoalLabel } from './cycleConstants';
 import { CyclePhaseModal } from './CyclePhaseModal';
 import { CycleEditorModal } from './CycleEditorModal';
@@ -35,6 +36,27 @@ export function CycleDetailModal({ cycleId, onClose, templates, sports, exercise
   const [phaseModalOpen, setPhaseModalOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [selectedWeekNumber, setSelectedWeekNumber] = useState(1);
+
+  useEffect(() => {
+    if (!weeks.length) return;
+    const today = todayStr();
+    const current = weeks.find((week) => week.start_date <= today && today <= week.end_date);
+    const fallback = current ?? weeks[0];
+    if (!weeks.some((week) => week.week_number === selectedWeekNumber)) {
+      setSelectedWeekNumber(fallback.week_number);
+    }
+  }, [selectedWeekNumber, weeks]);
+
+  const selectedWeek = useMemo(
+    () => weeks.find((week) => week.week_number === selectedWeekNumber) ?? weeks[0] ?? null,
+    [selectedWeekNumber, weeks],
+  );
+  const { data: weekWorkouts = [] } = useCycleWorkouts(cycleId, selectedWeek?.start_date ?? null, selectedWeek?.end_date ?? null);
+  const selectedWeekDays = useMemo(
+    () => selectedWeek ? Array.from({ length: 7 }, (_, index) => addDaysStr(selectedWeek.start_date, index)) : [],
+    [selectedWeek],
+  );
 
   if (!cycle) return null;
 
@@ -79,48 +101,101 @@ export function CycleDetailModal({ cycleId, onClose, templates, sports, exercise
 
           {cycle.notes && <p className="sport-cycle-notes">{cycle.notes}</p>}
 
-          <div className="sport-cycle-section">
-            <div className="sport-cycle-section-head">
-              <h4>Mezocykle</h4>
-              <button className="btn btn-ghost btn-sm" onClick={() => setPhaseModalOpen(true)}>+ Dodaj mezocykl</button>
-            </div>
-            {phases.length === 0 ? (
-              <p className="sport-cycle-empty-hint">Brak mezocykli — dodaj pierwszy, aby zaplanować treningi w tym cyklu.</p>
-            ) : (
-              <div className="sport-cycle-phase-list">
-                {phases.map(p => (
-                  <div key={p.id} className="sport-cycle-phase-row">
-                    <div>
-                      <strong>{p.name}</strong>
-                      {p.goal && <span className="sport-cycle-phase-goal"> · {p.goal}</span>}
-                      <div className="sport-history-row-meta">{p.start_date} – {p.end_date} · {p.duration_weeks} tyg.</div>
-                    </div>
-                    <button className="icon-btn" onClick={() => deletePhase.mutate(p.id)} title="Usuń mezocykl">×</button>
-                  </div>
-                ))}
+          <div className="sport-cycle-workspace">
+            <aside className="sport-cycle-left">
+              <div className="sport-cycle-section">
+                <div className="sport-cycle-section-head">
+                  <h4>Tygodnie</h4>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setPhaseModalOpen(true)}>+ Dodaj plan</button>
+                </div>
+                <div className="sport-cycle-week-list">
+                  {weeks.map((week) => (
+                    <button
+                      key={week.id}
+                      type="button"
+                      className={`sport-cycle-week-item${selectedWeek?.id === week.id ? ' is-active' : ''}`}
+                      onClick={() => setSelectedWeekNumber(week.week_number)}
+                    >
+                      <span>Tydzień {week.week_number}</span>
+                      <small>{week.start_date} - {week.end_date}</small>
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
-          </div>
 
-          <div className="sport-cycle-section">
-            <h4>Tygodnie</h4>
-            <table className="sport-cycle-weeks-table">
-              <thead><tr><th>Tydz.</th><th>Daty</th><th>Typ</th><th>Cel tygodnia</th></tr></thead>
-              <tbody>
-                {weeks.map(w => (
-                  <tr key={w.id}>
-                    <td>{w.week_number}</td>
-                    <td className="sport-history-row-meta">{w.start_date} – {w.end_date}</td>
-                    <td>
-                      <select className="select" value={w.week_type} onChange={(e) => updateWeek.mutate({ id: w.id, patch: { week_type: e.target.value as typeof w.week_type } })}>
+              <div className="sport-cycle-section">
+                <h4>Plany treningów</h4>
+                {phases.length === 0 ? (
+                  <p className="sport-cycle-empty-hint">Dodaj pierwszy plan, aby wypełnić dni treningami.</p>
+                ) : (
+                  <div className="sport-cycle-phase-list">
+                    {phases.map(p => (
+                      <div key={p.id} className="sport-cycle-phase-row">
+                        <div>
+                          <strong>{p.name}</strong>
+                          {p.goal && <span className="sport-cycle-phase-goal"> · {p.goal}</span>}
+                          <div className="sport-history-row-meta">{p.start_date} - {p.end_date} · {p.duration_weeks} tyg.</div>
+                        </div>
+                        <button className="icon-btn" onClick={() => deletePhase.mutate(p.id)} title="Usuń plan">×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </aside>
+
+            <section className="sport-cycle-week-main">
+              {selectedWeek ? (
+                <>
+                  <div className="sport-cycle-week-head">
+                    <div>
+                      <h4>Tydzień {selectedWeek.week_number}</h4>
+                      <div className="sport-history-row-meta">{selectedWeek.start_date} - {selectedWeek.end_date}</div>
+                    </div>
+                    <div className="sport-cycle-week-controls">
+                      <select className="select" value={selectedWeek.week_type} onChange={(e) => updateWeek.mutate({ id: selectedWeek.id, patch: { week_type: e.target.value as typeof selectedWeek.week_type } })}>
                         {Object.entries(CYCLE_WEEK_TYPE_LABEL).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
                       </select>
-                    </td>
-                    <td><input className="input sport-set-cell" defaultValue={w.goal ?? ''} onBlur={(e) => { if (e.target.value !== (w.goal ?? '')) updateWeek.mutate({ id: w.id, patch: { goal: e.target.value || null } }); }} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <input
+                        className="input sport-set-cell"
+                        defaultValue={selectedWeek.goal ?? ''}
+                        placeholder="Cel tygodnia"
+                        onBlur={(e) => {
+                          if (e.target.value !== (selectedWeek.goal ?? '')) updateWeek.mutate({ id: selectedWeek.id, patch: { goal: e.target.value || null } });
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="sport-cycle-days-grid">
+                    {selectedWeekDays.map((date) => (
+                      <CycleDayColumn key={date} date={date} workouts={weekWorkouts.filter((workout) => workout.scheduled_date === date)} />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="sport-cycle-empty-hint">Brak tygodni w tym cyklu.</p>
+              )}
+            </section>
+
+            <aside className="sport-cycle-templates">
+              <div className="sport-cycle-section">
+                <h4>Szablony</h4>
+                {templates.length === 0 ? (
+                  <p className="sport-cycle-empty-hint">Brak szablonów treningów.</p>
+                ) : (
+                  <div className="sport-cycle-template-list">
+                    {templates.slice(0, 8).map((template) => (
+                      <div key={template.id} className="sport-cycle-template-item">
+                        <strong>{template.name}</strong>
+                        <small>{template.subtitle || (template.estimated_duration_min ? `${template.estimated_duration_min} min` : 'Szablon treningu')}</small>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button className="btn btn-secondary btn-sm" onClick={() => setPhaseModalOpen(true)}>Zastosuj plan do tygodni</button>
+              </div>
+            </aside>
           </div>
         </div>
       </Modal>
@@ -132,5 +207,28 @@ export function CycleDetailModal({ cycleId, onClose, templates, sports, exercise
       <CycleEditorModal open={editOpen} onClose={() => setEditOpen(false)} sports={sports} existing={cycle} />
       <ConfirmDelete open={confirmDelete} onClose={() => setConfirmDelete(false)} label={`cykl "${cycle.name}"`} onConfirm={() => { deleteCycle.mutate(cycle.id); onClose(); }} />
     </>
+  );
+}
+
+function CycleDayColumn({ date, workouts }: { date: string; workouts: ScheduledWorkout[] }) {
+  const d = new Date(`${date}T12:00:00`);
+  const weekday = WEEKDAY_LABELS_LONG[(d.getDay() + 6) % 7];
+  return (
+    <div className="sport-cycle-day">
+      <div className="sport-day-head">
+        <span className="sport-day-name">{weekday}</span>
+        <span className="sport-day-date">{d.getDate()}.{String(d.getMonth() + 1).padStart(2, '0')}</span>
+      </div>
+      <div className="sport-cycle-day-drop">
+        {workouts.length === 0 ? (
+          <span>Wolny dzień</span>
+        ) : workouts.map((workout) => (
+          <article key={workout.id} className="sport-cycle-workout-chip">
+            <strong>{workout.title}</strong>
+            {workout.subtitle && <small>{workout.subtitle}</small>}
+          </article>
+        ))}
+      </div>
+    </div>
   );
 }

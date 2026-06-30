@@ -1710,7 +1710,7 @@ function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
       tabIndex={0}
       onClick={() => onTaskClick(task)}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onTaskClick(task)}
-      className="hover-row"
+      className="hover-row planner-task-row"
       style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 6px', margin:0, borderRadius:8, cursor:'pointer', opacity:isDone ? .72 : 1, minWidth: 0 }}
     >
       <div
@@ -1723,10 +1723,10 @@ function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
       >
         {isDone && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
       </div>
-      <span style={{ flex:1, fontSize:13, color:isDone?'var(--ink-3)':'var(--ink)', fontWeight:500, textDecoration:isDone?'line-through':'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+      <span className="planner-task-title" style={{ flex:1, fontSize:13, color:isDone?'var(--ink-3)':'var(--ink)', fontWeight:500, textDecoration:isDone?'line-through':'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
         {task.title}
       </span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, minWidth: 0, maxWidth: '56%' }}>
+      <div className="planner-task-meta" style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, minWidth: 0, maxWidth: '56%' }}>
         <div className="task-tags-row" style={{ justifyContent: 'flex-end', overflow: 'hidden', minWidth: 0 }}>
           {tags.map((tag) => (
             <span key={tag} className="task-tag-badge">{tag}</span>
@@ -1819,7 +1819,7 @@ function TodayPanel({
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
       {/* Header */}
-      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:14, flexShrink:0 }}>
+      <div className="planner-panel-head" style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:14, flexShrink:0 }}>
         <span style={{ fontFamily:'var(--display)', fontSize:28, fontWeight:600, letterSpacing:'-.02em', lineHeight:1 }}>Zadania</span>
         <button
           type="button"
@@ -1858,7 +1858,7 @@ function TodayPanel({
       </div>
 
       {/* Quick add row */}
-      <div style={{ display:'flex', alignItems:'center', gap:8, paddingTop:12, marginTop:8, borderTop:'1px solid var(--border-soft)', flexShrink:0 }}>
+      <div className="planner-quick-add-row" style={{ display:'flex', alignItems:'center', gap:8, paddingTop:12, marginTop:8, borderTop:'1px solid var(--border-soft)', flexShrink:0 }}>
         {quickTags.length > 0 && (
           <div className="task-tags-row" style={{ marginRight: 2 }}>
             {quickTags.map((tag) => (

@@ -327,17 +327,16 @@ export function DietScreen() {
         title="Dieta"
         desc="Dziennik posiłków, makroskładniki i nawodnienie w jednym miejscu."
         actions={<>
+          <DateBar
+            date={selectedDate}
+            loading={categoriesLoading || itemsLoading}
+            onChange={setSelectedDate}
+          />
           <button className="btn btn-secondary btn-sm" disabled={categoriesLoading || itemsLoading} onClick={() => { setCustomMealTarget(null); setCustomMealsOpen(true); }}><Book size={15} /> Własne posiłki</button>
           <button className="btn btn-secondary btn-sm" disabled={categoriesLoading || itemsLoading} onClick={() => setSettingsOpen(true)}><Settings size={15} /> Ustawienia</button>
         </>}
       />}
     >
-
-      <DateBar
-        date={selectedDate}
-        loading={categoriesLoading || itemsLoading}
-        onChange={setSelectedDate}
-      />
 
       <div className="diet-shell">
         <main className="diet-meals-col" aria-busy={itemsLoading || categoriesLoading}>

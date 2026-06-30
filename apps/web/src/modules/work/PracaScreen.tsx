@@ -241,6 +241,13 @@ export function PracaScreen() {
   }, [selectedTask, selectedTaskId, sortedTasks]);
 
   const deadlines = buildDeadlines(contextTasks, contextProjects);
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const workKpis = [
+    { label: 'Do zrobienia', value: contextTasks.filter((task) => task.status === 'todo').length },
+    { label: 'W trakcie', value: contextTasks.filter((task) => task.status === 'active').length },
+    { label: 'Terminy w tym miesiącu', value: contextTasks.filter((task) => task.dueDate?.startsWith(currentMonth)).length },
+    { label: 'Urlop', value: '0 dni' },
+  ];
 
   return (
     <PageLayout
@@ -253,11 +260,11 @@ export function PracaScreen() {
     >
 
       <section className="work-shell">
-        <main className="work-main">
+        <aside className="work-left-panel">
           <section className="work-context-panel">
             <div className="work-company-bar">
               <label>
-                <span>Firma</span>
+                <span>Wybór firmy</span>
                 <select value={context?.id ?? ''} onChange={(event) => {
                   setContextId(event.target.value);
                   updateCompany.mutate({ id: event.target.value, patch: { active: true } });
@@ -269,6 +276,7 @@ export function PracaScreen() {
               <button className="icon-btn work-icon-btn" type="button" aria-label="Edytuj firmę"><WorkIcon name="edit" /></button>
             </div>
 
+            <div className="work-left-section-title">Wybór projektu</div>
             <div className="work-project-strip">
               {contextProjects.map((project, index) => {
                 const projectTasks = contextTasks.filter((task) => task.projectId === project.id);
@@ -299,6 +307,22 @@ export function PracaScreen() {
             </div>
           </section>
 
+          <section className="work-panel work-kpi-panel">
+            <div className="work-panel-head">
+              <h2>Podsumowanie</h2>
+            </div>
+            <div className="work-side-kpis">
+              {workKpis.map((item) => (
+                <span key={item.label} className="work-side-kpi">
+                  <small>{item.label}</small>
+                  <strong>{item.value}</strong>
+                </span>
+              ))}
+            </div>
+          </section>
+        </aside>
+
+        <main className="work-main">
           <section className="work-task-board">
             <div className="work-viewbar">
               <div className="work-view-tabs">

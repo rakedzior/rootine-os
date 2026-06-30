@@ -77,7 +77,7 @@ export async function duplicateCycle(id: string): Promise<TrainingCycle> {
   });
 }
 
-async function scheduledWorkoutsForCycle(cycleId: string, fromDate?: string, toDate?: string): Promise<ScheduledWorkout[]> {
+export async function scheduledWorkoutsForCycle(cycleId: string, fromDate?: string, toDate?: string): Promise<ScheduledWorkout[]> {
   const phases = await cycleRepo.listPhases(cycleId);
   const blockIds = phases.map(p => p.block_id).filter((v): v is string => !!v);
   if (!blockIds.length) return [];

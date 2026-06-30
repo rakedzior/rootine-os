@@ -34,7 +34,7 @@ export async function insertGoal(input: NewGoalInput): Promise<Goal> {
       progress: input.progress ?? 0,
       streak: input.streak ?? 0,
       archived: input.archived ?? false,
-      emoji: input.emoji ?? 'target',
+      emoji: input.emoji ?? '🎯',
       completed_at: input.completed_at ?? null,
     })
     .select('*')

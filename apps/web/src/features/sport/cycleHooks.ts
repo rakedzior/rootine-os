@@ -9,6 +9,7 @@ const cycleKeys = {
   phases: (cycleId: string) => ['sport', 'cycle-phases', cycleId] as const,
   weeks: (cycleId: string) => ['sport', 'cycle-weeks', cycleId] as const,
   progress: (cycleId: string) => ['sport', 'cycle-progress', cycleId] as const,
+  workouts: (cycleId: string, from: string, to: string) => ['sport', 'cycle-workouts', cycleId, from, to] as const,
   summary: (cycleId: string) => ['sport', 'cycle-summary', cycleId] as const,
 };
 
@@ -87,6 +88,7 @@ export function useCreatePhase() {
     onSuccess: (_data, vars) => {
       qc.invalidateQueries({ queryKey: cycleKeys.phases(vars.cycleId) });
       qc.invalidateQueries({ queryKey: cycleKeys.progress(vars.cycleId) });
+      qc.invalidateQueries({ queryKey: ['sport', 'cycle-workouts', vars.cycleId] });
       qc.invalidateQueries({ queryKey: ['sport', 'week'] });
     },
   });
@@ -96,7 +98,10 @@ export function useDeletePhase(cycleId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: repo.deletePhase,
-    onSuccess: () => qc.invalidateQueries({ queryKey: cycleKeys.phases(cycleId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: cycleKeys.phases(cycleId) });
+      qc.invalidateQueries({ queryKey: ['sport', 'cycle-workouts', cycleId] });
+    },
   });
 }
 
@@ -114,6 +119,14 @@ export function useUpdateCycleWeek(cycleId: string) {
 
 export function useCycleProgress(cycleId: string | null) {
   return useQuery({ queryKey: cycleKeys.progress(cycleId ?? ''), queryFn: () => cycleService.getCycleProgress(cycleId!), enabled: !!cycleId });
+}
+
+export function useCycleWorkouts(cycleId: string | null, fromDate: string | null, toDate: string | null) {
+  return useQuery({
+    queryKey: cycleKeys.workouts(cycleId ?? '', fromDate ?? '', toDate ?? ''),
+    queryFn: () => cycleService.scheduledWorkoutsForCycle(cycleId!, fromDate!, toDate!),
+    enabled: !!cycleId && !!fromDate && !!toDate,
+  });
 }
 
 /** Everything the top-of-page "active cycle" banner needs in one query. */

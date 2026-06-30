@@ -1594,3 +1594,146 @@
     justify-self: start;
   }
 }
+
+/* Step 11-12: compact left panel for company, project and work KPIs. */
+.work-shell {
+  grid-template-columns: minmax(250px, 300px) minmax(0, 1fr) minmax(260px, 320px);
+  min-width: 0;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.work-left-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.work-left-panel .work-context-panel {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.work-left-section-title {
+  margin-top: 4px;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.work-left-panel .work-company-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px 38px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.work-left-panel .work-company-bar label {
+  min-width: 0;
+}
+
+.work-left-panel .work-project-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.work-left-panel .work-project-card,
+.work-left-panel .work-new-project {
+  width: 100%;
+  min-width: 0;
+  min-height: 74px;
+}
+
+.work-left-panel .work-project-card {
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  padding: 10px;
+}
+
+.work-left-panel .work-project-card b {
+  grid-column: 2 / -1;
+  justify-self: stretch;
+  text-align: left;
+}
+
+.work-left-panel .work-project-card em {
+  white-space: nowrap;
+}
+
+.work-kpi-panel {
+  flex: 0 0 auto;
+}
+
+.work-side-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.work-side-kpi {
+  min-width: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-sm);
+  background: var(--surface-inset);
+  padding: 8px 9px;
+}
+
+.work-side-kpi small {
+  display: block;
+  color: var(--ink-3);
+  font-size: 10px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.work-side-kpi strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.work-main {
+  min-width: 0;
+  min-height: 0;
+}
+
+@media (max-width: 1180px) {
+  .work-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .work-left-panel {
+    overflow: visible;
+  }
+
+  .work-left-panel .work-context-panel {
+    overflow: visible;
+  }
+
+  .work-left-panel .work-project-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    overflow: visible;
+  }
+}
+
+@media (max-width: 640px) {
+  .work-side-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
