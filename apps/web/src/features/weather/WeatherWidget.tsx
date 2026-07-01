@@ -1,8 +1,95 @@
-import { useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { Modal } from '@/components/common';
 import { useUpdateProfile } from '@/features/config/useProfile';
 import { toast } from '@/lib/toast';
-import { weatherLabel, type WeatherData, type WeatherDay, type WeatherHour } from './useWeather';
+import { geocodeSuggest, weatherLabel, type CitySuggestion, type WeatherData, type WeatherDay, type WeatherHour } from './useWeather';
+
+type SearchFn = (city: string, resolved?: { lat: number; lon: number; label: string }) => void;
+
+/** City text field with type-ahead suggestions from the geocoding database. */
+function CityAutocomplete({ onPick, autoFocus }: { onPick: (s: CitySuggestion) => void; autoFocus?: boolean }) {
+  const [q, setQ] = useState('');
+  const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
+  const [openList, setOpenList] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(-1);
+  const reqId = useRef(0);
+
+  useEffect(() => {
+    const term = q.trim();
+    if (term.length < 2) { setSuggestions([]); setOpenList(false); return; }
+    const id = ++reqId.current;
+    const t = window.setTimeout(async () => {
+      const list = await geocodeSuggest(term);
+      if (id !== reqId.current) return; // a newer keystroke superseded this
+      setSuggestions(list);
+      setOpenList(true);
+      setActiveIdx(-1);
+    }, 220);
+    return () => window.clearTimeout(t);
+  }, [q]);
+
+  function pick(s: CitySuggestion) {
+    onPick(s);
+    setQ('');
+    setSuggestions([]);
+    setOpenList(false);
+  }
+
+  return (
+    <div style={{ position: 'relative', flex: 1, minWidth: 180 }}>
+      <input
+        className="input"
+        placeholder="Wpisz miejscowość…"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        onFocus={() => suggestions.length > 0 && setOpenList(true)}
+        onBlur={() => window.setTimeout(() => setOpenList(false), 120)}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIdx((i) => Math.min(i + 1, suggestions.length - 1)); }
+          else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIdx((i) => Math.max(i - 1, 0)); }
+          else if (e.key === 'Enter') {
+            e.preventDefault();
+            const s = activeIdx >= 0 ? suggestions[activeIdx] : suggestions[0];
+            if (s) pick(s);
+          } else if (e.key === 'Escape') setOpenList(false);
+        }}
+        style={{ height: 34, width: '100%' }}
+        autoFocus={autoFocus}
+        role="combobox"
+        aria-expanded={openList}
+        aria-autocomplete="list"
+      />
+      {openList && suggestions.length > 0 && (
+        <ul
+          role="listbox"
+          style={{
+            position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 5,
+            margin: 0, padding: 4, listStyle: 'none', maxHeight: 220, overflowY: 'auto',
+            background: 'var(--surface-overlay)', border: '1px solid var(--border)', borderRadius: 12,
+            boxShadow: 'var(--sh-pop)',
+          }}
+        >
+          {suggestions.map((s, i) => (
+            <li
+              key={`${s.lat},${s.lon}`}
+              role="option"
+              aria-selected={i === activeIdx}
+              onMouseDown={(e) => { e.preventDefault(); pick(s); }}
+              onMouseEnter={() => setActiveIdx(i)}
+              style={{
+                display: 'flex', flexDirection: 'column', gap: 1, padding: '7px 10px', borderRadius: 8, cursor: 'pointer',
+                background: i === activeIdx ? 'var(--surface-2)' : 'transparent',
+              }}
+            >
+              <strong style={{ fontSize: 13, color: 'var(--ink)' }}>{s.name}</strong>
+              <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{[s.admin1, s.country].filter(Boolean).join(', ')}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export function WeatherIcon({ code, size = 18, className }: { code: number; size?: number; className?: string }) {
   const storm = [95, 96, 99].includes(code);
@@ -194,23 +281,20 @@ function DailyStrip({ days }: { days: WeatherDay[] }) {
   );
 }
 
-function LocationBar({ weather, onSearch }: { weather: WeatherData; onSearch?: (city: string) => void }) {
+function LocationBar({ weather, onSearch }: { weather: WeatherData; onSearch?: SearchFn }) {
   const [editing, setEditing] = useState(false);
-  const [city, setCity] = useState('');
+  const [picked, setPicked] = useState('');
   const updateProfile = useUpdateProfile();
 
-  function submit(saveDefault: boolean) {
-    const q = city.trim();
+  function saveDefault() {
+    const q = picked.trim();
     if (!q) return;
-    onSearch?.(q);
-    if (saveDefault) {
-      updateProfile.mutate({ default_city: q }, {
-        onSuccess: () => toast.success('Zapisano domyślną lokalizację'),
-        onError: () => toast.error('Nie udało się zapisać lokalizacji'),
-      });
-    }
+    updateProfile.mutate({ default_city: q }, {
+      onSuccess: () => toast.success('Zapisano domyślną lokalizację'),
+      onError: () => toast.error('Nie udało się zapisać lokalizacji'),
+    });
     setEditing(false);
-    setCity('');
+    setPicked('');
   }
 
   return (
@@ -219,20 +303,17 @@ function LocationBar({ weather, onSearch }: { weather: WeatherData; onSearch?: (
         {weather.locationSource === 'geo' ? 'Lokalizacja' : weather.locationSource === 'profile' ? 'Z profilu' : weather.locationSource === 'manual' ? 'Wpisana' : 'Domyślna'}
       </span>
       <strong style={{ fontSize: 13 }}>{weather.locationLabel}</strong>
-      <button className="btn btn-ghost btn-sm" onClick={() => setEditing((v) => !v)}>Zmień</button>
+      <button className="btn btn-ghost btn-sm" onClick={() => { setEditing((v) => !v); setPicked(''); }}>Zmień</button>
       {editing && (
-        <div style={{ display: 'flex', gap: 8, flexBasis: '100%', marginTop: 4 }}>
-          <input
-            className="input"
-            placeholder="Wpisz miejscowość…"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') submit(false); }}
-            style={{ height: 34 }}
+        <div style={{ display: 'flex', gap: 8, flexBasis: '100%', marginTop: 4, flexWrap: 'wrap' }}>
+          <CityAutocomplete
             autoFocus
+            onPick={(s) => {
+              onSearch?.(s.name, { lat: s.lat, lon: s.lon, label: s.label });
+              setPicked(s.name);
+            }}
           />
-          <button className="btn btn-secondary btn-sm" onClick={() => submit(false)}>Pokaż</button>
-          <button className="btn btn-primary btn-sm" onClick={() => submit(true)}>Zapisz jako domyślną</button>
+          <button className="btn btn-primary btn-sm" disabled={!picked} onClick={saveDefault}>Zapisz jako domyślną</button>
         </div>
       )}
     </div>
@@ -246,7 +327,7 @@ interface WeatherModalProps {
   error: boolean;
   needsCity?: boolean;
   onClose: () => void;
-  onSearch?: (city: string) => void;
+  onSearch?: SearchFn;
 }
 
 export function WeatherModal({ open, weather, loading, error, needsCity, onClose, onSearch }: WeatherModalProps) {
@@ -334,12 +415,10 @@ export function WeatherModal({ open, weather, loading, error, needsCity, onClose
   );
 }
 
-function ManualOnly({ onSearch }: { onSearch: (city: string) => void }) {
-  const [city, setCity] = useState('');
+function ManualOnly({ onSearch }: { onSearch: SearchFn }) {
   return (
     <div style={{ display: 'flex', gap: 8 }}>
-      <input className="input" placeholder="Wpisz miejscowość..." value={city} onChange={(e) => setCity(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && city.trim()) onSearch(city.trim()); }} style={{ height: 34 }} autoFocus />
-      <button className="btn btn-primary btn-sm" onClick={() => city.trim() && onSearch(city.trim())}>Pokaż pogodę</button>
+      <CityAutocomplete autoFocus onPick={(s) => onSearch(s.name, { lat: s.lat, lon: s.lon, label: s.label })} />
     </div>
   );
 }

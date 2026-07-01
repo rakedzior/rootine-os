@@ -98,6 +98,43 @@ async function geocodeCity(name: string): Promise<GeoPoint | null> {
   return { lat: r.latitude, lon: r.longitude, label, source: 'manual' };
 }
 
+export interface CitySuggestion {
+  name: string;
+  country: string;
+  admin1: string;
+  label: string;
+  lat: number;
+  lon: number;
+}
+
+/** Type-ahead city suggestions from the Open-Meteo geocoding database. */
+export async function geocodeSuggest(name: string): Promise<CitySuggestion[]> {
+  const q = name.trim();
+  if (q.length < 2) return [];
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=pl&format=json`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const json = await res.json();
+    const results: Array<Record<string, unknown>> = Array.isArray(json.results) ? json.results : [];
+    return results.map((r) => {
+      const nm = String(r.name ?? '');
+      const country = String(r.country ?? '');
+      const admin1 = String(r.admin1 ?? '');
+      return {
+        name: nm,
+        country,
+        admin1,
+        label: [nm, admin1, country].filter(Boolean).join(', '),
+        lat: Number(r.latitude ?? 0),
+        lon: Number(r.longitude ?? 0),
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 async function loadWeather(point: GeoPoint): Promise<WeatherData> {
   const params = new URLSearchParams({
     latitude: String(point.lat),
@@ -176,7 +213,7 @@ async function loadWeather(point: GeoPoint): Promise<WeatherData> {
   };
 }
 
-const WARSAW: GeoPoint = { lat: 52.2297, lon: 21.0122, label: 'Warszawa, Polska', source: 'default' };
+const KRAKOW: GeoPoint = { lat: 50.0619, lon: 19.9369, label: 'Kraków, Polska', source: 'default' };
 const WEATHER_CACHE_KEY = 'rootine-weather-cache-v1';
 const WEATHER_CACHE_TTL_MS = 1000 * 60 * 20;
 
@@ -231,8 +268,12 @@ export function useWeather() {
     }
   }, []);
 
-  /** Manual city search (also used to save default). */
-  const search = useCallback(async (city: string) => {
+  /** Manual city search. Pass `resolved` coords to skip geocoding (from autocomplete). */
+  const search = useCallback(async (city: string, resolved?: { lat: number; lon: number; label: string }) => {
+    if (resolved) {
+      await run({ lat: resolved.lat, lon: resolved.lon, label: resolved.label, source: 'manual' });
+      return;
+    }
     if (!city.trim()) return;
     setLoading(true);
     setError(false);
@@ -255,7 +296,7 @@ export function useWeather() {
         }
       } catch { /* fall through */ }
       // No geo, no profile city → ask the user, but still show a sensible default.
-      if (!cancelled.current) { setNeedsCity(true); await run(WARSAW); }
+      if (!cancelled.current) { setNeedsCity(true); await run(KRAKOW); }
     }
 
     if ('geolocation' in navigator) {
