@@ -9,6 +9,9 @@ const ForgotPassword = lazy(() => import('@/features/auth/ForgotPassword').then(
 const ResetPassword = lazy(() => import('@/features/auth/ResetPassword').then((m) => ({ default: m.ResetPassword })));
 const ConfirmEmail = lazy(() => import('@/features/auth/ConfirmEmail').then((m) => ({ default: m.ConfirmEmail })));
 const AuthCallback = lazy(() => import('@/features/auth/AuthCallback').then((m) => ({ default: m.AuthCallback })));
+const PrivacyPolicy = lazy(() => import('@/features/legal/LegalPages').then((m) => ({ default: m.PrivacyPolicy })));
+const TermsOfService = lazy(() => import('@/features/legal/LegalPages').then((m) => ({ default: m.TermsOfService })));
+const DeleteData = lazy(() => import('@/features/legal/LegalPages').then((m) => ({ default: m.DeleteData })));
 const StartScreen = lazy(() => import('@/modules/start/StartScreen').then((m) => ({ default: m.StartScreen })));
 const SportScreen = lazy(() => import('@/modules/sport/SportScreen').then((m) => ({ default: m.SportScreen })));
 const DietScreen = lazy(() => import('@/modules/diet/DietScreenV2').then((m) => ({ default: m.DietScreen })));
@@ -44,6 +47,9 @@ export const router = createBrowserRouter([
   { path: '/reset-password', element: lazyRoute(<ResetPassword />) },
   { path: '/confirm-email', element: lazyRoute(<ConfirmEmail />) },
   { path: '/auth/callback', element: lazyRoute(<AuthCallback />) },
+  { path: '/privacy', element: lazyRoute(<PrivacyPolicy />) },
+  { path: '/terms', element: lazyRoute(<TermsOfService />) },
+  { path: '/delete-data', element: lazyRoute(<DeleteData />) },
 
   // ---- protected app ----
   {
