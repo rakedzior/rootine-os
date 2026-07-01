@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { AuthShell } from './AuthShell';
 
@@ -13,13 +14,30 @@ function getOAuthError(params: URLSearchParams) {
   );
 }
 
-async function waitForSession() {
+async function applySessionFromHash(): Promise<Session | null> {
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const accessToken = hash.get('access_token');
+  const refreshToken = hash.get('refresh_token');
+
+  if (!accessToken || !refreshToken) return null;
+
+  const { data, error } = await supabase.auth.setSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  });
+
+  if (error) throw error;
+  window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.search}`);
+  return data.session;
+}
+
+async function waitForSession(): Promise<Session | null> {
   const existing = await supabase.auth.getSession();
   if (existing.data.session) return existing.data.session;
 
-  return new Promise((resolve) => {
+  return new Promise<Session | null>((resolve) => {
     let done = false;
-    const finish = (session: unknown) => {
+    const finish = (session: Session | null) => {
       if (done) return;
       done = true;
       sub.data.subscription.unsubscribe();
@@ -55,7 +73,8 @@ export function AuthCallback() {
         return;
       }
 
-      const session = await waitForSession();
+      let session = window.location.hash ? await applySessionFromHash() : null;
+      session ??= await waitForSession();
       if (!active) return;
       if (!session) {
         const marker = params.get('code') ? 'code' : window.location.hash ? 'hash' : 'brak parametrow OAuth';
