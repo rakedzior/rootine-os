@@ -1627,7 +1627,15 @@ function HabitDetailsOverlay({
   }
 
   const overlay = (
-    <div className="habit-detail-overlay" role="dialog" aria-modal="true" aria-label={quickCreate ? 'Dodaj nawyk' : 'Szczegóły nawyków'}>
+    <div
+      className="habit-detail-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label={quickCreate ? 'Dodaj nawyk' : 'Szczegóły nawyków'}
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target) onClose();
+      }}
+    >
       <div className={`habit-detail-shell${quickCreate ? ' is-quick-create' : ''}`}>
         {!quickCreate && (
           <>
@@ -1797,7 +1805,14 @@ function HabitDetailsOverlay({
           </>
         )}
         {formMode !== 'none' && (
-          <div className="habit-form-layer" role="dialog" aria-label={formMode === 'edit' ? 'Edytuj nawyk' : 'Dodaj nawyk'}>
+          <div
+            className="habit-form-layer"
+            role="dialog"
+            aria-label={formMode === 'edit' ? 'Edytuj nawyk' : 'Dodaj nawyk'}
+            onMouseDown={(event) => {
+              if (event.currentTarget === event.target) closeForm();
+            }}
+          >
             <div className="habit-form-card">
               <div className="habit-form-head">
                 <h3>{formMode === 'edit' ? 'Edytuj nawyk' : 'Dodaj nawyk'}</h3>

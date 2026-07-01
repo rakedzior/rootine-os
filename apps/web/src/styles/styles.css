@@ -40,36 +40,36 @@
   /* — z-index — */
   --z-sticky: 30; --z-nav: 40; --z-dropdown: 100; --z-modal: 200; --z-toast: 300;
 
-  /* — neutrals (warm, matured) — */
-  --bg-0: #e9e2d4; --bg-1: #f1ebe0;
-  --surface: #fbf9f4; --surface-2: #f4efe5; --surface-3: #ece5d8; --surface-inset: var(--surface-3);
-  --border: rgba(58, 48, 30, .12); --border-soft: rgba(58, 48, 30, .07); --border-strong: rgba(58, 48, 30, .20);
-  --ink: #272320; --ink-2: #5d564a; --ink-3: #928979; --ink-4: #bcb3a1;
+  /* — neutrals: soft warm paper (light default = Light Emerald) — */
+  --bg-0: #f0eee9; --bg-1: #f8f6f2;
+  --surface: #fdfcfa; --surface-2: #f4f2ee; --surface-3: #ebe8e1; --surface-inset: var(--surface-3);
+  --border: rgba(40, 35, 28, .11); --border-soft: rgba(40, 35, 28, .06); --border-strong: rgba(40, 35, 28, .20);
+  --ink: #26231f; --ink-2: #57524a; --ink-3: #8b857a; --ink-4: #b8b2a6;
 
-  /* — accent: warm brown — */
-  --acc: #9a6a42; --acc-ink: #6f4a2a; --acc-soft: rgba(154, 106, 66, .13); --acc-line: rgba(154, 106, 66, .30);
-  --acc-solid: #6f4a2a; --on-acc: #ffffff;
-  --acc-rgb: 154 106 66;
-  /* secondary, warm clay */
-  --acc-b: #bc7f5f; --acc-b-ink: #99613f; --acc-b-soft: rgba(188, 127, 95, .15);
+  /* — accent: emerald (deepened for legibility on light) — */
+  --acc: #2f9e73; --acc-ink: #1c7a58; --acc-soft: rgba(47, 158, 115, .13); --acc-line: rgba(47, 158, 115, .30);
+  --acc-solid: #1f7a57; --on-acc: #ffffff;
+  --acc-rgb: 47 158 115;
+  /* secondary, brighter emerald */
+  --acc-b: #4bae88; --acc-b-ink: #2f8e6c; --acc-b-soft: rgba(75, 174, 136, .15);
 
   /* — semantic — */
   --success: #2f8e6c; --success-ink: #1f7a57; --success-soft: rgba(47, 142, 108, .13);
   --warn: #c2893a; --warn-ink: #97631f; --warn-soft: rgba(194, 137, 58, .15);
   --danger: #c5453a; --danger-ink: #a8362c; --danger-soft: rgba(197, 69, 58, .13);
-  --info: #5b7ba6; --info-ink: #455f84; --info-soft: rgba(91, 123, 166, .14);
+  --info: #4f77b0; --info-ink: #3a5c8c; --info-soft: rgba(79, 119, 176, .14);
 
   /* — calendar / event chips (harmonized) — */
-  --ev-blue: #5b7ba6; --ev-blue-bg: rgba(91, 123, 166, .14);
+  --ev-blue: #4f77b0; --ev-blue-bg: rgba(79, 119, 176, .14);
   --ev-green: #2f8e6c; --ev-green-bg: rgba(47, 142, 108, .15);
   --ev-clay: #bc7f5f; --ev-clay-bg: rgba(188, 127, 95, .15);
   --ev-lav: #8a79a8; --ev-lav-bg: rgba(138, 121, 168, .15);
 
-  /* — elevation (cool, subtle) — */
+  /* — elevation (soft, subtle) — */
   --sh-1: 0 1px 2px rgba(28, 25, 20, .05);
-  --sh-2: 0 1px 2px rgba(28, 25, 20, .04), 0 8px 24px -14px rgba(28, 25, 20, .16);
-  --sh-3: 0 2px 6px rgba(28, 25, 20, .06), 0 16px 40px -18px rgba(28, 25, 20, .22);
-  --sh-pop: 0 18px 50px -16px rgba(28, 25, 20, .26);
+  --sh-2: 0 1px 2px rgba(28, 25, 20, .04), 0 8px 24px -14px rgba(28, 25, 20, .14);
+  --sh-3: 0 2px 6px rgba(28, 25, 20, .06), 0 16px 40px -18px rgba(28, 25, 20, .18);
+  --sh-pop: 0 18px 50px -16px rgba(28, 25, 20, .22);
   --ring: 0 0 0 3px var(--acc-soft);
 
   /* — legacy compatibility aliases — */
@@ -252,6 +252,40 @@
   --border-subtle: #2e3742;
 }
 
+/* ============================================================ THEME — White Lotus (warm ivory · sage · blush) */
+[data-theme="lotus"] {
+  --bg-0: #ece3d2; --bg-1: #f4ecdd;
+  --surface: #faf6ef; --surface-2: #f2ebdf; --surface-3: #e9e0cf; --surface-inset: #e9e0cf;
+  --border: rgba(74, 58, 38, .13); --border-soft: rgba(74, 58, 38, .07); --border-strong: rgba(122, 155, 110, .34);
+  --ink: #3a322a; --ink-2: #6b6154; --ink-3: #9a8f7d; --ink-4: #c4baa6;
+
+  /* accent: warm sage green */
+  --acc: #7a9b6e; --acc-ink: #56744b; --acc-soft: rgba(122, 155, 110, .16); --acc-line: rgba(122, 155, 110, .34);
+  --acc-solid: #5f8353; --on-acc: #ffffff;
+  --acc-rgb: 122 155 110;
+  /* secondary: blush pink */
+  --acc-b: #d9a7a2; --acc-b-ink: #b06f68; --acc-b-soft: rgba(217, 167, 162, .22);
+
+  --success: #4f8a5f; --success-ink: #3a6d47; --success-soft: rgba(79, 138, 95, .15);
+  --warn: #c2893a; --warn-ink: #97631f; --warn-soft: rgba(194, 137, 58, .15);
+  --danger: #c5605a; --danger-ink: #a8443c; --danger-soft: rgba(197, 96, 90, .15);
+  --info: #6f8fa8; --info-ink: #517089; --info-soft: rgba(111, 143, 168, .16);
+
+  --ev-blue: #6f8fa8; --ev-blue-bg: rgba(111, 143, 168, .16);
+  --ev-green: #7a9b6e; --ev-green-bg: rgba(122, 155, 110, .18);
+  --ev-clay: #c98f6a; --ev-clay-bg: rgba(201, 143, 106, .16);
+  --ev-lav: #b58fb0; --ev-lav-bg: rgba(181, 143, 176, .16);
+
+  --accent-special: #b58fb0;
+  --accent-hot: #d9a7a2;
+
+  --sh-1: 0 1px 2px rgba(74, 58, 38, .06);
+  --sh-2: 0 1px 2px rgba(74, 58, 38, .05), 0 8px 24px -14px rgba(74, 58, 38, .16);
+  --sh-3: 0 2px 6px rgba(74, 58, 38, .07), 0 16px 40px -18px rgba(74, 58, 38, .20);
+  --sh-pop: 0 18px 50px -16px rgba(74, 58, 38, .24);
+  --ring: 0 0 0 3px var(--acc-soft);
+}
+
 /* ============================================================ BASE */
 *, *::before, *::after { box-sizing: border-box; }
 :root.theme-switching, :root.theme-switching *, :root.theme-switching *::before, :root.theme-switching *::after { transition: none !important; }
@@ -272,8 +306,8 @@ body {
 }
 [data-theme="dark"] body {
   background:
-    radial-gradient(1100px 640px at 84% -12%, rgb(var(--acc-rgb) / .04), transparent 60%),
-    radial-gradient(900px 560px at 4% 110%, rgb(var(--acc-rgb) / .03), transparent 58%),
+    radial-gradient(1100px 640px at 84% -12%, rgb(var(--acc-rgb) / .028), transparent 60%),
+    radial-gradient(900px 560px at 4% 110%, rgb(var(--acc-rgb) / .021), transparent 58%),
     linear-gradient(168deg, var(--bg-1), var(--bg-0));
 }
 ::selection { background: var(--acc-soft); color: var(--text-primary); }
@@ -2686,8 +2720,8 @@ button.active .sub-tab-icon { opacity: 1; }
 }
 .habit-chip { background: var(--surface-inset); border: 1px solid var(--border-soft); transition: background var(--t), border-color var(--t), transform var(--t); }
 .habit-chip:not(:disabled):hover { background: var(--surface-2); border-color: var(--border-strong); transform: translateY(-1px); }
-.habit-chip.done { background: rgba(52, 211, 153, 0.10); border-color: rgba(52, 211, 153, 0.45); }
-.habit-chip.done:not(:disabled):hover { background: rgba(52, 211, 153, 0.12); border-color: rgba(52, 211, 153, 0.55); transform: translateY(-1px); }
+.habit-chip.done { background: var(--surface-inset); border-color: var(--border-soft); }
+.habit-chip.done:not(:disabled):hover { background: var(--surface-2); border-color: var(--border-strong); transform: translateY(-1px); }
 
 .habit-detail-overlay { position: fixed; inset: 0; z-index: 120; padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); background: color-mix(in srgb, #020812 56%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: grid; place-items: center; overflow-y: auto; overscroll-behavior: contain; }
 .habit-detail-shell { position: relative; box-sizing: border-box; width: min(1580px, calc(100vw - 20px)); height: min(980px, calc(100dvh - 20px)); max-height: calc(100svh - 20px); min-height: 0; display: flex; flex-direction: column; overflow: hidden; border: 1px solid color-mix(in srgb, var(--accent-ice) 18%, var(--border-soft)); border-radius: 24px; background: radial-gradient(circle at 18% 4%, color-mix(in srgb, var(--accent-ice) 8%, transparent), transparent 38%), color-mix(in srgb, var(--surface-calendar) 94%, #06111a); box-shadow: 0 30px 90px rgba(0, 0, 0, .42), inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent); padding: clamp(16px, 1.8vw, 24px); }
@@ -3595,11 +3629,11 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
 }
 .ev-task::before { display: none; }
 .day-cell.is-compact .ev-task {
-  height: 18px;
-  min-height: 18px;
+  height: 20px;
+  min-height: 20px;
   gap: 4px;
   padding: 0 6px 0 3px;
-  font-size: 10px;
+  font-size: 11.5px;
   line-height: 1;
   border-radius: var(--r-xs);
   background: color-mix(in srgb, var(--surface-calendar) 93%, var(--accent-ice) 7%);
@@ -3684,7 +3718,7 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
   font-weight: 600;
 }
 .day-cell.is-compact .ev-task-time {
-  font-size: 9px;
+  font-size: 10px;
   color: color-mix(in srgb, var(--ink-2) 82%, transparent);
 }
 .ev-task-prio {
@@ -10206,6 +10240,15 @@ textarea.input {
   padding: clamp(12px, 1.2vw, 16px);
 }
 
+.goals-roadmap-card.is-collapsed,
+.goals-week-card.is-collapsed {
+  min-height: 0;
+}
+
+.goals-week-card.is-expanded {
+  overflow: auto;
+}
+
 .goals-roadmap-card .card-head,
 .goals-week-card .card-head,
 .goals-actions-card .card-head {
@@ -10261,10 +10304,27 @@ textarea.input {
   background: color-mix(in srgb, var(--acc-soft) 68%, transparent);
 }
 
+.goals-week-day.is-drop-target {
+  border-color: color-mix(in srgb, var(--accent-ice) 70%, var(--border-soft));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent-ice) 13%, transparent), transparent 72%),
+    color-mix(in srgb, var(--acc-soft) 76%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-ice) 30%, transparent);
+}
+
 .goals-week-task {
   min-width: 0;
   border-radius: calc(var(--ui-card-radius) - 2px);
   background: color-mix(in srgb, var(--surface) 88%, transparent);
+  cursor: grab;
+}
+
+.goals-week-task:active {
+  cursor: grabbing;
+}
+
+.goals-week-task.is-dragging {
+  opacity: .45;
 }
 
 .goals-week-task span,
@@ -10363,6 +10423,58 @@ textarea.input {
 
 .goals-range {
   min-height: var(--ui-control-h);
+}
+
+.goal-form-modal {
+  gap: 16px;
+}
+
+.goal-form-title-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.goal-form-grid {
+  gap: 14px;
+}
+
+.goal-deadline-select {
+  display: grid;
+  grid-template-columns: 38px minmax(72px, .55fr) minmax(150px, 1fr) minmax(96px, .62fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--ui-card-radius);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent-ice) 9%, transparent), transparent 56%),
+    color-mix(in srgb, var(--surface-inset) 82%, transparent);
+  padding: 9px;
+}
+
+.goal-deadline-select > svg {
+  width: 18px;
+  height: 18px;
+  justify-self: center;
+  color: var(--accent-ice);
+}
+
+.goal-deadline-select .input {
+  min-width: 0;
+  height: 38px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+}
+
+.goal-deadline-select .input:focus {
+  border-color: var(--acc-line);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-ice) 12%, transparent);
+}
+
+@media (max-width: 620px) {
+  .goal-deadline-select {
+    grid-template-columns: 32px repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 1180px) {
@@ -13224,7 +13336,7 @@ textarea.input {
 .planner-task-meta {
   min-inline-size: 0;
   max-inline-size: min(58%, 240px) !important;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   row-gap: 4px;
 }
@@ -13771,7 +13883,7 @@ textarea.input {
 }
 
 .goals-command-panel .goals-folder-row {
-  grid-template-columns: 18px minmax(0, 1fr) auto 18px;
+  grid-template-columns: 18px minmax(0, 1fr) auto auto;
   min-height: 78px;
   padding: 15px 16px;
   gap: 13px;
@@ -13837,6 +13949,64 @@ textarea.input {
   min-width: 44px;
   font-size: 12px;
   color: var(--ink-2);
+}
+
+.goals-command-panel .goals-folder-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  opacity: .68;
+  transition: opacity var(--t);
+}
+
+.goals-command-panel .goals-folder-row:hover .goals-folder-actions,
+.goals-command-panel .goals-folder-row.is-active .goals-folder-actions {
+  opacity: 1;
+}
+
+.goals-command-panel .goals-folder-actions .icon-btn {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 8px;
+  color: var(--ink-3);
+  background: color-mix(in srgb, var(--surface-inset) 62%, transparent);
+}
+
+.goals-command-panel .goals-folder-actions .icon-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.goals-command-panel .goals-folder-actions .icon-btn:hover {
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+
+.goals-command-panel .goals-folder-actions .icon-btn.is-danger:hover {
+  color: var(--danger-ink);
+  border-color: color-mix(in srgb, var(--danger) 36%, var(--border-soft));
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.module-page.goals-page .goals-main-stage {
+  grid-template-rows: auto auto minmax(0, 1fr);
+  align-content: stretch;
+}
+
+.module-page.goals-page .goals-actions-card {
+  min-height: min(56vh, 680px);
+}
+
+.module-page.goals-page .goal-actions-layout {
+  flex: 1 1 auto;
+}
+
+.module-page.goals-page .goal-actions-tree,
+.module-page.goals-page .goal-action-details-panel {
+  min-height: 460px;
+  max-height: none;
 }
 
 .goals-task-node {
@@ -13940,7 +14110,7 @@ textarea.input {
 .goal-action-row {
   --indent-size: 22px;
   display: grid;
-  grid-template-columns: 20px 20px minmax(150px, 1fr) auto auto auto 34px;
+  grid-template-columns: 20px 20px minmax(150px, 1fr) 24px auto auto auto 34px;
   align-items: center;
   gap: 8px;
   min-height: 34px;
@@ -14061,6 +14231,37 @@ textarea.input {
   font-size: 10px;
   font-weight: 750;
   line-height: 1;
+}
+
+.goal-action-add-btn {
+  width: 22px;
+  height: 22px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  color: var(--acc-ink);
+  background: transparent;
+  cursor: pointer;
+  opacity: .56;
+  transition: opacity var(--t), background var(--t), border-color var(--t);
+}
+
+.goal-action-row:hover .goal-action-add-btn,
+.goal-action-row.is-selected .goal-action-add-btn {
+  opacity: 1;
+}
+
+.goal-action-add-btn:hover,
+.goal-action-add-btn:focus-visible {
+  outline: 0;
+  border-color: color-mix(in srgb, var(--accent-ice) 34%, transparent);
+  background: color-mix(in srgb, var(--accent-ice) 11%, transparent);
+}
+
+.goal-action-add-btn svg {
+  width: 13px;
+  height: 13px;
 }
 
 .goal-action-progress {
@@ -14212,7 +14413,7 @@ textarea.input {
 
 @media (max-width: 700px) {
   .goal-action-row {
-    grid-template-columns: 18px 18px minmax(0, 1fr) auto 32px;
+    grid-template-columns: 18px 18px minmax(0, 1fr) 22px auto 32px;
   }
 
   .goal-action-progress {

@@ -6,7 +6,7 @@ import { toast } from '@/lib/toast';
 import { useMfaStepUp } from '@/features/auth/useMfaStepUp';
 
 type AppearancePreset = {
-  id: 'graphite-emerald' | 'graphite-ice' | 'beige';
+  id: 'dark-emerald' | 'dark-blue' | 'light-emerald' | 'light-ice' | 'white-lotus';
   label: string;
   theme: Theme;
   accent: AccentColor;
@@ -14,9 +14,11 @@ type AppearancePreset = {
 };
 
 const APPEARANCE_PRESETS: AppearancePreset[] = [
-  { id: 'graphite-emerald', label: 'Graphite/Emerald', theme: 'dark', accent: 'emerald', swatch: 'linear-gradient(135deg, #181d1f 0 58%, #4bae88 58%)' },
-  { id: 'graphite-ice', label: 'Graphite/Ice', theme: 'dark', accent: 'cool-ice', swatch: 'linear-gradient(135deg, #181d1f 0 58%, #76b7ff 58%)' },
-  { id: 'beige', label: 'Beige', theme: 'white-lotus', accent: 'emerald', swatch: 'linear-gradient(135deg, #f1ebe0 0 58%, #9a6a42 58%)' },
+  { id: 'dark-emerald', label: 'Dark Emerald', theme: 'dark', accent: 'emerald', swatch: 'linear-gradient(135deg, #181d1f 0 58%, #4bae88 58%)' },
+  { id: 'dark-blue', label: 'Dark Blue', theme: 'dark', accent: 'cool-ice', swatch: 'linear-gradient(135deg, #181d1f 0 58%, #76b7ff 58%)' },
+  { id: 'light-emerald', label: 'Light Emerald', theme: 'light', accent: 'emerald', swatch: 'linear-gradient(135deg, #fdfcfa 0 58%, #2f9e73 58%)' },
+  { id: 'light-ice', label: 'Light Ice', theme: 'light', accent: 'cool-ice', swatch: 'linear-gradient(135deg, #fdfcfa 0 58%, #3f82bd 58%)' },
+  { id: 'white-lotus', label: 'White Lotus', theme: 'lotus', accent: 'emerald', swatch: 'linear-gradient(135deg, #faf6ef 0 58%, #7a9b6e 58%)' },
 ];
 
 export function AccountSettings() {
@@ -35,11 +37,11 @@ export function AccountSettings() {
     });
   }, []);
 
-  const activePreset = theme === 'white-lotus'
-    ? 'beige'
-    : accent === 'cool-ice'
-      ? 'graphite-ice'
-      : 'graphite-emerald';
+  const activePreset: AppearancePreset['id'] = theme === 'lotus'
+    ? 'white-lotus'
+    : theme === 'light'
+      ? (accent === 'cool-ice' ? 'light-ice' : 'light-emerald')
+      : (accent === 'cool-ice' ? 'dark-blue' : 'dark-emerald');
 
   function pickAppearance(preset: AppearancePreset) {
     setThemeState(preset.theme);
@@ -118,7 +120,7 @@ export function AccountSettings() {
           Wybierz paletę aplikacji. Ustawienie jest zapisywane na koncie i synchronizowane między urządzeniami.
         </p>
         <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: '-6px 0 14px' }}>
-          Kolor akcentu jest zapisywany lokalnie w tej przegladarce.
+          Kolor akcentu jest zapisywany lokalnie w tej przeglądarce.
         </p>
         <div className="settings-choice-block">
           <span className="settings-choice-label">Preset</span>

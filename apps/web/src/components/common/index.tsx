@@ -111,9 +111,10 @@ interface ModalProps {
   children: ReactNode;
   size?: 'sm' | 'md' | 'lg';
   footer?: ReactNode;
+  closeOnBackdrop?: boolean;
 }
 
-export function Modal({ open, onClose, title, children, size, footer }: ModalProps) {
+export function Modal({ open, onClose, title, children, size, footer, closeOnBackdrop = true }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -168,7 +169,9 @@ export function Modal({ open, onClose, title, children, size, footer }: ModalPro
     <div
       className="modal-overlay"
       ref={overlayRef}
-      onMouseDown={e => { if (e.target === overlayRef.current) onClose(); }}
+      onMouseDown={e => {
+        if (closeOnBackdrop && e.target === overlayRef.current) onClose();
+      }}
     >
       <div
         className={`modal ${sizeClass}`}
@@ -203,7 +206,7 @@ interface ConfirmDeleteProps {
 }
 export function ConfirmDelete({ open, onClose, onConfirm, label = 'ten element' }: ConfirmDeleteProps) {
   return (
-    <Modal open={open} onClose={onClose} title="Usuń" size="sm"
+    <Modal open={open} onClose={onClose} title="Usuń" size="sm" closeOnBackdrop={false}
       footer={
         <>
           <button className="btn btn-secondary btn-sm" onClick={onClose}>Anuluj</button>

@@ -987,7 +987,7 @@ function CustomMealsDrawer({ open, date, targetCategory, fallbackCategory, categ
           toast.success('Własny posiłek zapisany');
         }}
       />
-      <Modal open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Usuń własny posiłek" size="sm" footer={<><button className="btn btn-secondary" onClick={() => setConfirmDelete(null)}>Anuluj</button><button className="btn btn-danger" onClick={async () => { if (confirmDelete) await deleteMeal.mutateAsync(confirmDelete.id); setConfirmDelete(null); toast.success('Usunięto własny posiłek'); }}>Usuń</button></>}>
+      <Modal open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Usuń własny posiłek" size="sm" closeOnBackdrop={false} footer={<><button className="btn btn-secondary" onClick={() => setConfirmDelete(null)}>Anuluj</button><button className="btn btn-danger" onClick={async () => { if (confirmDelete) await deleteMeal.mutateAsync(confirmDelete.id); setConfirmDelete(null); toast.success('Usunięto własny posiłek'); }}>Usuń</button></>}>
         <p className="muted">Usunięcie nie kasuje historycznych wpisów w dzienniku.</p>
       </Modal>
     </Drawer>
@@ -1240,7 +1240,7 @@ function CategorySettingsDrawer({ open, onClose, categories }: { open: boolean; 
         </section>
       </div>
 
-      <Modal open={!!deleteState} onClose={() => setDeleteState(null)} title="Usuń kategorię" size="md" footer={<><button className="btn btn-secondary" onClick={() => setDeleteState(null)}>Anuluj</button><button className="btn btn-primary" onClick={applyDelete}>Potwierdź</button></>}>
+      <Modal open={!!deleteState} onClose={() => setDeleteState(null)} title="Usuń kategorię" size="md" closeOnBackdrop={false} footer={<><button className="btn btn-secondary" onClick={() => setDeleteState(null)}>Anuluj</button><button className="btn btn-primary" onClick={applyDelete}>Potwierdź</button></>}>
         {deleteState && (
           <div className="diet-form-stack">
             <p className="muted">Kategoria „{deleteState.category.name}” zawiera {deleteState.count} wpisów.</p>
