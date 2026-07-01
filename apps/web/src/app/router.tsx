@@ -8,6 +8,7 @@ const Register = lazy(() => import('@/features/auth/Register').then((m) => ({ de
 const ForgotPassword = lazy(() => import('@/features/auth/ForgotPassword').then((m) => ({ default: m.ForgotPassword })));
 const ResetPassword = lazy(() => import('@/features/auth/ResetPassword').then((m) => ({ default: m.ResetPassword })));
 const ConfirmEmail = lazy(() => import('@/features/auth/ConfirmEmail').then((m) => ({ default: m.ConfirmEmail })));
+const AuthCallback = lazy(() => import('@/features/auth/AuthCallback').then((m) => ({ default: m.AuthCallback })));
 const StartScreen = lazy(() => import('@/modules/start/StartScreen').then((m) => ({ default: m.StartScreen })));
 const SportScreen = lazy(() => import('@/modules/sport/SportScreen').then((m) => ({ default: m.SportScreen })));
 const DietScreen = lazy(() => import('@/modules/diet/DietScreenV2').then((m) => ({ default: m.DietScreen })));
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
   { path: '/forgot-password', element: lazyRoute(<ForgotPassword />) },
   { path: '/reset-password', element: lazyRoute(<ResetPassword />) },
   { path: '/confirm-email', element: lazyRoute(<ConfirmEmail />) },
+  { path: '/auth/callback', element: lazyRoute(<AuthCallback />) },
 
   // ---- protected app ----
   {

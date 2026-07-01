@@ -18,7 +18,7 @@ export function OAuthButtons() {
     setBusy(provider);
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}/` },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) {
       setError('Nie udało się rozpocząć logowania. Spróbuj ponownie.');
