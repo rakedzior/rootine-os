@@ -1139,13 +1139,11 @@ function GoalWeekPlan({ goal, tasks, todayTasks, onToggle, onReschedule, onPlann
             })}
           </div>
 
-          <div className="goals-week-footer">
-            <div>
-              <span className="eyebrow">Dziś</span>
-              <strong>{activeTodayCount} aktywne działania</strong>
+          {todayTasks[0] && (
+            <div className="goals-week-footer">
+              <button className="btn btn-secondary btn-sm" type="button" onClick={() => onPlanner(todayTasks[0])}><GoalIcon name="calendar" /> Dodaj do Planera</button>
             </div>
-            {todayTasks[0] && <button className="btn btn-secondary btn-sm" type="button" onClick={() => onPlanner(todayTasks[0])}><GoalIcon name="calendar" /> Dodaj do Planera</button>}
-          </div>
+          )}
         </>
       )}
     </section>
