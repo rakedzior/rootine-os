@@ -1001,8 +1001,20 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
               {t.done && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
             </button>
             {isRecurringTask(t) && <RecurringIcon />}
-            <span className="ev-task-title">{t.title}</span>
+            <span className="ev-task-copy">
+              <span className="ev-task-title">{t.title}</span>
+              {!compact && !!t.tags?.length && (
+                <span className="ev-task-tags" aria-label={`Tagi: ${t.tags.join(', ')}`}>
+                  {t.tags.slice(0, 4).map((tag) => (
+                    <span key={tag} className="ev-task-tag">#{tag}</span>
+                  ))}
+                </span>
+              )}
+            </span>
             {taskTimeRangeLabel(t) && <span className="ev-task-time">{taskTimeRangeLabel(t)}</span>}
+            {t.priority === 'high' && (
+              <span className="ev-task-prio" title="Wysoki priorytet" aria-label="Wysoki priorytet">!</span>
+            )}
           </div>
         ))}
         </div>
@@ -1091,7 +1103,12 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
         {cat && !compact && <span className="week-tl-block-cat">{cat}</span>}
         <div className="week-tl-block-footer">
           <span className="week-tl-block-date">{dateLabel}</span>
-          {timeLabel && <span className="week-tl-block-time">{timeLabel}</span>}
+          <span className="week-tl-block-meta">
+            {timeLabel && <span className="week-tl-block-time">{timeLabel}</span>}
+            {t.priority === 'high' && (
+              <span className="week-tl-block-prio" title="Wysoki priorytet" aria-label="Wysoki priorytet">!</span>
+            )}
+          </span>
         </div>
         <button
           type="button"
@@ -2058,6 +2075,9 @@ function PlannerTaskRow({ task, todayStr, onTaskClick, onToggleTask }: {
         {task.scheduled_time && (
           <span className="planner-task-time">{task.scheduled_time}</span>
         )}
+        {task.priority === 'high' && (
+          <span className="planner-task-prio" title="Wysoki priorytet" aria-label="Wysoki priorytet">!</span>
+        )}
         <span style={{ fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-3)', flexShrink:0, whiteSpace:'nowrap' }}>{dueLabel}</span>
       </div>
     </div>
@@ -2313,6 +2333,7 @@ const IC_CHEVRON_L = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 const IC_CHEVRON_R = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>);
 const IC_CHECK = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>);
 const IC_X = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>);
+const IC_TRASH = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 15H6L5 6" /><path d="M10 11v6M14 11v6" /></svg>);
 const IC_ARROW_R = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>);
 const IC_NOTE = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="3.5" width="16" height="17" rx="3.5" /><path d="M8.5 3.5v3" /></svg>);
 
@@ -2872,10 +2893,13 @@ interface CalendarQuickPopoverProps {
   saving: boolean;
   detailsOpen: boolean;
   onClose: () => void;
+  onOutsideClose: () => void;
   onChange: (next: Partial<CalendarQuickState>) => void;
+  onToggleFlag: () => void;
   onSubmit: () => void;
   onOpenOptions: (anchor: AnchorRect) => void;
   onReturnSimple: () => void;
+  onDelete: () => void;
 }
 
 function quickDateLabel(dateStr: string): string {
@@ -2894,7 +2918,7 @@ const IC_SEND = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 const WEEK_HOUR_H = 56;
 const WEEK_SNAP_MINUTES = 30;
 
-function CalendarQuickPopover({ state, saving, detailsOpen, onClose, onChange, onSubmit, onOpenOptions, onReturnSimple }: CalendarQuickPopoverProps) {
+function CalendarQuickPopover({ state, saving, detailsOpen, onClose, onOutsideClose, onChange, onToggleFlag, onSubmit, onOpenOptions, onReturnSimple, onDelete }: CalendarQuickPopoverProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const anchorWidth = Math.max(0, state.aRight - state.aLeft);
@@ -2911,8 +2935,7 @@ function CalendarQuickPopover({ state, saving, detailsOpen, onClose, onChange, o
   const quickPos = placePopover({ left: state.aLeft, right: state.aRight, top: state.aTop, bottom: state.aBottom }, noteWidth, noteHeight, 10, 18);
   const quickRect = { left: quickPos.left, right: quickPos.left + noteWidth, top: quickPos.top, bottom: quickPos.top + noteHeight };
 
-  // Clicking anywhere outside the note confirms it (saves when there is text),
-  // otherwise just closes. Esc always closes without saving.
+  // Outside clicks only dismiss the quick note. Esc always closes without saving.
   useEffect(() => {
     if (!state.open) return;
     function onDown(ev: MouseEvent) {
@@ -2921,8 +2944,7 @@ function CalendarQuickPopover({ state, saving, detailsOpen, onClose, onChange, o
       if (ref.current.contains(target)) return;
       if (target.closest('.task-options-pop, .task-options-subpop')) return;
       if (detailsOpen) return;
-      if (state.title.trim()) void onSubmit();
-      else onClose();
+      onOutsideClose();
     }
     function onEsc(ev: KeyboardEvent) {
       if (ev.key === 'Escape') onClose();
@@ -2933,7 +2955,7 @@ function CalendarQuickPopover({ state, saving, detailsOpen, onClose, onChange, o
       window.removeEventListener('mousedown', onDown);
       window.removeEventListener('keydown', onEsc);
     };
-  }, [detailsOpen, onClose, onSubmit, state.open, state.title]);
+  }, [detailsOpen, onClose, onOutsideClose, state.open]);
 
   // On open, drop the caret at the *end* of any existing text (editing a task)
   // instead of the start, which is where autoFocus lands it.
@@ -2967,7 +2989,7 @@ function CalendarQuickPopover({ state, saving, detailsOpen, onClose, onChange, o
           <span className="tq-date-ic">{IC_CAL_SM}</span>
           <span>{quickDateLabel(state.date)}</span>
         </button>
-        <button type="button" className={`tq-flag ${state.flagged ? 'is-on' : ''}`} onClick={() => onChange({ flagged: !state.flagged })} aria-pressed={state.flagged} aria-label="Oflaguj jako ważne" title="Oflaguj jako ważne">
+        <button type="button" className={`tq-flag ${state.flagged ? 'is-on' : ''}`} onClick={onToggleFlag} aria-pressed={state.flagged} aria-label="Oflaguj jako ważne" title="Oflaguj jako ważne">
           {IC_FLAG}
         </button>
       </div>
@@ -2997,6 +3019,20 @@ function CalendarQuickPopover({ state, saving, detailsOpen, onClose, onChange, o
             <button key={tag} type="button" className="task-tag-badge" title="Usuń tag" onClick={() => onChange({ tags: state.tags.filter((item) => item !== tag) })}>#{tag}</button>
           ))}
         </div>
+      )}
+      {state.editingId && (
+        <button
+          type="button"
+          className="tq-delete"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          aria-label="Usuń zadanie"
+          title="Usuń zadanie"
+        >
+          {IC_TRASH}
+        </button>
       )}
       <button type="button" className="tq-send" onClick={() => void onSubmit()} disabled={!canSave} aria-label="Dodaj zadanie" title="Dodaj (lub kliknij poza notatkę)">
         {IC_SEND}
@@ -3065,6 +3101,7 @@ export function StartScreen() {
   const [hideCompletedTasks, setHideCompletedTasks] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [seriesDeleteTarget, setSeriesDeleteTarget] = useState<SupabaseTask | null>(null);
+  const suppressCalendarQuickOpenUntilRef = useRef(0);
 
   const editingTask = editingTaskId ? tasks.find((task) => task.id === editingTaskId) ?? null : null;
   const editingSeriesCount = editingTask?.series_id
@@ -3180,7 +3217,18 @@ export function StartScreen() {
     if (taskMutationPending) return;
     await createTaskFromDraft({ ...emptyDraft(dueDate), title, tags }, 'quick_add');
   }
+  function closeCalendarQuickFromOutside() {
+    suppressCalendarQuickOpenUntilRef.current = Date.now() + 300;
+    setCalendarQuick((prev) => ({ ...prev, open: false, editingId: null }));
+  }
   function openCalendarQuick(dateStr: string, anchor: AnchorRect) {
+    if (Date.now() < suppressCalendarQuickOpenUntilRef.current) return;
+    if (calendarQuick.open || taskOptions.open) {
+      suppressCalendarQuickOpenUntilRef.current = Date.now() + 300;
+      setCalendarQuick((prev) => ({ ...prev, open: false, editingId: null }));
+      setTaskOptions((prev) => ({ ...prev, open: false }));
+      return;
+    }
     setCalendarQuick({
       open: true,
       editingId: null,
@@ -3220,6 +3268,15 @@ export function StartScreen() {
       'calendar_quick',
     );
     setCalendarQuick((prev) => ({ ...prev, open: false, editingId: null, title: '', tags: [], flagged: false }));
+  }
+  function toggleCalendarQuickFlag() {
+    const nextFlagged = !calendarQuick.flagged;
+    setCalendarQuick((prev) => ({ ...prev, flagged: nextFlagged }));
+    if (!calendarQuick.editingId) return;
+    updateTask.mutate({
+      id: calendarQuick.editingId,
+      patch: { priority: nextFlagged ? 'high' : 'mid' },
+    });
   }
   function openTask(task: SupabaseTask, anchor: AnchorRect) {
     setTaskOptions((prev) => ({ ...prev, open: false }));
@@ -3416,7 +3473,9 @@ export function StartScreen() {
         saving={taskMutationPending}
         detailsOpen={taskOptions.open && taskOptions.overlayMode}
         onClose={() => setCalendarQuick((prev) => ({ ...prev, open: false, editingId: null }))}
+        onOutsideClose={closeCalendarQuickFromOutside}
         onChange={(next) => setCalendarQuick((prev) => ({ ...prev, ...next }))}
+        onToggleFlag={toggleCalendarQuickFlag}
         onSubmit={submitCalendarQuick}
         onOpenOptions={(anchor) => {
           const task = calendarQuick.editingId ? tasks.find((item) => item.id === calendarQuick.editingId) : null;
@@ -3424,6 +3483,11 @@ export function StartScreen() {
           else openTaskOptions(anchor, calendarQuick.title, calendarQuick.tags, calendarQuick.date, true);
         }}
         onReturnSimple={() => setTaskOptions((prev) => ({ ...prev, open: false }))}
+        onDelete={() => {
+          const task = calendarQuick.editingId ? tasks.find((item) => item.id === calendarQuick.editingId) : null;
+          setCalendarQuick((prev) => ({ ...prev, open: false, editingId: null }));
+          if (task) requestDeleteSeries(task);
+        }}
       />
 
       <AddTaskModal
