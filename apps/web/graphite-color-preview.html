@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rootine OS - Graphite Color Preview</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0b0d0f;
+      color: #eef2f0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #0b0d0f;
+      padding: 28px;
+    }
+
+    .page {
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+
+    .intro {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      font-size: 28px;
+      letter-spacing: 0;
+      font-weight: 720;
+    }
+
+    .hint {
+      color: #aeb7b3;
+      font-size: 14px;
+      max-width: 620px;
+      line-height: 1.55;
+    }
+
+    .compare {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .theme {
+      --bg-0: #0e1512;
+      --bg-1: #121a16;
+      --surface: #161e1a;
+      --surface-2: #1d2621;
+      --surface-3: #26312b;
+      --border: #26312b;
+      --border-soft: #1e2723;
+      --border-strong: rgba(75, 174, 136, .34);
+      --ink: #e7ede9;
+      --ink-2: #a6b3ac;
+      --ink-3: #7a877f;
+      --acc: #4bae88;
+      --acc-ink: #86d9b7;
+      --acc-soft: rgba(75, 174, 136, .14);
+      --acc-line: rgba(75, 174, 136, .42);
+      --blue: #5b83b6;
+      --amber: #d9a860;
+      --violet: #9a8cc2;
+      --danger: #e07a6f;
+
+      min-height: 760px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      overflow: hidden;
+      background:
+        radial-gradient(900px 520px at 92% -18%, var(--acc-soft), transparent 62%),
+        radial-gradient(720px 480px at -10% 105%, rgba(107, 181, 159, .14), transparent 60%),
+        linear-gradient(168deg, var(--bg-1), var(--bg-0));
+      box-shadow: 0 20px 60px rgba(0,0,0,.28);
+    }
+
+    .theme.graphite {
+      --bg-0: #101713;
+      --bg-1: #141d18;
+      --surface: #17211c;
+      --surface-2: #202a25;
+      --surface-3: #2b3731;
+      --border: #2d3a34;
+      --border-soft: #223029;
+      --border-strong: rgba(75, 174, 136, .34);
+      --ink: #eaf0ec;
+      --ink-2: #a9b5ae;
+      --ink-3: #7c8981;
+      --acc: #4bae88;
+      --acc-ink: #86d9b7;
+      --acc-soft: rgba(75, 174, 136, .14);
+      --acc-line: rgba(75, 174, 136, .42);
+      --blue: #5b83b6;
+      --amber: #d9a860;
+      --violet: #9a8cc2;
+      --danger: #e07a6f;
+
+      background:
+        radial-gradient(900px 520px at 92% -18%, rgba(75, 174, 136, .07), transparent 62%),
+        radial-gradient(720px 480px at -10% 105%, rgba(107, 181, 159, .07), transparent 60%),
+        linear-gradient(168deg, var(--bg-1), var(--bg-0));
+    }
+
+    .theme.graphite .side {
+      background: rgba(0,0,0,.08);
+      border-right-color: var(--border-soft);
+    }
+
+    .theme.graphite .main {
+      background:
+        radial-gradient(680px 460px at 82% 8%, rgba(75, 174, 136, .04), transparent 62%),
+        linear-gradient(180deg, rgba(255,255,255,.006), transparent);
+    }
+
+    .theme.graphite .card {
+      background: color-mix(in srgb, #181b1e 74%, #17271f 26%);
+      border-color: color-mix(in srgb, #30363b 72%, #4bae88 28%);
+    }
+
+    .theme.graphite .card.subtle,
+    .theme.graphite .task,
+    .theme.graphite .btn {
+      background: color-mix(in srgb, #202428 72%, #1d3329 28%);
+      border-color: color-mix(in srgb, #30363b 76%, #4bae88 24%);
+    }
+
+    .topbar {
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px;
+      border-bottom: 1px solid var(--border-soft);
+      background: rgba(0,0,0,.10);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--ink);
+      font-weight: 760;
+    }
+
+    .mark {
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      background: var(--acc);
+      transform: rotate(45deg);
+      box-shadow: 0 0 0 5px var(--acc-soft);
+    }
+
+    .pill {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--ink-2);
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 158px 1fr;
+      min-height: 692px;
+    }
+
+    .side {
+      padding: 18px 12px;
+      border-right: 1px solid var(--border-soft);
+      background: rgba(0,0,0,.08);
+    }
+
+    .nav-item {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 10px;
+      border-radius: 8px;
+      color: var(--ink-3);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .nav-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: .6;
+    }
+
+    .nav-item.active {
+      color: var(--acc-ink);
+      background: var(--acc-soft);
+      border: 1px solid var(--acc-line);
+    }
+
+    .main {
+      padding: 22px;
+    }
+
+    .theme-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+
+    .theme-title h2 {
+      font-size: 21px;
+      letter-spacing: 0;
+      color: var(--ink);
+    }
+
+    .theme-title p {
+      color: var(--ink-2);
+      font-size: 13px;
+      line-height: 1.45;
+      margin-top: 4px;
+    }
+
+    .score {
+      min-width: 92px;
+      text-align: right;
+      color: var(--acc-ink);
+      font-weight: 750;
+      font-size: 13px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 14px 34px -28px rgba(0,0,0,.9);
+    }
+
+    .card.subtle {
+      background: var(--surface-2);
+    }
+
+    .label {
+      color: var(--ink-3);
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .metric {
+      font-size: 32px;
+      line-height: 1;
+      color: var(--ink);
+      font-weight: 760;
+      margin-bottom: 8px;
+    }
+
+    .muted {
+      color: var(--ink-2);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      height: 34px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .btn.primary {
+      background: var(--acc);
+      border-color: var(--acc);
+      color: #06130d;
+    }
+
+    .list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .task {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--border-soft);
+      background: var(--surface-2);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .task strong {
+      color: var(--ink);
+      font-size: 13px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .task span {
+      color: var(--ink-3);
+      font-size: 12px;
+    }
+
+    .tag {
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 11px;
+      border: 1px solid var(--acc-line);
+      color: var(--acc-ink);
+      background: var(--acc-soft);
+      white-space: nowrap;
+    }
+
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .swatch {
+      height: 48px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .bars {
+      display: grid;
+      gap: 9px;
+      margin-top: 14px;
+    }
+
+    .bar {
+      height: 9px;
+      border-radius: 999px;
+      background: var(--surface-3);
+      overflow: hidden;
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+    }
+
+    @media (max-width: 980px) {
+      body { padding: 16px; }
+      .compare { grid-template-columns: 1fr; }
+      .intro { align-items: start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="intro">
+      <div>
+        <h1>Rootine OS - kolorystyka: obecna vs graphite</h1>
+        <p class="hint">Podglad nie zmienia aplikacji. Lewa strona pokazuje obecna zielono-grafitowa baze, prawa proponuje bardziej neutralny grafit z emeraldem tylko jako akcentem.</p>
+      </div>
+      <div class="pill">Preview tokenow UI - v2</div>
+    </div>
+
+    <section class="compare">
+      <div class="theme">
+        <div class="topbar">
+          <div class="brand"><span class="mark"></span> Rootine OS</div>
+          <div class="pill">Obecnie</div>
+        </div>
+        <div class="shell">
+          <aside class="side">
+            <div class="nav-item active"><span class="nav-dot"></span> Start</div>
+            <div class="nav-item"><span class="nav-dot"></span> Sport</div>
+            <div class="nav-item"><span class="nav-dot"></span> Dieta</div>
+            <div class="nav-item"><span class="nav-dot"></span> Finanse</div>
+            <div class="nav-item"><span class="nav-dot"></span> Cele</div>
+            <div class="nav-item"><span class="nav-dot"></span> Praca</div>
+          </aside>
+          <main class="main">
+            <div class="theme-title">
+              <div>
+                <h2>Emerald Cockpit</h2>
+                <p>Tlo, powierzchnie i poświaty maja zielony tint, wiec caly produkt czyta sie bardziej zielono.</p>
+              </div>
+              <div class="score">more green</div>
+            </div>
+            <div class="grid">
+              <section class="card">
+                <div class="label">Dzisiaj</div>
+                <div class="metric">72%</div>
+                <p class="muted">Plan dnia jest aktywny, ale otoczenie wizualne wzmacnia emerald bardziej niz neutralny OS.</p>
+                <div class="button-row">
+                  <div class="btn primary">Start focus</div>
+                  <div class="btn">Przeglad</div>
+                </div>
+              </section>
+              <section class="card subtle">
+                <div class="label">Status</div>
+                <div class="bars">
+                  <div class="bar"><i style="width: 76%; background: var(--acc);"></i></div>
+                  <div class="bar"><i style="width: 52%; background: var(--blue);"></i></div>
+                  <div class="bar"><i style="width: 38%; background: var(--amber);"></i></div>
+                </div>
+              </section>
+            </div>
+            <section class="card">
+              <div class="label">Nastepne akcje</div>
+              <div class="list">
+                <div class="task"><div><strong>Review tygodnia</strong><span>20 min, spokojny przeglad</span></div><div class="tag">active</div></div>
+                <div class="task"><div><strong>Budzet miesiaca</strong><span>Finanse / dom</span></div><div class="tag">soon</div></div>
+                <div class="task"><div><strong>Trening</strong><span>Sport / regeneracja</span></div><div class="tag">health</div></div>
+              </div>
+            </section>
+            <div class="swatches">
+              <div class="swatch" style="background: var(--bg-0)"></div>
+              <div class="swatch" style="background: var(--surface)"></div>
+              <div class="swatch" style="background: var(--surface-2)"></div>
+              <div class="swatch" style="background: var(--acc)"></div>
+              <div class="swatch" style="background: var(--blue)"></div>
+              <div class="swatch" style="background: var(--amber)"></div>
+            </div>
+          </main>
+        </div>
+      </div>
+
+      <div class="theme graphite">
+        <div class="topbar">
+          <div class="brand"><span class="mark"></span> Rootine OS</div>
+          <div class="pill">Propozycja</div>
+        </div>
+        <div class="shell">
+          <aside class="side">
+            <div class="nav-item active"><span class="nav-dot"></span> Start</div>
+            <div class="nav-item"><span class="nav-dot"></span> Sport</div>
+            <div class="nav-item"><span class="nav-dot"></span> Dieta</div>
+            <div class="nav-item"><span class="nav-dot"></span> Finanse</div>
+            <div class="nav-item"><span class="nav-dot"></span> Cele</div>
+            <div class="nav-item"><span class="nav-dot"></span> Praca</div>
+          </aside>
+          <main class="main">
+            <div class="theme-title">
+              <div>
+                <h2>Half-Tint Content</h2>
+                <p>Sidebar zostaje taki jak obecnie, a content ma okolo polowe obecnego emerald tintu.</p>
+              </div>
+              <div class="score">balanced</div>
+            </div>
+            <div class="grid">
+              <section class="card">
+                <div class="label">Dzisiaj</div>
+                <div class="metric">72%</div>
+                <p class="muted">To zachowuje obecny charakter, ale glowny obszar pracy jest spokojniejszy i mniej zielony.</p>
+                <div class="button-row">
+                  <div class="btn primary">Start focus</div>
+                  <div class="btn">Przeglad</div>
+                </div>
+              </section>
+              <section class="card subtle">
+                <div class="label">Status</div>
+                <div class="bars">
+                  <div class="bar"><i style="width: 76%; background: var(--acc);"></i></div>
+                  <div class="bar"><i style="width: 52%; background: var(--blue);"></i></div>
+                  <div class="bar"><i style="width: 38%; background: var(--amber);"></i></div>
+                </div>
+              </section>
+            </div>
+            <section class="card">
+              <div class="label">Nastepne akcje</div>
+              <div class="list">
+                <div class="task"><div><strong>Review tygodnia</strong><span>20 min, spokojny przeglad</span></div><div class="tag">active</div></div>
+                <div class="task"><div><strong>Budzet miesiaca</strong><span>Finanse / dom</span></div><div class="tag">soon</div></div>
+                <div class="task"><div><strong>Trening</strong><span>Sport / regeneracja</span></div><div class="tag">health</div></div>
+              </div>
+            </section>
+            <div class="swatches">
+              <div class="swatch" style="background: var(--bg-0)"></div>
+              <div class="swatch" style="background: var(--surface)"></div>
+              <div class="swatch" style="background: var(--surface-2)"></div>
+              <div class="swatch" style="background: var(--acc)"></div>
+              <div class="swatch" style="background: var(--blue)"></div>
+              <div class="swatch" style="background: var(--amber)"></div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

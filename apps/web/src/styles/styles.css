@@ -146,10 +146,10 @@
 
 /* ============================================================ THEME — The Graphite Cockpit (dark = primary identity) */
 [data-theme="dark"] {
-  --bg-0: #101713; --bg-1: #141d18;
-  --surface: #17211c; --surface-2: #202a25; --surface-3: #2b3731; --surface-inset: #151d18;
-  --border: #2d3a34; --border-soft: #223029; --border-strong: rgba(75, 174, 136, .34);
-  --ink: #eaf0ec; --ink-2: #a9b5ae; --ink-3: #7c8981; --ink-4: rgba(234, 240, 236, .38);
+  --bg-0: #101315; --bg-1: #15191b;
+  --surface: #181d1f; --surface-2: #202629; --surface-3: #2b3235; --surface-inset: #151a1c;
+  --border: #2f383a; --border-soft: #242c2f; --border-strong: rgba(75, 174, 136, .30);
+  --ink: #edf2ef; --ink-2: #acb6b2; --ink-3: #7f8a86; --ink-4: rgba(237, 242, 239, .38);
 
   /* Graphite Cockpit — muted emerald accent (restrained; primary/active/positive only) */
   --acc: #4bae88; --acc-ink: #86d9b7; --acc-soft: rgba(75, 174, 136, .14); --acc-line: rgba(75, 174, 136, .42);
@@ -171,16 +171,16 @@
   --accent-special: #9a8cc2;
   --accent-hot: #d98fb0;
 
-  --surface-base: #101713;
-  --surface-raised: #17211c;
-  --surface-elevated: #202a25;
-  --surface-overlay: #2b3731;
-  --surface-calendar: #151d18;
-  --border-subtle: #2d3a34;
+  --surface-base: #101315;
+  --surface-raised: #181d1f;
+  --surface-elevated: #202629;
+  --surface-overlay: #2b3235;
+  --surface-calendar: #151a1c;
+  --border-subtle: #2f383a;
   --border-active: #4bae88;
-  --text-primary: #eaf0ec;
-  --text-secondary: #a9b5ae;
-  --text-muted: #7c8981;
+  --text-primary: #edf2ef;
+  --text-secondary: #acb6b2;
+  --text-muted: #7f8a86;
   --accent-ice: #4bae88;
   --accent-ice-strong: #3f9d78;
   --accent-teal: #6bb59f;
@@ -215,8 +215,8 @@ body {
 }
 [data-theme="dark"] body {
   background:
-    radial-gradient(1100px 640px at 84% -12%, rgba(75, 174, 136, .07), transparent 60%),
-    radial-gradient(900px 560px at 4% 110%, rgba(107, 181, 159, .08), transparent 58%),
+    radial-gradient(1100px 640px at 84% -12%, rgba(75, 174, 136, .04), transparent 60%),
+    radial-gradient(900px 560px at 4% 110%, rgba(107, 181, 159, .045), transparent 58%),
     linear-gradient(168deg, var(--bg-1), var(--bg-0));
 }
 ::selection { background: var(--acc-soft); color: var(--text-primary); }
@@ -3003,8 +3003,8 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
   font-size: 30px;
   line-height: 1.2;
   color: var(--ink);
-  background: color-mix(in srgb, var(--surface-calendar) 82%, var(--accent-ice) 10%);
-  border: 1px solid color-mix(in srgb, var(--accent-ice) 14%, var(--border-soft));
+  background: color-mix(in srgb, var(--surface-calendar) 94%, var(--accent-ice) 6%);
+  border: 1px solid color-mix(in srgb, var(--accent-ice) 18%, var(--border-soft));
   border-radius: 12px;
   transition: filter var(--t), box-shadow var(--t), transform var(--t);
 }
@@ -3017,8 +3017,8 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
   font-size: 10px;
   line-height: 1;
   border-radius: var(--r-xs);
-  background: color-mix(in srgb, var(--surface-calendar) 76%, var(--ev-blue) 24%);
-  border-color: color-mix(in srgb, var(--ev-blue) 32%, var(--border-soft));
+  background: color-mix(in srgb, var(--surface-calendar) 93%, var(--accent-ice) 7%);
+  border-color: color-mix(in srgb, var(--accent-ice) 22%, var(--border-soft));
 }
 .day-cell.is-compact .ev-task.is-done {
   background: color-mix(in srgb, var(--surface-base) 78%, #4b5563 22%);
@@ -3043,7 +3043,7 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
 }
 .day-cell.is-compact .ev-task-time {
   font-size: 9px;
-  color: color-mix(in srgb, var(--ink-2) 76%, transparent);
+  color: color-mix(in srgb, var(--ink-2) 82%, transparent);
 }
 .tsk-check {
   width: 19px;
@@ -3069,7 +3069,8 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
   min-height: 12px;
   border-radius: 4px;
   border-width: 1.2px;
-  background: color-mix(in srgb, var(--surface-calendar) 68%, transparent);
+  border-color: color-mix(in srgb, var(--accent-ice) 44%, var(--ink-4));
+  background: color-mix(in srgb, var(--surface-calendar) 78%, transparent);
 }
 .day-cell.is-compact .tsk-check-sm.is-done {
   background: color-mix(in srgb, #6b7280 74%, var(--surface-base));
@@ -4805,7 +4806,6 @@ button.task-tag-badge {
   --text-muted: #7a877f;
   background: var(--surface-raised);
 }
-
 /* brand / head */
 .sidebar-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; padding: 2px; min-height: 40px; }
 .sb-brand { display: flex; align-items: center; gap: 11px; text-decoration: none; min-width: 0; }
