@@ -3,6 +3,16 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { AuthShell } from './AuthShell';
 
+function getOAuthError(params: URLSearchParams) {
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  return (
+    params.get('error_description') ??
+    params.get('error') ??
+    hash.get('error_description') ??
+    hash.get('error')
+  );
+}
+
 async function waitForSession() {
   const existing = await supabase.auth.getSession();
   if (existing.data.session) return existing.data.session;
@@ -35,31 +45,22 @@ export function AuthCallback() {
 
   useEffect(() => {
     let active = true;
+    let redirectTimer: number | undefined;
 
     async function finish() {
-      const oauthError = params.get('error_description') ?? params.get('error');
+      const oauthError = getOAuthError(params);
       if (oauthError) {
         setMessage(oauthError);
-        window.setTimeout(() => navigate('/login', { replace: true }), 2000);
+        redirectTimer = window.setTimeout(() => navigate('/login', { replace: true }), 3000);
         return;
-      }
-
-      const code = params.get('code');
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (!active) return;
-        if (error) {
-          setMessage('Nie udalo sie zapisac sesji. Sprobuj ponownie.');
-          window.setTimeout(() => navigate('/login', { replace: true }), 2000);
-          return;
-        }
       }
 
       const session = await waitForSession();
       if (!active) return;
       if (!session) {
-        setMessage('Nie udalo sie potwierdzic logowania. Sprobuj ponownie.');
-        window.setTimeout(() => navigate('/login', { replace: true }), 2000);
+        const marker = params.get('code') ? 'code' : window.location.hash ? 'hash' : 'brak parametrow OAuth';
+        setMessage(`Nie udalo sie potwierdzic logowania (${marker}). Sprawdz konfiguracje Supabase Redirect URLs.`);
+        redirectTimer = window.setTimeout(() => navigate('/login', { replace: true }), 6000);
         return;
       }
 
@@ -70,6 +71,7 @@ export function AuthCallback() {
 
     return () => {
       active = false;
+      if (redirectTimer) window.clearTimeout(redirectTimer);
     };
   }, [navigate, params]);
 
