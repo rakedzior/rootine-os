@@ -13160,6 +13160,27 @@ textarea.input {
   flex: 0 0 36px;
 }
 
+@media (max-width: 1280px), (max-height: 820px) {
+  .planner-task-row {
+    gap: 8px !important;
+    padding-block: 7px !important;
+  }
+
+  .planner-task-title {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+
+  .planner-task-meta {
+    display: none !important;
+  }
+
+  .planner-quick-add-row {
+    padding-top: 10px !important;
+    margin-top: 6px !important;
+  }
+}
+
 .planner-calendar-card .day-cell {
   min-inline-size: 0;
 }
@@ -13236,7 +13257,23 @@ textarea.input {
   }
 
   .planner-sidebar {
-    grid-template-rows: auto auto;
+    display: contents;
+  }
+
+  .planner-tasks-card {
+    order: 1;
+  }
+
+  .planner-calendar-card {
+    order: 2;
+  }
+
+  .planner-habits-card {
+    order: 3;
+  }
+
+  .planner-signals {
+    order: 4;
   }
 }
 
@@ -13280,6 +13317,25 @@ textarea.input {
   .planner-tasks-card {
     min-block-size: 226px;
     overflow: visible;
+  }
+
+  .planner-today-panel {
+    gap: 10px;
+  }
+
+  .planner-quick-add-row {
+    order: 3;
+    margin-top: 0 !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px;
+    border-top: 1px solid var(--border-soft);
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .planner-task-list {
+    order: 4;
+    flex: 0 1 auto !important;
+    max-block-size: min(28vh, 220px);
   }
 
   .planner-habits-card {
@@ -13500,5 +13556,80 @@ textarea.input {
 @media (max-height: 760px) {
   .module-page.settings-os {
     overflow: auto;
+  }
+}
+
+/* Goals nested action folders */
+.goals-folder-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ui-control-radius);
+  display: grid;
+  place-items: center;
+  color: var(--ink-3);
+  background: color-mix(in srgb, var(--surface-inset) 80%, transparent);
+  border: 1px solid var(--border-soft);
+}
+
+.goals-folder-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.goals-folder-row.is-active .goals-folder-icon {
+  color: var(--accent-ice);
+  border-color: color-mix(in srgb, var(--accent-ice) 30%, transparent);
+  background: color-mix(in srgb, var(--accent-ice) 10%, transparent);
+}
+
+.goals-task-node {
+  min-width: 0;
+}
+
+.goals-task-row {
+  cursor: grab;
+}
+
+.goals-task-row:active {
+  cursor: grabbing;
+}
+
+.goals-task-row.is-folder {
+  background: color-mix(in srgb, var(--surface-inset) 88%, transparent);
+  border-top-color: transparent;
+  font-weight: 650;
+}
+
+.goals-task-row.is-folder .goals-task-check {
+  color: var(--ink-2);
+  border-color: color-mix(in srgb, var(--ink-3) 18%, transparent);
+  background: color-mix(in srgb, var(--ink-3) 8%, transparent);
+}
+
+.goals-task-row.is-drop-target {
+  outline: 1px dashed color-mix(in srgb, var(--accent-ice) 54%, transparent);
+  outline-offset: -3px;
+}
+
+.goals-task-row.is-drop-target:hover {
+  background: color-mix(in srgb, var(--accent-ice) 8%, var(--surface));
+}
+
+.goals-add-task-row.goals-add-task-row-nested {
+  grid-template-columns: minmax(108px, .42fr) minmax(180px, 1fr) minmax(140px, .6fr) minmax(128px, .42fr) minmax(108px, .34fr) auto;
+}
+
+.goals-add-task-row.goals-add-task-row-nested .input:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 980px) {
+  .goals-add-task-row.goals-add-task-row-nested {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .goals-add-task-row.goals-add-task-row-nested .btn {
+    grid-column: 1 / -1;
   }
 }

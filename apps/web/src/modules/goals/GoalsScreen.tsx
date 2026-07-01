@@ -37,6 +37,7 @@ interface Goal {
 }
 
 const DEFAULT_GOAL_CATEGORIES = ['Osobiste', 'Zdrowie', 'Finanse', 'Nauka', 'Praca'];
+const GOAL_FOLDER_MARKER = '[rootine-folder]';
 const GOAL_EMOJI_FALLBACK = '🎯';
 
 function collectTasks(tasks: GoalTask[]): GoalTask[] {
@@ -86,6 +87,28 @@ function relativeDateLabel(date?: string) {
 
 function goalNextStep(goal: Goal): string | null {
   return collectTasks(goal.tasks).find((task) => task.status !== 'done')?.title ?? null;
+}
+
+function isGoalFolder(task: GoalTask): boolean {
+  return task.description.includes(GOAL_FOLDER_MARKER);
+}
+
+function taskDescription(description: string, folder: boolean) {
+  const clean = description.replace(GOAL_FOLDER_MARKER, '').trim();
+  return folder ? `${GOAL_FOLDER_MARKER}${clean ? ` ${clean}` : ''}` : clean;
+}
+
+function descendantsOf(task: GoalTask): Set<string> {
+  return new Set(collectTasks(task.subtasks).map((item) => item.id));
+}
+
+function findTask(tasks: GoalTask[], id: string): GoalTask | null {
+  for (const task of tasks) {
+    if (task.id === id) return task;
+    const nested = findTask(task.subtasks, id);
+    if (nested) return nested;
+  }
+  return null;
 }
 
 function goalStatus(goal: Goal): { label: string; cls: string } {
@@ -172,7 +195,7 @@ function useGoalPlannerBridge() {
   return { addPlanner };
 }
 
-function GoalIcon({ name }: { name: 'target' | 'calendar' | 'flame' | 'clock' | 'gear' | 'repeat' }) {
+function GoalIcon({ name }: { name: 'target' | 'calendar' | 'flame' | 'clock' | 'gear' | 'repeat' | 'folder' | 'folder-open' | 'task' }) {
   const c = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -182,6 +205,9 @@ function GoalIcon({ name }: { name: 'target' | 'calendar' | 'flame' | 'clock' | 
       {name === 'flame' && <path d="M12 2c1 3-1 4-2 6-1 1.6-.5 3 1 3 1.2 0 2-1 2-2 1.5 1 3 2.8 3 5a6 6 0 1 1-12 0c0-2 1-3.7 2.5-5C8 12 9 9 12 2z" fill="currentColor" stroke="none" />}
       {name === 'gear' && <><circle cx="12" cy="12" r="3" {...c} /><path d="M19.4 13a7.97 7.97 0 0 0 0-2l2-1.2-2-3.4-2.3.7a8 8 0 0 0-1.7-1l-.3-2.4H9.9l-.3 2.4a8 8 0 0 0-1.7 1l-2.3-.7-2 3.4L5.6 11a7.97 7.97 0 0 0 0 2l-2 1.2 2 3.4 2.3-.7c.5.4 1.1.8 1.7 1l.3 2.4h4.2l.3-2.4c.6-.2 1.2-.6 1.7-1l2.3.7 2-3.4-2-1.2z" {...c} /></>}
       {name === 'repeat' && <><path d="m17 1 4 4-4 4" {...c} /><path d="M3 11V9a4 4 0 0 1 4-4h14" {...c} /><path d="m7 23-4-4 4-4" {...c} /><path d="M21 13v2a4 4 0 0 1-4 4H3" {...c} /></>}
+      {name === 'folder' && <path d="M3.8 6.8a2 2 0 0 1 2-2h4.3l2 2.3h6.1a2 2 0 0 1 2 2v8.1a2 2 0 0 1-2 2H5.8a2 2 0 0 1-2-2Z" {...c} />}
+      {name === 'folder-open' && <><path d="M3.8 8.8v-2a2 2 0 0 1 2-2h4.3l2 2.3h6.1a2 2 0 0 1 2 2v1.1" {...c} /><path d="M4.8 19.2h13.6a2 2 0 0 0 1.9-1.4l1.6-5.2a1.4 1.4 0 0 0-1.3-1.8H7.1a2 2 0 0 0-1.9 1.4l-1.7 5.2a1.4 1.4 0 0 0 1.3 1.8Z" {...c} /></>}
+      {name === 'task' && <><rect x="4.5" y="4" width="15" height="16" rx="2.2" {...c} /><path d="M8.2 9.2h7.6M8.2 13h7.6M8.2 16.8h4.4" {...c} /></>}
     </svg>
   );
 }
@@ -273,7 +299,7 @@ export function GoalsScreen() {
               <EmptyState title="Brak celów" desc="Dodaj pierwszy cel, aby zacząć rozbijać go na działania." />
             ) : activeGoals.map((goal) => (
               <button key={goal.id} type="button" className={`goals-folder-row${goal.id === selected?.id ? ' is-active' : ''}`} onClick={() => setSelectedId(goal.id)}>
-                <span className="goals-folder-emoji">{goal.emoji || '◎'}</span>
+                <span className="goals-folder-icon"><GoalIcon name="target" /></span>
                 <span className="goals-folder-main">
                   <strong>{goal.title}</strong>
                   <small>{goal.category}</small>
@@ -312,7 +338,8 @@ export function GoalsScreen() {
                 onUpdate={(taskId, patch) => updateGoalTask.mutate({ id: taskId, patch: { status: patch.status, title: patch.title, description: patch.description, due_date: patch.dueDate, priority: patch.priority, progress: patch.progress } })}
                 onDelete={(taskId) => removeGoalTask.mutate(taskId)}
                 onPlanner={(task) => addPlanner(task.title, task.dueDate, task.priority)}
-                onAdd={(payload) => createGoalTask.mutate({ goal_id: selected.id, title: payload.title, description: payload.description, due_date: payload.dueDate ?? null, priority: payload.priority ?? null, status: payload.status, progress: 0 })}
+                onNest={(taskId, parentTaskId) => updateGoalTask.mutate({ id: taskId, patch: { parent_task_id: parentTaskId } })}
+                onAdd={(payload) => createGoalTask.mutate({ goal_id: selected.id, parent_task_id: payload.parentTaskId ?? null, title: payload.title, description: payload.description, due_date: payload.dueDate ?? null, priority: payload.priority ?? null, status: payload.status, progress: 0 })}
               />
             </>
           ) : (
@@ -351,35 +378,116 @@ export function GoalsScreen() {
   );
 }
 
-function GoalTaskTree({ tasks, goalId, onUpdate, onDelete, onPlanner, depth = 0 }: {
+function GoalTaskTreeNested({ tasks, allTasks, draggedId, onDragStart, onDragEnd, onNest, onUpdate, onDelete, onPlanner, depth = 0 }: {
   tasks: GoalTask[];
-  goalId: string;
+  allTasks: GoalTask[];
+  draggedId: string | null;
+  onDragStart: (taskId: string) => void;
+  onDragEnd: () => void;
+  onNest: (taskId: string, parentTaskId: string | null) => void;
   onUpdate: (taskId: string, patch: Partial<GoalTask>) => void;
   onDelete: (taskId: string) => void;
   onPlanner: (task: GoalTask) => void;
   depth?: number;
 }) {
-  if (tasks.length === 0 && depth === 0) return <div className="goals-muted">Brak działań. Dodaj pierwszy krok pod celem.</div>;
+  if (tasks.length === 0 && depth === 0) return <div className="goals-muted">Brak działań. Dodaj pierwszy krok albo folder pod celem.</div>;
   return (
     <div className={depth === 0 ? 'goals-task-tree' : 'goals-task-children'}>
-      {tasks.map((task) => (
-        <div key={task.id}>
-          <div className={`goals-task-row${task.status === 'done' ? ' is-done' : ''}`} style={{ paddingLeft: depth ? 8 : undefined }}>
-            <button className="goals-task-check" type="button" onClick={() => onUpdate(task.id, { status: task.status === 'done' ? 'todo' : 'done' })} aria-label="Zmień status">
-              {task.status === 'done' && <IcoCheck />}
-            </button>
-            <span className="goals-task-title">{task.title}</span>
-            {task.priority && <PriorityBadge priority={task.priority} />}
-            <span className="goals-task-date">{relativeDateLabel(task.dueDate)}</span>
-            <button className="icon-btn" type="button" onClick={() => onPlanner(task)} aria-label="Dodaj do Planera"><GoalIcon name="calendar" /></button>
-            <button className="icon-btn" type="button" onClick={() => onDelete(task.id)} aria-label="Usuń działanie"><IcoTrash /></button>
+      {tasks.map((task) => {
+        const folder = isGoalFolder(task);
+        return (
+          <div key={task.id} className="goals-task-node">
+            <div
+              className={`goals-task-row${task.status === 'done' ? ' is-done' : ''}${folder ? ' is-folder' : ''}${draggedId && draggedId !== task.id ? ' is-drop-target' : ''}`}
+              draggable
+              onDragStart={(event) => {
+                event.dataTransfer.setData('text/plain', task.id);
+                event.dataTransfer.effectAllowed = 'move';
+                onDragStart(task.id);
+              }}
+              onDragEnd={onDragEnd}
+              onDragOver={(event) => {
+                if (!draggedId || draggedId === task.id) return;
+                const dragged = findTask(allTasks, draggedId);
+                if (dragged && descendantsOf(dragged).has(task.id)) return;
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'move';
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                const id = event.dataTransfer.getData('text/plain') || draggedId;
+                if (!id || id === task.id) return;
+                const dragged = findTask(allTasks, id);
+                if (dragged && descendantsOf(dragged).has(task.id)) return;
+                onNest(id, task.id);
+                onDragEnd();
+              }}
+              style={{ paddingLeft: depth ? 8 : undefined }}
+            >
+              <button className="goals-task-check" type="button" onClick={() => !folder && onUpdate(task.id, { status: task.status === 'done' ? 'todo' : 'done' })} aria-label="Zmień status">
+                {folder ? <GoalIcon name={task.subtasks.length ? 'folder-open' : 'folder'} /> : task.status === 'done' && <IcoCheck />}
+              </button>
+              <span className="goals-task-title">{task.title}</span>
+              {!folder && task.priority && <PriorityBadge priority={task.priority} />}
+              {!folder && <span className="goals-task-date">{relativeDateLabel(task.dueDate)}</span>}
+              {!folder && <button className="icon-btn" type="button" onClick={() => onPlanner(task)} aria-label="Dodaj do Planera"><GoalIcon name="calendar" /></button>}
+              {task.parentTaskId && <button className="icon-btn" type="button" onClick={() => onNest(task.id, null)} aria-label="Przenieś na poziom celu"><GoalIcon name="folder" /></button>}
+              <button className="icon-btn" type="button" onClick={() => onDelete(task.id)} aria-label="Usuń działanie"><IcoTrash /></button>
+            </div>
+            {task.subtasks.length > 0 && (
+              <GoalTaskTreeNested tasks={task.subtasks} allTasks={allTasks} draggedId={draggedId} onDragStart={onDragStart} onDragEnd={onDragEnd} onNest={onNest} onUpdate={onUpdate} onDelete={onDelete} onPlanner={onPlanner} depth={depth + 1} />
+            )}
           </div>
-          {task.subtasks.length > 0 && (
-            <GoalTaskTree tasks={task.subtasks} goalId={goalId} onUpdate={onUpdate} onDelete={onDelete} onPlanner={onPlanner} depth={depth + 1} />
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
+  );
+}
+
+function GoalTaskFormNested({ tasks, onAdd }: { tasks: GoalTask[]; onAdd: (payload: Omit<GoalTask, 'id' | 'goalId' | 'subtasks' | 'progress'>) => void }) {
+  const [title, setTitle] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [priority, setPriority] = useState<Priority>('mid');
+  const [parentTaskId, setParentTaskId] = useState('');
+  const [kind, setKind] = useState<'task' | 'folder'>('task');
+  const flatTasks = collectTasks(tasks);
+
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    onAdd({
+      title: trimmed,
+      parentTaskId: parentTaskId || undefined,
+      description: taskDescription('', kind === 'folder'),
+      dueDate: kind === 'folder' ? undefined : dueDate || undefined,
+      priority: kind === 'folder' ? undefined : priority,
+      status: 'todo',
+    });
+    setTitle('');
+    setDueDate('');
+    setPriority('mid');
+  }
+
+  return (
+    <form className="goals-add-task-row goals-add-task-row-nested" onSubmit={submit}>
+      <select className="input" value={kind} onChange={(event) => setKind(event.target.value as 'task' | 'folder')} aria-label="Typ wpisu">
+        <option value="task">Działanie</option>
+        <option value="folder">Folder</option>
+      </select>
+      <input className="input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder={kind === 'folder' ? 'Nazwa folderu' : 'Dodaj działanie'} />
+      <select className="input" value={parentTaskId} onChange={(event) => setParentTaskId(event.target.value)} aria-label="Folder nadrzędny">
+        <option value="">Poziom celu</option>
+        {flatTasks.map((task) => <option key={task.id} value={task.id}>{task.title}</option>)}
+      </select>
+      <input className="input" type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} disabled={kind === 'folder'} />
+      <select className="input" value={priority} onChange={(event) => setPriority(event.target.value as Priority)} disabled={kind === 'folder'}>
+        <option value="low">Niski</option>
+        <option value="mid">Średni</option>
+        <option value="high">Wysoki</option>
+      </select>
+      <button className="btn btn-secondary btn-sm" type="submit"><IcoPlus /> Dodaj</button>
+    </form>
   );
 }
 
@@ -407,15 +515,17 @@ function GoalDetailHeader({ goal, onEdit, onToggleDone, onDelete }: { goal: Goal
   );
 }
 
-function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onAdd }: {
+function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest, onAdd }: {
   goal: Goal;
   onUpdate: (taskId: string, patch: Partial<GoalTask>) => void;
   onDelete: (taskId: string) => void;
   onPlanner: (task: GoalTask) => void;
+  onNest: (taskId: string, parentTaskId: string | null) => void;
   onAdd: (payload: Omit<GoalTask, 'id' | 'goalId' | 'subtasks' | 'progress'>) => void;
 }) {
   const tasks = collectTasks(goal.tasks);
   const openTasks = tasks.filter((task) => task.status !== 'done').length;
+  const [draggedId, setDraggedId] = useState<string | null>(null);
 
   return (
     <section className="card goals-actions-card">
@@ -425,44 +535,19 @@ function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onAdd }: {
           <span className="goals-collapsed-summary">{openTasks} otwarte · {tasks.length} wszystkich</span>
         </div>
       </div>
-      <GoalTaskTree
+      <GoalTaskTreeNested
         tasks={goal.tasks}
-        goalId={goal.id}
+        allTasks={goal.tasks}
+        draggedId={draggedId}
+        onDragStart={setDraggedId}
+        onDragEnd={() => setDraggedId(null)}
+        onNest={onNest}
         onUpdate={onUpdate}
         onDelete={onDelete}
         onPlanner={onPlanner}
       />
-      <NewGoalTaskForm onAdd={onAdd} />
+      <GoalTaskFormNested tasks={goal.tasks} onAdd={onAdd} />
     </section>
-  );
-}
-
-function NewGoalTaskForm({ onAdd }: { onAdd: (payload: Omit<GoalTask, 'id' | 'goalId' | 'subtasks' | 'progress'>) => void }) {
-  const [title, setTitle] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [priority, setPriority] = useState<Priority>('mid');
-
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
-    const trimmed = title.trim();
-    if (!trimmed) return;
-    onAdd({ title: trimmed, description: '', dueDate: dueDate || undefined, priority, status: 'todo' });
-    setTitle('');
-    setDueDate('');
-    setPriority('mid');
-  }
-
-  return (
-    <form className="goals-add-task-row" onSubmit={submit}>
-      <input className="input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Dodaj działanie" />
-      <input className="input" type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
-      <select className="input" value={priority} onChange={(event) => setPriority(event.target.value as Priority)}>
-        <option value="low">Niski</option>
-        <option value="mid">Średni</option>
-        <option value="high">Wysoki</option>
-      </select>
-      <button className="btn btn-secondary btn-sm" type="submit"><IcoPlus /> Dodaj</button>
-    </form>
   );
 }
 
