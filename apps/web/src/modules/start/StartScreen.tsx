@@ -6,6 +6,7 @@ import { ALL_WEEKDAYS, habitOccursOn, habitScheduleLabel, habitStats, todayStr a
 import type { Habit, HabitEndMode, HabitEntryStatus, HabitLog, HabitScheduleType, NewHabitInput } from '@/features/habits/types';
 import { useCreateTask, useDeleteTask, useDeleteTasks, useTasks, useToggleTask, useUpdateTask } from '@/features/tasks/hooks';
 import type { Task as SupabaseTask } from '@/features/tasks/types';
+import { SportSignal, DietSignal } from './DashboardSignals';
 
 const MONTH_FULL = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
 const MONTH_SHORT = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
@@ -1832,14 +1833,15 @@ function TodayPanel({
         </button>
       </div>
 
-      <div className="task-filter-row">
+      <div className="task-filter-seg">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
-            className={`task-filter-btn${windowFilter === tab.id ? ' is-active' : ''}`}
+            className={`task-filter-seg-btn${windowFilter === tab.id ? ' is-active' : ''}`}
             onClick={() => setWindowFilter(tab.id)}
           >
+            <i className="task-filter-seg-dot" aria-hidden="true" />
             <span>{tab.label}</span>
             <sup>{tab.count}</sup>
           </button>
@@ -2910,6 +2912,10 @@ export function StartScreen() {
               />
             </div>
             <div className="card planner-habits-card"><HabitsStrip /></div>
+            <div className="planner-signals">
+              <SportSignal />
+              <DietSignal />
+            </div>
           </aside>
           <section className="card planner-calendar-card">
             <Calendar

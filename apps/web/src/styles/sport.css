@@ -23,7 +23,7 @@
 
 .sport-day-col { background: var(--surface-inset); border: 1px solid var(--border-soft); border-radius: var(--r-mid); padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 160px; transition: var(--t); }
 .sport-day-col.is-today { border-color: var(--acc-line); background: var(--acc-soft); }
-.sport-day-col.is-drop-target { border-color: var(--accent-ice); box-shadow: 0 0 0 2px rgba(125, 211, 252, .25) inset; }
+.sport-day-col.is-drop-target { border-color: var(--accent-ice); box-shadow: 0 0 0 2px rgb(var(--acc-rgb) / .25) inset; }
 .sport-day-head { display: flex; align-items: center; gap: 6px; }
 .sport-day-name { font-family: var(--font-mono); font-size: 10px; letter-spacing: .07em; font-weight: 600; color: var(--ink-2); }
 .sport-day-date { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); }

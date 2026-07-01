@@ -1,18 +1,19 @@
-/* Auth screens - Graphite Cool Ice login panel. */
+/* Auth screens - Graphite Cockpit login panel. */
 .auth-wrap{
-  --bg-0:#0d131b; --bg-1:#111a24;
-  --surface:#141d29; --surface-2:#1b2836; --surface-3:#25364a; --surface-inset:var(--surface-3);
-  --border:#25364a; --border-soft:#1f2e3f; --border-strong:rgba(125,211,252,.36);
-  --ink:#e6edf5; --ink-2:#a7b4c2; --ink-3:#78899a; --ink-4:rgba(230,237,245,.38);
-  --acc:#7dd3fc; --acc-ink:#b9e9ff; --acc-soft:rgba(125,211,252,.16); --acc-line:rgba(125,211,252,.40);
-  --acc-solid:#38bdf8; --on-acc:#06111a;
-  --acc-b:#5eead4; --acc-b-ink:#99f6e4; --acc-b-soft:rgba(94,234,212,.14);
-  --success:#34d399; --success-ink:#6ee7b7; --success-soft:rgba(52,211,153,.16);
-  --warn:#fbbf24; --warn-ink:#fcd34d; --warn-soft:rgba(251,191,36,.16);
-  --danger:#f87171; --danger-ink:#fca5a5; --danger-soft:rgba(248,113,113,.16);
+  --bg-0:#0e1512; --bg-1:#121a16;
+  --surface:#161e1a; --surface-2:#1d2621; --surface-3:#26312b; --surface-inset:var(--surface-3);
+  --border:#26312b; --border-soft:#1e2723; --border-strong:rgba(75,174,136,.34);
+  --ink:#e7ede9; --ink-2:#a6b3ac; --ink-3:#7a877f; --ink-4:rgba(231,237,233,.38);
+  --acc:#4bae88; --acc-ink:#86d9b7; --acc-soft:rgba(75,174,136,.16); --acc-line:rgba(75,174,136,.42);
+  --acc-solid:#3f9d78; --on-acc:#06130d;
+  --acc-rgb:75 174 136;
+  --acc-b:#6bb59f; --acc-b-ink:#8fcbb8; --acc-b-soft:rgba(107,181,159,.14);
+  --success:#46b088; --success-ink:#86d9b7; --success-soft:rgba(70,176,136,.16);
+  --warn:#d9a860; --warn-ink:#e6c088; --warn-soft:rgba(217,168,96,.15);
+  --danger:#e07a6f; --danger-ink:#eba59b; --danger-soft:rgba(224,122,111,.15);
   --ring:0 0 0 3px var(--acc-soft);
-  --sh-1:0 1px 2px rgba(2,10,20,.55);
-  --sh-2:0 1px 2px rgba(2,10,20,.55),0 14px 36px -18px rgba(8,24,44,.9);
+  --sh-1:0 1px 2px rgba(2,8,6,.55);
+  --sh-2:0 1px 2px rgba(2,8,6,.55),0 14px 36px -18px rgba(4,16,12,.9);
   min-height:100vh; display:grid; place-items:center; padding:40px 20px;
   color:var(--ink);
   background:
@@ -47,10 +48,10 @@
 .auth-note{ color:var(--ink-2); font-size:12px; }
 
 .auth-btn{ width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  background:var(--acc); color:var(--on-acc); border:1px solid rgba(125,211,252,.65); border-radius:var(--r-mid); padding:13px;
+  background:var(--acc); color:var(--on-acc); border:1px solid rgb(var(--acc-rgb) / .65); border-radius:var(--r-mid); padding:13px;
   font-family:var(--sans); font-size:13.5px; letter-spacing:-.01em; font-weight:600;
   cursor:pointer; transition:var(--t); margin-top:4px; box-shadow:var(--sh-1); }
-.auth-btn:hover{ transform:translateY(-1px); background:var(--acc-solid); box-shadow:0 0 0 3px rgba(125,211,252,.14); }
+.auth-btn:hover{ transform:translateY(-1px); background:var(--acc-solid); box-shadow:0 0 0 3px rgb(var(--acc-rgb) / .14); }
 .auth-btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; filter:none; box-shadow:none; }
 
 .auth-alt{ text-align:center; font-size:12.5px; color:var(--ink-2); margin-top:16px; }

@@ -6,16 +6,8 @@ import { toast } from '@/lib/toast';
 import { useMfaStepUp } from '@/features/auth/useMfaStepUp';
 
 const THEMES: { id: Theme; label: string; swatch: string }[] = [
-  { id: 'white-lotus', label: 'Beżowy', swatch: '#9a6a42' },
-  { id: 'green', label: 'Chłodny', swatch: '#4257d4' },
-  { id: 'dark', label: 'Grafit', swatch: '#161c26' },
-  { id: 'coastal', label: 'Nadmorski', swatch: '#335765' },
-  { id: 'aqua', label: 'Laguna', swatch: '#16a3b8' },
-  { id: 'lavender', label: 'Lawenda', swatch: '#8a737d' },
-  { id: 'coral', label: 'Koralowy', swatch: '#bc6266' },
-  { id: 'steel', label: 'Stalowy', swatch: '#405278' },
-  { id: 'magenta', label: 'Magenta', swatch: '#cf2487' },
-  { id: 'mono', label: 'Monochrom', swatch: '#4d4d4d' },
+  { id: 'dark', label: 'Grafit', swatch: '#4bae88' },
+  { id: 'white-lotus', label: 'Jasny', swatch: '#9a6a42' },
 ];
 
 export function AccountSettings() {

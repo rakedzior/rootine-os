@@ -565,9 +565,9 @@ function NutritionSummaryPanel({ mode, setMode, totals, nutrition, target, onOpe
           <span>Nawodnienie {round((nutrition?.water_ml ?? 0) / 1000, 1)} / {round(goals.water_target_ml / 1000, 1)} L</span>
         </div>
       </div>
-      <MacroProgress label="Białko" value={totals.protein} max={goals.protein_target} color="var(--macro-protein, #7DD3FC)" />
-      <MacroProgress label="Węglowodany" value={totals.carb} max={goals.carb_target} color="var(--macro-carbs, #FBBF24)" />
-      <MacroProgress label="Tłuszcze" value={totals.fat} max={goals.fat_target} color="var(--macro-fat, #F472B6)" />
+      <MacroProgress label="Białko" value={totals.protein} max={goals.protein_target} color="var(--macro-protein, #5b83b6)" />
+      <MacroProgress label="Węglowodany" value={totals.carb} max={goals.carb_target} color="var(--macro-carbs, #d9a860)" />
+      <MacroProgress label="Tłuszcze" value={totals.fat} max={goals.fat_target} color="var(--macro-fat, #9a8cc2)" />
       <button className="diet-summary-details" onClick={onOpenDetails}>
         Szczegółowe podsumowanie
         <ChevronRight size={14} />
@@ -609,7 +609,7 @@ function HydrationPanel({ date, nutrition, target }: { date: string; nutrition?:
     <section className="diet-side-card">
       <header className="diet-panel-head"><strong>Nawodnienie</strong><Droplets size={15} /></header>
       <div className="diet-water-value"><strong>{round(amount / 1000, 1)}</strong> / {round(goal / 1000, 1)} L</div>
-      <ProgressBar value={amount} max={goal} color="var(--water, #38BDF8)" size="md" />
+      <ProgressBar value={amount} max={goal} color="var(--water, #6bb59f)" size="md" />
       <div className="diet-water-actions">
         {[200, 300, 500].map((ml) => (
           <button key={ml} className={`btn btn-secondary btn-sm ${active === ml ? 'is-active' : ''}`} disabled={pending} onClick={() => add(ml)}>+{ml} ml</button>

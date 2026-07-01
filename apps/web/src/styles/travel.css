@@ -114,7 +114,7 @@
   font-size: 11px;
   font-weight: 800;
   color: var(--accent-ice);
-  background: rgba(125, 211, 252, .12);
+  background: rgb(var(--acc-rgb) / .12);
 }
 
 .travel-top-action {
@@ -141,9 +141,9 @@
 .travel-top-action:hover,
 .travel-top-action:focus-visible {
   color: var(--accent-ice);
-  border-color: rgba(125, 211, 252, .36);
+  border-color: rgb(var(--acc-rgb) / .36);
   background:
-    radial-gradient(circle at 20% 0%, rgba(125, 211, 252, .13), transparent 40%),
+    radial-gradient(circle at 20% 0%, rgb(var(--acc-rgb) / .13), transparent 40%),
     color-mix(in srgb, var(--surface-2) 94%, transparent);
   outline: none;
 }
@@ -161,7 +161,7 @@
   place-items: center;
   border-radius: 10px;
   color: var(--ink-3);
-  background: rgba(125, 211, 252, .05);
+  background: rgb(var(--acc-rgb) / .05);
 }
 
 .travel-top-action small svg {
@@ -247,8 +247,8 @@
 
 .travel-trip-item:hover,
 .travel-trip-item.is-selected {
-  border-color: rgba(125, 211, 252, .55);
-  background: rgba(125, 211, 252, .08);
+  border-color: rgb(var(--acc-rgb) / .55);
+  background: rgb(var(--acc-rgb) / .08);
 }
 
 .travel-trip-icon {
@@ -258,8 +258,8 @@
   place-items: center;
   border-radius: 999px;
   color: var(--accent-ice);
-  background: rgba(125, 211, 252, .10);
-  border: 1px solid rgba(125, 211, 252, .18);
+  background: rgb(var(--acc-rgb) / .10);
+  border: 1px solid rgb(var(--acc-rgb) / .18);
 }
 
 .travel-trip-icon svg {
@@ -304,7 +304,7 @@
   white-space: nowrap;
 }
 
-.travel-status.is-planned { color: var(--accent-ice); background: rgba(125, 211, 252, .12); }
+.travel-status.is-planned { color: var(--accent-ice); background: rgb(var(--acc-rgb) / .12); }
 .travel-status.is-active { color: var(--warn-ink); background: var(--warn-soft); }
 .travel-status.is-complete { color: var(--success-ink); background: var(--success-soft); }
 .travel-status.is-archived { color: var(--ink-3); background: var(--surface-2); }
@@ -341,7 +341,7 @@
 .travel-rail-filters button:hover,
 .travel-rail-filters button.is-active {
   color: var(--accent-ice);
-  background: rgba(125, 211, 252, .10);
+  background: rgb(var(--acc-rgb) / .10);
 }
 
 .travel-archive-btn {
@@ -363,7 +363,7 @@
 
 .travel-archive-btn:hover {
   color: var(--ink);
-  background: rgba(125, 211, 252, .05);
+  background: rgb(var(--acc-rgb) / .05);
 }
 
 .travel-archive-btn svg {
@@ -462,8 +462,8 @@
   border: 1px solid var(--border-soft);
   border-radius: var(--r-mid);
   background:
-    radial-gradient(circle at 0% 0%, rgba(125, 211, 252, .10), transparent 42%),
-    rgba(125, 211, 252, .05);
+    radial-gradient(circle at 0% 0%, rgb(var(--acc-rgb) / .10), transparent 42%),
+    rgb(var(--acc-rgb) / .05);
 }
 
 .travel-next-step strong {
@@ -522,7 +522,7 @@
 .travel-tabs button.is-active {
   color: var(--accent-ice);
   border-bottom-color: var(--accent-ice);
-  box-shadow: 0 1px 0 rgba(125, 211, 252, .24);
+  box-shadow: 0 1px 0 rgb(var(--acc-rgb) / .24);
 }
 
 .travel-tabs svg {
@@ -627,7 +627,7 @@
   padding: 14px;
   border: 1px solid var(--border-soft);
   border-radius: var(--r-mid);
-  background: rgba(125, 211, 252, .05);
+  background: rgb(var(--acc-rgb) / .05);
 }
 
 .travel-plan-note strong {
@@ -694,7 +694,7 @@
 .travel-stay-card > button:hover,
 .travel-panel-link:hover {
   color: var(--accent-ice);
-  background: rgba(125, 211, 252, .06);
+  background: rgb(var(--acc-rgb) / .06);
 }
 
 .travel-stay-card > button svg {
@@ -714,7 +714,7 @@
   gap: 12px;
   min-height: 54px;
   padding: 9px 10px;
-  border: 1px solid rgba(125, 211, 252, .09);
+  border: 1px solid rgb(var(--acc-rgb) / .09);
   border-radius: var(--r-sm);
   background: rgba(9, 19, 31, .30);
 }
@@ -726,8 +726,8 @@
   place-items: center;
   border-radius: 10px;
   color: var(--accent-ice);
-  background: rgba(125, 211, 252, .10);
-  border: 1px solid rgba(125, 211, 252, .15);
+  background: rgb(var(--acc-rgb) / .10);
+  border: 1px solid rgb(var(--acc-rgb) / .15);
 }
 
 .travel-row-icon svg {
@@ -755,7 +755,7 @@
   padding: 4px 8px;
   border-radius: var(--r-pill);
   color: var(--accent-ice);
-  background: rgba(125, 211, 252, .10);
+  background: rgb(var(--acc-rgb) / .10);
   font-size: 11px;
   font-style: normal;
   font-weight: 800;
@@ -787,7 +787,7 @@
   border-radius: var(--r-pill);
   padding: 5px 10px;
   color: var(--accent-ice);
-  background: rgba(125, 211, 252, .10);
+  background: rgb(var(--acc-rgb) / .10);
   cursor: pointer;
   font: inherit;
   font-size: 12px;
@@ -936,7 +936,7 @@
   padding: 3px 9px;
   border-radius: var(--r-pill);
   color: var(--accent-ice);
-  background: rgba(125, 211, 252, .10);
+  background: rgb(var(--acc-rgb) / .10);
   font-size: 12px;
   font-weight: 800;
 }
@@ -1062,7 +1062,7 @@
   min-height: 78px;
   border: 1px solid var(--border-soft);
   border-radius: var(--r-mid);
-  background: rgba(125, 211, 252, .04);
+  background: rgb(var(--acc-rgb) / .04);
   color: var(--ink-2);
   display: grid;
   place-items: center;
@@ -1075,8 +1075,8 @@
 
 .travel-actions-card button:hover {
   color: var(--accent-ice);
-  background: rgba(125, 211, 252, .08);
-  border-color: rgba(125, 211, 252, .25);
+  background: rgb(var(--acc-rgb) / .08);
+  border-color: rgb(var(--acc-rgb) / .25);
 }
 
 .travel-actions-card svg {
@@ -1251,7 +1251,7 @@
   text-transform: uppercase;
 }
 
-.travel-status.is-planned { color: var(--accent-ice); background: rgba(125, 211, 252, .10); border-color: rgba(125, 211, 252, .24); }
+.travel-status.is-planned { color: var(--accent-ice); background: rgb(var(--acc-rgb) / .10); border-color: rgb(var(--acc-rgb) / .24); }
 .travel-status.is-active { color: var(--warn-ink); background: rgba(251, 191, 36, .10); border-color: rgba(251, 191, 36, .20); }
 .travel-status.is-complete { color: var(--success-ink); background: rgba(52, 211, 153, .10); border-color: rgba(52, 211, 153, .22); }
 .travel-status.is-archived { color: var(--ink-3); background: color-mix(in srgb, var(--surface-2) 70%, transparent); border-color: var(--border-soft); }

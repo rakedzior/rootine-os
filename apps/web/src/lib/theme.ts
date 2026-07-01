@@ -1,14 +1,20 @@
 /**
- * Theme management — white-lotus (beige), dark, green.
+ * Theme management — dark (Graphite Cockpit, primary identity) + white-lotus (light alt).
  * Applies data-theme to <html>; persists to localStorage.
  */
 import { fetchPreferences, updatePreferences } from '@/features/config/profile';
 
-export type Theme = 'white-lotus' | 'dark' | 'green' | 'coastal' | 'aqua' | 'lavender' | 'coral' | 'steel' | 'magenta' | 'mono';
+export type Theme = 'dark' | 'white-lotus';
 
 const ROOT = document.documentElement;
 const KEY = 'rootine-theme';
 const DEFAULT_THEME: Theme = 'dark';
+const VALID: readonly Theme[] = ['dark', 'white-lotus'];
+
+/** Coerce any stored/legacy value (retired palettes, seeded 'light') to a supported theme. */
+function normalize(value: string | null | undefined): Theme {
+  return VALID.includes(value as Theme) ? (value as Theme) : DEFAULT_THEME;
+}
 
 export function applyTheme(theme: Theme, animate = false) {
   if (animate) {
@@ -20,13 +26,11 @@ export function applyTheme(theme: Theme, animate = false) {
 }
 
 export function applyStoredTheme() {
-  const stored = localStorage.getItem(KEY) as Theme | null;
-  applyTheme(stored ?? DEFAULT_THEME);
+  applyTheme(normalize(localStorage.getItem(KEY)));
 }
 
 export function getCurrentTheme(): Theme {
-  const stored = localStorage.getItem(KEY) as Theme | null;
-  return stored ?? DEFAULT_THEME;
+  return normalize(localStorage.getItem(KEY));
 }
 
 export function setTheme(theme: Theme) {
@@ -41,13 +45,15 @@ export async function loadUserTheme(): Promise<Theme> {
   const local = getCurrentTheme();
   try {
     const prefs = await fetchPreferences();
-    const server = prefs?.theme as Theme | undefined;
-    if (!server) return local;
+    const serverRaw = prefs?.theme as string | undefined;
+    if (!serverRaw) return local;
     // Legacy: column seeded literal 'light' but user has a real local pick → migrate up.
-    if ((server as string) === 'light' && local !== 'white-lotus') {
+    if (serverRaw === 'light' && local !== 'white-lotus') {
       void updatePreferences({ theme: local }).catch(() => {});
       return local;
     }
+    // Legacy 'light' → white-lotus; retired palettes coerce to the default identity.
+    const server: Theme = serverRaw === 'light' ? 'white-lotus' : normalize(serverRaw);
     applyTheme(server);
     return server;
   } catch {

@@ -121,6 +121,23 @@ export function useWeekWorkouts(weekStart: string) {
   return useQuery({ queryKey: sportKeys.week(weekStart, end), queryFn: () => repo.listScheduledWorkouts(weekStart, end) });
 }
 
+/** Next upcoming planned/in-progress workout within the next two weeks (for the Start dashboard signal). */
+export function useNextWorkout() {
+  const today = planner.todayStr();
+  const end = planner.addDaysStr(today, 14);
+  return useQuery({
+    queryKey: ['sport', 'next-workout', today],
+    queryFn: async () => {
+      const list = await repo.listScheduledWorkouts(today, end);
+      return (
+        list
+          .filter((w) => (w.status === 'planned' || w.status === 'in_progress') && w.scheduled_date >= today)
+          .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date))[0] ?? null
+      );
+    },
+  });
+}
+
 export function useCreateScheduledWorkout() {
   const qc = useQueryClient();
   return useMutation({

@@ -1155,8 +1155,8 @@
 
 .work-priority.is-high { color: var(--danger-ink); background: rgba(248, 113, 113, .11); border-color: rgba(248, 113, 113, .22); }
 .work-priority.is-mid { color: var(--warn-ink); background: rgba(251, 191, 36, .10); border-color: rgba(251, 191, 36, .20); }
-.work-priority.is-low { color: var(--accent-ice); background: rgba(125, 211, 252, .10); border-color: rgba(125, 211, 252, .22); }
-.work-status.is-active { color: var(--accent-ice); background: rgba(125, 211, 252, .10); border-color: rgba(125, 211, 252, .22); }
+.work-priority.is-low { color: var(--accent-ice); background: rgb(var(--acc-rgb) / .10); border-color: rgb(var(--acc-rgb) / .22); }
+.work-status.is-active { color: var(--accent-ice); background: rgb(var(--acc-rgb) / .10); border-color: rgb(var(--acc-rgb) / .22); }
 .work-status.is-todo,
 .work-status.is-waiting { color: var(--ink-3); background: color-mix(in srgb, var(--surface-2) 70%, transparent); border-color: var(--border-soft); }
 .work-status.is-done { color: var(--success-ink); background: rgba(52, 211, 153, .10); border-color: rgba(52, 211, 153, .22); }

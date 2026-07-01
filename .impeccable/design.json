@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-01T00:00:00.000Z",
+  "title": "Design System: Rootine OS",
+  "extensions": {
+    "colorMeta": {
+      "accent-emerald": { "role": "primary", "displayName": "Muted Emerald", "canonical": "#4bae88", "tonalRamp": ["#0c1f18", "#123027", "#1c4638", "#295f4b", "#347b60", "#3f9d78", "#4bae88", "#86d9b7", "#c3ecdc"] },
+      "graphite-surface": { "role": "neutral", "displayName": "Panel Surface", "canonical": "#161e1a", "tonalRamp": ["#0e1512", "#161e1a", "#1d2621", "#26312b", "#374640", "#5f6b64", "#7a877f", "#a6b3ac", "#e7ede9"] },
+      "graphite-canvas": { "role": "neutral", "displayName": "Graphite Canvas", "canonical": "#0e1512", "tonalRamp": ["#0e1512", "#121a16", "#161e1a", "#1d2621", "#26312b", "#374640", "#5f6b64", "#7a877f", "#a6b3ac"] },
+      "ink": { "role": "neutral", "displayName": "Warm Off-White Ink", "canonical": "#e7ede9", "tonalRamp": ["#26312b", "#374640", "#4b5750", "#5f6b64", "#7a877f", "#a6b3ac", "#c6cfc9", "#e7ede9", "#f4f7f5"] },
+      "info-navy": { "role": "secondary", "displayName": "Deep Navy Info", "canonical": "#5b83b6" },
+      "success": { "role": "secondary", "displayName": "Muted Success", "canonical": "#46b088" },
+      "warning": { "role": "secondary", "displayName": "Amber Warning", "canonical": "#d9a860" },
+      "danger": { "role": "secondary", "displayName": "Clay Danger", "canonical": "#e07a6f" },
+      "event-lavender": { "role": "tertiary", "displayName": "Muted Lavender", "canonical": "#9a8cc2" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Rare hero figures / top-of-page numbers (Sora 650)." },
+      "headline": { "displayName": "Headline", "purpose": "Screen and module titles (Sora 650)." },
+      "title": { "displayName": "Title", "purpose": "Card and section headers (Sora 600)." },
+      "body": { "displayName": "Body", "purpose": "Default 14px reading text on dense dark screens (Inter 400)." },
+      "label": { "displayName": "Label", "purpose": "Field labels, chips, meta — 11px functional (Inter 600)." },
+      "mono": { "displayName": "Mono", "purpose": "Counts, times, macros, numeric data (IBM Plex Mono)." }
+    },
+    "shadows": [
+      { "name": "hairline", "value": "0 1px 2px rgba(2,8,6,.55)", "purpose": "Resting cards and buttons — barely there." },
+      { "name": "lifted", "value": "0 1px 2px rgba(2,8,6,.55), 0 14px 36px -18px rgba(4,16,12,.9)", "purpose": "Hover on interactive surfaces." },
+      { "name": "raised", "value": "0 2px 8px rgba(2,8,6,.6), 0 24px 56px -22px rgba(4,16,12,.95)", "purpose": "Persistent elevated containers." },
+      { "name": "pop", "value": "0 28px 72px -20px rgba(2,12,8,.96)", "purpose": "Popovers, dropdowns, and modals only." },
+      { "name": "focus-ring", "value": "0 0 0 3px rgba(75,174,136,.34)", "purpose": "Emerald-tinted focus indicator." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(.4, 0, .2, 1)", "purpose": "Default easing for all state transitions." },
+      { "name": "t-fast", "value": "120ms", "purpose": "Micro-feedback (button press, toggle)." },
+      { "name": "t", "value": "180ms", "purpose": "Standard state transition (hover, focus)." },
+      { "name": "t-slow", "value": "280ms", "purpose": "Larger reveals (popover, panel)." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "480px" },
+      { "name": "tablet", "value": "768px" },
+      { "name": "desktop", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single emerald call-to-action — used rarely so the signal stays meaningful.",
+      "html": "<button class=\"ds-btn-primary\">Dodaj zadanie</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; background: var(--acc, #4bae88); color: var(--on-acc, #06130d); border: 1px solid rgb(var(--acc-rgb, 75 174 136) / .55); border-radius: 12px; padding: 0 18px; font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 650; letter-spacing: -.01em; cursor: pointer; box-shadow: 0 1px 2px rgba(2,8,6,.55); transition: background 180ms cubic-bezier(.4,0,.2,1), transform 180ms cubic-bezier(.4,0,.2,1), box-shadow 180ms cubic-bezier(.4,0,.2,1); } .ds-btn-primary:hover { background: var(--acc-solid, #3f9d78); transform: translateY(-1px); box-shadow: 0 0 0 3px rgb(var(--acc-rgb, 75 174 136) / .16); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px rgb(var(--acc-rgb, 75 174 136) / .34); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The default action button — quiet border on graphite, keeping the emerald primary rare.",
+      "html": "<button class=\"ds-btn-secondary\">Anuluj</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; background: var(--surface, #161e1a); color: var(--ink, #e7ede9); border: 1px solid var(--border, #26312b); border-radius: 12px; padding: 0 18px; font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color 180ms cubic-bezier(.4,0,.2,1), background 180ms cubic-bezier(.4,0,.2,1); } .ds-btn-secondary:hover { background: var(--surface-2, #1d2621); border-color: var(--border-strong, rgba(75,174,136,.34)); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The primary container — graphite panel, generous radius, depth by tone not shadow.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Dzisiaj</div><p class=\"ds-card-body\">3 zadania, 1 wydarzenie, 2 nawyki do uzupełnienia.</p></div>",
+      "css": ".ds-card { background: var(--surface, #161e1a); color: var(--ink, #e7ede9); border: 1px solid var(--border, #26312b); border-radius: 20px; padding: 20px; box-shadow: 0 1px 2px rgba(2,8,6,.55); } .ds-card-title { font-family: 'Sora', 'Inter', sans-serif; font-weight: 600; font-size: 18px; letter-spacing: -.01em; margin: 0 0 8px; } .ds-card-body { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.5; color: var(--ink-2, #a6b3ac); margin: 0; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Quiet field with an emerald focus ring — never a harsh glow.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Szukaj modułów\" />",
+      "css": ".ds-input { width: 100%; background: var(--surface, #161e1a); color: var(--ink, #e7ede9); border: 1px solid var(--border, #26312b); border-radius: 12px; padding: 10px 12px; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; transition: border-color 180ms cubic-bezier(.4,0,.2,1), box-shadow 180ms cubic-bezier(.4,0,.2,1); } .ds-input::placeholder { color: var(--ink-3, #7a877f); } .ds-input:focus-visible { outline: none; border-color: rgb(var(--acc-rgb, 75 174 136) / .42); box-shadow: 0 0 0 3px rgb(var(--acc-rgb, 75 174 136) / .14); }"
+    },
+    {
+      "name": "Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Module nav entry — muted at rest, emerald when active, no heavy underline.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item is-active\" href=\"#\">Start</a><a class=\"ds-nav-item\" href=\"#\">Praca</a><a class=\"ds-nav-item\" href=\"#\">Sport</a></nav>",
+      "css": ".ds-nav { display: inline-flex; gap: 4px; background: var(--surface, #161e1a); border: 1px solid var(--border, #26312b); border-radius: 12px; padding: 4px; } .ds-nav-item { font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 600; color: var(--ink-2, #a6b3ac); text-decoration: none; padding: 7px 14px; border-radius: 8px; transition: color 180ms cubic-bezier(.4,0,.2,1), background 180ms cubic-bezier(.4,0,.2,1); } .ds-nav-item:hover { color: var(--ink, #e7ede9); background: var(--surface-2, #1d2621); } .ds-nav-item.is-active { color: var(--acc-ink, #86d9b7); background: rgb(var(--acc-rgb, 75 174 136) / .14); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Graphite Cockpit",
+    "overview": "Rootine OS is a dark-first personal life operating system. The primary identity is a premium graphite cockpit: a deep warm-graphite base with a green-blue undertone, carrying a single muted emerald signal. It reads like well-made control software — calm, dense where it counts, composed under load — not a movie HUD and not a cold admin panel. 'White Lotus' contributes humanity (warm graphite, desaturated emerald); 'Jarvis' contributes clarity and precision through information design, never neon. Dark is the product; a white-lotus light theme is the one supported alternative. Every surface is token-driven so the whole app stays coherent.",
+    "keyCharacteristics": [
+      "Graphite base with a green-blue undertone; depth by tonal layering, not heavy shadow.",
+      "One restrained muted-emerald signal (<=10% of any screen) plus a muted natural status/event palette.",
+      "Sora display + Inter body; compact 14px base tuned for glanceable, dense screens.",
+      "Subtle borders, soft atmospheric surfaces, calm contrast.",
+      "Fully token-driven so the whole app (and the light alt) stays coherent from one source."
+    ],
+    "rules": [
+      { "name": "The One Emerald Rule", "body": "There is exactly one brand signal — Muted Emerald. It carries interaction, identity, and positive state; it does not decorate. If emerald is doing more than ~10% of a screen, something is over-accented.", "section": "colors" },
+      { "name": "The No-Pure, No-Neon Rule", "body": "No #000, no #fff, no neon green, no glow. Text is warm off-white; the darkest surface is warm graphite; emerald is desaturated. Purity reads cold and neon reads cyberpunk — both are anti-references.", "section": "colors" },
+      { "name": "The Compact-Base Rule", "body": "Body is 14px, not 16px. This is a cockpit, not an article. Hierarchy comes from weight and the Sora/Inter split, not from inflating sizes.", "section": "typography" },
+      { "name": "The Tone-First Rule", "body": "Reach for a surface-tone step before a shadow. On a dark base a tight drop shadow muddies; let tone do the lifting. Shadows are for things that truly float.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do author every surface against semantic tokens and rgb(var(--acc-rgb) / a) for accent tints, so it themes across dark/light for free.",
+      "Do convey depth by stepping surface tone first; add shadow only for elements that genuinely float.",
+      "Do keep the emerald signal rare and earned — interaction, identity, and positive state only; keep most of the UI graphite and navy.",
+      "Do keep body text at 14px and build hierarchy from weight and the Sora/Inter split.",
+      "Do lead each surface with 'what matters now?' (orient before act); prioritize signal over inventory."
+    ],
+    "donts": [
+      "Don't use neon green, glow, hologram/HUD lines, or fake sci-fi panels. Advanced is not cyberpunk.",
+      "Don't use #000 or #fff or cold corporate gray. The base is warm graphite; text is warm off-white.",
+      "Don't add gamified flourishes — no streak confetti, mascots, badges, or celebratory bounce/elastic motion.",
+      "Don't fall into the generic SaaS-dashboard look: no gradient hero cards, no default purple, no icon-heading-text card grids, no meaningless insight widgets.",
+      "Don't create Notion/ClickUp clutter — no everything-at-once density, no nested config on primary surfaces.",
+      "Don't use border-left/border-right greater than 1px as a colored accent stripe; carry tone with a leading icon, a soft tint, or a full hairline.",
+      "Don't use gradient text or decorative glassmorphism.",
+      "Don't hardcode hex values in new components; that breaks theming and drifts the system."
+    ]
+  }
+}
