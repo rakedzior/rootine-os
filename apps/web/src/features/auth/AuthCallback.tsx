@@ -14,6 +14,10 @@ function getOAuthError(params: URLSearchParams) {
   );
 }
 
+function getHashKeys() {
+  return Array.from(new URLSearchParams(window.location.hash.replace(/^#/, '')).keys());
+}
+
 async function applySessionFromHash(): Promise<Session | null> {
   const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
   const accessToken = hash.get('access_token');
@@ -32,28 +36,15 @@ async function applySessionFromHash(): Promise<Session | null> {
 }
 
 async function waitForSession(): Promise<Session | null> {
-  const existing = await supabase.auth.getSession();
-  if (existing.data.session) return existing.data.session;
+  const startedAt = Date.now();
 
-  return new Promise<Session | null>((resolve) => {
-    let done = false;
-    const finish = (session: Session | null) => {
-      if (done) return;
-      done = true;
-      sub.data.subscription.unsubscribe();
-      window.clearTimeout(timeout);
-      resolve(session);
-    };
+  while (Date.now() - startedAt < 5000) {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) return data.session;
+    await new Promise((resolve) => window.setTimeout(resolve, 250));
+  }
 
-    const sub = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) finish(session);
-    });
-
-    const timeout = window.setTimeout(async () => {
-      const latest = await supabase.auth.getSession();
-      finish(latest.data.session);
-    }, 4000);
-  });
+  return null;
 }
 
 export function AuthCallback() {
@@ -66,24 +57,31 @@ export function AuthCallback() {
     let redirectTimer: number | undefined;
 
     async function finish() {
-      const oauthError = getOAuthError(params);
-      if (oauthError) {
-        setMessage(oauthError);
-        redirectTimer = window.setTimeout(() => navigate('/login', { replace: true }), 3000);
-        return;
-      }
+      try {
+        const oauthError = getOAuthError(params);
+        if (oauthError) {
+          setMessage(oauthError);
+          redirectTimer = window.setTimeout(() => navigate('/login', { replace: true }), 3000);
+          return;
+        }
 
-      let session = window.location.hash ? await applySessionFromHash() : null;
-      session ??= await waitForSession();
-      if (!active) return;
-      if (!session) {
-        const marker = params.get('code') ? 'code' : window.location.hash ? 'hash' : 'brak parametrow OAuth';
-        setMessage(`Nie udalo sie potwierdzic logowania (${marker}). Sprawdz konfiguracje Supabase Redirect URLs.`);
+        let session = window.location.hash ? await applySessionFromHash() : null;
+        session ??= await waitForSession();
+        if (!active) return;
+        if (!session) {
+          const marker = params.get('code') ? 'code' : window.location.hash ? `hash: ${getHashKeys().join(', ') || 'empty'}` : 'brak parametrow OAuth';
+          setMessage(`Nie udalo sie potwierdzic logowania (${marker}).`);
+          redirectTimer = window.setTimeout(() => navigate('/login', { replace: true }), 8000);
+          return;
+        }
+
+        navigate('/', { replace: true });
+      } catch (error) {
+        if (!active) return;
+        const message = error instanceof Error ? error.message : String(error);
+        setMessage(`Blad callback OAuth: ${message}`);
         redirectTimer = window.setTimeout(() => navigate('/login', { replace: true }), 6000);
-        return;
       }
-
-      navigate('/', { replace: true });
     }
 
     void finish();
