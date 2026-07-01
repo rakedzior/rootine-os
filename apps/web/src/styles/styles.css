@@ -13765,6 +13765,80 @@ textarea.input {
   background: color-mix(in srgb, var(--accent-ice) 10%, transparent);
 }
 
+/* Goals list: larger goal tiles with one consistent marker instead of noisy icons. */
+.goals-command-panel .goals-folder-list {
+  gap: 12px;
+}
+
+.goals-command-panel .goals-folder-row {
+  grid-template-columns: 18px minmax(0, 1fr) auto 18px;
+  min-height: 78px;
+  padding: 15px 16px;
+  gap: 13px;
+  border-radius: 14px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--surface-inset) 92%, transparent), color-mix(in srgb, var(--surface-raised) 74%, transparent)),
+    var(--surface-inset);
+}
+
+.goals-command-panel .goals-folder-row:hover {
+  border-color: color-mix(in srgb, var(--accent-ice) 22%, var(--border-soft));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--surface-2) 74%, transparent), color-mix(in srgb, var(--surface-raised) 72%, transparent)),
+    var(--surface-inset);
+}
+
+.goals-command-panel .goals-folder-row.is-active {
+  border-color: color-mix(in srgb, var(--accent-ice) 58%, var(--border-soft));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent-ice) 14%, transparent), color-mix(in srgb, var(--surface-raised) 82%, transparent)),
+    var(--surface-inset);
+  box-shadow: inset 3px 0 0 var(--accent-ice), 0 10px 26px rgba(0, 0, 0, .18);
+}
+
+.goals-command-panel .goals-folder-icon {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  align-self: center;
+  background: color-mix(in srgb, var(--ink-3) 42%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ink-3) 34%, transparent);
+  box-shadow: none;
+}
+
+.goals-command-panel .goals-folder-icon svg {
+  display: none;
+}
+
+.goals-command-panel .goals-folder-row.is-active .goals-folder-icon {
+  width: 13px;
+  height: 13px;
+  background: var(--accent-ice);
+  border-color: var(--accent-ice);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent-ice) 13%, transparent);
+}
+
+.goals-command-panel .goals-folder-main {
+  gap: 7px;
+}
+
+.goals-command-panel .goals-folder-main strong {
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.goals-command-panel .goals-folder-main small {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.goals-command-panel .goals-folder-pct {
+  min-width: 44px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
 .goals-task-node {
   min-width: 0;
 }
@@ -13883,6 +13957,20 @@ textarea.input {
   color: var(--ink);
   border-color: color-mix(in srgb, var(--accent-ice) 22%, var(--border-soft));
   background: color-mix(in srgb, var(--acc-soft) 56%, transparent);
+}
+
+.goal-action-row.is-dragging {
+  opacity: .42;
+  border-color: color-mix(in srgb, var(--accent-ice) 30%, transparent);
+}
+
+.goal-action-row.is-drop-target {
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--accent-ice) 58%, var(--border-soft));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent-ice) 13%, transparent), transparent 72%),
+    color-mix(in srgb, var(--acc-soft) 72%, transparent);
+  box-shadow: inset 3px 0 0 var(--accent-ice);
 }
 
 .goal-action-row.is-done .goal-action-title {

@@ -14,7 +14,7 @@ import {
   useUpdateGoalTask,
 } from '@/features/goals/hooks';
 import type { Goal as GoalRow, GoalAction, GoalActionNode, GoalActionPriority, GoalActionStatus, GoalTask as GoalTaskRow, Milestone as MilestoneRow } from '@/features/goals/types';
-import { buildGoalActionTree, getActionBreadcrumb } from '@/features/goals/utils/buildGoalActionTree';
+import { buildGoalActionTree, canMoveAction, getActionBreadcrumb } from '@/features/goals/utils/buildGoalActionTree';
 import { getVisualCompletionState } from '@/features/goals/utils/goalActionProgress';
 
 type Priority = 'low' | 'mid' | 'high';
@@ -621,11 +621,17 @@ function InlineGoalActionInput({ depth, placeholder, onCancel, onSave }: {
   );
 }
 
-function GoalActionRow({ node, selectedId, expandedIds, editingId, onToggleExpanded, onSelect, onToggleStatus, onAddChild, onEdit, onRename, onSetStatus, onDelete, onPlanner }: {
+function GoalActionRow({ node, selectedId, expandedIds, editingId, draggingId, dropTargetId, onDragStart, onDragEnd, onDragOverAction, onDropOnAction, onToggleExpanded, onSelect, onToggleStatus, onAddChild, onEdit, onRename, onSetStatus, onDelete, onPlanner }: {
   node: GoalActionNode;
   selectedId: string | null;
   expandedIds: Set<string>;
   editingId: string | null;
+  draggingId: string | null;
+  dropTargetId: string | null;
+  onDragStart: (id: string) => void;
+  onDragEnd: () => void;
+  onDragOverAction: (targetId: string) => void;
+  onDropOnAction: (targetId: string) => void;
   onToggleExpanded: (id: string) => void;
   onSelect: (id: string) => void;
   onToggleStatus: (node: GoalActionNode) => void;
@@ -652,8 +658,27 @@ function GoalActionRow({ node, selectedId, expandedIds, editingId, onToggleExpan
   return (
     <div className={`goal-action-node depth-${Math.min(node.depth, 5)}`}>
       <div
-        className={`goal-action-row${selectedId === node.id ? ' is-selected' : ''}${node.status === 'done' ? ' is-done' : ''}${node.depth >= 4 ? ' is-deep' : ''}`}
+        className={`goal-action-row${selectedId === node.id ? ' is-selected' : ''}${node.status === 'done' ? ' is-done' : ''}${node.depth >= 4 ? ' is-deep' : ''}${draggingId === node.id ? ' is-dragging' : ''}${dropTargetId === node.id ? ' is-drop-target' : ''}`}
         style={{ '--depth': node.depth } as React.CSSProperties}
+        draggable={editingId !== node.id}
+        onDragStart={(event) => {
+          event.stopPropagation();
+          event.dataTransfer.setData('text/plain', node.id);
+          event.dataTransfer.effectAllowed = 'move';
+          onDragStart(node.id);
+        }}
+        onDragEnd={onDragEnd}
+        onDragOver={(event) => {
+          if (!draggingId || draggingId === node.id) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = 'move';
+          onDragOverAction(node.id);
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onDropOnAction(node.id);
+        }}
         onClick={() => onSelect(node.id)}
       >
         {hasChildren ? (
@@ -705,6 +730,12 @@ function GoalActionRow({ node, selectedId, expandedIds, editingId, onToggleExpan
               selectedId={selectedId}
               expandedIds={expandedIds}
               editingId={editingId}
+              draggingId={draggingId}
+              dropTargetId={dropTargetId}
+              onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
+              onDragOverAction={onDragOverAction}
+              onDropOnAction={onDropOnAction}
               onToggleExpanded={onToggleExpanded}
               onSelect={onSelect}
               onToggleStatus={onToggleStatus}
@@ -761,7 +792,7 @@ function GoalActionDetailsPanel({ action, actionsById, onAddChild, onEdit }: {
   );
 }
 
-function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest: _onNest, onAdd }: {
+function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest, onAdd }: {
   goal: Goal;
   onUpdate: (taskId: string, patch: Partial<GoalTask>) => void;
   onDelete: (taskId: string) => void;
@@ -778,6 +809,8 @@ function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest: _onNest
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
   const [creatingParentId, setCreatingParentId] = useState<string | null | undefined>(undefined);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [draggingActionId, setDraggingActionId] = useState<string | null>(null);
+  const [dropTargetActionId, setDropTargetActionId] = useState<string | null>(null);
 
   useEffect(() => {
     const key = `rootine:goal-actions-expanded:${goal.id}`;
@@ -791,6 +824,8 @@ function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest: _onNest
     setSelectedActionId(null);
     setCreatingParentId(undefined);
     setEditingId(null);
+    setDraggingActionId(null);
+    setDropTargetActionId(null);
   }, [goal.id]);
 
   useEffect(() => {
@@ -845,6 +880,19 @@ function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest: _onNest
     });
   }
 
+  function moveActionToParent(targetId: string) {
+    const draggedId = draggingActionId;
+    setDraggingActionId(null);
+    setDropTargetActionId(null);
+    if (!draggedId || draggedId === targetId) return;
+    if (!canMoveAction(draggedId, targetId, actions)) return;
+    const dragged = actionsById.get(draggedId);
+    if (dragged?.parentId === targetId) return;
+    onNest(draggedId, targetId);
+    setExpandedIds((prev) => new Set(prev).add(targetId));
+    setSelectedActionId(draggedId);
+  }
+
   function actionToTask(action: GoalAction): GoalTask {
     return {
       id: action.id,
@@ -891,6 +939,21 @@ function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest: _onNest
                   selectedId={selectedActionId}
                   expandedIds={expandedIds}
                   editingId={editingId}
+                  draggingId={draggingActionId}
+                  dropTargetId={dropTargetActionId}
+                  onDragStart={(id) => {
+                    setDraggingActionId(id);
+                    setDropTargetActionId(null);
+                  }}
+                  onDragEnd={() => {
+                    setDraggingActionId(null);
+                    setDropTargetActionId(null);
+                  }}
+                  onDragOverAction={(targetId) => {
+                    if (!draggingActionId || draggingActionId === targetId) return;
+                    setDropTargetActionId(canMoveAction(draggingActionId, targetId, actions) ? targetId : null);
+                  }}
+                  onDropOnAction={moveActionToParent}
                   onToggleExpanded={toggleExpanded}
                   onSelect={setSelectedActionId}
                   onToggleStatus={(item) => updateAction(item.id, { status: nextStatusAfterToggle(item.status) })}
