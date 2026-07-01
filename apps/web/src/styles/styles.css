@@ -2840,10 +2840,10 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
 }
 .day-cell.is-active,
 .day-cell.is-today {
-  border-color: color-mix(in srgb, var(--accent-ice) 42%, var(--border-soft));
+  border-color: color-mix(in srgb, var(--accent-ice) 34%, var(--border-soft));
   background:
-    radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--accent-ice) 12%, transparent), transparent 44%),
-    color-mix(in srgb, var(--surface-calendar) 90%, #06111a);
+    radial-gradient(circle at 16% 0%, color-mix(in srgb, var(--accent-ice) 7%, transparent), transparent 44%),
+    color-mix(in srgb, var(--surface-calendar) 94%, #06111a);
 }
 .day-cell.is-drop-target {
   border-color: var(--border-active);
@@ -2895,8 +2895,9 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
   height: 22px;
   display: grid;
   place-items: center;
-  color: #06111a;
-  background: var(--accent-ice);
+  color: var(--acc-ink);
+  background: color-mix(in srgb, var(--surface-calendar) 70%, var(--accent-ice) 30%);
+  border: 1px solid color-mix(in srgb, var(--accent-ice) 42%, transparent);
   border-radius: 50%;
   font-size: 11px;
 }
@@ -3021,9 +3022,9 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
   border-color: color-mix(in srgb, var(--accent-ice) 22%, var(--border-soft));
 }
 .day-cell.is-compact .ev-task.is-done {
-  background: color-mix(in srgb, var(--surface-base) 78%, #4b5563 22%);
-  border-color: color-mix(in srgb, var(--border-soft) 72%, #4b5563 28%);
-  color: color-mix(in srgb, var(--ink-2) 74%, transparent);
+  background: color-mix(in srgb, var(--surface-calendar) 86%, var(--surface-3) 14%);
+  border-color: color-mix(in srgb, var(--border-soft) 76%, var(--surface-3) 24%);
+  color: color-mix(in srgb, var(--ink-3) 88%, transparent);
 }
 .ev-task-title {
   flex: 1;
@@ -3061,7 +3062,7 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
 }
 .tsk-check:hover { border-color: var(--accent-ice); box-shadow: 0 0 0 3px rgb(var(--acc-rgb) / 0.12); }
 .tsk-check.is-done { background: var(--status-success); border-color: var(--status-success); color: #06111a; }
-.tsk-check-sm { width: 22px; height: 22px; border-radius: 6px; border-width: 1.5px; border-color: color-mix(in srgb, var(--accent-ice) 38%, var(--border-strong)); }
+.tsk-check-sm { width: 22px; height: 22px; border-radius: 6px; border-width: 1.5px; border-color: color-mix(in srgb, var(--accent-ice) 32%, var(--border-strong)); }
 .day-cell.is-compact .tsk-check-sm {
   width: 12px;
   height: 12px;
@@ -3069,18 +3070,18 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
   min-height: 12px;
   border-radius: 4px;
   border-width: 1.2px;
-  border-color: color-mix(in srgb, var(--accent-ice) 44%, var(--ink-4));
-  background: color-mix(in srgb, var(--surface-calendar) 78%, transparent);
+  border-color: color-mix(in srgb, var(--accent-ice) 34%, var(--ink-4));
+  background: color-mix(in srgb, var(--surface-calendar) 82%, transparent);
 }
 .day-cell.is-compact .tsk-check-sm.is-done {
-  background: color-mix(in srgb, #6b7280 74%, var(--surface-base));
-  border-color: color-mix(in srgb, #9ca3af 54%, var(--border-soft));
-  color: color-mix(in srgb, var(--ink) 88%, #ffffff);
+  background: color-mix(in srgb, var(--surface-3) 72%, var(--surface-base));
+  border-color: color-mix(in srgb, var(--surface-3) 64%, var(--border-soft));
+  color: color-mix(in srgb, var(--ink-2) 84%, #ffffff);
 }
 .tsk-check-sm:hover { box-shadow: 0 0 0 2px var(--acc-soft); }
 .tsk-check-sm svg { width: 11px; height: 11px; }
 .day-cell.is-compact .tsk-check-sm svg { width: 7px; height: 7px; }
-.ev-task:hover { filter: brightness(1.18) saturate(1.1); box-shadow: 0 0 0 1px var(--acc-line); transform: translateY(-1px); }
+.ev-task:hover { filter: brightness(1.06); box-shadow: 0 0 0 1px color-mix(in srgb, var(--acc-line) 58%, transparent); transform: translateY(-1px); }
 .day-cell:hover { filter: brightness(1.04); }
 .hover-row { transition: background var(--t); }
 .hover-row:hover { background: var(--surface-2); }
@@ -8209,8 +8210,8 @@ textarea.input {
 
 .cal-cell.today,
 .day-cell.is-today {
-  border-color: var(--acc-line);
-  background: color-mix(in srgb, var(--acc-soft) 56%, var(--surface-calendar));
+  border-color: color-mix(in srgb, var(--accent-ice) 34%, var(--border-soft));
+  background: color-mix(in srgb, var(--acc-soft) 26%, var(--surface-calendar));
 }
 
 .ev-task {
