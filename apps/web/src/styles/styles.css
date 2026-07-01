@@ -4789,23 +4789,46 @@ button.task-tag-badge {
   background: var(--surface-raised);
   border-right: 1px solid var(--border-soft);
   box-shadow: var(--sh-1);
+  overflow: hidden;
   transition: width var(--t);
 }
 [data-theme="dark"] .sidebar {
-  --bg-0: #0e1512; --bg-1: #121a16;
-  --surface: #161e1a; --surface-2: #1d2621; --surface-3: #26312b; --surface-inset: #121a16;
-  --border: #26312b; --border-soft: #1e2723; --border-strong: rgba(75, 174, 136, .34);
-  --ink: #e7ede9; --ink-2: #a6b3ac; --ink-3: #7a877f; --ink-4: rgba(231, 237, 233, .38);
-  --surface-base: #0e1512;
-  --surface-raised: #161e1a;
-  --surface-elevated: #1d2621;
-  --surface-overlay: #26312b;
-  --surface-calendar: #121a16;
-  --border-subtle: #26312b;
-  --text-primary: #e7ede9;
-  --text-secondary: #a6b3ac;
-  --text-muted: #7a877f;
-  background: var(--surface-raised);
+  --bg-0: #101416; --bg-1: #151a1c;
+  --surface: rgba(24, 31, 31, .72); --surface-2: rgba(34, 43, 42, .76); --surface-3: rgba(43, 53, 52, .82); --surface-inset: rgba(17, 22, 23, .72);
+  --border: rgba(67, 81, 80, .72); --border-soft: rgba(48, 61, 60, .62); --border-strong: rgba(75, 174, 136, .21);
+  --ink: #edf2ef; --ink-2: #a9b4af; --ink-3: #77837f; --ink-4: rgba(237, 242, 239, .32);
+  --surface-base: #101416;
+  --surface-raised: rgba(24, 31, 31, .74);
+  --surface-elevated: rgba(34, 43, 42, .78);
+  --surface-overlay: rgba(43, 53, 52, .84);
+  --surface-calendar: #151a1b;
+  --border-subtle: rgba(48, 61, 60, .66);
+  --text-primary: #edf2ef;
+  --text-secondary: #a9b4af;
+  --text-muted: #77837f;
+  background:
+    radial-gradient(280px 220px at 18% 4%, rgba(75, 174, 136, .13), transparent 68%),
+    radial-gradient(360px 260px at 110% 88%, rgba(107, 181, 159, .04), transparent 64%),
+    linear-gradient(162deg, rgba(29, 43, 39, .70) 0%, rgba(23, 30, 31, .84) 44%, rgba(16, 20, 22, .90) 100%);
+  border-right: 1px solid rgba(75, 174, 136, .12);
+  box-shadow:
+    inset -1px 0 0 rgba(255, 255, 255, .03),
+    inset 1px 0 0 rgba(255, 255, 255, .03),
+    18px 0 42px rgba(0, 0, 0, .20);
+  backdrop-filter: blur(18px) saturate(1.06);
+  -webkit-backdrop-filter: blur(18px) saturate(1.06);
+}
+[data-theme="dark"] .sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255, 255, 255, .03), transparent 34%, rgba(75, 174, 136, .025));
+  opacity: .7;
+}
+[data-theme="dark"] .sidebar > * {
+  position: relative;
+  z-index: 1;
 }
 /* brand / head */
 .sidebar-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; padding: 2px; min-height: 40px; }
@@ -4845,6 +4868,22 @@ button.task-tag-badge {
 .sb-item.is-active .sb-item-ic { color: var(--accent-ice); }
 .sb-item.is-active .sb-item-badge { background: rgb(var(--acc-rgb) / 0.18); color: var(--accent-ice); }
 .sb-item.is-active::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 2px; height: 22px; border-radius: 0 2px 2px 0; background: var(--accent-ice); }
+[data-theme="dark"] .sidebar .sb-item { color: color-mix(in srgb, var(--ink-2) 78%, var(--surface-base)); }
+[data-theme="dark"] .sidebar .sb-item-ic { color: color-mix(in srgb, var(--ink-3) 82%, var(--surface-base)); }
+[data-theme="dark"] .sidebar .sb-item:hover {
+  color: var(--ink-2);
+  background: color-mix(in srgb, var(--surface-2) 86%, var(--accent-ice) 14%);
+}
+[data-theme="dark"] .sidebar .sb-item:hover .sb-item-ic { color: color-mix(in srgb, var(--ink-2) 88%, var(--surface-base)); }
+[data-theme="dark"] .sidebar .sb-item.is-active {
+  color: color-mix(in srgb, var(--ink) 88%, var(--surface-base));
+  background:
+    linear-gradient(135deg, rgba(75, 174, 136, .17), rgba(75, 174, 136, .04)),
+    rgba(255, 255, 255, .03);
+  border-color: rgba(75, 174, 136, .25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+[data-theme="dark"] .sidebar .sb-item.is-active .sb-item-ic { color: color-mix(in srgb, var(--accent-ice) 72%, var(--ink-2)); }
 
 /* footer cluster */
 .sidebar-footer { flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; padding-top: 4px; }
