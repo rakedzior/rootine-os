@@ -13,7 +13,9 @@ import {
   useUpdateGoal,
   useUpdateGoalTask,
 } from '@/features/goals/hooks';
-import type { Goal as GoalRow, GoalTask as GoalTaskRow, Milestone as MilestoneRow } from '@/features/goals/types';
+import type { Goal as GoalRow, GoalAction, GoalActionNode, GoalActionPriority, GoalActionStatus, GoalTask as GoalTaskRow, Milestone as MilestoneRow } from '@/features/goals/types';
+import { buildGoalActionTree, getActionBreadcrumb } from '@/features/goals/utils/buildGoalActionTree';
+import { getVisualCompletionState } from '@/features/goals/utils/goalActionProgress';
 
 type Priority = 'low' | 'mid' | 'high';
 type TaskStatus = 'todo' | 'active' | 'waiting' | 'done' | 'blocked';
@@ -23,6 +25,7 @@ interface GoalTask {
   id: string; goalId: string; parentTaskId?: string;
   title: string; description: string; dueDate?: string;
   priority?: Priority; status: TaskStatus; progress: number;
+  sortOrder?: number; createdAt?: string; updatedAt?: string;
   subtasks: GoalTask[];
 }
 
@@ -141,6 +144,7 @@ function normalizeGoalEmoji(emoji?: string | null): string {
 function buildGoalTaskTree(rows: GoalTaskRow[], goalId: string, parentTaskId: string | null = null): GoalTask[] {
   return rows
     .filter((task) => task.goal_id === goalId && task.parent_task_id === parentTaskId)
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.created_at.localeCompare(b.created_at))
     .map((task) => ({
       id: task.id,
       goalId: task.goal_id,
@@ -151,6 +155,9 @@ function buildGoalTaskTree(rows: GoalTaskRow[], goalId: string, parentTaskId: st
       priority: normalizePriority(task.priority),
       status: normalizeStatus(task.status),
       progress: task.progress ?? 0,
+      sortOrder: task.sort_order ?? 0,
+      createdAt: task.created_at,
+      updatedAt: task.updated_at,
       subtasks: buildGoalTaskTree(rows, goalId, task.id),
     }));
 }
@@ -339,7 +346,7 @@ export function GoalsScreen() {
                 onDelete={(taskId) => removeGoalTask.mutate(taskId)}
                 onPlanner={(task) => addPlanner(task.title, task.dueDate, task.priority)}
                 onNest={(taskId, parentTaskId) => updateGoalTask.mutate({ id: taskId, patch: { parent_task_id: parentTaskId } })}
-                onAdd={(payload) => createGoalTask.mutate({ goal_id: selected.id, parent_task_id: payload.parentTaskId ?? null, title: payload.title, description: payload.description, due_date: payload.dueDate ?? null, priority: payload.priority ?? null, status: payload.status, progress: 0 })}
+                onAdd={(payload) => createGoalTask.mutate({ goal_id: selected.id, parent_task_id: payload.parentTaskId ?? null, title: payload.title, description: payload.description, due_date: payload.dueDate ?? null, priority: payload.priority ?? null, status: payload.status, progress: 0, sort_order: payload.sortOrder ?? 0 })}
               />
             </>
           ) : (
@@ -378,7 +385,7 @@ export function GoalsScreen() {
   );
 }
 
-function GoalTaskTreeNested({ tasks, allTasks, draggedId, onDragStart, onDragEnd, onNest, onUpdate, onDelete, onPlanner, depth = 0 }: {
+export function GoalTaskTreeNested({ tasks, allTasks, draggedId, onDragStart, onDragEnd, onNest, onUpdate, onDelete, onPlanner, depth = 0 }: {
   tasks: GoalTask[];
   allTasks: GoalTask[];
   draggedId: string | null;
@@ -444,7 +451,7 @@ function GoalTaskTreeNested({ tasks, allTasks, draggedId, onDragStart, onDragEnd
   );
 }
 
-function GoalTaskFormNested({ tasks, onAdd }: { tasks: GoalTask[]; onAdd: (payload: Omit<GoalTask, 'id' | 'goalId' | 'subtasks' | 'progress'>) => void }) {
+export function GoalTaskFormNested({ tasks, onAdd }: { tasks: GoalTask[]; onAdd: (payload: Omit<GoalTask, 'id' | 'goalId' | 'subtasks' | 'progress'>) => void }) {
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState<Priority>('mid');
@@ -515,7 +522,246 @@ function GoalDetailHeader({ goal, onEdit, onToggleDone, onDelete }: { goal: Goal
   );
 }
 
-function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest, onAdd }: {
+function taskPriorityToAction(priority?: Priority): GoalActionPriority {
+  if (priority === 'low') return 'low';
+  if (priority === 'high') return 'high';
+  return 'medium';
+}
+
+function actionPriorityToTask(priority: GoalActionPriority): Priority {
+  if (priority === 'low') return 'low';
+  if (priority === 'high') return 'high';
+  return 'mid';
+}
+
+function taskStatusToAction(status: TaskStatus): GoalActionStatus {
+  if (status === 'done' || status === 'active' || status === 'blocked') return status;
+  return 'todo';
+}
+
+function actionStatusToTask(status: GoalActionStatus): TaskStatus {
+  return status;
+}
+
+function goalTaskToAction(task: GoalTask): GoalAction {
+  const updatedAt = task.updatedAt ?? new Date().toISOString();
+  return {
+    id: task.id,
+    goalId: task.goalId,
+    parentId: task.parentTaskId ?? null,
+    title: task.title,
+    description: task.description,
+    status: taskStatusToAction(task.status),
+    priority: taskPriorityToAction(task.priority),
+    dueDate: task.dueDate ?? null,
+    sortOrder: task.sortOrder ?? 0,
+    createdAt: task.createdAt ?? updatedAt,
+    updatedAt,
+    completedAt: task.status === 'done' ? updatedAt : null,
+  };
+}
+
+function statusLabel(status: GoalActionStatus) {
+  if (status === 'active') return 'Aktywne';
+  if (status === 'done') return 'Ukończone';
+  if (status === 'blocked') return 'Zablokowane';
+  return 'Do zrobienia';
+}
+
+function priorityLabel(priority: GoalActionPriority) {
+  if (priority === 'low') return 'Niski';
+  if (priority === 'high') return 'Wysoki';
+  return 'Średni';
+}
+
+function nextStatusAfterToggle(status: GoalActionStatus): GoalActionStatus {
+  if (status === 'blocked') return 'blocked';
+  return status === 'done' ? 'todo' : 'done';
+}
+
+function InlineGoalActionInput({ depth, placeholder, onCancel, onSave }: {
+  depth: number;
+  placeholder: string;
+  onCancel: () => void;
+  onSave: (title: string) => void;
+}) {
+  const [title, setTitle] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  function save() {
+    const trimmed = title.trim();
+    if (!trimmed) {
+      onCancel();
+      return;
+    }
+    onSave(trimmed);
+  }
+
+  return (
+    <div className="goal-action-row is-editing" style={{ '--depth': depth } as React.CSSProperties}>
+      <span className="goal-action-chevron-spacer" />
+      <span className="goal-action-status is-empty" aria-hidden="true" />
+      <input
+        ref={inputRef}
+        className="goal-action-inline-input"
+        value={title}
+        placeholder={placeholder}
+        onChange={(event) => setTitle(event.target.value)}
+        onBlur={save}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') save();
+          if (event.key === 'Escape') onCancel();
+        }}
+      />
+    </div>
+  );
+}
+
+function GoalActionRow({ node, selectedId, expandedIds, editingId, onToggleExpanded, onSelect, onToggleStatus, onAddChild, onEdit, onRename, onSetStatus, onDelete, onPlanner }: {
+  node: GoalActionNode;
+  selectedId: string | null;
+  expandedIds: Set<string>;
+  editingId: string | null;
+  onToggleExpanded: (id: string) => void;
+  onSelect: (id: string) => void;
+  onToggleStatus: (node: GoalActionNode) => void;
+  onAddChild: (parentId: string) => void;
+  onEdit: (id: string | null) => void;
+  onRename: (id: string, title: string) => void;
+  onSetStatus: (id: string, status: GoalActionStatus) => void;
+  onDelete: (id: string) => void;
+  onPlanner: (action: GoalAction) => void;
+}) {
+  const isExpanded = expandedIds.has(node.id);
+  const hasChildren = node.children.length > 0;
+  const visualState = getVisualCompletionState(node);
+  const [draft, setDraft] = useState(node.title);
+
+  useEffect(() => setDraft(node.title), [node.title, editingId]);
+
+  function saveRename() {
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== node.title) onRename(node.id, trimmed);
+    else onEdit(null);
+  }
+
+  return (
+    <div className={`goal-action-node depth-${Math.min(node.depth, 5)}`}>
+      <div
+        className={`goal-action-row${selectedId === node.id ? ' is-selected' : ''}${node.status === 'done' ? ' is-done' : ''}${node.depth >= 4 ? ' is-deep' : ''}`}
+        style={{ '--depth': node.depth } as React.CSSProperties}
+        onClick={() => onSelect(node.id)}
+      >
+        {hasChildren ? (
+          <button className="goal-action-chevron" type="button" onClick={(event) => { event.stopPropagation(); onToggleExpanded(node.id); }} aria-label={isExpanded ? 'Zwiń' : 'Rozwiń'} aria-expanded={isExpanded}>
+            <IcoChevRight />
+          </button>
+        ) : <span className="goal-action-chevron-spacer" />}
+        <button
+          type="button"
+          className={`goal-action-status is-${visualState}`}
+          onClick={(event) => { event.stopPropagation(); onToggleStatus(node); }}
+          aria-label="Zmień status"
+        >
+          {visualState === 'done' && <IcoCheck />}
+        </button>
+        {editingId === node.id ? (
+          <input
+            className="goal-action-inline-input"
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onClick={(event) => event.stopPropagation()}
+            onBlur={saveRename}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') saveRename();
+              if (event.key === 'Escape') onEdit(null);
+            }}
+            autoFocus
+          />
+        ) : (
+          <span className="goal-action-title" onDoubleClick={(event) => { event.stopPropagation(); onEdit(node.id); }}>{node.title}</span>
+        )}
+        {hasChildren && <span className="goal-action-progress">{node.progress.done}/{node.progress.total}</span>}
+        <span className={`goal-action-priority is-${node.priority}`}>{priorityLabel(node.priority)}</span>
+        <span className="goal-action-date"><GoalIcon name="calendar" /> {relativeDateLabel(node.dueDate ?? undefined)}</span>
+        <MoreMenu actions={[
+          { label: 'Zmień nazwę', onClick: () => onEdit(node.id) },
+          { label: 'Dodaj poddziałanie', onClick: () => onAddChild(node.id) },
+          { label: node.status === 'blocked' ? 'Odblokuj' : 'Zablokuj', onClick: () => onSetStatus(node.id, node.status === 'blocked' ? 'todo' : 'blocked') },
+          { label: 'Dodaj do Planera', onClick: () => onPlanner(node) },
+          { label: 'Usuń', onClick: () => onDelete(node.id), danger: true },
+        ]} />
+      </div>
+      {hasChildren && isExpanded && (
+        <div className="goal-action-children">
+          {node.children.map((child) => (
+            <GoalActionRow
+              key={child.id}
+              node={child}
+              selectedId={selectedId}
+              expandedIds={expandedIds}
+              editingId={editingId}
+              onToggleExpanded={onToggleExpanded}
+              onSelect={onSelect}
+              onToggleStatus={onToggleStatus}
+              onAddChild={onAddChild}
+              onEdit={onEdit}
+              onRename={onRename}
+              onSetStatus={onSetStatus}
+              onDelete={onDelete}
+              onPlanner={onPlanner}
+            />
+          ))}
+          <button className="goal-action-add-child" type="button" style={{ '--depth': node.depth + 1 } as React.CSSProperties} onClick={() => onAddChild(node.id)}>
+            <IcoPlus /> Dodaj poddziałanie
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GoalActionDetailsPanel({ action, actionsById, onAddChild, onEdit }: {
+  action: GoalAction | null;
+  actionsById: Map<string, GoalAction>;
+  onAddChild: (parentId: string) => void;
+  onEdit: (id: string) => void;
+}) {
+  if (!action) {
+    return (
+      <aside className="goal-action-details-panel is-empty">
+        <span className="eyebrow">Szczegóły</span>
+        <p>Wybierz działanie, aby zobaczyć status, termin, priorytet i ścieżkę.</p>
+      </aside>
+    );
+  }
+
+  const breadcrumb = getActionBreadcrumb(action.id, actionsById);
+
+  return (
+    <aside className="goal-action-details-panel">
+      <span className="eyebrow">Szczegóły</span>
+      <h3>{action.title}</h3>
+      <div className="goal-action-detail-grid">
+        <span>Status</span><strong>{statusLabel(action.status)}</strong>
+        <span>Termin</span><strong>{relativeDateLabel(action.dueDate ?? undefined)}</strong>
+        <span>Priorytet</span><strong>{priorityLabel(action.priority)}</strong>
+        <span>Ścieżka</span><strong>{breadcrumb.map((item) => item.title).join(' > ')}</strong>
+      </div>
+      {action.description && <p className="goal-action-note">{action.description}</p>}
+      <div className="goal-action-detail-actions">
+        <button className="btn btn-secondary btn-sm" type="button" onClick={() => onAddChild(action.id)}><IcoPlus /> Dodaj poddziałanie</button>
+        <button className="btn btn-secondary btn-sm" type="button" onClick={() => onEdit(action.id)}>Edytuj</button>
+      </div>
+    </aside>
+  );
+}
+
+function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest: _onNest, onAdd }: {
   goal: Goal;
   onUpdate: (taskId: string, patch: Partial<GoalTask>) => void;
   onDelete: (taskId: string) => void;
@@ -523,30 +769,155 @@ function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest, onAdd }
   onNest: (taskId: string, parentTaskId: string | null) => void;
   onAdd: (payload: Omit<GoalTask, 'id' | 'goalId' | 'subtasks' | 'progress'>) => void;
 }) {
-  const tasks = collectTasks(goal.tasks);
-  const openTasks = tasks.filter((task) => task.status !== 'done').length;
-  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const flatTasks = useMemo(() => collectTasks(goal.tasks), [goal.tasks]);
+  const actions = useMemo(() => flatTasks.map(goalTaskToAction), [flatTasks]);
+  const tree = useMemo(() => buildGoalActionTree(actions), [actions]);
+  const actionsById = useMemo(() => new Map(actions.map((action) => [action.id, action])), [actions]);
+  const openTasks = actions.filter((task) => task.status !== 'done').length;
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
+  const [creatingParentId, setCreatingParentId] = useState<string | null | undefined>(undefined);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const key = `rootine:goal-actions-expanded:${goal.id}`;
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved) setExpandedIds(new Set(JSON.parse(saved) as string[]));
+      else setExpandedIds(new Set(actions.filter((action) => action.parentId === null).map((action) => action.id)));
+    } catch {
+      setExpandedIds(new Set(actions.filter((action) => action.parentId === null).map((action) => action.id)));
+    }
+    setSelectedActionId(null);
+    setCreatingParentId(undefined);
+    setEditingId(null);
+  }, [goal.id]);
+
+  useEffect(() => {
+    const key = `rootine:goal-actions-expanded:${goal.id}`;
+    localStorage.setItem(key, JSON.stringify([...expandedIds]));
+  }, [expandedIds, goal.id]);
+
+  useEffect(() => {
+    if (actions.length === 0) return;
+    setExpandedIds((prev) => prev.size ? prev : new Set(actions.filter((action) => action.parentId === null).map((action) => action.id)));
+  }, [actions]);
+
+  useEffect(() => {
+    if (selectedActionId && !actionsById.has(selectedActionId)) setSelectedActionId(null);
+  }, [actionsById, selectedActionId]);
+
+  function toggleExpanded(id: string) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function startCreate(parentId: string | null) {
+    setCreatingParentId(parentId);
+    if (parentId) setExpandedIds((prev) => new Set(prev).add(parentId));
+  }
+
+  function addInline(parentId: string | null, title: string) {
+    const siblings = actions.filter((action) => action.parentId === parentId);
+    onAdd({
+      title,
+      parentTaskId: parentId ?? undefined,
+      description: '',
+      dueDate: undefined,
+      priority: 'mid',
+      status: 'todo',
+      sortOrder: siblings.length + 1,
+    });
+    setCreatingParentId(undefined);
+  }
+
+  function updateAction(id: string, patch: Partial<GoalAction>) {
+    onUpdate(id, {
+      title: patch.title,
+      description: patch.description,
+      dueDate: patch.dueDate ?? undefined,
+      priority: patch.priority ? actionPriorityToTask(patch.priority) : undefined,
+      status: patch.status ? actionStatusToTask(patch.status) : undefined,
+    });
+  }
+
+  function actionToTask(action: GoalAction): GoalTask {
+    return {
+      id: action.id,
+      goalId: action.goalId,
+      parentTaskId: action.parentId ?? undefined,
+      title: action.title,
+      description: action.description ?? '',
+      dueDate: action.dueDate ?? undefined,
+      priority: actionPriorityToTask(action.priority),
+      status: actionStatusToTask(action.status),
+      progress: 0,
+      sortOrder: action.sortOrder,
+      createdAt: action.createdAt,
+      updatedAt: action.updatedAt,
+      subtasks: [],
+    };
+  }
+
+  const selectedAction = selectedActionId ? actionsById.get(selectedActionId) ?? null : null;
 
   return (
-    <section className="card goals-actions-card">
+    <section className="card goals-actions-card goal-actions-section">
       <div className="card-head">
         <div>
           <span className="card-title">Działania celu</span>
-          <span className="goals-collapsed-summary">{openTasks} otwarte · {tasks.length} wszystkich</span>
+          <span className="goals-collapsed-summary">{actions.length} działań · {openTasks} aktywnych · {actions.length - openTasks} ukończone</span>
         </div>
+        <button className="btn btn-primary btn-sm" type="button" onClick={() => startCreate(null)}><IcoPlus /> Dodaj działanie</button>
       </div>
-      <GoalTaskTreeNested
-        tasks={goal.tasks}
-        allTasks={goal.tasks}
-        draggedId={draggedId}
-        onDragStart={setDraggedId}
-        onDragEnd={() => setDraggedId(null)}
-        onNest={onNest}
-        onUpdate={onUpdate}
-        onDelete={onDelete}
-        onPlanner={onPlanner}
-      />
-      <GoalTaskFormNested tasks={goal.tasks} onAdd={onAdd} />
+      <div className="goal-actions-layout">
+        <div className="goal-actions-tree">
+          {actions.length === 0 ? (
+            <div className="goal-actions-empty">
+              <strong>Nie ma jeszcze działań dla tego celu.</strong>
+              <span>Rozbij cel na pierwszy konkretny krok.</span>
+              <button className="btn btn-primary btn-sm" type="button" onClick={() => startCreate(null)}><IcoPlus /> Dodaj pierwsze działanie</button>
+            </div>
+          ) : (
+            <>
+              {tree.map((node) => (
+                <GoalActionRow
+                  key={node.id}
+                  node={node}
+                  selectedId={selectedActionId}
+                  expandedIds={expandedIds}
+                  editingId={editingId}
+                  onToggleExpanded={toggleExpanded}
+                  onSelect={setSelectedActionId}
+                  onToggleStatus={(item) => updateAction(item.id, { status: nextStatusAfterToggle(item.status) })}
+                  onAddChild={startCreate}
+                  onEdit={setEditingId}
+                  onRename={(id, title) => { updateAction(id, { title }); setEditingId(null); }}
+                  onSetStatus={(id, status) => updateAction(id, { status })}
+                  onDelete={onDelete}
+                  onPlanner={(action) => onPlanner(actionToTask(action))}
+                />
+              ))}
+              {creatingParentId === null && (
+                <InlineGoalActionInput depth={0} placeholder="Wpisz nazwę działania..." onCancel={() => setCreatingParentId(undefined)} onSave={(title) => addInline(null, title)} />
+              )}
+            </>
+          )}
+          {creatingParentId && (
+            <InlineGoalActionInput
+              depth={actionsById.has(creatingParentId) ? getActionBreadcrumb(creatingParentId, actionsById).length : 1}
+              placeholder="Wpisz nazwę poddziałania..."
+              onCancel={() => setCreatingParentId(undefined)}
+              onSave={(title) => addInline(creatingParentId, title)}
+            />
+          )}
+        </div>
+        <GoalActionDetailsPanel action={selectedAction} actionsById={actionsById} onAddChild={startCreate} onEdit={setEditingId} />
+      </div>
     </section>
   );
 }

@@ -115,6 +115,7 @@ export async function insertGoalTask(input: NewGoalTaskInput): Promise<GoalTask>
       priority: input.priority ?? null,
       status: input.status ?? 'todo',
       progress: input.progress ?? 0,
+      sort_order: input.sort_order ?? 0,
     })
     .select('*')
     .single();

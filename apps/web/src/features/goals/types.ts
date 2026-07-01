@@ -71,6 +71,35 @@ export interface NewGoalTaskInput {
   priority?: 'low' | 'mid' | 'high' | null;
   status?: 'todo' | 'active' | 'waiting' | 'done' | 'blocked';
   progress?: number;
+  sort_order?: number;
+}
+
+export type GoalActionStatus = 'todo' | 'active' | 'done' | 'blocked';
+export type GoalActionPriority = 'low' | 'medium' | 'high';
+
+export interface GoalAction {
+  id: string;
+  goalId: string;
+  parentId: string | null;
+  title: string;
+  description?: string;
+  status: GoalActionStatus;
+  priority: GoalActionPriority;
+  dueDate?: string | null;
+  sortOrder: number;
+  isExpanded?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string | null;
+}
+
+export interface GoalActionNode extends GoalAction {
+  children: GoalActionNode[];
+  depth: number;
+  progress: {
+    done: number;
+    total: number;
+  };
 }
 
 /** Maps a goal category to one of the prototype's coloured icon classes. */
