@@ -3227,13 +3227,16 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
   gap: 10px;
 }
 .day-view-panel > .day-cell .ev-task {
-  min-height: 76px;
+  height: 112px;
+  min-height: 112px;
+  max-height: 112px;
   align-items: flex-start;
   gap: 12px;
   padding: 14px 16px;
-  background: color-mix(in srgb, var(--surface-inset) 88%, var(--accent-ice) 12%);
-  border-color: color-mix(in srgb, var(--accent-ice) 22%, var(--border-soft));
+  background: color-mix(in srgb, var(--surface-calendar) 92%, #06111a);
+  border-color: color-mix(in srgb, var(--border-soft) 88%, transparent);
   border-radius: 14px;
+  overflow: hidden;
 }
 .day-view-panel > .day-cell .tsk-check-sm {
   margin-top: 3px;
@@ -3620,6 +3623,36 @@ button.habit-detail-switch { padding: 0; cursor: pointer; }
   display: flex;
   flex-direction: column;
 }
+.ev-task-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+.ev-task-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1;
+  font-weight: 750;
+  color: color-mix(in srgb, var(--ink-2) 88%, transparent);
+  background: color-mix(in srgb, var(--surface-calendar) 74%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-soft) 82%, transparent);
+  border-radius: 999px;
+  padding: 6px 8px;
+}
+.ev-task-detail span {
+  color: var(--ink-4);
+  font-size: 9px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
 .ev-task-tags {
   display: flex;
   flex-wrap: wrap;
@@ -3873,9 +3906,9 @@ button.task-tag-badge {
   flex-direction: column;
   max-width: calc(100vw - 28px);
   max-height: calc(100vh - 32px);
-  overflow-y: auto;
+  overflow: hidden;
   scrollbar-width: none;
-  padding: clamp(12px, 1.4vw, 16px);
+  padding: clamp(10px, 1.1vw, 14px);
   border-radius: 20px;
   background:
     radial-gradient(circle at 16% 5%, color-mix(in srgb, var(--accent-ice) 4%, transparent), transparent 42%),
@@ -3890,9 +3923,9 @@ button.task-tag-badge {
   display: flex;
   align-items: center;
   gap: 7px;
-  height: 30px;
-  padding: 0 10px;
-  margin-bottom: 10px;
+  height: 28px;
+  padding: 0 9px;
+  margin-bottom: 7px;
   border: 1px solid color-mix(in srgb, var(--accent-ice) 20%, var(--border-soft));
   background: color-mix(in srgb, var(--surface-elevated) 38%, transparent);
   border-radius: 10px;
@@ -3927,8 +3960,8 @@ button.task-tag-badge {
 .task-options-icons {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 6px;
+  margin-bottom: 8px;
   flex-shrink: 0;
 }
 .task-options-icons button {
@@ -3940,7 +3973,7 @@ button.task-tag-badge {
   color: var(--ink-2);
   border-color: color-mix(in srgb, var(--accent-ice) 16%, var(--border-soft));
   border-radius: 9px;
-  height: clamp(34px, 5vh, 44px);
+  height: clamp(28px, 4vh, 34px);
   cursor: pointer;
   transition: background .12s, color .12s, border-color .12s;
 }
@@ -3955,7 +3988,7 @@ button.task-tag-badge {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   flex-shrink: 0;
 }
 .task-options-navhead span {
@@ -3982,7 +4015,7 @@ button.task-tag-badge {
 .task-options-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   flex-shrink: 0;
 }
 .task-options-weekdays span {
@@ -3997,7 +4030,7 @@ button.task-tag-badge {
   grid-auto-rows: 30px;
   align-items: center;
   gap: 2px;
-  margin-bottom: 10px;
+  margin-bottom: 7px;
   flex: 0 0 auto;
 }
 .task-options-days button {
@@ -4006,11 +4039,15 @@ button.task-tag-badge {
   justify-self: center;
   width: 30px;
   height: 30px;
+  min-width: 30px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--ink-2);
   border-radius: 999px;
-  font-size: clamp(9.5px, 1.6vh, 12px);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  word-break: keep-all;
   cursor: pointer;
 }
 .task-options-days button:hover { background: color-mix(in srgb, var(--surface-2) 80%, transparent); }
@@ -4032,7 +4069,7 @@ button.task-tag-badge {
   border: 1px solid color-mix(in srgb, var(--accent-ice) 18%, var(--border-soft));
   border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   background: color-mix(in srgb, var(--surface-elevated) 26%, transparent);
   flex-shrink: 0;
 }
@@ -4130,7 +4167,7 @@ button.task-tag-badge {
   align-items: center;
   gap: 9px;
   min-width: 0;
-  padding: 8px 10px;
+  padding: 7px 9px;
   cursor: pointer;
 }
 .task-options-links button:last-child { border-bottom: 0; }
@@ -4152,19 +4189,79 @@ button.task-tag-badge {
 .task-options-links .tol-chev { display: flex; color: var(--ink-4); flex-shrink: 0; }
 .task-options-links .tol-chev svg { width: 12px; height: 12px; }
 .task-options-actions {
-  position: sticky;
-  bottom: 0;
+  position: static;
   display: flex;
   justify-content: space-between;
   gap: 7px;
-  margin-top: 6px;
-  padding: 6px 0 0;
-  background:
-    linear-gradient(to bottom, transparent, color-mix(in srgb, var(--surface-calendar) 91%, #06111a) 34%);
-  box-shadow: 0 -10px 18px color-mix(in srgb, #06111a 54%, transparent);
+  margin-top: 4px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
 }
-.task-options-actions .btn { flex: 1; padding-top: 7px; padding-bottom: 7px; border-radius: 8px; font-size: 9.5px; min-height: 0; }
+.task-options-actions .btn { flex: 1; padding-top: 6px; padding-bottom: 6px; border-radius: 8px; font-size: 9.5px; min-height: 0; }
 .task-del-btn { color: var(--p-high) !important; }
+
+@media (max-height: 560px) {
+  .task-options-pop {
+    padding: 8px;
+    border-radius: 16px;
+  }
+
+  .task-options-namebox {
+    height: 24px;
+    margin-bottom: 5px;
+    border-radius: 8px;
+  }
+
+  .task-options-icons {
+    gap: 5px;
+    margin-bottom: 5px;
+  }
+
+  .task-options-icons button {
+    height: 24px;
+    border-radius: 8px;
+  }
+
+  .task-options-navhead {
+    margin-bottom: 2px;
+  }
+
+  .task-options-navhead button {
+    width: 20px;
+    height: 20px;
+  }
+
+  .task-options-days {
+    grid-auto-rows: 26px;
+    gap: 1px;
+    margin-bottom: 5px;
+  }
+
+  .task-options-days button {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    font-size: 10.5px;
+    line-height: 1;
+    white-space: nowrap;
+    word-break: keep-all;
+  }
+
+  .task-options-links button {
+    padding: 5px 8px;
+  }
+
+  .task-options-card {
+    margin-bottom: 5px;
+  }
+
+  .task-options-actions .btn {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+}
+
 .task-options-advanced {
   display: block;
   width: 100%;
@@ -13249,6 +13346,92 @@ textarea.input {
 
 .planner-calendar-card .day-view-panel .day-cell-head {
   display: none;
+}
+
+.planner-calendar-card .day-view-panel .day-cell-tasks {
+  gap: 14px;
+}
+
+.planner-calendar-card .day-view-panel .ev-task {
+  height: 112px;
+  min-height: 112px;
+  max-height: 112px;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 20px;
+  font-size: 15px;
+  line-height: 1.25;
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--surface-calendar) 92%, #06111a);
+  border-color: color-mix(in srgb, var(--border-soft) 88%, transparent);
+  overflow: hidden;
+}
+
+.planner-calendar-card .day-view-panel .ev-task:hover {
+  background: color-mix(in srgb, var(--surface-calendar) 84%, var(--accent-ice) 16%);
+  border-color: color-mix(in srgb, var(--accent-ice) 34%, var(--border-soft));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-ice) 18%, transparent);
+}
+
+.planner-calendar-card .day-view-panel .tsk-check-sm {
+  margin-top: 3px;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+.planner-calendar-card .day-view-panel .ev-task-copy {
+  gap: 11px;
+  overflow: hidden;
+}
+
+.planner-calendar-card .day-view-panel .ev-task-title {
+  font-size: 19px;
+  line-height: 1.2;
+  font-weight: 750;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.planner-calendar-card .day-view-panel .ev-task-tags {
+  display: flex;
+  gap: 6px;
+  max-height: 24px;
+  overflow: hidden;
+}
+
+.planner-calendar-card .day-view-panel .ev-task-tag {
+  font-size: 10.5px;
+  padding: 5px 8px;
+}
+
+.planner-calendar-card .day-view-panel .ev-task-details {
+  display: flex;
+  max-height: 26px;
+  overflow: hidden;
+}
+
+.planner-calendar-card .day-view-panel .ev-task-detail {
+  font-size: 10.5px;
+  padding: 6px 9px;
+}
+
+.planner-calendar-card .day-view-panel .ev-task-time {
+  margin-top: 3px;
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-calendar) 78%, transparent);
+  border: 1px solid var(--border-soft);
+}
+
+.planner-calendar-card .day-view-panel .ev-task-prio {
+  margin-top: 5px;
+  width: 17px;
+  height: 17px;
+  flex-basis: 17px;
+  font-size: 10px;
 }
 
 @media (max-width: 1100px) {

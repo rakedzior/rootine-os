@@ -88,6 +88,7 @@ type RepeatEndMode = 'date' | 'count';
 interface NewTask {
   title: string;
   tags: string[];
+  location: string;
   priority: 'high' | 'mid' | 'low';
   dueDates: string[];
   allDay: boolean;
@@ -218,6 +219,7 @@ function AddTaskModal({
   const isEditing = !!task;
   const [title, setTitle] = useState('');
   const [tags, setTags] = useState<string[]>([]);
+  const [location, setLocation] = useState('');
   const [priority, setPriority] = useState<'high' | 'mid' | 'low'>('mid');
   const [selectedDates, setSelectedDates] = useState<Set<string>>(() => new Set([defaultDate]));
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('none');
@@ -245,6 +247,7 @@ function AddTaskModal({
       const date = task.due_date ?? defaultDate;
       setTitle(task.title);
       setTags(dedupeTags(task.tags ?? []));
+      setLocation(task.location ?? '');
       setPriority(task.priority ?? 'mid');
       setRepeatMode('none');
       setRepeatWeekdays([weekdayFromDateStr(date)]);
@@ -260,6 +263,7 @@ function AddTaskModal({
     const parsed = extractTitleAndTags(initialTitle ?? '', initialTags ?? []);
     setTitle(parsed.title);
     setTags(parsed.tags);
+    setLocation('');
     setPriority('mid');
     setRepeatMode('none');
     setRepeatEndMode('date');
@@ -272,6 +276,7 @@ function AddTaskModal({
   const reset = () => {
     setTitle('');
     setTags([]);
+    setLocation('');
     setPriority('mid');
     setRepeatMode('none');
     setRepeatEndMode('date');
@@ -303,6 +308,7 @@ function AddTaskModal({
         editingId: task?.id,
         title: parsed.title,
         tags: parsed.tags,
+        location: location.trim(),
         priority,
         dueDates: isEditing ? selectedDateList.slice(0, 1) : selectedDateList,
         allDay: true,
@@ -501,6 +507,16 @@ function AddTaskModal({
             <select className="select" value={priority} onChange={(e) => setPriority(e.target.value as 'high' | 'mid' | 'low')} style={{ width: '100%' }}>
               {PRIO_OPTIONS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
             </select>
+          </Field>
+
+          <Field label="Miejsce">
+            <input
+              className="input"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Opcjonalnie, np. biuro, dom, siłownia..."
+              style={{ width: '100%', boxSizing: 'border-box' }}
+            />
           </Field>
 
           {!isEditing && (
@@ -948,7 +964,7 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
         onDragEnd={clearWeekInteraction}
         title={`Dodaj zadanie na ${date.getDate()} ${MONTH_SHORT[date.getMonth()]}`}
       >
-        <div className="day-cell-head">
+        {compact && <div className="day-cell-head">
           <div className="day-number">{date.getDate()}</div>
           <div className="day-head-meta">
           {dayTasks.length > 3 && (
@@ -958,65 +974,82 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
           )}
             <span className="day-flag" aria-hidden="true">{IC_FLAG}</span>
           </div>
-        </div>
+        </div>}
         <div className="day-cell-tasks" data-date={dateStr}>
-        {dayTasks.map(t => (
-          <div
-            key={t.id}
-            className={`ev ev-task ${t.done ? 'is-done' : ''}`}
-            draggable
-            onDragStart={(e) => {
-              e.stopPropagation();
-              e.dataTransfer.setData('text/plain', t.id);
-              e.dataTransfer.effectAllowed = 'move';
-              setDragTaskId(t.id);
-            }}
-            onDragEnd={() => {
-              setDropTargetDate(null);
-              setDragTaskId(null);
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              const r = e.currentTarget.getBoundingClientRect();
-              onTaskClick(t, { left: r.left, right: r.right, top: r.top, bottom: r.bottom });
-            }}
-            style={{
-              opacity:t.done ? .75 : 1,
-              textDecoration:t.done?'line-through':'none',
-              cursor:'grab',
-              zIndex: dragTaskId === t.id ? 6 : 1,
-              transform: dragTaskId === t.id ? 'scale(1.01)' : 'none',
-            }}
-            title="Edytuj zadanie"
-          >
-            <button
-              type="button"
-              aria-label={t.done ? 'Oznacz jako niewykonane' : 'Zakończ zadanie'}
+        {dayTasks.map(t => {
+          const timeLabel = taskTimeRangeLabel(t);
+          const durationLabel = taskDurationLabel(t);
+          const placeLabel = t.location?.trim() || t.category?.trim() || null;
+          const detailItems = compact ? [] : [
+            timeLabel ? { key: 'time', label: 'Godzina', value: timeLabel } : null,
+            durationLabel ? { key: 'duration', label: 'Czas', value: durationLabel } : null,
+            placeLabel ? { key: 'place', label: 'Miejsce', value: placeLabel } : null,
+          ].filter(Boolean) as Array<{ key: string; label: string; value: string }>;
+          return (
+            <div
+              key={t.id}
+              className={`ev ev-task ${t.done ? 'is-done' : ''}`}
+              draggable
+              onDragStart={(e) => {
+                e.stopPropagation();
+                e.dataTransfer.setData('text/plain', t.id);
+                e.dataTransfer.effectAllowed = 'move';
+                setDragTaskId(t.id);
+              }}
+              onDragEnd={() => {
+                setDropTargetDate(null);
+                setDragTaskId(null);
+              }}
               onClick={(e) => {
                 e.stopPropagation();
-                onToggleTask(t.id, !t.done);
+                const r = e.currentTarget.getBoundingClientRect();
+                onTaskClick(t, { left: r.left, right: r.right, top: r.top, bottom: r.bottom });
               }}
-              className={`tsk-check tsk-check-sm ${t.done ? 'is-done' : ''}`}
+              style={{
+                opacity:t.done ? .75 : 1,
+                textDecoration:t.done?'line-through':'none',
+                cursor:'grab',
+                zIndex: dragTaskId === t.id ? 6 : 1,
+                transform: dragTaskId === t.id ? 'scale(1.01)' : 'none',
+              }}
+              title="Edytuj zadanie"
             >
-              {t.done && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
-            </button>
-            {isRecurringTask(t) && <RecurringIcon />}
-            <span className="ev-task-copy">
-              <span className="ev-task-title">{t.title}</span>
-              {!compact && !!t.tags?.length && (
-                <span className="ev-task-tags" aria-label={`Tagi: ${t.tags.join(', ')}`}>
-                  {t.tags.slice(0, 4).map((tag) => (
-                    <span key={tag} className="ev-task-tag">#{tag}</span>
-                  ))}
-                </span>
+              <button
+                type="button"
+                aria-label={t.done ? 'Oznacz jako niewykonane' : 'Zakończ zadanie'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleTask(t.id, !t.done);
+                }}
+                className={`tsk-check tsk-check-sm ${t.done ? 'is-done' : ''}`}
+              >
+                {t.done && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>}
+              </button>
+              {isRecurringTask(t) && <RecurringIcon />}
+              <span className="ev-task-copy">
+                <span className="ev-task-title">{t.title}</span>
+                {!compact && detailItems.length > 0 && (
+                  <span className="ev-task-details" aria-label="Szczegóły zadania">
+                    {detailItems.map((item) => (
+                      <span key={item.key} className="ev-task-detail"><span>{item.label}</span>{item.value}</span>
+                    ))}
+                  </span>
+                )}
+                {!compact && !!t.tags?.length && (
+                  <span className="ev-task-tags" aria-label={`Tagi: ${t.tags.join(', ')}`}>
+                    {t.tags.slice(0, 6).map((tag) => (
+                      <span key={tag} className="ev-task-tag">#{tag}</span>
+                    ))}
+                  </span>
+                )}
+              </span>
+              {compact && timeLabel && <span className="ev-task-time">{timeLabel}</span>}
+              {compact && t.priority === 'high' && (
+                <span className="ev-task-prio" title="Wysoki priorytet" aria-label="Wysoki priorytet">!</span>
               )}
-            </span>
-            {taskTimeRangeLabel(t) && <span className="ev-task-time">{taskTimeRangeLabel(t)}</span>}
-            {t.priority === 'high' && (
-              <span className="ev-task-prio" title="Wysoki priorytet" aria-label="Wysoki priorytet">!</span>
-            )}
-          </div>
-        ))}
+            </div>
+          );
+        })}
         </div>
         {hasTaskOverflow && (
           <span className="day-scroll-hint" aria-hidden="true">
@@ -2280,6 +2313,7 @@ interface TaskOptionsState {
   aBottom: number;
   title: string;
   tags: string[];
+  location: string;
   dueDate: string;
   scheduledTime: string;
   endDate: string;
@@ -2327,6 +2361,7 @@ const IC_SUNRISE = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const IC_WEEK = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /><text x="12" y="19" textAnchor="middle" fontSize="8.5" fontWeight="700" fill="currentColor" stroke="none">+7</text></svg>);
 const IC_MOON = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg>);
 const IC_CLOCK = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7.5V12l3 1.8" /></svg>);
+const IC_LOCATION = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s7-5.1 7-11a7 7 0 1 0-14 0c0 5.9 7 11 7 11z" /><circle cx="12" cy="10" r="2.4" /></svg>);
 const IC_BELL = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>);
 const IC_REPEAT = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 2l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 22l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" /></svg>);
 const IC_CHEVRON_L = (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>);
@@ -2379,9 +2414,10 @@ function placeLayeredPopover(anchor: AnchorRect, width: number, height: number, 
 function taskOptionsSize() {
   const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
   const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+  const maxPanelHeight = Math.max(320, vh - 32);
   return {
     width: Math.min(Math.max(360, Math.round(vw * 0.28)), Math.min(460, Math.max(280, vw - 32))),
-    height: Math.min(Math.max(430, Math.round(vh * 0.58)), Math.min(520, Math.max(340, vh - 32))),
+    height: Math.min(Math.max(560, Math.round(vh * 0.72)), maxPanelHeight),
   };
 }
 
@@ -2461,6 +2497,15 @@ function taskTimeRangeLabel(task: SupabaseTask) {
   return endTime ? `${start} - ${endTime}` : start;
 }
 
+function taskDurationLabel(task: SupabaseTask) {
+  if (!task.duration_minutes || task.duration_minutes <= 0) return null;
+  const hours = Math.floor(task.duration_minutes / 60);
+  const minutes = task.duration_minutes % 60;
+  if (hours && minutes) return `${hours} h ${minutes} min`;
+  if (hours) return `${hours} h`;
+  return `${minutes} min`;
+}
+
 function draftTimeRangeLabel(state: Pick<TaskOptionsState, 'allDay' | 'scheduledTime' | 'endTime'>) {
   if (state.allDay) return 'Cały dzień';
   if (!state.scheduledTime) return 'Brak';
@@ -2500,6 +2545,7 @@ function isoFromDateWithOffset(dateStr: string, timeStr: string, offsetMinutes: 
 interface TaskDraft {
   title: string;
   tags: string[];
+  location: string;
   dueDate: string | null;
   scheduledTime: string;
   endDate: string;
@@ -2515,6 +2561,7 @@ function emptyDraft(dueDate: string | null, priority: TaskDraft['priority'] = 'm
   return {
     title: '',
     tags: [],
+    location: '',
     dueDate,
     scheduledTime: '',
     endDate: '',
@@ -2570,6 +2617,7 @@ function buildTaskFields(draft: TaskDraft) {
   return {
     title: draft.title,
     tags: draft.tags,
+    location: draft.location.trim() || null,
     priority: draft.priority,
     all_day: allDay,
     due_date: dueDate || null,
@@ -2919,6 +2967,16 @@ function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete
             onChange={(e) => onChange({ title: e.target.value })}
             aria-label="Nazwa zadania"
             autoFocus={!state.editingId && !state.title}
+          />
+        </div>
+        <div className="task-options-namebox">
+          <span className="ton-ic">{IC_LOCATION}</span>
+          <input
+            className="task-options-title"
+            value={state.location}
+            placeholder="Miejsce (opcjonalnie)"
+            onChange={(e) => onChange({ location: e.target.value })}
+            aria-label="Miejsce zadania"
           />
         </div>
         <div className="task-options-icons">
@@ -3297,6 +3355,7 @@ export function StartScreen() {
     aBottom: 0,
     title: '',
     tags: [],
+    location: '',
     dueDate: todayStr,
     scheduledTime: '',
     endDate: '',
@@ -3343,6 +3402,7 @@ export function StartScreen() {
       aBottom: anchor.bottom,
       title: parsed.title,
       tags: parsed.tags,
+      location: '',
       dueDate,
       scheduledTime: '',
       endDate: '',
@@ -3369,6 +3429,7 @@ export function StartScreen() {
       aBottom: anchor.bottom,
       title: parsed.title,
       tags: parsed.tags,
+      location: task.location ?? '',
       dueDate: task.due_date || todayStr,
       scheduledTime: task.scheduled_time || '',
       endDate: end.endDate,
@@ -3406,6 +3467,7 @@ export function StartScreen() {
     const draft: TaskDraft = {
       title: parsed.title,
       tags: parsed.tags,
+      location: taskOptions.location,
       dueDate: taskOptions.dueDate || null,
       scheduledTime: taskOptions.scheduledTime,
       endDate: taskOptions.endDate,
@@ -3538,6 +3600,7 @@ export function StartScreen() {
           title: task.title,
           tags: task.tags,
           category: null,
+          location: task.location.trim() || null,
           priority: task.priority,
           all_day: task.allDay,
           due_date: task.dueDates[0] ?? null,
@@ -3573,6 +3636,7 @@ export function StartScreen() {
         tags: task.tags,
         source: task.repeatMode === 'none' ? 'manual' : 'imported',
         category: null,
+        location: task.location.trim() || null,
         priority: task.priority,
         due_date: dueDate || null,
         all_day: task.allDay,

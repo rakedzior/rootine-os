@@ -11,6 +11,7 @@ export interface Task {
   end_at: string | null;
   reminder_at: string | null;
   category: string | null;
+  location: string | null;
   priority: 'high' | 'mid' | 'low' | null;
   scheduled_time: string | null;
   duration_minutes: number | null;
@@ -33,6 +34,7 @@ export interface NewTaskInput {
   tags?: string[] | null;
   source?: 'manual' | 'quick_add' | 'calendar_quick' | 'drag_drop' | 'imported' | null;
   category?: string | null;
+  location?: string | null;
   priority?: 'high' | 'mid' | 'low' | null;
   due_date?: string | null;
   all_day?: boolean;

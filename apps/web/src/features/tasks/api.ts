@@ -95,6 +95,7 @@ function mapTaskRow(row: PlannerTaskRow, tags: string[]): Task {
     end_at: row.end_at,
     reminder_at: row.reminder_at,
     category: (row.metadata?.category as string | undefined) ?? null,
+    location: (row.metadata?.location as string | undefined) ?? null,
     priority: toPriority(row.priority),
     scheduled_time: scheduled,
     duration_minutes: row.start_at && row.end_at
@@ -265,6 +266,7 @@ export async function insertTask(input: NewTaskInput): Promise<Task> {
       repeat_rule: repeatRule,
       metadata: {
         category: input.category ?? null,
+        location: input.location ?? null,
         favorite: false,
         series_id: input.series_id ?? null,
       },
@@ -349,7 +351,7 @@ export async function patchTask(id: string, patch: Partial<Task>): Promise<Task>
     }
   }
 
-  if (patch.category !== undefined || patch.favorite !== undefined || patch.series_id !== undefined) {
+  if (patch.category !== undefined || patch.location !== undefined || patch.favorite !== undefined || patch.series_id !== undefined) {
     const { data: existing, error: existingErr } = await supabase
       .from('planner_tasks')
       .select('metadata')
@@ -358,6 +360,7 @@ export async function patchTask(id: string, patch: Partial<Task>): Promise<Task>
     if (existingErr) throw existingErr;
     const metadata = ((existing.metadata ?? {}) as Record<string, unknown>);
     if (patch.category !== undefined) metadata.category = patch.category;
+    if (patch.location !== undefined) metadata.location = patch.location;
     if (patch.favorite !== undefined) metadata.favorite = patch.favorite;
     if (patch.series_id !== undefined) metadata.series_id = patch.series_id;
     updatePayload.metadata = metadata;
