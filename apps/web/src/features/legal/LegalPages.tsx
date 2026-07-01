@@ -49,7 +49,7 @@ export function PrivacyPolicy() {
       </p>
       <h2>Data we collect</h2>
       <p>
-        When you create an account or sign in with Google, Facebook, or Apple, we may receive your
+        When you create an account or sign in with Google or Facebook, we may receive your
         email address, provider account identifier, display name, and profile information made
         available by the provider. Inside the app, you may add personal notes, tasks, goals, health,
         finance, travel, work, and other personal planning data.
@@ -62,7 +62,7 @@ export function PrivacyPolicy() {
       </p>
       <h2>Third-party providers</h2>
       <p>
-        Login and optional integrations may use providers such as Google, Facebook, Apple,
+        Login and optional integrations may use providers such as Google, Facebook,
         Supabase, and Cloudflare. Their services process data according to their own policies.
       </p>
       <h2>Contact</h2>

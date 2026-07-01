@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-type Provider = 'google' | 'apple' | 'facebook';
+type Provider = 'google' | 'facebook';
 
 const LABELS: Record<Provider, string> = {
   google: 'Kontynuuj z Google',
-  apple: 'Kontynuuj z Apple',
   facebook: 'Kontynuuj z Facebookiem',
 };
 
@@ -29,7 +28,7 @@ export function OAuthButtons() {
 
   return (
     <div className="oauth-row">
-      {(['google', 'apple', 'facebook'] as Provider[]).map((p) => (
+      {(['google', 'facebook'] as Provider[]).map((p) => (
         <button
           key={p}
           type="button"
