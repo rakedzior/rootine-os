@@ -88,7 +88,7 @@ const LABELS_BY_MODULE: Record<ModuleKey, string> = {
 
 export function MobileBottomNav() {
   const [sheetOpen, setSheetOpen] = useState(false);
-  const modules = useVisibleModules();
+  const modules = useVisibleModules().filter((module) => module.key !== 'sport' && module.key !== 'diet');
   const moduleItems = modules.map((module) => ({
     to: module.path,
     label: LABELS_BY_MODULE[module.key] ?? module.label,

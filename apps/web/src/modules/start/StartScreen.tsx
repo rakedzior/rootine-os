@@ -2585,6 +2585,229 @@ function buildTaskFields(draft: TaskDraft) {
   };
 }
 
+type MobilePlannerTab = 'today' | 'calendar';
+
+function taskSortByDate(a: SupabaseTask, b: SupabaseTask) {
+  if (a.done !== b.done) return Number(a.done) - Number(b.done);
+  const aDate = a.due_date ?? '9999-12-31';
+  const bDate = b.due_date ?? '9999-12-31';
+  if (aDate !== bDate) return aDate.localeCompare(bDate);
+  const aTime = a.scheduled_time ?? '';
+  const bTime = b.scheduled_time ?? '';
+  if (aTime !== bTime) return aTime.localeCompare(bTime);
+  return a.created_at.localeCompare(b.created_at);
+}
+
+function MobileTaskRow({ task, today, onTaskClick, onToggleTask }: {
+  task: SupabaseTask;
+  today: string;
+  onTaskClick: (task: SupabaseTask, anchor: AnchorRect) => void;
+  onToggleTask: (id: string, done: boolean) => void;
+}) {
+  const isOverdue = !!task.due_date && task.due_date < today && !task.done;
+  const dateLabel = task.due_date ? (task.due_date === today ? 'Dziś' : fmtShortDate(task.due_date)) : 'Bez terminu';
+  const timeLabel = taskTimeRangeLabel(task);
+  const meta = timeLabel ? `${dateLabel}, ${timeLabel}` : dateLabel;
+  const bucket = task.category || dedupeTags(task.tags ?? [])[0] || 'Skrzynka zadań';
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      className={`mobile-task-row${task.done ? ' is-done' : ''}`}
+      onClick={(event) => {
+        const r = event.currentTarget.getBoundingClientRect();
+        onTaskClick(task, { left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        const r = event.currentTarget.getBoundingClientRect();
+        onTaskClick(task, { left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+      }}
+    >
+      <button
+        type="button"
+        className={`mobile-task-check${task.done ? ' is-done' : ''}`}
+        aria-label={task.done ? 'Oznacz jako niewykonane' : 'Zakończ zadanie'}
+        onClick={(event) => {
+          event.stopPropagation();
+          onToggleTask(task.id, !task.done);
+        }}
+      >
+        {task.done && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+      </button>
+      <div className="mobile-task-main">
+        <strong>{task.title}</strong>
+        <span className={isOverdue ? 'is-overdue' : ''}>{meta}</span>
+      </div>
+      <small>{bucket}</small>
+    </div>
+  );
+}
+
+function MobileTaskSection({ title, action, tasks, empty, today, onTaskClick, onToggleTask }: {
+  title: string;
+  action?: string;
+  tasks: SupabaseTask[];
+  empty: string;
+  today: string;
+  onTaskClick: (task: SupabaseTask, anchor: AnchorRect) => void;
+  onToggleTask: (id: string, done: boolean) => void;
+}) {
+  return (
+    <section className="mobile-task-section">
+      <header>
+        <h3>{title}</h3>
+        {action && <span>{action}</span>}
+        <em>{tasks.length}</em>
+      </header>
+      {tasks.length === 0 ? (
+        <p className="mobile-empty">{empty}</p>
+      ) : (
+        tasks.map((task) => <MobileTaskRow key={task.id} task={task} today={today} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />)
+      )}
+    </section>
+  );
+}
+
+function MobilePlannerCalendar({ tasks, hideCompleted, selectedDate, monthDate, today, onSelectDate, onShiftMonth, onTaskClick, onToggleTask }: {
+  tasks: SupabaseTask[];
+  hideCompleted: boolean;
+  selectedDate: string;
+  monthDate: string;
+  today: string;
+  onSelectDate: (date: string) => void;
+  onShiftMonth: (delta: number) => void;
+  onTaskClick: (task: SupabaseTask, anchor: AnchorRect) => void;
+  onToggleTask: (id: string, done: boolean) => void;
+}) {
+  const parsed = parseDateStr(monthDate) ?? new Date();
+  const year = parsed.getFullYear();
+  const month = parsed.getMonth();
+  const calendarTasks = hideCompleted ? tasks.filter((task) => !task.done) : tasks;
+  const taskDates = new Set(calendarTasks.map((task) => task.due_date).filter(Boolean) as string[]);
+  const selectedTasks = calendarTasks.filter((task) => task.due_date === selectedDate).sort(taskSortByDate);
+  const cells = monthGridFor(year, month);
+
+  return (
+    <div className="mobile-calendar-panel">
+      <div className="mobile-calendar-head">
+        <button type="button" onClick={() => onShiftMonth(-1)} aria-label="Poprzedni miesiąc">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+        </button>
+        <h2>{MONTH_FULL[month].toLocaleLowerCase('pl-PL')} <span>{year}</span></h2>
+        <button type="button" onClick={() => onShiftMonth(1)} aria-label="Następny miesiąc">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+        </button>
+      </div>
+
+      <div className="mobile-calendar-weekdays">
+        {['P', 'W', 'Ś', 'C', 'P', 'S', 'N'].map((day, index) => <span key={`${day}-${index}`}>{day}</span>)}
+      </div>
+
+      <div className="mobile-calendar-grid">
+        {cells.map((cell) => {
+          const hasTasks = taskDates.has(cell.value);
+          return (
+            <button
+              key={cell.value}
+              type="button"
+              className={`${cell.currentMonth ? '' : 'is-out'}${cell.value === today ? ' is-today' : ''}${cell.value === selectedDate ? ' is-selected' : ''}${hasTasks ? ' has-tasks' : ''}`}
+              onClick={() => onSelectDate(cell.value)}
+            >
+              <span>{cell.day}</span>
+              {hasTasks && <i aria-hidden="true" />}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mobile-selected-day">
+        <div className="mobile-selected-date">
+          <span>{fmtShortDate(selectedDate)}</span>
+          <strong>{selectedDate === today ? 'Dziś' : new Date(`${selectedDate}T12:00:00`).toLocaleDateString('pl-PL', { weekday: 'long' })}</strong>
+        </div>
+        {selectedTasks.length === 0 ? (
+          <p className="mobile-empty">Brak zadań tego dnia.</p>
+        ) : (
+          selectedTasks.map((task) => <MobileTaskRow key={task.id} task={task} today={today} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />)
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MobilePlanner({ tasks, isLoading, hideCompleted, onToggleHideCompleted, onAddTask, onTaskClick, onToggleTask }: {
+  tasks: SupabaseTask[];
+  isLoading: boolean;
+  hideCompleted: boolean;
+  onToggleHideCompleted: () => void;
+  onAddTask: (date: string) => void;
+  onTaskClick: (task: SupabaseTask, anchor: AnchorRect) => void;
+  onToggleTask: (id: string, done: boolean) => void;
+}) {
+  const now = new Date();
+  const today = toDateStr(now.getFullYear(), now.getMonth(), now.getDate());
+  const [tab, setTab] = useState<MobilePlannerTab>('today');
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [monthDate, setMonthDate] = useState(firstOfMonth(today));
+
+  const visibleTasks = hideCompleted ? tasks.filter((task) => !task.done) : tasks;
+  const overdueTasks = visibleTasks.filter((task) => !!task.due_date && task.due_date < today && !task.done).sort(taskSortByDate);
+  const todayTasks = visibleTasks.filter((task) => task.due_date === today).sort(taskSortByDate);
+  const addDate = tab === 'calendar' ? selectedDate : today;
+
+  return (
+    <section className="mobile-planner" aria-label="Planer mobilny">
+      <div className="mobile-planner-top">
+        <h1>{tab === 'today' ? 'Dziś' : 'Kalendarz'}</h1>
+        <button type="button" className={`mobile-hide-done${hideCompleted ? ' is-active' : ''}`} onClick={onToggleHideCompleted} aria-pressed={hideCompleted}>
+          {hideCompleted ? 'Aktywne' : 'Wszystkie'}
+        </button>
+      </div>
+
+      <div className="mobile-planner-tabs" role="tablist" aria-label="Widok planera">
+        <button type="button" className={tab === 'today' ? 'is-active' : ''} onClick={() => setTab('today')} role="tab" aria-selected={tab === 'today'}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+          Lista
+        </button>
+        <button type="button" className={tab === 'calendar' ? 'is-active' : ''} onClick={() => setTab('calendar')} role="tab" aria-selected={tab === 'calendar'}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+          Kalendarz
+        </button>
+      </div>
+
+      {isLoading ? (
+        <div className="mobile-task-section"><p className="mobile-empty">Ładowanie planera...</p></div>
+      ) : tab === 'today' ? (
+        <>
+          <MobileTaskSection title="Po terminie" action="Przełożyć" tasks={overdueTasks} empty="Brak zaległych zadań." today={today} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />
+          <MobileTaskSection title="Dziś" tasks={todayTasks} empty="Brak zadań na dziś." today={today} onTaskClick={onTaskClick} onToggleTask={onToggleTask} />
+          <div className="mobile-habits-panel">
+            <HabitsStrip />
+          </div>
+        </>
+      ) : (
+        <MobilePlannerCalendar
+          tasks={tasks}
+          hideCompleted={hideCompleted}
+          selectedDate={selectedDate}
+          monthDate={monthDate}
+          today={today}
+          onSelectDate={setSelectedDate}
+          onShiftMonth={(delta) => setMonthDate((current) => shiftMonth(current, delta))}
+          onTaskClick={onTaskClick}
+          onToggleTask={onToggleTask}
+        />
+      )}
+
+      <button type="button" className="mobile-planner-fab" onClick={() => onAddTask(addDate)} aria-label="Dodaj zadanie">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+      </button>
+    </section>
+  );
+}
+
 function TaskOptionsPopover({ state, saving, onClose, onChange, onSave, onDelete }: TaskOptionsPopoverProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const subRef = useRef<HTMLDivElement | null>(null);
@@ -3062,7 +3285,7 @@ export function StartScreen() {
   const deleteTasks = useDeleteTasks();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const modalDate = todayStr;
+  const [modalDate, setModalDate] = useState(todayStr);
   const [modalInitialTitle, setModalInitialTitle] = useState('');
   const [modalInitialTags, setModalInitialTags] = useState<string[]>([]);
   const [taskOptions, setTaskOptions] = useState<TaskOptionsState>({
@@ -3299,6 +3522,13 @@ export function StartScreen() {
     setModalInitialTitle('');
     setModalInitialTags([]);
   }
+  function openAddTaskForDate(date: string) {
+    setEditingTaskId(null);
+    setModalDate(date || todayStr);
+    setModalInitialTitle('');
+    setModalInitialTags([]);
+    setModalOpen(true);
+  }
   async function handleSaveTask(task: TaskModalPayload) {
     const primaryDueDate = task.dueDates[0] ?? todayStr;
     if (task.editingId) {
@@ -3423,6 +3653,15 @@ export function StartScreen() {
     >
 
       <div className="planner-shell">
+        <MobilePlanner
+          tasks={tasks}
+          isLoading={tasksLoading}
+          hideCompleted={hideCompletedTasks}
+          onToggleHideCompleted={() => setHideCompletedTasks((prev) => !prev)}
+          onAddTask={openAddTaskForDate}
+          onTaskClick={openTask}
+          onToggleTask={(id, done) => toggleTask.mutate({ id, done })}
+        />
         <div className="planner-layout">
           <aside className="planner-sidebar">
             <div className="card planner-tasks-card">
