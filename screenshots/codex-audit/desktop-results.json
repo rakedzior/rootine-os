@@ -1,0 +1,389 @@
+[
+  {
+    "route": "/",
+    "name": "start",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "url": "http://127.0.0.1:5173/",
+    "title": "Rootine OS",
+    "horizontalOverflow": false,
+    "rawTarget": [],
+    "clipped": [],
+    "headings": [
+      "Planer"
+    ],
+    "buttons": [
+      "Pogoda: 27°C, Częściowe zachmurzenie",
+      "Q",
+      "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+      "Ukryj zakończone",
+      "DZISIAJ\n0",
+      "JUTRO\n0",
+      "TYDZIEŃ\n0",
+      "MIESIĄC\n0",
+      "WSZYSTKIE\n0",
+      "Szybko dodaj zadanie na dziś",
+      "Ustaw termin i szczegóły zadania",
+      "ZOBACZ SZCZEGÓŁY",
+      "Ukryj zakończone",
+      "MIESIĄC",
+      "TYDZIEŃ",
+      "DZIEŃ",
+      "DZIŚ"
+    ],
+    "bodyText": "R\nQ\nPlaner\n\nZaplanuj dzień, zadania, nawyki i cele w jednym miejscu.\n\nZadania\nUkryj zakończone\nDZISIAJ\n0\nJUTRO\n0\nTYDZIEŃ\n0\nMIESIĄC\n0\nWSZYSTKIE\n0\nBrak zadań. Dodaj pierwsze poniżej.\nNAWYKI\n0 / 0\n0%\nWykonano 0 z 0 dzisiejszych nawyków.\nBrak nawyków w Celach.\nZOBACZ SZCZEGÓŁY\nCzerwiec 2026\nUkryj zakończone\nMIESIĄC\nTYDZIEŃ\nDZIEŃ\nDZIŚ\nPON\nWT\nŚR\nCZW\nPT\nSOB\nNDZ\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30"
+  },
+  {
+    "route": "/sport",
+    "name": "sport",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "url": "http://127.0.0.1:5173/sport",
+    "title": "Rootine OS",
+    "horizontalOverflow": false,
+    "rawTarget": [],
+    "clipped": [],
+    "headings": [
+      "Sport",
+      "Szablony i planowanie",
+      "Nie masz jeszcze szablonów",
+      "Historia treningów",
+      "Historia pojawi się po zakończeniu pierwszej sesji.",
+      "Rekordy",
+      "Rekordy pojawią się po zapisaniu treningów"
+    ],
+    "buttons": [
+      "Pogoda: 27°C, Częściowe zachmurzenie",
+      "Q",
+      "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+      "Cykle treningowe",
+      "+ Dodaj trening",
+      "+ Zaplanuj blok",
+      "+ Zaplanuj cykl treningowy",
+      "Poprzedni tydzień",
+      "Następny tydzień",
+      "+",
+      "+",
+      "+",
+      "+",
+      "+",
+      "+",
+      "+",
+      "+ Nowy szablon",
+      "+ Nowy szablon",
+      "Zobacz całą historię",
+      "Zobacz wszystkie rekordy",
+      "+ Dodaj rekord"
+    ],
+    "bodyText": "R\nQ\nSport\n\nPlanuj, analizuj i poprawiaj swoje treningi.\n\nCykle treningowe\n+ Dodaj trening\n+ Zaplanuj blok\nBrak aktywnego cyklu treningowego\nUtwórz prosty plan na kilka tygodni i dodaj treningi do konkretnych dni.\n+ Zaplanuj cykl treningowy\nTen tydzień\n29 czerwca – 5 lipca 2026\nPON\n29.06\n+\nWTO\n30.06\nDZIŚ\n+\nŚRO\n1.07\n+\nCZW\n2.07\n+\nPIĄ\n3.07\n+\nSOB\n4.07\n+\nNIE\n5.07\n+\nSzablony i planowanie\n+ Nowy szablon\nNie masz jeszcze szablonów\n\nUtwórz pierwszy szablon, aby szybciej planować treningi.\n\n+ Nowy szablon\nHistoria treningów\nZobacz całą historię\nHistoria pojawi się po zakończeniu pierwszej sesji.\nRekordy\nZobacz wszystkie rekordy\nRekordy pojawią się po zapisaniu treningów\n\nMożesz też dodać je ręcznie.\n\n+ Dodaj rekord"
+  },
+  {
+    "route": "/diet",
+    "name": "diet",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "url": "http://127.0.0.1:5173/diet?date=2026-06-30",
+    "title": "Rootine OS",
+    "horizontalOverflow": false,
+    "rawTarget": [],
+    "clipped": [],
+    "headings": [
+      "Dieta"
+    ],
+    "buttons": [
+      "Pogoda: 27°C, Częściowe zachmurzenie",
+      "Q",
+      "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+      "Poprzedni dzień",
+      "wtorek, 30 czerwca 2026",
+      "Następny dzień",
+      "Dzisiaj",
+      "Własne posiłki",
+      "Ustawienia",
+      "Dodaj",
+      "Brak wpisów",
+      "Dodaj",
+      "Brak wpisów",
+      "Dodaj",
+      "Brak wpisów",
+      "Dodaj",
+      "Brak wpisów",
+      "Dzień",
+      "Tydzień",
+      "Miesiąc",
+      "Zakres",
+      "Szczegółowe podsumowanie",
+      "+200 ml",
+      "+300 ml",
+      "+500 ml",
+      "Dodaj wpis"
+    ],
+    "bodyText": "R\nQ\nDieta\n\nDziennik posiłków, makroskładniki i nawodnienie w jednym miejscu.\n\nwtorek, 30 czerwca 2026\nDzisiaj\nWłasne posiłki\nUstawienia\nSniadanie\n0 kcal\nB 0g\nW 0g\nT 0g\nDodaj\nPRODUKT\nILOŚĆ\nKCAL\nB\nW\nT\nBrak wpisów\nObiad\n0 kcal\nB 0g\nW 0g\nT 0g\nDodaj\nPRODUKT\nILOŚĆ\nKCAL\nB\nW\nT\nBrak wpisów\nKolacja\n0 kcal\nB 0g\nW 0g\nT 0g\nDodaj\nPRODUKT\nILOŚĆ\nKCAL\nB\nW\nT\nBrak wpisów\nPrzekaski\n0 kcal\nB 0g\nW 0g\nT 0g\nDodaj\nPRODUKT\nILOŚĆ\nKCAL\nB\nW\nT\nBrak wpisów\nPodsumowanie\ncel dzienny\nDzień\nTydzień\nMiesiąc\nZakres\n0 / 2500 kcal\nPozostało 2500 kcal\nNawodnienie 0.0 / 2.5 L\nBiałko\n0/180g\nWęglowodany\n0/240g\nTłuszcze\n0/70g\nSzczegółowe podsumowanie\nNawodnienie\n0.0 / 2.5 L\n+200 ml\n+300 ml\n+500 ml\nRytm posiłków\n0 wpisów dzisiaj\n0%\n0/4 kategorii uzupełnionych\nNastępny posiłek\nSniadanie\nDodaj wpis\nDo uzupełnienia: 240 g węglowodanów\n0 / 2500 kcal"
+  },
+  {
+    "route": "/finance",
+    "name": "finance",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "url": "http://127.0.0.1:5173/finance?month=2026-06",
+    "title": "Rootine OS",
+    "horizontalOverflow": false,
+    "rawTarget": [],
+    "clipped": [],
+    "headings": [
+      "Finanse"
+    ],
+    "buttons": [
+      "Pogoda: 27°C, Częściowe zachmurzenie",
+      "Q",
+      "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+      "Poprzedni miesiąc",
+      "Następny miesiąc",
+      "Środki\n0 zł\n0 aktywnych źródeł",
+      "Oszczędności\n0 zł\n0 cele oszczędnościowe",
+      "Budżet\n0%\n0 zł wydane z 0 zł",
+      "Płatności\n0 zł\nPozostało w czerwiec 2026",
+      "Płatności",
+      "Budżet",
+      "JDG",
+      "Historia",
+      "+ Płatność"
+    ],
+    "bodyText": "R\nQ\nFinanse\n\nPrzegląd finansów, budżetu i płatności w jednym miejscu.\n\nŚrodki\n0 zł\n0 aktywnych źródeł\nOszczędności\n0 zł\n0 cele oszczędnościowe\nBudżet\n0%\n0 zł wydane z 0 zł\nPłatności\n0 zł\nPozostało w czerwiec 2026\nMIESIĄC\nOpłacone\n0 zł\nDo zapłaty\n0 zł\nBudżet\n0%\nPłatności\nBudżet\nJDG\nHistoria\nPłatności\n0 zł\nOpłacone\n0 zł\nNajbliższa\n-\nPo terminie\n0\n+ Płatność\nBrak płatności w tym miesiącu.\nDodaj pierwszą płatność albo skonfiguruj cykliczne koszty.\nczerwiec 2026 · suma płatności 0 zł"
+  },
+  {
+    "route": "/goals",
+    "name": "goals",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "url": "http://127.0.0.1:5173/goals",
+    "title": "Rootine OS",
+    "horizontalOverflow": false,
+    "rawTarget": [],
+    "clipped": [],
+    "headings": [
+      "Cele",
+      "Brak celów",
+      "Brak aktywnego celu"
+    ],
+    "buttons": [
+      "Pogoda: 27°C, Częściowe zachmurzenie",
+      "Q",
+      "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+      "Dodaj cel",
+      "Kategorie",
+      "Archiwalne cele"
+    ],
+    "bodyText": "R\nQ\nCele\n\nRoadmapy, kamienie milowe i działania na dziś w jednym widoku.\n\nDodaj cel\nBrak celów\n\nDodaj pierwszy cel, aby zacząć rozbijać go na działania.\n\nArchiwalne cele\nBrak aktywnego celu\n\nDodaj cel, aby zobaczyć roadmapę i plan tygodnia."
+  },
+  {
+    "route": "/office",
+    "name": "office",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "url": "http://127.0.0.1:5173/office",
+    "title": "Rootine OS",
+    "horizontalOverflow": false,
+    "rawTarget": [],
+    "clipped": [],
+    "headings": [
+      "Biuro",
+      "Brak spraw",
+      "Brak terminów",
+      "Brak dokumentów"
+    ],
+    "buttons": [
+      "Pogoda: 27°C, Częściowe zachmurzenie",
+      "Q",
+      "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+      "Nowe zadanie",
+      "Urlop\n26 dni\nz 26 dni rocznie\n›",
+      "Wszystkie\nOK\n0",
+      "Zadania urzędowe\nOK\n0",
+      "Dokumenty\nOK\n0",
+      "Samochód\nOK\n0",
+      "Ubezpieczenia\nOK\n0",
+      "Urlopy\nOK\n0",
+      "Dodaj kategorię",
+      "Sortuj: Termin ↑",
+      "Dodaj zadanie",
+      "Zobacz wszystkie terminy ›",
+      "Zobacz wszystkie dokumenty ›"
+    ],
+    "bodyText": "R\nQ\nBiuro\n\nSprawy, dokumenty i terminy w jednym miejscu.\n\nNowe zadanie\nDo zrobienia\n0\naktywnych spraw\n›\nW trakcie\n0\nw realizacji\n›\nTerminy w tym miesiącu\n0\n0 pilne\n›\nUrlop\n26 dni\nz 26 dni rocznie\n›\nKATEGORIE\nWszystkie\nOK\n0\nZadania urzędowe\nOK\n0\nDokumenty\nOK\n0\nSamochód\nOK\n0\nUbezpieczenia\nOK\n0\nUrlopy\nOK\n0\nDodaj kategorię\nMOJE SPRAWY\nSortuj: Termin ↑\nBrak spraw\nDodaj zadanie\nNADCHODZĄCE TERMINY\nBrak terminów\nZobacz wszystkie terminy ›\nDOKUMENTY 0\nBrak dokumentów\nZobacz wszystkie dokumenty ›"
+  },
+  {
+    "route": "/travel",
+    "name": "travel",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "url": "http://127.0.0.1:5173/travel",
+    "title": "Rootine OS",
+    "horizontalOverflow": false,
+    "rawTarget": [],
+    "clipped": [],
+    "headings": [
+      "Podróże",
+      "Moje podróże",
+      "Brak podróży w tej kategorii",
+      "Brak wybranej podróży"
+    ],
+    "buttons": [
+      "Pogoda: 27°C, Częściowe zachmurzenie",
+      "Q",
+      "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+      "Nowa podróż",
+      "Dodaj podróż",
+      "Dodaj podróż",
+      "Planowane",
+      "Trwające",
+      "Zakończone",
+      "Archiwum podróży\n›"
+    ],
+    "bodyText": "R\nQ\nPodróże\n\nWszystkie wyjazdy i szczegóły podróży w jednym miejscu.\n\nNowa podróż\nWszystkie\nPlanowane\nTrwające\nZakończone\nArchiwum\nMoje podróże\nBrak podróży w tej kategorii\nDodaj podróż\nPlanowane\nTrwające\nZakończone\nArchiwum podróży\n›\nBrak wybranej podróży\n\nDodaj lub wybierz podróż z listy."
+  },
+  {
+    "route": "/notes",
+    "name": "notes",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "url": "http://127.0.0.1:5173/notes",
+    "title": "Rootine OS",
+    "horizontalOverflow": false,
+    "rawTarget": [],
+    "clipped": [],
+    "headings": [
+      "Notatki",
+      "Kategorie",
+      "Wszystkie notatki",
+      "Brak notatek w tej kategorii"
+    ],
+    "buttons": [
+      "Pogoda: 27°C, Częściowe zachmurzenie",
+      "Q",
+      "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+      "Nowa notatka",
+      "Widok kafelków",
+      "Widok listy",
+      "Wszystkie notatki\n0",
+      "Notatki\n0",
+      "Projekty\n0",
+      "Spotkania\n0",
+      "Osobiste\n0",
+      "Inspiracje\n0",
+      "Do przeczytania\n0",
+      "Archiwum\n0",
+      "Dodaj kategorię",
+      "Nowa notatka"
+    ],
+    "bodyText": "R\nQ\nNotatki\n\nWszystkie notatki, pomysły i szybkie zapisy w jednym miejscu.\n\nNowa notatka\nKATEGORIE\nWszystkie notatki\n0\nNotatki\n0\nProjekty\n0\nSpotkania\n0\nOsobiste\n0\nInspiracje\n0\nDo przeczytania\n0\nArchiwum\n0\nDodaj kategorię\nWszystkie notatki\nBrak notatek w tej kategorii\nNowa notatka"
+  },
+  {
+    "route": "/work",
+    "name": "work",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "url": "http://127.0.0.1:5173/work",
+    "title": "Rootine OS",
+    "horizontalOverflow": false,
+    "rawTarget": [],
+    "clipped": [],
+    "headings": [
+      "Praca",
+      "Podsumowanie",
+      "Brak firm",
+      "Brak zadania",
+      "Najbliższe deadline'y"
+    ],
+    "buttons": [
+      "Pogoda: 27°C, Częściowe zachmurzenie",
+      "Q",
+      "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+      "Dodaj firmę",
+      "Edytuj firmę",
+      "Nowy projekt",
+      "Lista",
+      "Tablica",
+      "Kalendarz",
+      "Oś czasu",
+      "Filtry",
+      "Sortuj: Priorytet",
+      "Ustawienia",
+      "Dodaj firme",
+      "Zobacz kalendarz"
+    ],
+    "bodyText": "R\nQ\nPraca\n\nWszystkie firmy, projekty, zadania i notatki w jednym miejscu.\n\nWybór firmy\nWYBÓR PROJEKTU\nNowy projekt\nPODSUMOWANIE\nDo zrobienia\n0\nW trakcie\n0\nTerminy w tym miesiącu\n0\nUrlop\n0 dni\nLista\nTablica\nKalendarz\nOś czasu\nFiltry\nSortuj: Priorytet\nBrak firm\n\nDodaj pierwsza firme lub kontekst pracy.\n\nDodaj firme\nSzczegóły zadania\nBrak zadania\nNAJBLIŻSZE DEADLINE'Y\nZobacz kalendarz\nBrak najbliższych terminów."
+  },
+  {
+    "route": "/settings",
+    "name": "settings",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "url": "http://127.0.0.1:5173/settings",
+    "title": "Rootine OS",
+    "horizontalOverflow": false,
+    "rawTarget": [],
+    "clipped": [],
+    "headings": [
+      "Ustawienia"
+    ],
+    "buttons": [
+      "Pogoda: 27°C, Częściowe zachmurzenie",
+      "Q",
+      "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+      "Beżowy",
+      "Chłodny",
+      "Grafit",
+      "Nadmorski",
+      "Laguna",
+      "Lawenda",
+      "Koralowy",
+      "Stalowy",
+      "Magenta",
+      "Monochrom",
+      "Pobierz moje dane",
+      "USUŃ KONTO"
+    ],
+    "bodyText": "R\nQ\nUstawienia\n\nProfil, konto, bezpieczeństwo, moduły i integracje aplikacji.\n\nProfil\nKonto\nBezpieczeństwo\nModuły\nIntegracje\nMOTYW I KOLOR AKCENTU\n\nWybierz paletę aplikacji. Ustawienie jest zapisywane na koncie i synchronizowane między urządzeniami.\n\nBeżowy\nChłodny\nGrafit\nNadmorski\nLaguna\nLawenda\nKoralowy\nStalowy\nMagenta\nMonochrom\nKONTO\nE-MAIL\n—\nEKSPORT DANYCH\n\nPobierz wszystkie swoje dane jako plik JSON (RODO — prawo do przenoszenia danych).\n\nPobierz moje dane\nUSUŃ KONTO\n\nTrwale usuwa wszystkie Twoje dane i konto. Tej operacji nie można cofnąć.\n\nUSUŃ KONTO"
+  }
+]

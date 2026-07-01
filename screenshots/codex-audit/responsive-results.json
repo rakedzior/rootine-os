@@ -1,0 +1,3632 @@
+[
+  {
+    "viewport": "tablet",
+    "size": "900x1000",
+    "route": "/",
+    "name": "start",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Ukryj zakończone",
+        "box": [
+          123,
+          34
+        ]
+      },
+      {
+        "text": "DZISIAJ 0",
+        "box": [
+          73,
+          32
+        ]
+      },
+      {
+        "text": "JUTRO 0",
+        "box": [
+          73,
+          32
+        ]
+      },
+      {
+        "text": "TYDZIEŃ 0",
+        "box": [
+          73,
+          41
+        ]
+      },
+      {
+        "text": "MIESIĄC 0",
+        "box": [
+          73,
+          41
+        ]
+      },
+      {
+        "text": "WSZYSTKIE 0",
+        "box": [
+          309,
+          32
+        ]
+      },
+      {
+        "text": "Szybko dodaj zadanie na dziś",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Ustaw termin i szczegóły zadania",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "ZOBACZ SZCZEGÓŁY",
+        "box": [
+          283,
+          13
+        ]
+      },
+      {
+        "text": "Ukryj zakończone",
+        "box": [
+          123,
+          34
+        ]
+      },
+      {
+        "text": "MIESIĄC",
+        "box": [
+          34,
+          34
+        ]
+      },
+      {
+        "text": "TYDZIEŃ",
+        "box": [
+          34,
+          34
+        ]
+      },
+      {
+        "text": "DZIEŃ",
+        "box": [
+          34,
+          34
+        ]
+      },
+      {
+        "text": "DZIŚ",
+        "box": [
+          34,
+          34
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "size": "900x1000",
+    "route": "/sport",
+    "name": "sport",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Cykle treningowe",
+        "box": [
+          145,
+          40
+        ]
+      },
+      {
+        "text": "+ Dodaj trening",
+        "box": [
+          131,
+          40
+        ]
+      },
+      {
+        "text": "+ Zaplanuj blok",
+        "box": [
+          131,
+          40
+        ]
+      },
+      {
+        "text": "+ Zaplanuj cykl treningowy",
+        "box": [
+          184,
+          44
+        ]
+      },
+      {
+        "text": "Poprzedni tydzień",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Następny tydzień",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          195,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          195,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          195,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          195,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          195,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          195,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          195,
+          34
+        ]
+      },
+      {
+        "text": "+ Nowy szablon",
+        "box": [
+          120,
+          34
+        ]
+      },
+      {
+        "text": "+ Nowy szablon",
+        "box": [
+          120,
+          34
+        ]
+      },
+      {
+        "text": "Zobacz całą historię",
+        "box": [
+          144,
+          34
+        ]
+      },
+      {
+        "text": "Zobacz wszystkie rekordy",
+        "box": [
+          180,
+          34
+        ]
+      },
+      {
+        "text": "+ Dodaj rekord",
+        "box": [
+          112,
+          34
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "size": "900x1000",
+    "route": "/diet",
+    "name": "diet",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Poprzedni dzień",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "środa, 1 lipca 2026",
+        "box": [
+          407,
+          34
+        ]
+      },
+      {
+        "text": "Następny dzień",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Dzisiaj",
+        "box": [
+          65,
+          34
+        ]
+      },
+      {
+        "text": "Własne posiłki",
+        "box": [
+          134,
+          34
+        ]
+      },
+      {
+        "text": "Ustawienia",
+        "box": [
+          114,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj",
+        "box": [
+          83,
+          34
+        ]
+      },
+      {
+        "text": "Brak wpisów",
+        "box": [
+          674,
+          76
+        ]
+      },
+      {
+        "text": "Dodaj",
+        "box": [
+          83,
+          34
+        ]
+      },
+      {
+        "text": "Brak wpisów",
+        "box": [
+          674,
+          76
+        ]
+      },
+      {
+        "text": "Dodaj",
+        "box": [
+          83,
+          34
+        ]
+      },
+      {
+        "text": "Brak wpisów",
+        "box": [
+          674,
+          76
+        ]
+      },
+      {
+        "text": "Dodaj",
+        "box": [
+          83,
+          34
+        ]
+      },
+      {
+        "text": "Brak wpisów",
+        "box": [
+          674,
+          76
+        ]
+      },
+      {
+        "text": "Dzień",
+        "box": [
+          45,
+          30
+        ]
+      },
+      {
+        "text": "Tydzień",
+        "box": [
+          45,
+          30
+        ]
+      },
+      {
+        "text": "Miesiąc",
+        "box": [
+          45,
+          30
+        ]
+      },
+      {
+        "text": "Zakres",
+        "box": [
+          45,
+          30
+        ]
+      },
+      {
+        "text": "Szczegółowe podsumowanie",
+        "box": [
+          201,
+          34
+        ]
+      },
+      {
+        "text": "+200 ml",
+        "box": [
+          63,
+          34
+        ]
+      },
+      {
+        "text": "+300 ml",
+        "box": [
+          63,
+          34
+        ]
+      },
+      {
+        "text": "+500 ml",
+        "box": [
+          63,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj wpis",
+        "box": [
+          90,
+          34
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "size": "900x1000",
+    "route": "/finance",
+    "name": "finance",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Poprzedni miesiąc",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Następny miesiąc",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Środki 0 zł 0 aktywnych źródeł",
+        "box": [
+          130,
+          386
+        ]
+      },
+      {
+        "text": "Oszczędności 0 zł 0 cele oszczędnościowe",
+        "box": [
+          130,
+          386
+        ]
+      },
+      {
+        "text": "Budżet 0% 0 zł wydane z 0 zł",
+        "box": [
+          130,
+          386
+        ]
+      },
+      {
+        "text": "Płatności 0 zł Pozostało w lipiec 2026",
+        "box": [
+          130,
+          386
+        ]
+      },
+      {
+        "text": "Płatności",
+        "box": [
+          51,
+          38
+        ]
+      },
+      {
+        "text": "Budżet",
+        "box": [
+          51,
+          38
+        ]
+      },
+      {
+        "text": "JDG",
+        "box": [
+          51,
+          38
+        ]
+      },
+      {
+        "text": "Historia",
+        "box": [
+          51,
+          38
+        ]
+      },
+      {
+        "text": "+ Płatność",
+        "box": [
+          103,
+          46
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "size": "900x1000",
+    "route": "/goals",
+    "name": "goals",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj cel",
+        "box": [
+          111,
+          40
+        ]
+      },
+      {
+        "text": "Kategorie",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Archiwalne cele",
+        "box": [
+          676,
+          40
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "size": "900x1000",
+    "route": "/office",
+    "name": "office",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [
+      {
+        "tag": "aside",
+        "cls": "card office-sidebar",
+        "text": "KATEGORIE Wszystkie OK 0 Zadania urzędowe OK 0 Dokumenty OK 0 Samochód OK 0 Ubezpieczenia OK 0 Urlopy OK 0 Dodaj kategor",
+        "sw": 700,
+        "cw": 700,
+        "sh": 428,
+        "ch": 199
+      },
+      {
+        "tag": "main",
+        "cls": "card office-cases-panel",
+        "text": "MOJE SPRAWY Sortuj: Termin ↑ Brak spraw Dodaj zadanie",
+        "sw": 700,
+        "cw": 700,
+        "sh": 210,
+        "ch": 189
+      },
+      {
+        "tag": "section",
+        "cls": "card office-mini-panel",
+        "text": "NADCHODZĄCE TERMINY Brak terminów Zobacz wszystkie terminy ›",
+        "sw": 700,
+        "cw": 700,
+        "sh": 248,
+        "ch": 218
+      },
+      {
+        "tag": "section",
+        "cls": "card office-mini-panel",
+        "text": "DOKUMENTY 0 Brak dokumentów Zobacz wszystkie dokumenty ›",
+        "sw": 700,
+        "cw": 700,
+        "sh": 248,
+        "ch": 14
+      }
+    ],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Nowe zadanie",
+        "box": [
+          140,
+          40
+        ]
+      },
+      {
+        "text": "Urlop 26 dni z 26 dni rocznie ›",
+        "box": [
+          343,
+          103
+        ]
+      },
+      {
+        "text": "Wszystkie OK 0",
+        "box": [
+          674,
+          58
+        ]
+      },
+      {
+        "text": "Zadania urzędowe OK 0",
+        "box": [
+          674,
+          58
+        ]
+      },
+      {
+        "text": "Dokumenty OK 0",
+        "box": [
+          674,
+          58
+        ]
+      },
+      {
+        "text": "Samochód OK 0",
+        "box": [
+          674,
+          58
+        ]
+      },
+      {
+        "text": "Ubezpieczenia OK 0",
+        "box": [
+          674,
+          58
+        ]
+      },
+      {
+        "text": "Urlopy OK 0",
+        "box": [
+          674,
+          58
+        ]
+      },
+      {
+        "text": "Dodaj kategorię",
+        "box": [
+          676,
+          40
+        ]
+      },
+      {
+        "text": "Sortuj: Termin ↑",
+        "box": [
+          116,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj zadanie",
+        "box": [
+          109,
+          34
+        ]
+      },
+      {
+        "text": "Zobacz wszystkie terminy ›",
+        "box": [
+          672,
+          40
+        ]
+      },
+      {
+        "text": "Zobacz wszystkie dokumenty ›",
+        "box": [
+          672,
+          40
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "size": "900x1000",
+    "route": "/travel",
+    "name": "travel",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Nowa podróż",
+        "box": [
+          135,
+          40
+        ]
+      },
+      {
+        "text": "Dodaj podróż",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Dodaj podróż",
+        "box": [
+          104,
+          34
+        ]
+      },
+      {
+        "text": "Planowane",
+        "box": [
+          208,
+          34
+        ]
+      },
+      {
+        "text": "Trwające",
+        "box": [
+          208,
+          34
+        ]
+      },
+      {
+        "text": "Zakończone",
+        "box": [
+          208,
+          34
+        ]
+      },
+      {
+        "text": "Archiwum podróży ›",
+        "box": [
+          672,
+          41
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "size": "900x1000",
+    "route": "/notes",
+    "name": "notes",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Nowa notatka",
+        "box": [
+          145,
+          40
+        ]
+      },
+      {
+        "text": "Widok kafelków",
+        "box": [
+          36,
+          34
+        ]
+      },
+      {
+        "text": "Widok listy",
+        "box": [
+          36,
+          34
+        ]
+      },
+      {
+        "text": "Wszystkie notatki 0",
+        "box": [
+          217,
+          83
+        ]
+      },
+      {
+        "text": "Notatki 0",
+        "box": [
+          217,
+          83
+        ]
+      },
+      {
+        "text": "Projekty 0",
+        "box": [
+          217,
+          83
+        ]
+      },
+      {
+        "text": "Spotkania 0",
+        "box": [
+          217,
+          83
+        ]
+      },
+      {
+        "text": "Osobiste 0",
+        "box": [
+          217,
+          83
+        ]
+      },
+      {
+        "text": "Inspiracje 0",
+        "box": [
+          217,
+          83
+        ]
+      },
+      {
+        "text": "Do przeczytania 0",
+        "box": [
+          217,
+          83
+        ]
+      },
+      {
+        "text": "Archiwum 0",
+        "box": [
+          217,
+          83
+        ]
+      },
+      {
+        "text": "Dodaj kategorię",
+        "box": [
+          676,
+          47
+        ]
+      },
+      {
+        "text": "Nowa notatka",
+        "box": [
+          107,
+          34
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "size": "900x1000",
+    "route": "/work",
+    "name": "work",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj firmę",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Edytuj firmę",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Nowy projekt",
+        "box": [
+          674,
+          76
+        ]
+      },
+      {
+        "text": "Lista",
+        "box": [
+          80,
+          34
+        ]
+      },
+      {
+        "text": "Tablica",
+        "box": [
+          95,
+          34
+        ]
+      },
+      {
+        "text": "Kalendarz",
+        "box": [
+          113,
+          34
+        ]
+      },
+      {
+        "text": "Oś czasu",
+        "box": [
+          107,
+          34
+        ]
+      },
+      {
+        "text": "Filtry",
+        "box": [
+          81,
+          34
+        ]
+      },
+      {
+        "text": "Sortuj: Priorytet",
+        "box": [
+          124,
+          34
+        ]
+      },
+      {
+        "text": "Ustawienia",
+        "box": [
+          41,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj firme",
+        "box": [
+          94,
+          34
+        ]
+      },
+      {
+        "text": "Zobacz kalendarz",
+        "box": [
+          140,
+          40
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "size": "390x844",
+    "route": "/",
+    "name": "start",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [
+      {
+        "tag": "button",
+        "cls": "task-filter-btn",
+        "left": 368,
+        "right": 464,
+        "w": 96,
+        "text": "WSZYSTKIE0"
+      },
+      {
+        "tag": "span",
+        "cls": "",
+        "left": 375,
+        "right": 447,
+        "w": 72,
+        "text": "WSZYSTKIE"
+      },
+      {
+        "tag": "sup",
+        "cls": "",
+        "left": 452,
+        "right": 457,
+        "w": 5,
+        "text": "0"
+      }
+    ],
+    "clipped": [
+      {
+        "tag": "div",
+        "cls": "card planner-tasks-card",
+        "text": "Zadania Ukryj zakończone DZISIAJ 0 JUTRO 0 TYDZIEŃ 0 MIESIĄC 0 WSZYSTKIE 0 Brak zadań. Dodaj pierwsze poniżej.",
+        "sw": 324,
+        "cw": 324,
+        "sh": 175,
+        "ch": 136
+      }
+    ],
+    "buttons": [
+      {
+        "text": "26°CPochmurno26°C · Pochmurno",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Ukryj zakończone",
+        "box": [
+          123,
+          34
+        ]
+      },
+      {
+        "text": "DZISIAJ 0",
+        "box": [
+          72,
+          32
+        ]
+      },
+      {
+        "text": "JUTRO 0",
+        "box": [
+          65,
+          32
+        ]
+      },
+      {
+        "text": "TYDZIEŃ 0",
+        "box": [
+          78,
+          32
+        ]
+      },
+      {
+        "text": "MIESIĄC 0",
+        "box": [
+          75,
+          32
+        ]
+      },
+      {
+        "text": "WSZYSTKIE 0",
+        "box": [
+          96,
+          32
+        ]
+      },
+      {
+        "text": "Szybko dodaj zadanie na dziś",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Ustaw termin i szczegóły zadania",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "ZOBACZ SZCZEGÓŁY",
+        "box": [
+          292,
+          13
+        ]
+      },
+      {
+        "text": "Ukryj zakończone",
+        "box": [
+          123,
+          34
+        ]
+      },
+      {
+        "text": "MIESIĄC",
+        "box": [
+          34,
+          34
+        ]
+      },
+      {
+        "text": "TYDZIEŃ",
+        "box": [
+          34,
+          34
+        ]
+      },
+      {
+        "text": "DZIEŃ",
+        "box": [
+          34,
+          34
+        ]
+      },
+      {
+        "text": "DZIŚ",
+        "box": [
+          34,
+          34
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "size": "390x844",
+    "route": "/sport",
+    "name": "sport",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "26°CPochmurno26°C · Pochmurno",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Cykle treningowe",
+        "box": [
+          170,
+          40
+        ]
+      },
+      {
+        "text": "+ Dodaj trening",
+        "box": [
+          170,
+          40
+        ]
+      },
+      {
+        "text": "+ Zaplanuj blok",
+        "box": [
+          348,
+          40
+        ]
+      },
+      {
+        "text": "+ Zaplanuj cykl treningowy",
+        "box": [
+          282,
+          34
+        ]
+      },
+      {
+        "text": "Poprzedni tydzień",
+        "box": [
+          91,
+          40
+        ]
+      },
+      {
+        "text": "Następny tydzień",
+        "box": [
+          91,
+          40
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          264,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          264,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          264,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          264,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          264,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          264,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          264,
+          34
+        ]
+      },
+      {
+        "text": "+ Nowy szablon",
+        "box": [
+          120,
+          34
+        ]
+      },
+      {
+        "text": "+ Nowy szablon",
+        "box": [
+          120,
+          34
+        ]
+      },
+      {
+        "text": "Zobacz całą historię",
+        "box": [
+          144,
+          34
+        ]
+      },
+      {
+        "text": "Zobacz wszystkie rekordy",
+        "box": [
+          180,
+          34
+        ]
+      },
+      {
+        "text": "+ Dodaj rekord",
+        "box": [
+          112,
+          34
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "size": "390x844",
+    "route": "/diet",
+    "name": "diet",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "26°CPochmurno26°C · Pochmurno",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Poprzedni dzień",
+        "box": [
+          82,
+          40
+        ]
+      },
+      {
+        "text": "środa, 1 lipca 2026",
+        "box": [
+          338,
+          34
+        ]
+      },
+      {
+        "text": "Następny dzień",
+        "box": [
+          82,
+          40
+        ]
+      },
+      {
+        "text": "Dzisiaj",
+        "box": [
+          82,
+          34
+        ]
+      },
+      {
+        "text": "Własne posiłki",
+        "box": [
+          170,
+          34
+        ]
+      },
+      {
+        "text": "Ustawienia",
+        "box": [
+          170,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj",
+        "box": [
+          26,
+          34
+        ]
+      },
+      {
+        "text": "Brak wpisów",
+        "box": [
+          14,
+          139
+        ]
+      },
+      {
+        "text": "Dodaj",
+        "box": [
+          26,
+          34
+        ]
+      },
+      {
+        "text": "Brak wpisów",
+        "box": [
+          14,
+          139
+        ]
+      },
+      {
+        "text": "Dodaj",
+        "box": [
+          26,
+          34
+        ]
+      },
+      {
+        "text": "Brak wpisów",
+        "box": [
+          14,
+          139
+        ]
+      },
+      {
+        "text": "Dodaj",
+        "box": [
+          26,
+          34
+        ]
+      },
+      {
+        "text": "Brak wpisów",
+        "box": [
+          14,
+          139
+        ]
+      },
+      {
+        "text": "Dzień",
+        "box": [
+          20,
+          30
+        ]
+      },
+      {
+        "text": "Tydzień",
+        "box": [
+          20,
+          30
+        ]
+      },
+      {
+        "text": "Miesiąc",
+        "box": [
+          20,
+          30
+        ]
+      },
+      {
+        "text": "Zakres",
+        "box": [
+          20,
+          30
+        ]
+      },
+      {
+        "text": "Szczegółowe podsumowanie",
+        "box": [
+          26,
+          314
+        ]
+      },
+      {
+        "text": "+200 ml",
+        "box": [
+          26,
+          34
+        ]
+      },
+      {
+        "text": "+300 ml",
+        "box": [
+          26,
+          34
+        ]
+      },
+      {
+        "text": "+500 ml",
+        "box": [
+          26,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj wpis",
+        "box": [
+          26,
+          34
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "size": "390x844",
+    "route": "/finance",
+    "name": "finance",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "26°CPochmurno26°C · Pochmurno",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Poprzedni miesiąc",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Następny miesiąc",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Środki 0 zł 0 aktywnych źródeł",
+        "box": [
+          154,
+          112
+        ]
+      },
+      {
+        "text": "Oszczędności 0 zł 0 cele oszczędnościowe",
+        "box": [
+          154,
+          112
+        ]
+      },
+      {
+        "text": "Budżet 0% 0 zł wydane z 0 zł",
+        "box": [
+          154,
+          112
+        ]
+      },
+      {
+        "text": "Płatności 0 zł Pozostało w lipiec 2026",
+        "box": [
+          154,
+          112
+        ]
+      },
+      {
+        "text": "Płatności",
+        "box": [
+          91,
+          38
+        ]
+      },
+      {
+        "text": "Budżet",
+        "box": [
+          77,
+          38
+        ]
+      },
+      {
+        "text": "JDG",
+        "box": [
+          60,
+          38
+        ]
+      },
+      {
+        "text": "Historia",
+        "box": [
+          82,
+          38
+        ]
+      },
+      {
+        "text": "+ Płatność",
+        "box": [
+          278,
+          46
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "size": "390x844",
+    "route": "/goals",
+    "name": "goals",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "26°CPochmurno26°C · Pochmurno",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Dodaj cel",
+        "box": [
+          170,
+          40
+        ]
+      },
+      {
+        "text": "Kategorie",
+        "box": [
+          170,
+          40
+        ]
+      },
+      {
+        "text": "Archiwalne cele",
+        "box": [
+          290,
+          40
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "size": "390x844",
+    "route": "/office",
+    "name": "office",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [
+      {
+        "tag": "aside",
+        "cls": "card office-sidebar",
+        "text": "KATEGORIE Wszystkie OK 0 Zadania urzędowe OK 0 Dokumenty OK 0 Samochód OK 0 Ubezpieczenia OK 0 Urlopy OK 0 Dodaj kategor",
+        "sw": 314,
+        "cw": 314,
+        "sh": 428,
+        "ch": 92
+      },
+      {
+        "tag": "main",
+        "cls": "card office-cases-panel",
+        "text": "MOJE SPRAWY Sortuj: Termin ↑ Brak spraw Dodaj zadanie",
+        "sw": 314,
+        "cw": 314,
+        "sh": 240,
+        "ch": 82
+      },
+      {
+        "tag": "section",
+        "cls": "card office-mini-panel",
+        "text": "NADCHODZĄCE TERMINY Brak terminów Zobacz wszystkie terminy ›",
+        "sw": 314,
+        "cw": 314,
+        "sh": 274,
+        "ch": 218
+      },
+      {
+        "tag": "section",
+        "cls": "card office-mini-panel",
+        "text": "DOKUMENTY 0 Brak dokumentów Zobacz wszystkie dokumenty ›",
+        "sw": 314,
+        "cw": 314,
+        "sh": 282,
+        "ch": 14
+      }
+    ],
+    "buttons": [
+      {
+        "text": "26°CPochmurno26°C · Pochmurno",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Nowe zadanie",
+        "box": [
+          348,
+          40
+        ]
+      },
+      {
+        "text": "Urlop 26 dni z 26 dni rocznie",
+        "box": [
+          316,
+          82
+        ]
+      },
+      {
+        "text": "Wszystkie OK 0",
+        "box": [
+          288,
+          58
+        ]
+      },
+      {
+        "text": "Zadania urzędowe OK 0",
+        "box": [
+          288,
+          58
+        ]
+      },
+      {
+        "text": "Dokumenty OK 0",
+        "box": [
+          288,
+          58
+        ]
+      },
+      {
+        "text": "Samochód OK 0",
+        "box": [
+          288,
+          58
+        ]
+      },
+      {
+        "text": "Ubezpieczenia OK 0",
+        "box": [
+          288,
+          58
+        ]
+      },
+      {
+        "text": "Urlopy OK 0",
+        "box": [
+          288,
+          58
+        ]
+      },
+      {
+        "text": "Dodaj kategorię",
+        "box": [
+          290,
+          40
+        ]
+      },
+      {
+        "text": "Sortuj: Termin ↑",
+        "box": [
+          286,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj zadanie",
+        "box": [
+          109,
+          34
+        ]
+      },
+      {
+        "text": "Zobacz wszystkie terminy ›",
+        "box": [
+          286,
+          40
+        ]
+      },
+      {
+        "text": "Zobacz wszystkie dokumenty ›",
+        "box": [
+          286,
+          40
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "size": "390x844",
+    "route": "/travel",
+    "name": "travel",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "26°CPochmurno26°C · Pochmurno",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Nowa podróż",
+        "box": [
+          348,
+          40
+        ]
+      },
+      {
+        "text": "Dodaj podróż",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Dodaj podróż",
+        "box": [
+          104,
+          34
+        ]
+      },
+      {
+        "text": "Planowane",
+        "box": [
+          134,
+          34
+        ]
+      },
+      {
+        "text": "Trwające",
+        "box": [
+          134,
+          34
+        ]
+      },
+      {
+        "text": "Zakończone",
+        "box": [
+          134,
+          34
+        ]
+      },
+      {
+        "text": "Archiwum podróży ›",
+        "box": [
+          294,
+          40
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "size": "390x844",
+    "route": "/notes",
+    "name": "notes",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "26°CPochmurno26°C · Pochmurno",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Nowa notatka",
+        "box": [
+          348,
+          40
+        ]
+      },
+      {
+        "text": "Widok kafelków",
+        "box": [
+          167,
+          34
+        ]
+      },
+      {
+        "text": "Widok listy",
+        "box": [
+          167,
+          34
+        ]
+      },
+      {
+        "text": "Wszystkie notatki 0",
+        "box": [
+          286,
+          52
+        ]
+      },
+      {
+        "text": "Notatki 0",
+        "box": [
+          286,
+          52
+        ]
+      },
+      {
+        "text": "Projekty 0",
+        "box": [
+          286,
+          52
+        ]
+      },
+      {
+        "text": "Spotkania 0",
+        "box": [
+          286,
+          52
+        ]
+      },
+      {
+        "text": "Osobiste 0",
+        "box": [
+          286,
+          52
+        ]
+      },
+      {
+        "text": "Inspiracje 0",
+        "box": [
+          286,
+          52
+        ]
+      },
+      {
+        "text": "Do przeczytania 0",
+        "box": [
+          286,
+          52
+        ]
+      },
+      {
+        "text": "Archiwum 0",
+        "box": [
+          286,
+          52
+        ]
+      },
+      {
+        "text": "Dodaj kategorię",
+        "box": [
+          298,
+          47
+        ]
+      },
+      {
+        "text": "Nowa notatka",
+        "box": [
+          107,
+          34
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "size": "390x844",
+    "route": "/work",
+    "name": "work",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "work-view-actions",
+        "left": 349,
+        "right": 647,
+        "w": 298,
+        "text": "FiltrySortuj: Priorytet"
+      },
+      {
+        "tag": "button",
+        "cls": "",
+        "left": 349,
+        "right": 494,
+        "w": 145,
+        "text": "Filtry"
+      },
+      {
+        "tag": "svg",
+        "cls": "[object SVGAnimatedString]",
+        "left": 394,
+        "right": 409,
+        "w": 15,
+        "text": ""
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "left": 397,
+        "right": 407,
+        "w": 10,
+        "text": ""
+      },
+      {
+        "tag": "button",
+        "cls": "",
+        "left": 502,
+        "right": 647,
+        "w": 145,
+        "text": "Sortuj: Priorytet"
+      },
+      {
+        "tag": "button",
+        "cls": "",
+        "left": 349,
+        "right": 647,
+        "w": 298,
+        "text": "Ustawienia"
+      },
+      {
+        "tag": "svg",
+        "cls": "[object SVGAnimatedString]",
+        "left": 491,
+        "right": 506,
+        "w": 15,
+        "text": ""
+      },
+      {
+        "tag": "circle",
+        "cls": "[object SVGAnimatedString]",
+        "left": 496,
+        "right": 500,
+        "w": 4,
+        "text": ""
+      },
+      {
+        "tag": "path",
+        "cls": "[object SVGAnimatedString]",
+        "left": 492,
+        "right": 504,
+        "w": 11,
+        "text": ""
+      }
+    ],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "26°CPochmurno26°C · Pochmurno",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Qqaqa@rootine.localqa",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Tryb autoTryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          0,
+          0
+        ]
+      },
+      {
+        "text": "Dodaj firmę",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Edytuj firmę",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Nowy projekt",
+        "box": [
+          296,
+          76
+        ]
+      },
+      {
+        "text": "Lista",
+        "box": [
+          142,
+          34
+        ]
+      },
+      {
+        "text": "Tablica",
+        "box": [
+          142,
+          34
+        ]
+      },
+      {
+        "text": "Kalendarz",
+        "box": [
+          142,
+          34
+        ]
+      },
+      {
+        "text": "Oś czasu",
+        "box": [
+          142,
+          34
+        ]
+      },
+      {
+        "text": "Filtry",
+        "box": [
+          145,
+          34
+        ]
+      },
+      {
+        "text": "Sortuj: Priorytet",
+        "box": [
+          145,
+          34
+        ]
+      },
+      {
+        "text": "Ustawienia",
+        "box": [
+          298,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj firme",
+        "box": [
+          94,
+          34
+        ]
+      },
+      {
+        "text": "Zobacz kalendarz",
+        "box": [
+          136,
+          40
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "size": "1280x640",
+    "route": "/",
+    "name": "start",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Ukryj zakończone",
+        "box": [
+          123,
+          34
+        ]
+      },
+      {
+        "text": "DZISIAJ 0",
+        "box": [
+          94,
+          32
+        ]
+      },
+      {
+        "text": "JUTRO 0",
+        "box": [
+          94,
+          32
+        ]
+      },
+      {
+        "text": "TYDZIEŃ 0",
+        "box": [
+          94,
+          32
+        ]
+      },
+      {
+        "text": "MIESIĄC 0",
+        "box": [
+          144,
+          32
+        ]
+      },
+      {
+        "text": "WSZYSTKIE 0",
+        "box": [
+          144,
+          32
+        ]
+      },
+      {
+        "text": "Szybko dodaj zadanie na dziś",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Ustaw termin i szczegóły zadania",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "ZOBACZ SZCZEGÓŁY",
+        "box": [
+          304,
+          13
+        ]
+      },
+      {
+        "text": "Ukryj zakończone",
+        "box": [
+          123,
+          34
+        ]
+      },
+      {
+        "text": "MIESIĄC",
+        "box": [
+          34,
+          34
+        ]
+      },
+      {
+        "text": "TYDZIEŃ",
+        "box": [
+          34,
+          34
+        ]
+      },
+      {
+        "text": "DZIEŃ",
+        "box": [
+          34,
+          34
+        ]
+      },
+      {
+        "text": "DZIŚ",
+        "box": [
+          34,
+          34
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "size": "1280x640",
+    "route": "/sport",
+    "name": "sport",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Cykle treningowe",
+        "box": [
+          145,
+          40
+        ]
+      },
+      {
+        "text": "+ Dodaj trening",
+        "box": [
+          131,
+          40
+        ]
+      },
+      {
+        "text": "+ Zaplanuj blok",
+        "box": [
+          131,
+          40
+        ]
+      },
+      {
+        "text": "+ Zaplanuj cykl treningowy",
+        "box": [
+          184,
+          44
+        ]
+      },
+      {
+        "text": "Poprzedni tydzień",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Następny tydzień",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          118,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          118,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          118,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          118,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          118,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          118,
+          34
+        ]
+      },
+      {
+        "text": "+",
+        "box": [
+          118,
+          34
+        ]
+      },
+      {
+        "text": "+ Nowy szablon",
+        "box": [
+          120,
+          34
+        ]
+      },
+      {
+        "text": "+ Nowy szablon",
+        "box": [
+          120,
+          34
+        ]
+      },
+      {
+        "text": "Zobacz całą historię",
+        "box": [
+          144,
+          34
+        ]
+      },
+      {
+        "text": "Zobacz wszystkie rekordy",
+        "box": [
+          180,
+          34
+        ]
+      },
+      {
+        "text": "+ Dodaj rekord",
+        "box": [
+          112,
+          34
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "size": "1280x640",
+    "route": "/diet",
+    "name": "diet",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Poprzedni dzień",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "środa, 1 lipca 2026",
+        "box": [
+          265,
+          34
+        ]
+      },
+      {
+        "text": "Następny dzień",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Dzisiaj",
+        "box": [
+          65,
+          34
+        ]
+      },
+      {
+        "text": "Własne posiłki",
+        "box": [
+          134,
+          34
+        ]
+      },
+      {
+        "text": "Ustawienia",
+        "box": [
+          114,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj",
+        "box": [
+          83,
+          34
+        ]
+      },
+      {
+        "text": "Brak wpisów",
+        "box": [
+          671,
+          76
+        ]
+      },
+      {
+        "text": "Dodaj",
+        "box": [
+          83,
+          34
+        ]
+      },
+      {
+        "text": "Brak wpisów",
+        "box": [
+          671,
+          76
+        ]
+      },
+      {
+        "text": "Dodaj",
+        "box": [
+          83,
+          34
+        ]
+      },
+      {
+        "text": "Brak wpisów",
+        "box": [
+          671,
+          76
+        ]
+      },
+      {
+        "text": "Dodaj",
+        "box": [
+          83,
+          34
+        ]
+      },
+      {
+        "text": "Brak wpisów",
+        "box": [
+          671,
+          76
+        ]
+      },
+      {
+        "text": "Dzień",
+        "box": [
+          78,
+          30
+        ]
+      },
+      {
+        "text": "Tydzień",
+        "box": [
+          78,
+          30
+        ]
+      },
+      {
+        "text": "Miesiąc",
+        "box": [
+          78,
+          30
+        ]
+      },
+      {
+        "text": "Zakres",
+        "box": [
+          78,
+          30
+        ]
+      },
+      {
+        "text": "Szczegółowe podsumowanie",
+        "box": [
+          332,
+          34
+        ]
+      },
+      {
+        "text": "+200 ml",
+        "box": [
+          107,
+          34
+        ]
+      },
+      {
+        "text": "+300 ml",
+        "box": [
+          107,
+          34
+        ]
+      },
+      {
+        "text": "+500 ml",
+        "box": [
+          107,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj wpis",
+        "box": [
+          90,
+          34
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "size": "1280x640",
+    "route": "/finance",
+    "name": "finance",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Poprzedni miesiąc",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Następny miesiąc",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Środki 0 zł 0 aktywnych źródeł",
+        "box": [
+          280,
+          112
+        ]
+      },
+      {
+        "text": "Oszczędności 0 zł 0 cele oszczędnościowe",
+        "box": [
+          280,
+          112
+        ]
+      },
+      {
+        "text": "Budżet 0% 0 zł wydane z 0 zł",
+        "box": [
+          280,
+          112
+        ]
+      },
+      {
+        "text": "Płatności 0 zł Pozostało w lipiec 2026",
+        "box": [
+          280,
+          112
+        ]
+      },
+      {
+        "text": "Płatności",
+        "box": [
+          59,
+          38
+        ]
+      },
+      {
+        "text": "Budżet",
+        "box": [
+          59,
+          38
+        ]
+      },
+      {
+        "text": "JDG",
+        "box": [
+          59,
+          38
+        ]
+      },
+      {
+        "text": "Historia",
+        "box": [
+          59,
+          38
+        ]
+      },
+      {
+        "text": "+ Płatność",
+        "box": [
+          115,
+          46
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "size": "1280x640",
+    "route": "/goals",
+    "name": "goals",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj cel",
+        "box": [
+          111,
+          40
+        ]
+      },
+      {
+        "text": "Kategorie",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Archiwalne cele",
+        "box": [
+          339,
+          40
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "size": "1280x640",
+    "route": "/office",
+    "name": "office",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [
+      {
+        "tag": "main",
+        "cls": "card office-cases-panel",
+        "text": "MOJE SPRAWY Sortuj: Termin ↑ Brak spraw Dodaj zadanie",
+        "sw": 754,
+        "cw": 754,
+        "sh": 213,
+        "ch": 126
+      },
+      {
+        "tag": "section",
+        "cls": "card office-mini-panel",
+        "text": "NADCHODZĄCE TERMINY Brak terminów Zobacz wszystkie terminy ›",
+        "sw": 531,
+        "cw": 531,
+        "sh": 250,
+        "ch": 218
+      },
+      {
+        "tag": "section",
+        "cls": "card office-mini-panel",
+        "text": "DOKUMENTY 0 Brak dokumentów Zobacz wszystkie dokumenty ›",
+        "sw": 531,
+        "cw": 531,
+        "sh": 250,
+        "ch": 218
+      }
+    ],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Nowe zadanie",
+        "box": [
+          140,
+          40
+        ]
+      },
+      {
+        "text": "Urlop 26 dni z 26 dni rocznie ›",
+        "box": [
+          533,
+          103
+        ]
+      },
+      {
+        "text": "Wszystkie OK 0",
+        "box": [
+          265,
+          58
+        ]
+      },
+      {
+        "text": "Zadania urzędowe OK 0",
+        "box": [
+          265,
+          58
+        ]
+      },
+      {
+        "text": "Dokumenty OK 0",
+        "box": [
+          265,
+          58
+        ]
+      },
+      {
+        "text": "Samochód OK 0",
+        "box": [
+          265,
+          58
+        ]
+      },
+      {
+        "text": "Ubezpieczenia OK 0",
+        "box": [
+          265,
+          58
+        ]
+      },
+      {
+        "text": "Urlopy OK 0",
+        "box": [
+          265,
+          58
+        ]
+      },
+      {
+        "text": "Dodaj kategorię",
+        "box": [
+          277,
+          40
+        ]
+      },
+      {
+        "text": "Sortuj: Termin ↑",
+        "box": [
+          116,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj zadanie",
+        "box": [
+          109,
+          34
+        ]
+      },
+      {
+        "text": "Zobacz wszystkie terminy ›",
+        "box": [
+          499,
+          40
+        ]
+      },
+      {
+        "text": "Zobacz wszystkie dokumenty ›",
+        "box": [
+          499,
+          40
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "size": "1280x640",
+    "route": "/travel",
+    "name": "travel",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Nowa podróż",
+        "box": [
+          135,
+          40
+        ]
+      },
+      {
+        "text": "Dodaj podróż",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Dodaj podróż",
+        "box": [
+          104,
+          34
+        ]
+      },
+      {
+        "text": "Planowane",
+        "box": [
+          208,
+          34
+        ]
+      },
+      {
+        "text": "Trwające",
+        "box": [
+          208,
+          34
+        ]
+      },
+      {
+        "text": "Zakończone",
+        "box": [
+          208,
+          34
+        ]
+      },
+      {
+        "text": "Archiwum podróży ›",
+        "box": [
+          1049,
+          40
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "size": "1280x640",
+    "route": "/notes",
+    "name": "notes",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Nowa notatka",
+        "box": [
+          145,
+          40
+        ]
+      },
+      {
+        "text": "Widok kafelków",
+        "box": [
+          36,
+          34
+        ]
+      },
+      {
+        "text": "Widok listy",
+        "box": [
+          36,
+          34
+        ]
+      },
+      {
+        "text": "Wszystkie notatki 0",
+        "box": [
+          278,
+          52
+        ]
+      },
+      {
+        "text": "Notatki 0",
+        "box": [
+          278,
+          52
+        ]
+      },
+      {
+        "text": "Projekty 0",
+        "box": [
+          278,
+          52
+        ]
+      },
+      {
+        "text": "Spotkania 0",
+        "box": [
+          278,
+          52
+        ]
+      },
+      {
+        "text": "Osobiste 0",
+        "box": [
+          278,
+          52
+        ]
+      },
+      {
+        "text": "Inspiracje 0",
+        "box": [
+          278,
+          52
+        ]
+      },
+      {
+        "text": "Do przeczytania 0",
+        "box": [
+          278,
+          52
+        ]
+      },
+      {
+        "text": "Archiwum 0",
+        "box": [
+          278,
+          52
+        ]
+      },
+      {
+        "text": "Dodaj kategorię",
+        "box": [
+          290,
+          47
+        ]
+      },
+      {
+        "text": "Nowa notatka",
+        "box": [
+          107,
+          34
+        ]
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "size": "1280x640",
+    "route": "/work",
+    "name": "work",
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "horizontalOverflow": false,
+    "offenders": [],
+    "clipped": [],
+    "buttons": [
+      {
+        "text": "Pogoda: 26°C, Pochmurno",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Q",
+        "box": [
+          48,
+          50
+        ]
+      },
+      {
+        "text": "Tryb auto (hover). Kliknij, aby przypiąć menu jako widoczne.",
+        "box": [
+          48,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj firmę",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Edytuj firmę",
+        "box": [
+          40,
+          40
+        ]
+      },
+      {
+        "text": "Nowy projekt",
+        "box": [
+          255,
+          76
+        ]
+      },
+      {
+        "text": "Lista",
+        "box": [
+          80,
+          34
+        ]
+      },
+      {
+        "text": "Tablica",
+        "box": [
+          95,
+          34
+        ]
+      },
+      {
+        "text": "Kalendarz",
+        "box": [
+          113,
+          34
+        ]
+      },
+      {
+        "text": "Oś czasu",
+        "box": [
+          107,
+          34
+        ]
+      },
+      {
+        "text": "Filtry",
+        "box": [
+          81,
+          34
+        ]
+      },
+      {
+        "text": "Sortuj: Priorytet",
+        "box": [
+          124,
+          34
+        ]
+      },
+      {
+        "text": "Ustawienia",
+        "box": [
+          41,
+          34
+        ]
+      },
+      {
+        "text": "Dodaj firme",
+        "box": [
+          94,
+          34
+        ]
+      },
+      {
+        "text": "Zobacz kalendarz",
+        "box": [
+          56,
+          96
+        ]
+      }
+    ]
+  }
+]

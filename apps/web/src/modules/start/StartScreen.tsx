@@ -974,9 +974,9 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
           >
             Ukryj zakończone
           </button>
-          <div style={{ display:'flex', gap:2, background:'var(--surface-inset)', padding:3, borderRadius:10, border:'1px solid var(--border-soft)' }}>
+          <div className="planner-view-switch" style={{ display:'flex', gap:2, background:'var(--surface-inset)', padding:3, borderRadius:10, border:'1px solid var(--border-soft)' }}>
             {(['month','week','day'] as const).map(v => (
-              <button key={v} onClick={()=>setView(v)} style={{
+              <button key={v} type="button" className="planner-view-btn" onClick={()=>setView(v)} style={{
                 fontFamily:'var(--mono)', fontSize:9.5, letterSpacing:'.08em', textTransform:'uppercase', fontWeight:600,
                 padding:'5px 10px', borderRadius:7, border:0, cursor:'pointer', transition:'.14s',
                 background: view===v ? 'var(--surface)' : 'transparent',
@@ -991,7 +991,7 @@ function Calendar({ tasks, activeDate, hideCompleted, onToggleHideCompleted, onD
           <button onClick={next} style={{ width:28,height:28,borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',display:'grid',placeItems:'center',cursor:'pointer',color:'var(--ink-2)' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
           </button>
-          <button onClick={goToday} style={{ fontFamily:'var(--mono)',fontSize:10,letterSpacing:'.08em',textTransform:'uppercase',fontWeight:600,padding:'6px 12px',borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',color:'var(--ink)',cursor:'pointer' }}>
+          <button type="button" className="planner-today-btn" onClick={goToday} style={{ fontFamily:'var(--mono)',fontSize:10,letterSpacing:'.08em',textTransform:'uppercase',fontWeight:600,padding:'6px 12px',borderRadius:8,border:'1px solid var(--border)',background:'var(--surface)',color:'var(--ink)',cursor:'pointer' }}>
             Dziś
           </button>
         </div>

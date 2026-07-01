@@ -1,0 +1,330 @@
+[
+  {
+    "name": "start-desktop",
+    "route": "/",
+    "width": 1440,
+    "height": 1000,
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "hOverflow": false,
+    "viewBtns": [
+      {
+        "text": "Miesiąc",
+        "w": 65,
+        "h": 34,
+        "scrollW": 65,
+        "clientW": 65
+      },
+      {
+        "text": "Tydzień",
+        "w": 65,
+        "h": 34,
+        "scrollW": 65,
+        "clientW": 65
+      },
+      {
+        "text": "Dzień",
+        "w": 52,
+        "h": 34,
+        "scrollW": 52,
+        "clientW": 52
+      }
+    ],
+    "filterBtns": [
+      {
+        "text": "DZISIAJ0",
+        "w": 82,
+        "h": 32,
+        "scrollW": 80,
+        "clientW": 80
+      },
+      {
+        "text": "JUTRO0",
+        "w": 82,
+        "h": 32,
+        "scrollW": 80,
+        "clientW": 80
+      },
+      {
+        "text": "TYDZIEŃ0",
+        "w": 82,
+        "h": 32,
+        "scrollW": 80,
+        "clientW": 80
+      },
+      {
+        "text": "MIESIĄC0",
+        "w": 82,
+        "h": 32,
+        "scrollW": 80,
+        "clientW": 80
+      },
+      {
+        "text": "WSZYSTKIE0",
+        "w": 345,
+        "h": 32,
+        "scrollW": 343,
+        "clientW": 343
+      }
+    ],
+    "officeCats": [],
+    "officeAdd": null,
+    "officeMetrics": [],
+    "offenders": [],
+    "text": "R\nQ\nPlaner\n\nZaplanuj dzień, zadania, nawyki i cele w jednym miejscu.\n\nZadania\nUkryj zakończone\nDZISIAJ\n0\nJUTRO\n0\nTYDZIEŃ\n0\nMIESIĄC\n0\nWSZYSTKIE\n0\nBrak zadań. Dodaj pierwsze poniżej.\nNAWYKI\n0 / 0\n0%\nWykonano 0 z 0 dzisiejszych nawyków.\nBrak nawyków w Celach.\nZOBACZ SZCZEGÓŁY\nLipiec 2026\nUkryj zakończone\nMIESIĄC\nTYDZIEŃ\nDZIEŃ\nDZIŚ\nPON\nWT\nŚR\nCZW\nPT\nSOB\nNDZ\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31"
+  },
+  {
+    "name": "start-mobile",
+    "route": "/",
+    "width": 390,
+    "height": 844,
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "hOverflow": false,
+    "viewBtns": [
+      {
+        "text": "Miesiąc",
+        "w": 96,
+        "h": 34,
+        "scrollW": 96,
+        "clientW": 96
+      },
+      {
+        "text": "Tydzień",
+        "w": 96,
+        "h": 34,
+        "scrollW": 96,
+        "clientW": 96
+      },
+      {
+        "text": "Dzień",
+        "w": 96,
+        "h": 34,
+        "scrollW": 96,
+        "clientW": 96
+      }
+    ],
+    "filterBtns": [
+      {
+        "text": "DZISIAJ0",
+        "w": 138,
+        "h": 32,
+        "scrollW": 136,
+        "clientW": 136
+      },
+      {
+        "text": "JUTRO0",
+        "w": 138,
+        "h": 32,
+        "scrollW": 136,
+        "clientW": 136
+      },
+      {
+        "text": "TYDZIEŃ0",
+        "w": 138,
+        "h": 32,
+        "scrollW": 136,
+        "clientW": 136
+      },
+      {
+        "text": "MIESIĄC0",
+        "w": 138,
+        "h": 32,
+        "scrollW": 136,
+        "clientW": 136
+      },
+      {
+        "text": "WSZYSTKIE0",
+        "w": 282,
+        "h": 32,
+        "scrollW": 280,
+        "clientW": 280
+      }
+    ],
+    "officeCats": [],
+    "officeAdd": null,
+    "officeMetrics": [],
+    "offenders": [],
+    "text": "Planer\n\nZaplanuj dzień, zadania, nawyki i cele w jednym miejscu.\n\nZadania\nUkryj zakończone\nDZISIAJ\n0\nJUTRO\n0\nTYDZIEŃ\n0\nMIESIĄC\n0\nWSZYSTKIE\n0\nBrak zadań. Dodaj pierwsze poniżej.\nNAWYKI\n0 / 0\n0%\nWykonano 0 z 0 dzisiejszych nawyków.\nBrak nawyków w Celach.\nZOBACZ SZCZEGÓŁY\nLipiec 2026\nUkryj zakończone\nMIESIĄC\nTYDZIEŃ\nDZIEŃ\nDZIŚ\nPON\nWT\nŚR\nCZW\nPT\nSOB\nNDZ\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\nPlaner\nSport\nDieta\nFinanse\nWięcej"
+  },
+  {
+    "name": "office-tablet",
+    "route": "/office",
+    "width": 900,
+    "height": 1000,
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "hOverflow": false,
+    "viewBtns": [],
+    "filterBtns": [],
+    "officeCats": [
+      {
+        "text": "WszystkieOK0",
+        "top": 394,
+        "bottom": 452,
+        "h": 58
+      },
+      {
+        "text": "Zadania urzędoweOK0",
+        "top": 460,
+        "bottom": 518,
+        "h": 58
+      },
+      {
+        "text": "DokumentyOK0",
+        "top": 526,
+        "bottom": 584,
+        "h": 58
+      },
+      {
+        "text": "SamochódOK0",
+        "top": 592,
+        "bottom": 650,
+        "h": 58
+      },
+      {
+        "text": "UbezpieczeniaOK0",
+        "top": 658,
+        "bottom": 716,
+        "h": 58
+      },
+      {
+        "text": "UrlopyOK0",
+        "top": 724,
+        "bottom": 782,
+        "h": 58
+      }
+    ],
+    "officeAdd": {
+      "top": 794,
+      "bottom": 834,
+      "h": 40
+    },
+    "officeMetrics": [
+      {
+        "text": "Do zrobienia0aktywnych spraw›",
+        "h": 103,
+        "scrollH": 101,
+        "clientH": 101
+      },
+      {
+        "text": "W trakcie0w realizacji›",
+        "h": 103,
+        "scrollH": 101,
+        "clientH": 101
+      },
+      {
+        "text": "Terminy w tym miesiącu00 pilne›",
+        "h": 103,
+        "scrollH": 101,
+        "clientH": 101
+      },
+      {
+        "text": "Urlop26 dniz 26 dni rocznie›",
+        "h": 103,
+        "scrollH": 101,
+        "clientH": 101
+      }
+    ],
+    "offenders": [],
+    "text": "R\nQ\nBiuro\n\nSprawy, dokumenty i terminy w jednym miejscu.\n\nNowe zadanie\nDo zrobienia\n0\naktywnych spraw\n›\nW trakcie\n0\nw realizacji\n›\nTerminy w tym miesiącu\n0\n0 pilne\n›\nUrlop\n26 dni\nz 26 dni rocznie\n›\nKATEGORIE\nWszystkie\nOK\n0\nZadania urzędowe\nOK\n0\nDokumenty\nOK\n0\nSamochód\nOK\n0\nUbezpieczenia\nOK\n0\nUrlopy\nOK\n0\nDodaj kategorię\nMOJE SPRAWY\nSortuj: Termin ↑\nBrak spraw\nDodaj zadanie\nNADCHODZĄCE TERMINY\nBrak terminów\nZobacz wszystkie terminy ›\nDOKUMENTY 0\nBrak dokumentów\nZobacz wszystkie dokumenty ›"
+  },
+  {
+    "name": "office-mobile",
+    "route": "/office",
+    "width": 390,
+    "height": 844,
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+      }
+    ],
+    "hOverflow": false,
+    "viewBtns": [],
+    "filterBtns": [],
+    "officeCats": [
+      {
+        "text": "WszystkieOK0",
+        "top": 501,
+        "bottom": 559,
+        "h": 58
+      },
+      {
+        "text": "Zadania urzędoweOK0",
+        "top": 567,
+        "bottom": 625,
+        "h": 58
+      },
+      {
+        "text": "DokumentyOK0",
+        "top": 633,
+        "bottom": 691,
+        "h": 58
+      },
+      {
+        "text": "SamochódOK0",
+        "top": 699,
+        "bottom": 757,
+        "h": 58
+      },
+      {
+        "text": "UbezpieczeniaOK0",
+        "top": 765,
+        "bottom": 823,
+        "h": 58
+      },
+      {
+        "text": "UrlopyOK0",
+        "top": 831,
+        "bottom": 889,
+        "h": 58
+      }
+    ],
+    "officeAdd": {
+      "top": 901,
+      "bottom": 941,
+      "h": 40
+    },
+    "officeMetrics": [
+      {
+        "text": "Do zrobienia0aktywnych spraw›",
+        "h": 96,
+        "scrollH": 94,
+        "clientH": 94
+      },
+      {
+        "text": "W trakcie0w realizacji›",
+        "h": 96,
+        "scrollH": 94,
+        "clientH": 94
+      },
+      {
+        "text": "Terminy w tym miesiącu00 pilne›",
+        "h": 96,
+        "scrollH": 94,
+        "clientH": 94
+      },
+      {
+        "text": "Urlop26 dniz 26 dni rocznie›",
+        "h": 96,
+        "scrollH": 95,
+        "clientH": 95
+      }
+    ],
+    "offenders": [],
+    "text": "Biuro\n\nSprawy, dokumenty i terminy w jednym miejscu.\n\nNowe zadanie\nDo zrobienia\n0\naktywnych spraw\nW trakcie\n0\nw realizacji\nTerminy w tym miesiącu\n0\n0 pilne\nUrlop\n26 dni\nz 26 dni rocznie\nKATEGORIE\nWszystkie\nOK\n0\nZadania urzędowe\nOK\n0\nDokumenty\nOK\n0\nSamochód\nOK\n0\nUbezpieczenia\nOK\n0\nUrlopy\nOK\n0\nDodaj kategorię\nMOJE SPRAWY\nSortuj: Termin ↑\nBrak spraw\nDodaj zadanie\nNADCHODZĄCE TERMINY\nBrak terminów\nZobacz wszystkie terminy ›\nDOKUMENTY 0\nBrak dokumentów\nZobacz wszystkie dokumenty ›\nPlaner\nSport\nDieta\n"
+  }
+]

@@ -9836,6 +9836,47 @@ textarea.input {
   }
 }
 
+@media (min-width: 901px) and (max-height: 760px) {
+  .module-page.office-page,
+  .module-page.office-page > .page-body {
+    overflow: auto;
+  }
+
+  .module-page.office-page > .page-body > .office-dashboard-shell {
+    flex: 0 0 auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  .office-dashboard-grid {
+    flex: 0 0 auto;
+    align-content: start;
+    grid-auto-rows: max-content;
+    grid-template-rows: max-content;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .office-cases-panel,
+  .office-right-stack,
+  .office-mini-panel {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .office-right-stack {
+    align-content: start;
+    grid-template-rows: max-content max-content;
+  }
+
+  .office-case-list,
+  .office-deadline-list,
+  .office-document-list {
+    overflow: visible;
+  }
+}
+
 @media (max-width: 900px) {
   .module-page.office-page,
   .module-page.office-page > .page-body {
@@ -9843,7 +9884,10 @@ textarea.input {
   }
 
   .module-page.office-page > .page-body > .office-dashboard-shell {
+    flex: 0 0 auto;
     height: auto;
+    align-content: start;
+    grid-template-rows: max-content max-content;
     overflow: visible;
   }
 
@@ -9852,10 +9896,33 @@ textarea.input {
     grid-template-columns: 1fr;
   }
 
+  .office-dashboard-grid {
+    align-content: start;
+    grid-auto-rows: max-content;
+    grid-template-rows: max-content max-content max-content;
+    overflow: visible;
+  }
+
   .office-dashboard-grid .office-sidebar,
   .office-cases-panel,
   .office-mini-panel {
     min-height: 0;
+  }
+
+  .office-dashboard-grid .office-sidebar {
+    overflow: visible;
+  }
+
+  .office-cases-panel,
+  .office-right-stack,
+  .office-mini-panel {
+    height: auto;
+    overflow: visible;
+  }
+
+  .office-right-stack {
+    align-content: start;
+    grid-template-rows: max-content max-content;
   }
 
   .office-dashboard-grid .office-category-list,
@@ -9863,6 +9930,15 @@ textarea.input {
   .office-deadline-list,
   .office-document-list {
     overflow: visible;
+  }
+
+  .office-dashboard-grid .office-category-list {
+    flex: 0 0 auto;
+    max-height: none;
+  }
+
+  .office-dashboard-grid .office-add-category-btn {
+    margin-top: 12px;
   }
 }
 
@@ -9877,7 +9953,8 @@ textarea.input {
   }
 
   .office-metric {
-    min-height: 82px;
+    min-height: 96px;
+    align-items: center;
   }
 
   .office-panel-head {
@@ -12042,6 +12119,35 @@ textarea.input {
   line-height: 1.15;
 }
 
+.planner-calendar-controls .planner-view-switch {
+  display: flex;
+  flex: 0 1 auto;
+  min-inline-size: max-content;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.planner-calendar-controls .planner-view-switch::-webkit-scrollbar {
+  display: none;
+}
+
+.planner-calendar-controls .planner-view-btn {
+  inline-size: auto !important;
+  min-inline-size: max-content !important;
+  min-block-size: var(--ui-control-h-sm);
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+}
+
+.planner-calendar-controls .planner-today-btn {
+  inline-size: auto !important;
+  min-inline-size: max-content !important;
+  min-block-size: var(--ui-control-h-sm);
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+}
+
 .planner-tasks-card .task-filter-row {
   display: flex;
   flex-wrap: wrap;
@@ -12201,20 +12307,84 @@ textarea.input {
 }
 
 @media (max-width: 760px) {
+  .module-page.planner-page {
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .module-page.planner-page > .page-body {
+    height: auto;
+    overflow: visible;
+  }
+
+  .page-body > .planner-shell {
+    flex: 0 0 auto;
+    height: auto;
+    overflow: visible;
+  }
+
+  .planner-layout {
+    height: auto !important;
+    align-items: start;
+    align-content: start;
+    grid-auto-rows: max-content;
+    grid-template-rows: max-content max-content;
+  }
+
+  .planner-sidebar {
+    height: auto;
+    overflow: visible;
+    align-content: start;
+    grid-template-rows: max-content max-content !important;
+  }
+
   .planner-calendar-controls {
     justify-content: flex-start;
   }
 
+  .planner-tasks-card {
+    min-block-size: 226px;
+    overflow: visible;
+  }
+
+  .planner-habits-card {
+    min-block-size: 174px;
+    overflow: visible;
+  }
+
+  .planner-habits-card > div {
+    height: auto !important;
+  }
+
+  .planner-tasks-card > div {
+    height: auto !important;
+  }
+
   .planner-tasks-card .task-filter-row {
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    flex-wrap: wrap;
+    overflow: visible;
     padding-bottom: 12px;
   }
 
   .planner-tasks-card .task-filter-btn {
-    flex: 0 0 auto;
-    min-inline-size: max-content;
-    max-inline-size: 18ch;
+    flex: 1 1 88px;
+    min-inline-size: min(100%, 88px);
+    max-inline-size: none;
+  }
+
+  .planner-calendar-controls .planner-view-switch {
+    flex: 1 1 100%;
+    min-inline-size: 0;
+  }
+
+  .planner-calendar-controls .planner-view-btn {
+    flex: 1 1 88px;
+    justify-content: center;
+  }
+
+  .planner-calendar-card .day-cell.is-compact {
+    min-block-size: 42px;
   }
 
   .planner-task-row {
@@ -12235,5 +12405,166 @@ textarea.input {
 
   .planner-task-meta .task-tags-row {
     justify-content: flex-start;
+  }
+}
+
+/* UI audit layout escapes: preserve dashboard density on large screens, but let
+   constrained screens grow vertically instead of clipping card content. */
+.finance-left-rail .finance-summary-strip {
+  flex: 0 0 auto;
+  block-size: auto;
+  overflow: visible;
+}
+
+@media (max-width: 760px), (max-height: 760px) {
+  .module-page.finance-os,
+  .module-page.finance-os > .page-body,
+  .module-page.travel-page,
+  .module-page.travel-page > .page-body,
+  .module-page.sport-os,
+  .module-page.sport-os > .page-body {
+    overflow: auto;
+  }
+
+  .module-page.finance-os > .page-body > .finance-workspace,
+  .module-page.travel-page > .page-body > .travel-dashboard,
+  .module-page.sport-os > .page-body > .lay-page {
+    flex: 0 0 auto !important;
+    block-size: auto !important;
+    height: auto !important;
+    min-block-size: 0;
+    overflow: visible;
+  }
+
+  .finance-workspace,
+  .finance-left-rail,
+  .finance-month-panel,
+  .finance-segment-body,
+  .finance-payments-section,
+  .finance-budget-section,
+  .finance-history-section,
+  .travel-dashboard,
+  .travel-list-card,
+  .travel-central,
+  .travel-main-trip,
+  .travel-empty-main,
+  .travel-main-grid,
+  .sport-bottom-grid,
+  .sport-panel,
+  .sport-week-card {
+    block-size: auto;
+    height: auto;
+    min-block-size: 0;
+    overflow: visible;
+  }
+
+  .module-page.sport-os .sport-bottom-grid > .lay-card.sport-panel {
+    block-size: auto;
+    height: auto;
+    min-block-size: 0;
+    overflow: visible;
+  }
+
+  .finance-segment-toolbar {
+    flex-basis: auto;
+    min-block-size: 0;
+    overflow: visible;
+  }
+
+  .travel-trip-list,
+  .travel-detail-list,
+  .sport-history-list,
+  .sport-record-list {
+    overflow: visible;
+  }
+
+  .sport-bottom-grid {
+    align-items: stretch;
+    flex: 0 0 auto !important;
+    grid-auto-rows: max-content;
+    grid-template-rows: none;
+  }
+
+  .sport-panel .empty-state,
+  .travel-list-card > .empty-state {
+    flex: 0 0 auto;
+    min-block-size: 132px;
+  }
+}
+
+@media (max-width: 760px) {
+  .finance-left-rail .finance-summary-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .finance-segment-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .finance-segment-tabs button {
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: var(--ui-control-h-sm);
+    justify-content: center;
+  }
+
+  .sport-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 900px) {
+  .module-page.sport-os,
+  .module-page.sport-os > .page-body {
+    overflow: auto;
+  }
+
+  .module-page.sport-os > .page-body > .lay-page {
+    flex: 0 0 auto !important;
+    block-size: auto !important;
+    height: auto !important;
+    min-block-size: 0;
+    overflow: visible;
+  }
+
+  .module-page.sport-os .sport-bottom-grid,
+  .module-page.sport-os .sport-bottom-grid > .lay-card.sport-panel {
+    block-size: auto;
+    height: auto;
+    min-block-size: 0;
+    overflow: visible;
+  }
+
+  .module-page.sport-os .sport-bottom-grid {
+    flex: 0 0 auto !important;
+    grid-auto-rows: max-content;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+  }
+
+  .module-page.sport-os .sport-bottom-grid > .lay-card.sport-panel:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .finance-segment-tabs {
+    min-block-size: 46px;
+    overflow-y: visible;
+  }
+}
+
+.office-right-stack .office-mini-panel {
+  min-block-size: 252px;
+}
+
+.office-right-stack {
+  overflow: visible;
+}
+
+@media (max-height: 760px) {
+  .module-page.settings-os {
+    overflow: auto;
   }
 }

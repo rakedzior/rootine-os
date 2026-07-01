@@ -1,0 +1,642 @@
+[
+  {
+    "viewport": "desktop",
+    "route": "planner",
+    "docW": 1440,
+    "vw": 1440,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "desktop",
+    "route": "sport",
+    "docW": 1440,
+    "vw": 1440,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "desktop",
+    "route": "diet",
+    "docW": 1440,
+    "vw": 1440,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "desktop",
+    "route": "finance",
+    "docW": 1440,
+    "vw": 1440,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "desktop",
+    "route": "goals",
+    "docW": 1440,
+    "vw": 1440,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "desktop",
+    "route": "office",
+    "docW": 1440,
+    "vw": 1440,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "desktop",
+    "route": "travel",
+    "docW": 1440,
+    "vw": 1440,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "desktop",
+    "route": "notes",
+    "docW": 1440,
+    "vw": 1440,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "desktop",
+    "route": "work",
+    "docW": 1440,
+    "vw": 1440,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "desktop",
+    "route": "settings",
+    "docW": 1440,
+    "vw": 1440,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "route": "planner",
+    "docW": 834,
+    "vw": 834,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "route": "sport",
+    "docW": 834,
+    "vw": 834,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "route": "diet",
+    "docW": 834,
+    "vw": 834,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "route": "finance",
+    "docW": 834,
+    "vw": 834,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "route": "goals",
+    "docW": 834,
+    "vw": 834,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "route": "office",
+    "docW": 834,
+    "vw": 834,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "route": "travel",
+    "docW": 834,
+    "vw": 834,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "route": "notes",
+    "docW": 834,
+    "vw": 834,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "route": "work",
+    "docW": 834,
+    "vw": 834,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "tablet",
+    "route": "settings",
+    "docW": 834,
+    "vw": 834,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "route": "planner",
+    "docW": 390,
+    "vw": 390,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "route": "sport",
+    "docW": 390,
+    "vw": 390,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "route": "diet",
+    "docW": 390,
+    "vw": 390,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "route": "finance",
+    "docW": 390,
+    "vw": 390,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "route": "goals",
+    "docW": 390,
+    "vw": 390,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "route": "office",
+    "docW": 390,
+    "vw": 390,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "route": "travel",
+    "docW": 390,
+    "vw": 390,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "route": "notes",
+    "docW": 390,
+    "vw": 390,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "route": "work",
+    "docW": 390,
+    "vw": 390,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "mobile",
+    "route": "settings",
+    "docW": 390,
+    "vw": 390,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "route": "planner",
+    "docW": 1280,
+    "vw": 1280,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "route": "sport",
+    "docW": 1280,
+    "vw": 1280,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "route": "diet",
+    "docW": 1280,
+    "vw": 1280,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "route": "finance",
+    "docW": 1280,
+    "vw": 1280,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "route": "goals",
+    "docW": 1280,
+    "vw": 1280,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "route": "office",
+    "docW": 1280,
+    "vw": 1280,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "route": "travel",
+    "docW": 1280,
+    "vw": 1280,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "route": "notes",
+    "docW": 1280,
+    "vw": 1280,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "route": "work",
+    "docW": 1280,
+    "vw": 1280,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  },
+  {
+    "viewport": "short",
+    "route": "settings",
+    "docW": 1280,
+    "vw": 1280,
+    "hOverflow": false,
+    "rawTarget": false,
+    "offenders": [],
+    "clipped": [],
+    "logs": [
+      {
+        "type": "warning",
+        "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://re"
+      }
+    ]
+  }
+]
