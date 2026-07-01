@@ -21,6 +21,12 @@ export const sportKeys = {
   records: (limit?: number) => ['sport', 'records', limit ?? 0] as const,
 };
 
+function invalidatePlannerWorkoutSignals(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: ['sport', 'week'] });
+  qc.invalidateQueries({ queryKey: ['sport', 'today-workouts'] });
+  qc.invalidateQueries({ queryKey: ['sport', 'next-workout'] });
+}
+
 // ── sports / exercises ───────────────────────────────────────
 
 export function useSports() {
@@ -138,11 +144,25 @@ export function useNextWorkout() {
   });
 }
 
+/** Today's planned/in-progress workouts for the Start dashboard signal carousel. */
+export function useTodayWorkouts() {
+  const today = planner.todayStr();
+  return useQuery({
+    queryKey: ['sport', 'today-workouts', today],
+    queryFn: async () => {
+      const list = await repo.listScheduledWorkouts(today, today);
+      return list
+        .filter((w) => w.status === 'planned' || w.status === 'in_progress')
+        .sort((a, b) => a.order_index - b.order_index);
+    },
+  });
+}
+
 export function useCreateScheduledWorkout() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: repo.createScheduledWorkout,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sport', 'week'] }),
+    onSuccess: () => invalidatePlannerWorkoutSignals(qc),
   });
 }
 
@@ -151,7 +171,7 @@ export function useCreateFromTemplate() {
   return useMutation({
     mutationFn: ({ input, templateName }: { input: NewWorkoutFromTemplateInput; templateName: string }) =>
       planner.createFromTemplateWithSchedule(input, templateName),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sport', 'week'] }),
+    onSuccess: () => invalidatePlannerWorkoutSignals(qc),
   });
 }
 
@@ -175,7 +195,7 @@ export function useMoveScheduledWorkout(weekStart: string) {
     onError: (_err, _vars, ctx) => {
       if (ctx?.previous) qc.setQueryData(key, ctx.previous);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ['sport', 'week'] }),
+    onSettled: () => invalidatePlannerWorkoutSignals(qc),
   });
 }
 
@@ -184,7 +204,7 @@ export function useUpdateScheduledWorkout() {
   return useMutation({
     mutationFn: ({ workout, patch, scope }: { workout: ScheduledWorkout; patch: Partial<ScheduledWorkout>; scope: EditScope }) =>
       planner.updateOccurrence(workout, patch, scope),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sport', 'week'] }),
+    onSuccess: () => invalidatePlannerWorkoutSignals(qc),
   });
 }
 
@@ -193,7 +213,7 @@ export function useDeleteScheduledWorkout() {
   return useMutation({
     mutationFn: ({ workout, scope }: { workout: ScheduledWorkout; scope: EditScope }) =>
       planner.deleteOccurrence(workout, scope),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sport', 'week'] }),
+    onSuccess: () => invalidatePlannerWorkoutSignals(qc),
   });
 }
 

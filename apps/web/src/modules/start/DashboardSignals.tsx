@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { useNextWorkout } from '@/features/sport/hooks';
+import { useEffect, useState } from 'react';
+import { useNextWorkout, useTodayWorkouts } from '@/features/sport/hooks';
 import { useTodayMealItems, useNutritionTarget } from '@/features/diet/hooks';
 
 /** Relative Polish day label for a YYYY-MM-DD date. */
@@ -17,22 +18,51 @@ function whenLabel(dateStr: string): string {
 /** Supporting signal: the next planned training session. */
 export function SportSignal() {
   const { data: next, isLoading } = useNextWorkout();
+  const { data: todayWorkouts = [], isLoading: isTodayLoading } = useTodayWorkouts();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const hasTodayWorkouts = todayWorkouts.length > 0;
+  const workouts = hasTodayWorkouts ? todayWorkouts : (next ? [next] : []);
+  const activeWorkout = workouts[Math.min(activeIndex, workouts.length - 1)] ?? null;
+  const showPager = todayWorkouts.length > 1;
+  const loading = isLoading || isTodayLoading;
+
+  useEffect(() => {
+    setActiveIndex((index) => Math.min(index, Math.max(0, workouts.length - 1)));
+  }, [workouts.length]);
+
+  function move(delta: number) {
+    setActiveIndex((index) => {
+      const total = todayWorkouts.length;
+      if (total <= 1) return index;
+      return (index + delta + total) % total;
+    });
+  }
+
   return (
     <div className="card signal-card">
       <div className="signal-head">
         <span className="signal-title">Trening</span>
         <Link to="/sport" className="signal-link">Sport</Link>
       </div>
-      {isLoading ? (
+      {loading ? (
         <div className="signal-empty"><p>Wczytywanie…</p></div>
-      ) : next ? (
-        <Link to="/sport" className="signal-body">
-          <span className="signal-when">{whenLabel(next.scheduled_date)}</span>
-          <span className="signal-main">{next.title}</span>
-          <span className="signal-sub">
-            {next.subtitle || (next.planned_duration_min ? `${next.planned_duration_min} min` : 'Trening')}
-          </span>
-        </Link>
+      ) : activeWorkout ? (
+        <div className="signal-workout">
+          <Link to="/sport" className="signal-body">
+            <span className="signal-when">{whenLabel(activeWorkout.scheduled_date)}</span>
+            <span className="signal-main">{activeWorkout.title}</span>
+            <span className="signal-sub">
+              {activeWorkout.subtitle || (activeWorkout.planned_duration_min ? `${activeWorkout.planned_duration_min} min` : 'Trening')}
+            </span>
+          </Link>
+          {showPager && (
+            <div className="signal-workout-pager" aria-label="Dzisiejsze treningi">
+              <button type="button" onClick={() => move(-1)} aria-label="Poprzedni trening">‹</button>
+              <span>{activeIndex + 1}/{todayWorkouts.length}</span>
+              <button type="button" onClick={() => move(1)} aria-label="Następny trening">›</button>
+            </div>
+          )}
+        </div>
       ) : (
         <div className="signal-empty">
           <p>Brak zaplanowanych treningów.</p>

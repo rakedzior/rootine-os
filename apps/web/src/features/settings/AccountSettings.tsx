@@ -1,18 +1,28 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { setTheme, getCurrentTheme, type Theme } from '@/lib/theme';
+import { setTheme, getCurrentTheme, setAccentColor, getCurrentAccentColor, type AccentColor, type Theme } from '@/lib/theme';
 import { logAudit } from '@/lib/audit';
 import { toast } from '@/lib/toast';
 import { useMfaStepUp } from '@/features/auth/useMfaStepUp';
 
-const THEMES: { id: Theme; label: string; swatch: string }[] = [
-  { id: 'dark', label: 'Grafit', swatch: '#4bae88' },
-  { id: 'white-lotus', label: 'Jasny', swatch: '#9a6a42' },
+type AppearancePreset = {
+  id: 'graphite-emerald' | 'graphite-ice' | 'beige';
+  label: string;
+  theme: Theme;
+  accent: AccentColor;
+  swatch: string;
+};
+
+const APPEARANCE_PRESETS: AppearancePreset[] = [
+  { id: 'graphite-emerald', label: 'Graphite/Emerald', theme: 'dark', accent: 'emerald', swatch: 'linear-gradient(135deg, #181d1f 0 58%, #4bae88 58%)' },
+  { id: 'graphite-ice', label: 'Graphite/Ice', theme: 'dark', accent: 'cool-ice', swatch: 'linear-gradient(135deg, #181d1f 0 58%, #76b7ff 58%)' },
+  { id: 'beige', label: 'Beige', theme: 'white-lotus', accent: 'emerald', swatch: 'linear-gradient(135deg, #f1ebe0 0 58%, #9a6a42 58%)' },
 ];
 
 export function AccountSettings() {
   const { ensureMfa, mfaStepUpModal } = useMfaStepUp();
   const [theme, setThemeState] = useState<Theme>(getCurrentTheme);
+  const [accent, setAccentState] = useState<AccentColor>(getCurrentAccentColor);
   const [email, setEmail] = useState('');
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -25,9 +35,17 @@ export function AccountSettings() {
     });
   }, []);
 
-  function pickTheme(next: Theme) {
-    setThemeState(next);
-    setTheme(next);
+  const activePreset = theme === 'white-lotus'
+    ? 'beige'
+    : accent === 'cool-ice'
+      ? 'graphite-ice'
+      : 'graphite-emerald';
+
+  function pickAppearance(preset: AppearancePreset) {
+    setThemeState(preset.theme);
+    setAccentState(preset.accent);
+    setTheme(preset.theme);
+    setAccentColor(preset.accent);
   }
 
 
@@ -99,21 +117,27 @@ export function AccountSettings() {
         <p style={{ fontSize: 13, color: 'var(--ink-2)', margin: '0 0 14px' }}>
           Wybierz paletę aplikacji. Ustawienie jest zapisywane na koncie i synchronizowane między urządzeniami.
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
-          {THEMES.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => pickTheme(t.id)}
-              className={theme === t.id ? 'theme-card active' : 'theme-card'}
-            >
-              <span className="theme-swatch" style={{ background: t.swatch }} />
-              <span>{t.label}</span>
-              {theme === t.id && (
-                <svg style={{ marginLeft: 'auto', width: 13, height: 13 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
-              )}
-            </button>
-          ))}
+        <p style={{ fontSize: 12, color: 'var(--ink-3)', margin: '-6px 0 14px' }}>
+          Kolor akcentu jest zapisywany lokalnie w tej przegladarce.
+        </p>
+        <div className="settings-choice-block">
+          <span className="settings-choice-label">Preset</span>
+          <div className="settings-choice-grid">
+            {APPEARANCE_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => pickAppearance(preset)}
+                className={activePreset === preset.id ? 'theme-card active' : 'theme-card'}
+              >
+                <span className="theme-swatch" style={{ background: preset.swatch }} />
+                <span>{preset.label}</span>
+                {activePreset === preset.id && (
+                  <svg style={{ marginLeft: 'auto', width: 13, height: 13 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </article>
 

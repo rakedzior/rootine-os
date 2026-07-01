@@ -328,7 +328,7 @@ export function StatusBadge({ status, label }: { status: string; label?: string 
 }
 
 // ─── PAGE HEADER ──────────────────────────────────────────────
-// One module header for the whole app: icon + title + description + actions.
+// One module header for the whole app: marker + title + description + actions.
 
 interface PageHeaderProps {
   icon?: ReactNode;
@@ -336,11 +336,11 @@ interface PageHeaderProps {
   desc?: string;
   actions?: ReactNode;
 }
-export function PageHeader({ icon, title, desc, actions }: PageHeaderProps) {
+export function PageHeader({ title, desc, actions }: PageHeaderProps) {
   return (
     <header className="page-head">
       <div className="page-head-main">
-        {icon && <span className="page-head-icon">{icon}</span>}
+        <span className="page-head-marker" aria-hidden="true" />
         <div className="page-head-text">
           <h1>{title}</h1>
           {desc && <p>{desc}</p>}

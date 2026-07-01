@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -11,11 +12,16 @@ export function UserProfileWidget({ expanded }: { expanded: boolean }) {
   const { session } = useAuth();
   const { data: profile } = useProfile();
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; bottom: number } | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function onDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (wrapRef.current?.contains(t)) return;
+      if (menuRef.current?.contains(t)) return;
+      setOpen(false);
     }
     document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
@@ -25,6 +31,18 @@ export function UserProfileWidget({ expanded }: { expanded: boolean }) {
   const name = profile?.display_name?.trim() || email.split('@')[0] || 'Użytkownik';
   const initial = (name[0] ?? 'U').toUpperCase();
   const avatarUrl = profile?.avatar_url || null;
+
+  function toggle() {
+    // Anchor the menu with fixed positioning from the trigger's rect so it
+    // escapes the sidebar's `overflow: hidden` (which was clipping it in half).
+    if (!open && wrapRef.current) {
+      const r = wrapRef.current.getBoundingClientRect();
+      const menuW = 220;
+      const left = Math.max(8, Math.min(r.left, window.innerWidth - menuW - 8));
+      setPos({ left, bottom: window.innerHeight - r.top + 8 });
+    }
+    setOpen((v) => !v);
+  }
 
   function go(path: string) {
     setOpen(false);
@@ -36,11 +54,11 @@ export function UserProfileWidget({ expanded }: { expanded: boolean }) {
   }
 
   return (
-    <div className="sb-profile-wrap" ref={ref}>
+    <div className="sb-profile-wrap" ref={wrapRef}>
       <button
         type="button"
         className="sb-profile"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggle}
         aria-haspopup="menu"
         aria-expanded={open}
         title={expanded ? undefined : name}
@@ -53,15 +71,21 @@ export function UserProfileWidget({ expanded }: { expanded: boolean }) {
         {!expanded && <span className="sb-tooltip" role="tooltip">{name}</span>}
       </button>
 
-      {open && (
-        <div className="sb-profile-menu" role="menu">
+      {open && pos && createPortal(
+        <div
+          ref={menuRef}
+          className="sb-profile-menu is-portal"
+          role="menu"
+          style={{ position: 'fixed', left: pos.left, bottom: pos.bottom }}
+        >
           <button role="menuitem" onClick={() => go('/settings/profile')}>Profil użytkownika</button>
           <button role="menuitem" onClick={() => go('/settings')}>Ustawienia</button>
           <button role="menuitem" onClick={() => go('/settings/integrations')}>Integracje</button>
           <div className="sb-profile-menu-foot">
             <button role="menuitem" className="danger" onClick={signOut}><Icon name="logout" size={15} /> Wyloguj</button>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
