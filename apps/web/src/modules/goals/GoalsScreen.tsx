@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, ProgressBar, PriorityBadge, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore } from '@/components/common';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Modal, EmptyState, ConfirmDelete, Field, PageHeader, ProgressBar, PriorityBadge, IcoTrash, IcoPlus, IcoCheck, IcoChevRight, IcoMore, IcoEdit } from '@/components/common';
 import { PageLayout } from '@/components/layout/primitives';
 import { useCreateTask } from '@/features/tasks/hooks';
 import {
@@ -40,6 +40,7 @@ interface Goal {
 }
 
 const DEFAULT_GOAL_CATEGORIES = ['Osobiste', 'Zdrowie', 'Finanse', 'Nauka', 'Praca'];
+const GOAL_CATEGORIES_KEY = 'rootine:goal-categories';
 const GOAL_FOLDER_MARKER = '[rootine-folder]';
 const GOAL_EMOJI_FALLBACK = '🎯';
 
@@ -262,17 +263,45 @@ export function GoalsScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [goalModal, setGoalModal] = useState<{ goal: Goal | null } | null>(null);
   const [deleteGoalId, setDeleteGoalId] = useState<string | null>(null);
-  const [showCategoryManager, setShowCategoryManager] = useState(false);
-  const [extraCategories, setExtraCategories] = useState<string[]>([]);
+  const [managedCategories, setManagedCategories] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(GOAL_CATEGORIES_KEY);
+      if (saved) return JSON.parse(saved) as string[];
+    } catch { /* ignore */ }
+    return DEFAULT_GOAL_CATEGORIES;
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem(GOAL_CATEGORIES_KEY, JSON.stringify(managedCategories)); } catch { /* ignore */ }
+  }, [managedCategories]);
 
   const goals = useMemo(
     () => (goalsQuery.data ?? []).map((goal) => mapGoal(goal, tasksQuery.data ?? [], milestonesQuery.data ?? [])),
     [goalsQuery.data, milestonesQuery.data, tasksQuery.data],
   );
   const goalCategories = useMemo(() => {
-    const categories = [...DEFAULT_GOAL_CATEGORIES, ...extraCategories, ...goals.map((goal) => goal.category)].filter(Boolean);
-    return Array.from(new Set(categories));
-  }, [extraCategories, goals]);
+    const used = goals.map((goal) => goal.category).filter(Boolean);
+    return Array.from(new Set([...managedCategories, ...used]));
+  }, [managedCategories, goals]);
+
+  const addCategory = (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setManagedCategories((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed]));
+  };
+
+  const renameCategory = (oldName: string, nextName: string) => {
+    const trimmed = nextName.trim();
+    if (!trimmed || trimmed === oldName) return;
+    setManagedCategories((prev) => Array.from(new Set(prev.map((cat) => (cat === oldName ? trimmed : cat)))));
+    goals.filter((goal) => goal.category === oldName).forEach((goal) => updateGoal.mutate({ id: goal.id, patch: { category: trimmed } }));
+  };
+
+  const deleteCategory = (name: string) => {
+    const fallback = managedCategories.find((cat) => cat !== name) ?? 'Osobiste';
+    setManagedCategories((prev) => prev.filter((cat) => cat !== name));
+    goals.filter((goal) => goal.category === name).forEach((goal) => updateGoal.mutate({ id: goal.id, patch: { category: fallback } }));
+  };
 
   const activeGoals = useMemo(() => goals.filter((goal) => !goal.completedAt), [goals]);
   const selected = activeGoals.find((goal) => goal.id === selectedId) ?? activeGoals[0] ?? null;
@@ -294,7 +323,6 @@ export function GoalsScreen() {
         desc="Roadmapy, kamienie milowe i działania na dziś w jednym widoku."
         actions={<>
           <button className="btn btn-primary btn-sm" type="button" onClick={() => setGoalModal({ goal: null })}><IcoPlus /> Dodaj cel</button>
-          <button className="icon-btn" type="button" onClick={() => setShowCategoryManager(true)} aria-label="Kategorie"><GoalIcon name="gear" /></button>
         </>}
       />}
     >
@@ -360,6 +388,9 @@ export function GoalsScreen() {
         open={!!goalModal}
         goal={goalModal?.goal ?? null}
         categories={goalCategories}
+        onAddCategory={addCategory}
+        onRenameCategory={renameCategory}
+        onDeleteCategory={deleteCategory}
         onClose={() => setGoalModal(null)}
         onSave={(payload) => {
           const patch = {
@@ -381,7 +412,6 @@ export function GoalsScreen() {
         }}
       />
       <ConfirmDelete open={!!deleteGoalId} onClose={() => setDeleteGoalId(null)} onConfirm={() => { if (deleteGoalId) removeGoal.mutate(deleteGoalId); setDeleteGoalId(null); }} label="ten cel" />
-      <CategoryManagerModal open={showCategoryManager} onClose={() => setShowCategoryManager(false)} categories={goalCategories} onAdd={(name) => setExtraCategories((items) => items.includes(name) ? items : [...items, name])} onDelete={(name) => setExtraCategories((items) => items.filter((item) => item !== name))} />
     </PageLayout>
   );
 }
@@ -479,21 +509,20 @@ export function GoalTaskFormNested({ tasks, onAdd }: { tasks: GoalTask[]; onAdd:
 
   return (
     <form className="goals-add-task-row goals-add-task-row-nested" onSubmit={submit}>
-      <select className="input" value={kind} onChange={(event) => setKind(event.target.value as 'task' | 'folder')} aria-label="Typ wpisu">
-        <option value="task">Działanie</option>
-        <option value="folder">Folder</option>
-      </select>
+      <GoalListSelect value={kind} options={[{ value: 'task', label: 'Działanie' }, { value: 'folder', label: 'Folder' }]} onChange={(value) => setKind(value as 'task' | 'folder')} />
       <input className="input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder={kind === 'folder' ? 'Nazwa folderu' : 'Dodaj działanie'} />
-      <select className="input" value={parentTaskId} onChange={(event) => setParentTaskId(event.target.value)} aria-label="Folder nadrzędny">
-        <option value="">Poziom celu</option>
-        {flatTasks.map((task) => <option key={task.id} value={task.id}>{task.title}</option>)}
-      </select>
-      <input className="input" type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} disabled={kind === 'folder'} />
-      <select className="input" value={priority} onChange={(event) => setPriority(event.target.value as Priority)} disabled={kind === 'folder'}>
-        <option value="low">Niski</option>
-        <option value="mid">Średni</option>
-        <option value="high">Wysoki</option>
-      </select>
+      <GoalListSelect
+        value={parentTaskId}
+        options={[{ value: '', label: 'Poziom celu' }, ...flatTasks.map((task) => ({ value: task.id, label: task.title }))]}
+        onChange={setParentTaskId}
+      />
+      <GoalDeadlineSelect value={dueDate || todayStr()} onChange={setDueDate} disabled={kind === 'folder'} />
+      <GoalListSelect
+        value={priority}
+        options={[{ value: 'low', label: 'Niski' }, { value: 'mid', label: 'Średni' }, { value: 'high', label: 'Wysoki' }]}
+        onChange={(value) => setPriority(value as Priority)}
+        disabled={kind === 'folder'}
+      />
       <button className="btn btn-secondary btn-sm" type="submit"><IcoPlus /> Dodaj</button>
     </form>
   );
@@ -575,9 +604,8 @@ function priorityLabel(priority: GoalActionPriority) {
   return 'Średni';
 }
 
-function nextStatusAfterToggle(status: GoalActionStatus): GoalActionStatus {
-  if (status === 'blocked') return 'blocked';
-  return status === 'done' ? 'todo' : 'done';
+function collectActionNodeDescendantIds(node: GoalActionNode): string[] {
+  return node.children.flatMap((child) => [child.id, ...collectActionNodeDescendantIds(child)]);
 }
 
 function InlineGoalActionInput({ depth, placeholder, onCancel, onSave }: {
@@ -604,25 +632,27 @@ function InlineGoalActionInput({ depth, placeholder, onCancel, onSave }: {
 
   return (
     <div className="goal-action-row is-editing" style={{ '--depth': depth } as React.CSSProperties}>
-      <span className="goal-action-chevron-spacer" />
-      <span className="goal-action-status is-empty" aria-hidden="true" />
-      <input
-        ref={inputRef}
-        className="goal-action-inline-input"
-        value={title}
-        placeholder={placeholder}
-        onChange={(event) => setTitle(event.target.value)}
-        onBlur={save}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') save();
-          if (event.key === 'Escape') onCancel();
-        }}
-      />
+      <div className="goal-action-main">
+        <span className="goal-action-chevron-spacer" />
+        <span className="goal-action-status is-empty" aria-hidden="true" />
+        <input
+          ref={inputRef}
+          className="goal-action-inline-input"
+          value={title}
+          placeholder={placeholder}
+          onChange={(event) => setTitle(event.target.value)}
+          onBlur={save}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') save();
+            if (event.key === 'Escape') onCancel();
+          }}
+        />
+      </div>
     </div>
   );
 }
 
-function GoalActionRow({ node, selectedId, expandedIds, editingId, draggingId, dropTargetId, onDragStart, onDragEnd, onDragOverAction, onDropOnAction, onToggleExpanded, onSelect, onToggleStatus, onAddChild, onEdit, onRename, onSetStatus, onDelete, onPlanner }: {
+function GoalActionRow({ node, selectedId, expandedIds, editingId, draggingId, dropTargetId, onDragStart, onDragEnd, onDragOverAction, onDropOnAction, onToggleExpanded, onSelect, onToggleStatus, onAddChild, onEdit, onRename }: {
   node: GoalActionNode;
   selectedId: string | null;
   expandedIds: Set<string>;
@@ -639,9 +669,6 @@ function GoalActionRow({ node, selectedId, expandedIds, editingId, draggingId, d
   onAddChild: (parentId: string) => void;
   onEdit: (id: string | null) => void;
   onRename: (id: string, title: string) => void;
-  onSetStatus: (id: string, status: GoalActionStatus) => void;
-  onDelete: (id: string) => void;
-  onPlanner: (action: GoalAction) => void;
 }) {
   const isExpanded = expandedIds.has(node.id);
   const hasChildren = node.children.length > 0;
@@ -682,56 +709,54 @@ function GoalActionRow({ node, selectedId, expandedIds, editingId, draggingId, d
         }}
         onClick={() => onSelect(node.id)}
       >
-        {hasChildren ? (
-          <button className="goal-action-chevron" type="button" onClick={(event) => { event.stopPropagation(); onToggleExpanded(node.id); }} aria-label={isExpanded ? 'Zwiń' : 'Rozwiń'} aria-expanded={isExpanded}>
-            <IcoChevRight />
+        <div className="goal-action-main">
+          {hasChildren ? (
+            <button className="goal-action-chevron" type="button" onClick={(event) => { event.stopPropagation(); onToggleExpanded(node.id); }} aria-label={isExpanded ? 'Zwiń' : 'Rozwiń'} aria-expanded={isExpanded}>
+              <IcoChevRight />
+            </button>
+          ) : <span className="goal-action-chevron-spacer" />}
+          <button
+            type="button"
+            className={`goal-action-status is-${visualState}`}
+            onClick={(event) => { event.stopPropagation(); onToggleStatus(node); }}
+            aria-label="Zmień status"
+          >
+            {visualState === 'done' && <IcoCheck />}
           </button>
-        ) : <span className="goal-action-chevron-spacer" />}
-        <button
-          type="button"
-          className={`goal-action-status is-${visualState}`}
-          onClick={(event) => { event.stopPropagation(); onToggleStatus(node); }}
-          aria-label="Zmień status"
-        >
-          {visualState === 'done' && <IcoCheck />}
-        </button>
-        {editingId === node.id ? (
-          <input
-            className="goal-action-inline-input"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onClick={(event) => event.stopPropagation()}
-            onBlur={saveRename}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') saveRename();
-              if (event.key === 'Escape') onEdit(null);
+          {editingId === node.id ? (
+            <input
+              className="goal-action-inline-input"
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              onClick={(event) => event.stopPropagation()}
+              onBlur={saveRename}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') saveRename();
+                if (event.key === 'Escape') onEdit(null);
+              }}
+              autoFocus
+            />
+          ) : (
+            <span className="goal-action-title" onDoubleClick={(event) => { event.stopPropagation(); onEdit(node.id); }}>{node.title}</span>
+          )}
+        </div>
+        <div className="goal-action-meta">
+          <button
+            className="goal-action-add-btn"
+            type="button"
+            aria-label="Dodaj poddziałanie"
+            title="Dodaj poddziałanie"
+            onClick={(event) => {
+              event.stopPropagation();
+              onAddChild(node.id);
             }}
-            autoFocus
-          />
-        ) : (
-          <span className="goal-action-title" onDoubleClick={(event) => { event.stopPropagation(); onEdit(node.id); }}>{node.title}</span>
-        )}
-        <button
-          className="goal-action-add-btn"
-          type="button"
-          aria-label="Dodaj poddziałanie"
-          title="Dodaj poddziałanie"
-          onClick={(event) => {
-            event.stopPropagation();
-            onAddChild(node.id);
-          }}
-        >
-          <IcoPlus />
-        </button>
-        <span className="goal-action-progress">{hasChildren ? `${node.progress.done}/${node.progress.total}` : ''}</span>
-        <span className={`goal-action-priority is-${node.priority}`}>{priorityLabel(node.priority)}</span>
-        <span className="goal-action-date"><GoalIcon name="calendar" /> {relativeDateLabel(node.dueDate ?? undefined)}</span>
-        <MoreMenu actions={[
-          { label: 'Edytuj', onClick: () => onEdit(node.id) },
-          { label: node.status === 'blocked' ? 'Odblokuj' : 'Zablokuj', onClick: () => onSetStatus(node.id, node.status === 'blocked' ? 'todo' : 'blocked') },
-          { label: 'Dodaj do Planera', onClick: () => onPlanner(node) },
-          { label: 'Usuń', onClick: () => onDelete(node.id), danger: true },
-        ]} />
+          >
+            <IcoPlus />
+          </button>
+          <span className="goal-action-progress">{hasChildren ? `${node.progress.done}/${node.progress.total}` : ''}</span>
+          <span className={`goal-action-priority is-${node.priority}`}>{priorityLabel(node.priority)}</span>
+          <span className="goal-action-date"><GoalIcon name="calendar" /> {relativeDateLabel(node.dueDate ?? undefined)}</span>
+        </div>
       </div>
       {hasChildren && isExpanded && (
         <div className="goal-action-children">
@@ -754,9 +779,6 @@ function GoalActionRow({ node, selectedId, expandedIds, editingId, draggingId, d
               onAddChild={onAddChild}
               onEdit={onEdit}
               onRename={onRename}
-              onSetStatus={onSetStatus}
-              onDelete={onDelete}
-              onPlanner={onPlanner}
             />
           ))}
         </div>
@@ -765,12 +787,26 @@ function GoalActionRow({ node, selectedId, expandedIds, editingId, draggingId, d
   );
 }
 
-function GoalActionDetailsPanel({ action, actionsById, onAddChild, onQuickAdd }: {
+type GoalActionEditField = 'title' | 'status' | 'dueDate' | 'priority' | 'path' | 'notes';
+
+function GoalActionDetailsPanel({ action, actions, actionsById, onAddChild, onQuickAdd, onUpdate, onReparent, onDelete, onPlanner }: {
   action: GoalAction | null;
+  actions: GoalAction[];
   actionsById: Map<string, GoalAction>;
   onAddChild: (parentId: string) => void;
   onQuickAdd: (parentId: string, title: string) => void;
+  onUpdate: (id: string, patch: Partial<GoalAction>) => void;
+  onReparent: (id: string, parentId: string | null) => void;
+  onDelete: (id: string) => void;
+  onPlanner: (action: GoalAction) => void;
 }) {
+  const [editingField, setEditingField] = useState<GoalActionEditField | null>(null);
+  const [draftTitle, setDraftTitle] = useState('');
+  const [draftNotes, setDraftNotes] = useState('');
+  const [draftDate, setDraftDate] = useState(todayStr());
+
+  useEffect(() => { setEditingField(null); }, [action?.id]);
+
   if (!action) {
     return (
       <aside className="goal-action-details-panel is-empty">
@@ -780,20 +816,168 @@ function GoalActionDetailsPanel({ action, actionsById, onAddChild, onQuickAdd }:
     );
   }
 
-  const breadcrumb = getActionBreadcrumb(action.id, actionsById);
+  const current = action;
+  const breadcrumb = getActionBreadcrumb(current.id, actionsById);
+  const parentOptions = actions.filter((item) => item.id !== current.id && canMoveAction(current.id, item.id, actions));
+
+  function startEdit(field: GoalActionEditField) {
+    if (field === 'title') setDraftTitle(current.title);
+    if (field === 'notes') setDraftNotes(current.description ?? '');
+    if (field === 'dueDate') setDraftDate(current.dueDate ?? todayStr());
+    setEditingField(field);
+  }
+
+  function saveTitle() {
+    const trimmed = draftTitle.trim();
+    if (trimmed && trimmed !== current.title) onUpdate(current.id, { title: trimmed });
+    setEditingField(null);
+  }
+
+  function saveNotes() {
+    onUpdate(current.id, { description: draftNotes.trim() });
+    setEditingField(null);
+  }
 
   return (
     <aside className="goal-action-details-panel">
-      <span className="eyebrow">Szczegóły</span>
-      <h3>{action.title}</h3>
-      <div className="goal-action-detail-grid">
-        <span>Status</span><strong>{statusLabel(action.status)}</strong>
-        <span>Termin</span><strong>{relativeDateLabel(action.dueDate ?? undefined)}</strong>
-        <span>Priorytet</span><strong>{priorityLabel(action.priority)}</strong>
-        <span>Ścieżka</span><strong>{breadcrumb.map((item) => item.title).join(' > ')}</strong>
+      <div className="goal-action-details-head">
+        <span className="eyebrow">Szczegóły</span>
+        <div className="goal-action-details-tools">
+          <button type="button" className="goal-action-tool-btn" onClick={() => onPlanner(current)} title="Dodaj do Planera" aria-label="Dodaj do Planera">
+            <GoalIcon name="calendar" />
+          </button>
+          <button type="button" className="goal-action-tool-btn is-danger" onClick={() => onDelete(current.id)} title="Usuń działanie" aria-label="Usuń działanie">
+            <IcoTrash />
+          </button>
+        </div>
       </div>
-      {action.description && <p className="goal-action-note">{action.description}</p>}
-      <QuickAddActionBar parentId={action.id} onQuickAdd={onQuickAdd} onDetails={onAddChild} />
+
+      <div className="goal-action-detail-title">
+        {editingField === 'title' ? (
+          <input
+            className="input"
+            value={draftTitle}
+            autoFocus
+            onChange={(event) => setDraftTitle(event.target.value)}
+            onBlur={saveTitle}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') saveTitle();
+              if (event.key === 'Escape') setEditingField(null);
+            }}
+          />
+        ) : (
+          <>
+            <h3>{current.title}</h3>
+            <button type="button" className="goal-action-edit-btn" onClick={() => startEdit('title')} title="Edytuj nazwę" aria-label="Edytuj nazwę"><IcoEdit /></button>
+          </>
+        )}
+      </div>
+
+      <div className="goal-action-detail-grid">
+        <span>Status</span>
+        <div className="goal-action-detail-value">
+          {editingField === 'status' ? (
+            <GoalListSelect
+              value={current.status}
+              options={[
+                { value: 'todo', label: 'Do zrobienia' },
+                { value: 'active', label: 'Aktywne' },
+                { value: 'done', label: 'Ukończone' },
+                { value: 'blocked', label: 'Zablokowane' },
+              ]}
+              onChange={(value) => { onUpdate(current.id, { status: value as GoalActionStatus }); setEditingField(null); }}
+            />
+          ) : (
+            <>
+              <strong>{statusLabel(current.status)}</strong>
+              <button type="button" className="goal-action-edit-btn" onClick={() => setEditingField('status')} title="Edytuj status" aria-label="Edytuj status"><IcoEdit /></button>
+            </>
+          )}
+        </div>
+
+        <span>Termin</span>
+        <div className="goal-action-detail-value">
+          {editingField === 'dueDate' ? (
+            <div className="goal-action-edit-date">
+              <GoalDeadlineSelect value={draftDate} onChange={(value) => { setDraftDate(value); onUpdate(current.id, { dueDate: value }); }} />
+              <div className="goal-action-edit-date-actions">
+                <button type="button" className="goal-action-inline-link" onClick={() => { onUpdate(current.id, { dueDate: null }); setEditingField(null); }}>Bez terminu</button>
+                <button type="button" className="goal-action-edit-confirm" onClick={() => setEditingField(null)} title="Gotowe" aria-label="Gotowe"><IcoCheck /></button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <strong>{relativeDateLabel(current.dueDate ?? undefined)}</strong>
+              <button type="button" className="goal-action-edit-btn" onClick={() => startEdit('dueDate')} title="Edytuj termin" aria-label="Edytuj termin"><IcoEdit /></button>
+            </>
+          )}
+        </div>
+
+        <span>Priorytet</span>
+        <div className="goal-action-detail-value">
+          {editingField === 'priority' ? (
+            <GoalListSelect
+              value={current.priority}
+              options={[{ value: 'low', label: 'Niski' }, { value: 'medium', label: 'Średni' }, { value: 'high', label: 'Wysoki' }]}
+              onChange={(value) => { onUpdate(current.id, { priority: value as GoalActionPriority }); setEditingField(null); }}
+            />
+          ) : (
+            <>
+              <strong>{priorityLabel(current.priority)}</strong>
+              <button type="button" className="goal-action-edit-btn" onClick={() => setEditingField('priority')} title="Edytuj priorytet" aria-label="Edytuj priorytet"><IcoEdit /></button>
+            </>
+          )}
+        </div>
+
+        <span>Ścieżka</span>
+        <div className="goal-action-detail-value">
+          {editingField === 'path' ? (
+            <GoalListSelect
+              value={current.parentId ?? ''}
+              options={[
+                { value: '', label: '— Najwyższy poziom' },
+                ...parentOptions.map((option) => ({ value: option.id, label: getActionBreadcrumb(option.id, actionsById).map((item) => item.title).join(' › ') })),
+              ]}
+              onChange={(value) => { onReparent(current.id, value || null); setEditingField(null); }}
+            />
+          ) : (
+            <>
+              <strong>{breadcrumb.map((item) => item.title).join(' › ')}</strong>
+              <button type="button" className="goal-action-edit-btn" onClick={() => setEditingField('path')} title="Zmień ścieżkę" aria-label="Zmień ścieżkę"><IcoEdit /></button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="goal-action-notes">
+        <div className="goal-action-notes-head">
+          <span className="eyebrow">Notatki</span>
+          {editingField !== 'notes' && (
+            <button type="button" className="goal-action-edit-btn" onClick={() => startEdit('notes')} title="Edytuj notatki" aria-label="Edytuj notatki"><IcoEdit /></button>
+          )}
+        </div>
+        {editingField === 'notes' ? (
+          <textarea
+            className="textarea"
+            rows={4}
+            autoFocus
+            value={draftNotes}
+            onChange={(event) => setDraftNotes(event.target.value)}
+            onBlur={saveNotes}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') setEditingField(null);
+              if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) saveNotes();
+            }}
+            placeholder="Dodaj dodatkowe informacje o tym działaniu..."
+          />
+        ) : current.description ? (
+          <p className="goal-action-note">{current.description}</p>
+        ) : (
+          <p className="goal-action-note is-empty">Brak notatek. Kliknij ołówek, aby dodać.</p>
+        )}
+      </div>
+
+      <QuickAddActionBar parentId={current.id} onQuickAdd={onQuickAdd} onDetails={onAddChild} />
     </aside>
   );
 }
@@ -908,13 +1092,14 @@ function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest, onAdd }
   }
 
   function updateAction(id: string, patch: Partial<GoalAction>) {
-    onUpdate(id, {
-      title: patch.title,
-      description: patch.description,
-      dueDate: patch.dueDate ?? undefined,
-      priority: patch.priority ? actionPriorityToTask(patch.priority) : undefined,
-      status: patch.status ? actionStatusToTask(patch.status) : undefined,
-    });
+    const next: Partial<GoalTask> = {};
+    if (patch.title !== undefined) next.title = patch.title;
+    if (patch.description !== undefined) next.description = patch.description;
+    // `null` clears the date; leaving the key absent keeps the current value.
+    if ('dueDate' in patch) (next as { dueDate?: string | null }).dueDate = patch.dueDate ?? null;
+    if (patch.priority) next.priority = actionPriorityToTask(patch.priority);
+    if (patch.status) next.status = actionStatusToTask(patch.status);
+    onUpdate(id, next);
   }
 
   function moveActionToParent(targetId: string) {
@@ -996,13 +1181,18 @@ function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest, onAdd }
                   onDropOnAction={moveActionToParent}
                   onToggleExpanded={toggleExpanded}
                   onSelect={setSelectedActionId}
-                  onToggleStatus={(item) => updateAction(item.id, { status: nextStatusAfterToggle(item.status) })}
+                  onToggleStatus={(item) => {
+                    if (item.status === 'blocked') return;
+                    // Checkbox nadrzędnego działania odzwierciedla stan podzadań, więc przełączamy
+                    // względem stanu widocznego i kaskadowo ustawiamy ten sam status na całym poddrzewie:
+                    // zaznaczenie → wszystko wykonane, odznaczenie → wszystko niewykonane.
+                    const nextStatus: GoalActionStatus = getVisualCompletionState(item) === 'done' ? 'todo' : 'done';
+                    updateAction(item.id, { status: nextStatus });
+                    collectActionNodeDescendantIds(item).forEach((childId) => updateAction(childId, { status: nextStatus }));
+                  }}
                   onAddChild={startCreate}
                   onEdit={setEditingId}
                   onRename={(id, title) => { updateAction(id, { title }); setEditingId(null); }}
-                  onSetStatus={(id, status) => updateAction(id, { status })}
-                  onDelete={onDelete}
-                  onPlanner={(action) => onPlanner(actionToTask(action))}
                 />
               ))}
               {creatingParentId === null && (
@@ -1019,7 +1209,20 @@ function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest, onAdd }
             />
           )}
         </div>
-        <GoalActionDetailsPanel action={selectedAction} actionsById={actionsById} onAddChild={startCreate} onQuickAdd={addInline} />
+        <GoalActionDetailsPanel
+          action={selectedAction}
+          actions={actions}
+          actionsById={actionsById}
+          onAddChild={startCreate}
+          onQuickAdd={addInline}
+          onUpdate={updateAction}
+          onReparent={(id, parentId) => {
+            const siblings = actions.filter((item) => item.parentId === parentId && item.id !== id);
+            onNest(id, parentId, siblings.length + 1);
+          }}
+          onDelete={(id) => { onDelete(id); setSelectedActionId(null); }}
+          onPlanner={(item) => onPlanner(actionToTask(item))}
+        />
       </div>
     </section>
   );
@@ -1197,44 +1400,108 @@ function splitDateParts(value: string) {
   };
 }
 
-function GoalDeadlineSelect({ value, onChange }: { value: string; onChange: (value: string) => void }) {
-  const parts = splitDateParts(value);
-  const years = Array.from({ length: 10 }, (_, index) => new Date().getFullYear() + index);
-  const months = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
-  const daysInMonth = new Date(parts.year, parts.month, 0).getDate();
+const GOAL_MONTHS = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
+const GOAL_WEEKDAYS = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Ndz'];
 
-  function update(next: Partial<typeof parts>) {
-    const merged = { ...parts, ...next };
-    const day = Math.min(merged.day, new Date(merged.year, merged.month, 0).getDate());
-    onChange(`${merged.year}-${String(merged.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+function parseGoalDate(value: string): Date {
+  const parts = splitDateParts(value || todayStr());
+  return new Date(parts.year, parts.month - 1, parts.day, 12);
+}
+
+function GoalDeadlineSelect({ value, onChange, disabled = false }: { value: string; onChange: (value: string) => void; disabled?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const selected = parseGoalDate(value);
+  const [viewYear, setViewYear] = useState(selected.getFullYear());
+  const [viewMonth, setViewMonth] = useState(selected.getMonth());
+
+  useEffect(() => {
+    const date = parseGoalDate(value);
+    setViewYear(date.getFullYear());
+    setViewMonth(date.getMonth());
+  }, [value]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  function shiftMonth(delta: number) {
+    const next = new Date(viewYear, viewMonth + delta, 1);
+    setViewYear(next.getFullYear());
+    setViewMonth(next.getMonth());
   }
 
+  function pick(day: number) {
+    onChange(toDateStr(new Date(viewYear, viewMonth, day, 12)));
+    setOpen(false);
+  }
+
+  const first = new Date(viewYear, viewMonth, 1);
+  const last = new Date(viewYear, viewMonth + 1, 0);
+  const offset = (first.getDay() + 6) % 7;
+  const cells: Array<number | null> = [
+    ...Array.from({ length: offset }, () => null),
+    ...Array.from({ length: last.getDate() }, (_, index) => index + 1),
+  ];
+  while (cells.length % 7 !== 0) cells.push(null);
+  const selectedIso = toDateStr(selected);
+  const todayIso = todayStr();
+
   return (
-    <div className="goal-deadline-select">
-      <GoalIcon name="calendar" />
-      <select className="input" value={parts.day} onChange={(event) => update({ day: Number(event.target.value) })} aria-label="Dzień terminu">
-        {Array.from({ length: daysInMonth }, (_, index) => index + 1).map((day) => <option key={day} value={day}>{day}</option>)}
-      </select>
-      <select className="input" value={parts.month} onChange={(event) => update({ month: Number(event.target.value) })} aria-label="Miesiąc terminu">
-        {months.map((month, index) => <option key={month} value={index + 1}>{month}</option>)}
-      </select>
-      <select className="input" value={parts.year} onChange={(event) => update({ year: Number(event.target.value) })} aria-label="Rok terminu">
-        {years.map((year) => <option key={year} value={year}>{year}</option>)}
-      </select>
+    <div className={`goal-date-picker${disabled ? ' is-disabled' : ''}`} ref={ref}>
+      <button className="goal-date-trigger" type="button" disabled={disabled} onClick={() => setOpen((prev) => !prev)} aria-haspopup="dialog" aria-expanded={open}>
+        <GoalIcon name="calendar" />
+        <span>{fmtDate(value || todayIso)}</span>
+        <IcoChevRight />
+      </button>
+      {open && !disabled && (
+        <div className="goal-date-panel">
+          <div className="goal-date-head">
+            <button className="icon-btn" type="button" onClick={() => shiftMonth(-1)} aria-label="Poprzedni miesiąc"><IcoChevRight /></button>
+            <strong>{GOAL_MONTHS[viewMonth]} <span>{viewYear}</span></strong>
+            <button className="icon-btn" type="button" onClick={() => shiftMonth(1)} aria-label="Następny miesiąc"><IcoChevRight /></button>
+          </div>
+          <div className="goal-date-weekdays">
+            {GOAL_WEEKDAYS.map((day) => <span key={day}>{day}</span>)}
+          </div>
+          <div className="goal-date-grid">
+            {cells.map((day, index) => {
+              const iso = day ? toDateStr(new Date(viewYear, viewMonth, day, 12)) : '';
+              return day ? (
+                <button
+                  key={iso}
+                  type="button"
+                  className={`${iso === selectedIso ? 'is-selected' : ''}${iso === todayIso ? ' is-today' : ''}`}
+                  onClick={() => pick(day)}
+                >
+                  {day}
+                </button>
+              ) : <span key={`empty-${index}`} />;
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function GoalFormModal({ open, goal, categories, onClose, onSave }: {
+function GoalFormModal({ open, goal, categories, onAddCategory, onRenameCategory, onDeleteCategory, onClose, onSave }: {
   open: boolean;
   goal: Goal | null;
   categories: string[];
+  onAddCategory: (name: string) => void;
+  onRenameCategory: (oldName: string, nextName: string) => void;
+  onDeleteCategory: (name: string) => void;
   onClose: () => void;
   onSave: (payload: Omit<Goal, 'id' | 'createdAt' | 'updatedAt' | 'tasks' | 'milestones'>) => void;
 }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [type, setType] = useState<GoalType>('project');
   const [category, setCategory] = useState(categories[0] ?? 'Osobiste');
   const [priority, setPriority] = useState<Priority>('mid');
   const [deadline, setDeadline] = useState('');
@@ -1245,7 +1512,6 @@ function GoalFormModal({ open, goal, categories, onClose, onSave }: {
     if (!open) return;
     setTitle(goal?.title ?? '');
     setDescription(goal?.description ?? '');
-    setType(goal?.type ?? 'project');
     setCategory(goal?.category ?? categories[0] ?? 'Osobiste');
     setPriority(goal?.priority ?? 'mid');
     setDeadline(goal?.deadline ?? '');
@@ -1259,7 +1525,7 @@ function GoalFormModal({ open, goal, categories, onClose, onSave }: {
     onSave({
       title: title.trim(),
       description: description.trim(),
-      type,
+      type: goal?.type ?? 'project',
       category: category.trim() || 'Osobiste',
       priority,
       deadline: deadline || undefined,
@@ -1276,25 +1542,23 @@ function GoalFormModal({ open, goal, categories, onClose, onSave }: {
       <form className="modal-form goal-form-modal" onSubmit={submit}>
         <Field label="Nazwa celu"><input className="input goal-form-title-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Wpisz nazwę celu..." autoFocus /></Field>
         <Field label="Termin końcowy"><GoalDeadlineSelect value={deadline || todayStr()} onChange={setDeadline} /></Field>
-        <Field label="Typ">
-          <div className="goal-form-icon-field">
-            <GoalIcon name="task" />
-            <select className="input" value={type} onChange={(event) => setType(event.target.value as GoalType)}><option value="project">Projekt</option><option value="simple">Prosty cel</option></select>
-          </div>
-        </Field>
         <Field label="Kategoria">
-          <div className="goal-form-icon-field">
-            <GoalIcon name="folder" />
-            <select className="input" value={category} onChange={(event) => setCategory(event.target.value)}>
-              {categories.map((name) => <option key={name} value={name}>{name}</option>)}
-            </select>
-          </div>
+          <CategorySelect
+            value={category}
+            categories={categories}
+            onChange={setCategory}
+            onAddCategory={onAddCategory}
+            onRenameCategory={onRenameCategory}
+            onDeleteCategory={onDeleteCategory}
+          />
         </Field>
         <Field label="Priorytet">
-          <div className="goal-form-icon-field">
-            <GoalIcon name="target" />
-            <select className="input" value={priority} onChange={(event) => setPriority(event.target.value as Priority)}><option value="low">Niski</option><option value="mid">Średni</option><option value="high">Wysoki</option></select>
-          </div>
+          <GoalListSelect
+            value={priority}
+            options={[{ value: 'low', label: 'Niski' }, { value: 'mid', label: 'Średni' }, { value: 'high', label: 'Wysoki' }]}
+            onChange={(value) => setPriority(value as Priority)}
+            icon={<GoalIcon name="target" />}
+          />
         </Field>
         <Field label={`Postęp (${progress}%)`}>
           <div className="goal-form-progress-row">
@@ -1314,22 +1578,156 @@ function GoalFormModal({ open, goal, categories, onClose, onSave }: {
     </Modal>
   );
 }
-function CategoryManagerModal({ open, onClose, categories, onAdd, onDelete }: { open: boolean; onClose: () => void; categories: string[]; onAdd: (name: string) => void; onDelete: (name: string) => void }) {
-  const [name, setName] = useState('');
+
+function GoalListSelect<T extends string>({ value, options, onChange, icon, disabled = false, placeholder = 'Wybierz' }: {
+  value: T;
+  options: Array<{ value: T; label: string }>;
+  onChange: (value: T) => void;
+  icon?: ReactNode;
+  disabled?: boolean;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find((option) => option.value === value);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
   return (
-    <Modal open={open} onClose={onClose} title="Kategorie celów">
-      <div className="goals-modal-list">
-        {categories.map((category) => (
-          <div className="goals-category-row" key={category}>
-            <span>{category}</span>
-            <button className="icon-btn" type="button" onClick={() => onDelete(category)} aria-label={`Usuń ${category}`}><IcoTrash /></button>
+    <div className={`goal-list-select${disabled ? ' is-disabled' : ''}`} ref={ref}>
+      <button type="button" className="input goal-list-trigger" disabled={disabled} onClick={() => setOpen((prev) => !prev)} aria-haspopup="listbox" aria-expanded={open}>
+        {icon && <span className="goal-list-icon">{icon}</span>}
+        <span className="goal-list-value">{selected?.label ?? placeholder}</span>
+        <span className="goal-list-caret"><IcoChevRight /></span>
+      </button>
+      {open && !disabled && (
+        <div className="goal-list-panel" role="listbox">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={`goal-list-option${option.value === value ? ' is-active' : ''}`}
+              onClick={() => { onChange(option.value); setOpen(false); }}
+              role="option"
+              aria-selected={option.value === value}
+            >
+              <span className="goal-list-check">{option.value === value && <IcoCheck />}</span>
+              <span>{option.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CategorySelect({ value, categories, onChange, onAddCategory, onRenameCategory, onDeleteCategory }: {
+  value: string;
+  categories: string[];
+  onChange: (name: string) => void;
+  onAddCategory: (name: string) => void;
+  onRenameCategory: (oldName: string, nextName: string) => void;
+  onDeleteCategory: (name: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
+  const [newName, setNewName] = useState('');
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+        setEditing(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  function startRename(cat: string) {
+    setEditing(cat);
+    setEditDraft(cat);
+  }
+
+  function commitRename() {
+    const trimmed = editDraft.trim();
+    if (editing && trimmed && trimmed !== editing) {
+      onRenameCategory(editing, trimmed);
+      if (value === editing) onChange(trimmed);
+    }
+    setEditing(null);
+  }
+
+  function addNew() {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    onAddCategory(trimmed);
+    onChange(trimmed);
+    setNewName('');
+  }
+
+  return (
+    <div className="category-select" ref={ref}>
+      <button type="button" className="input category-select-trigger" onClick={() => setOpen((prev) => !prev)} aria-haspopup="listbox" aria-expanded={open}>
+        <GoalIcon name="folder" />
+        <span className="category-select-value">{value || 'Wybierz kategorię'}</span>
+        <span className="category-select-caret"><IcoChevRight /></span>
+      </button>
+      {open && (
+        <div className="category-select-panel" role="listbox">
+          <div className="category-select-list">
+            {categories.length === 0 && <p className="category-select-empty">Brak kategorii. Dodaj pierwszą poniżej.</p>}
+            {categories.map((cat) => (
+              <div className={`category-select-item${cat === value ? ' is-active' : ''}`} key={cat}>
+                {editing === cat ? (
+                  <input
+                    className="input category-select-edit"
+                    autoFocus
+                    value={editDraft}
+                    onChange={(event) => setEditDraft(event.target.value)}
+                    onBlur={commitRename}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') { event.preventDefault(); commitRename(); }
+                      if (event.key === 'Escape') setEditing(null);
+                    }}
+                  />
+                ) : (
+                  <>
+                    <button type="button" className="category-select-name" onClick={() => { onChange(cat); setOpen(false); }}>
+                      <span className="category-select-check">{cat === value && <IcoCheck />}</span>
+                      <span className="category-select-label">{cat}</span>
+                    </button>
+                    <span className="category-select-actions">
+                      <button type="button" className="category-icon-btn" onClick={() => startRename(cat)} title="Edytuj kategorię" aria-label={`Edytuj kategorię ${cat}`}><IcoEdit /></button>
+                      <button type="button" className="category-icon-btn is-danger" onClick={() => { onDeleteCategory(cat); if (value === cat) onChange(categories.find((item) => item !== cat) ?? 'Osobiste'); }} title="Usuń kategorię" aria-label={`Usuń kategorię ${cat}`}><IcoTrash /></button>
+                    </span>
+                  </>
+                )}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      <form className="goals-category-add-row" onSubmit={(event) => { event.preventDefault(); if (name.trim()) { onAdd(name.trim()); setName(''); } }}>
-        <input className="input" value={name} onChange={(event) => setName(event.target.value)} placeholder="Nowa kategoria" />
-        <button className="btn btn-primary btn-sm" type="submit"><IcoPlus /> Dodaj</button>
-      </form>
-    </Modal>
+          <div className="category-select-add">
+            <input
+              className="input"
+              value={newName}
+              placeholder="Nowa kategoria..."
+              onChange={(event) => setNewName(event.target.value)}
+              onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addNew(); } }}
+            />
+            <button type="button" className="btn btn-primary btn-sm" onClick={addNew} aria-label="Dodaj kategorię"><IcoPlus /></button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -9,6 +9,8 @@
 
 /* ============================================================ TOKENS — base / beige (matured "White Lotus") */
 :root {
+  /* Native form controls (incl. <select> option popups) follow the theme. */
+  color-scheme: light;
   /* — type — */
   --font-display: 'Sora', 'Inter', system-ui, sans-serif;
   --font-sans: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -146,6 +148,7 @@
 
 /* ============================================================ THEME — The Graphite Cockpit (dark = primary identity) */
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg-0: #101315; --bg-1: #15191b;
   --surface: #181d1f; --surface-2: #202629; --surface-3: #2b3235; --surface-inset: #151a1c;
   --border: #2f383a; --border-soft: #242c2f; --border-strong: rgba(75, 174, 136, .30);
@@ -8804,6 +8807,18 @@ textarea.input {
   background-repeat: no-repeat;
 }
 
+/* Native <option> popups: keep the theme surface + ink so the list is legible
+   (default was white background + grey text — unreadable on the dark theme). */
+select option,
+select optgroup,
+.input option,
+.select option,
+.fi option,
+.form-group select option {
+  background-color: var(--surface-2);
+  color: var(--ink);
+}
+
 .field,
 .form-group,
 .auth-field {
@@ -10636,6 +10651,177 @@ textarea.input {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-ice) 12%, transparent);
 }
 
+.goal-date-picker,
+.goal-list-select {
+  position: relative;
+  min-width: 0;
+}
+
+.goal-date-trigger,
+.goal-list-trigger,
+.category-select-trigger {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid color-mix(in srgb, var(--border-strong) 74%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-base) 52%, transparent);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color var(--t), background var(--t), box-shadow var(--t);
+}
+
+.goal-date-trigger:hover,
+.goal-date-trigger:focus-visible,
+.goal-list-trigger:hover,
+.goal-list-trigger:focus-visible,
+.category-select-trigger:hover,
+.category-select-trigger:focus-visible,
+.goal-list-select:has(.goal-list-panel) .goal-list-trigger,
+.category-select:has(.category-select-panel) .category-select-trigger {
+  outline: 0;
+  border-color: color-mix(in srgb, var(--accent-ice) 62%, var(--border-strong));
+  background: color-mix(in srgb, var(--surface-inset) 72%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-ice) 12%, transparent);
+}
+
+.goal-date-trigger {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 30px;
+  align-items: center;
+  padding: 0;
+  text-align: left;
+}
+
+.goal-date-trigger > svg:first-child {
+  width: 18px;
+  height: 18px;
+  justify-self: center;
+  color: var(--accent-ice);
+}
+
+.goal-date-trigger span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.goal-date-trigger > svg:last-child {
+  width: 14px;
+  height: 14px;
+  justify-self: center;
+  color: var(--ink-3);
+  transform: rotate(90deg);
+}
+
+.goal-date-trigger:disabled,
+.goal-list-trigger:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.goal-date-panel,
+.goal-list-panel,
+.category-select-panel {
+  position: absolute;
+  z-index: calc(var(--z-dropdown) + 5);
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  border: 1px solid color-mix(in srgb, var(--accent-ice) 34%, var(--border-strong));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 92%, #06111a);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .34);
+  overflow: hidden;
+}
+
+.goal-date-panel {
+  width: min(320px, calc(100vw - 32px));
+  right: auto;
+  padding: 10px;
+}
+
+.goal-date-head {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.goal-date-head .icon-btn:first-child svg {
+  transform: rotate(180deg);
+}
+
+.goal-date-head strong {
+  text-align: center;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.goal-date-head strong span {
+  color: var(--ink-3);
+  font-weight: 650;
+}
+
+.goal-date-weekdays,
+.goal-date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.goal-date-weekdays {
+  margin-bottom: 6px;
+}
+
+.goal-date-weekdays span {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 750;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.goal-date-grid button,
+.goal-date-grid > span {
+  height: 34px;
+  border-radius: 9px;
+}
+
+.goal-date-grid button {
+  border: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--surface-calendar) 82%, transparent);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background var(--t), border-color var(--t), color var(--t);
+}
+
+.goal-date-grid button:hover,
+.goal-date-grid button:focus-visible {
+  outline: 0;
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--accent-ice) 32%, var(--border-soft));
+  background: color-mix(in srgb, var(--accent-ice) 12%, var(--surface-calendar));
+}
+
+.goal-date-grid button.is-today:not(.is-selected) {
+  color: var(--accent-ice);
+  border-color: color-mix(in srgb, var(--accent-ice) 38%, var(--border-soft));
+}
+
+.goal-date-grid button.is-selected {
+  color: var(--on-acc);
+  border-color: var(--accent-ice);
+  background: var(--accent-ice);
+}
+
 .modal:has(.goal-form-modal) {
   --modal-w: 640px;
   border-radius: 20px;
@@ -10731,6 +10917,275 @@ textarea.input {
   border-radius: 0;
   background: transparent;
   padding-left: 2px;
+}
+
+/* Category picker: select from list + rename/delete + add own */
+.category-select {
+  position: relative;
+}
+
+.category-select-trigger {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 30px;
+  align-items: center;
+  min-height: 46px;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.goal-list-trigger {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 30px;
+  align-items: center;
+  padding: 0;
+  text-align: left;
+}
+
+.goal-list-icon {
+  display: grid;
+  place-items: center;
+  color: var(--accent-ice);
+}
+
+.goal-list-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.goal-list-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.goal-list-caret {
+  display: grid;
+  place-items: center;
+  color: var(--ink-3);
+  transform: rotate(90deg);
+}
+
+.goal-list-caret svg {
+  width: 14px;
+  height: 14px;
+}
+
+.goal-list-panel {
+  display: grid;
+  gap: 2px;
+  padding: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.goal-list-option {
+  min-height: 34px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 560;
+  text-align: left;
+  cursor: pointer;
+  padding: 0 10px;
+}
+
+.goal-list-option:hover,
+.goal-list-option:focus-visible {
+  outline: 0;
+  background: color-mix(in srgb, var(--accent-ice) 10%, transparent);
+}
+
+.goal-list-option.is-active {
+  background: color-mix(in srgb, var(--accent-ice) 18%, var(--surface));
+}
+
+.goal-list-check {
+  display: grid;
+  place-items: center;
+  color: var(--accent-ice);
+}
+
+.goal-list-check svg {
+  width: 14px;
+  height: 14px;
+}
+
+.category-select-trigger > svg {
+  width: 18px;
+  height: 18px;
+  justify-self: center;
+  color: var(--accent-ice);
+}
+
+.category-select-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.category-select-caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-3);
+  transform: rotate(90deg);
+}
+
+.category-select-caret svg {
+  width: 14px;
+  height: 14px;
+}
+
+.category-select-panel {
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+}
+
+.category-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  overflow-y: auto;
+}
+
+.category-select-empty {
+  margin: 0;
+  padding: 10px;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.category-select-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+}
+
+.category-select-item.is-active {
+  background: color-mix(in srgb, var(--accent-ice) 18%, var(--surface));
+}
+
+.category-select-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  padding: 8px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 560;
+  text-align: left;
+  cursor: pointer;
+}
+
+.category-select-name:hover {
+  background: color-mix(in srgb, var(--accent-ice) 10%, transparent);
+}
+
+.category-select-check {
+  flex: 0 0 14px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--acc-ink);
+}
+
+.category-select-check svg {
+  width: 14px;
+  height: 14px;
+}
+
+.category-select-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.category-select-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 4px;
+  flex: 0 0 auto;
+}
+
+.category-icon-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  opacity: .7;
+  transition: opacity var(--t), background var(--t), color var(--t);
+}
+
+.category-icon-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.category-icon-btn:hover,
+.category-icon-btn:focus-visible {
+  outline: 0;
+  opacity: 1;
+  color: var(--acc-ink);
+  background: color-mix(in srgb, var(--accent-ice) 12%, transparent);
+}
+
+.category-icon-btn.is-danger:hover,
+.category-icon-btn.is-danger:focus-visible {
+  color: var(--danger-ink);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+}
+
+.category-select-edit {
+  flex: 1 1 auto;
+  height: 34px;
+  margin: 2px;
+}
+
+.category-select-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-top: 1px solid var(--border-soft);
+  background: color-mix(in srgb, var(--surface-inset) 78%, transparent);
+}
+
+.category-select-add .input {
+  flex: 1 1 auto;
+  min-height: 36px;
+}
+
+.category-select-add .btn {
+  flex: 0 0 auto;
 }
 
 .goal-form-modal .goal-deadline-select {
@@ -14505,11 +14960,8 @@ textarea.input {
 
 .goal-action-row {
   --indent-size: 22px;
-  display: grid;
-  grid-template-columns: 20px 20px minmax(120px, 1fr) 28px 42px 76px 92px 32px;
+  display: flex;
   align-items: center;
-  column-gap: 10px;
-  row-gap: 6px;
   min-height: 34px;
   padding: 5px 6px 5px min(calc(var(--depth, 0) * var(--indent-size) + 6px), 116px);
   border: 1px solid transparent;
@@ -14517,6 +14969,24 @@ textarea.input {
   color: var(--ink-2);
   transition: background var(--t), border-color var(--t), color var(--t);
   cursor: pointer;
+}
+
+.goal-action-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.goal-action-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 0 0 auto;
+  margin-left: 16px;
+  white-space: nowrap;
 }
 
 .goal-action-row:hover,
@@ -14623,13 +15093,16 @@ textarea.input {
 .goal-action-progress,
 .goal-action-priority,
 .goal-action-date {
-  min-width: 0;
-  justify-self: end;
+  flex: 0 0 auto;
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 750;
   line-height: 1;
-  text-align: right;
+  text-align: center;
+}
+
+.goal-action-add-btn {
+  flex: 0 0 26px;
 }
 
 .goal-action-add-btn {
@@ -14664,10 +15137,15 @@ textarea.input {
 }
 
 .goal-action-progress {
+  min-width: 28px;
   color: var(--ink-2);
 }
 
 .goal-action-priority {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
   border-radius: var(--r-pill);
   padding: 5px 8px;
   text-transform: uppercase;
@@ -14692,15 +15170,15 @@ textarea.input {
 .goal-action-date {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 5px;
+  min-width: 58px;
+  max-width: 76px;
   color: var(--ink-3);
-  width: 100%;
   white-space: nowrap;
 }
 
 .goal-action-row .goals-more {
-  justify-self: end;
+  flex: 0 0 auto;
 }
 
 .goal-action-date svg {
@@ -14788,6 +15266,136 @@ textarea.input {
   overflow-wrap: anywhere;
 }
 
+.goal-action-details-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.goal-action-details-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.goal-action-tool-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  background: var(--surface-inset);
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: background var(--t), border-color var(--t), color var(--t);
+}
+
+.goal-action-tool-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.goal-action-tool-btn:hover,
+.goal-action-tool-btn:focus-visible {
+  outline: 0;
+  color: var(--ink);
+  border-color: color-mix(in srgb, var(--accent-ice) 32%, var(--border-soft));
+  background: color-mix(in srgb, var(--accent-ice) 12%, transparent);
+}
+
+.goal-action-tool-btn.is-danger {
+  color: color-mix(in srgb, var(--danger) 60%, var(--ink-2));
+  border-color: color-mix(in srgb, var(--danger) 24%, var(--border-soft));
+  background: color-mix(in srgb, var(--danger) 11%, transparent);
+}
+
+.goal-action-tool-btn.is-danger:hover,
+.goal-action-tool-btn.is-danger:focus-visible {
+  color: var(--danger-ink);
+  border-color: color-mix(in srgb, var(--danger) 42%, var(--border-soft));
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+.goal-action-detail-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.goal-action-detail-title h3 {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.goal-action-detail-title .input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.goal-action-edit-btn {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  opacity: .62;
+  transition: opacity var(--t), background var(--t), color var(--t);
+}
+
+.goal-action-edit-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.goal-action-edit-btn:hover,
+.goal-action-edit-btn:focus-visible {
+  outline: 0;
+  opacity: 1;
+  color: var(--acc-ink);
+  background: color-mix(in srgb, var(--accent-ice) 12%, transparent);
+}
+
+.goal-action-detail-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.goal-action-detail-value .goal-action-edit-btn {
+  margin-left: auto;
+}
+
+.goal-action-detail-value .input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 30px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.goal-action-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.goal-action-notes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .goal-action-note {
   margin: 0;
   border: 1px solid var(--border-soft);
@@ -14797,6 +15405,65 @@ textarea.input {
   padding: 10px;
   font-size: 12px;
   line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.goal-action-note.is-empty {
+  color: var(--ink-3);
+  font-style: italic;
+  background: transparent;
+  border-style: dashed;
+}
+
+.goal-action-edit-date {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.goal-action-edit-date .goal-deadline-select {
+  flex-wrap: wrap;
+}
+
+.goal-action-edit-date-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.goal-action-inline-link {
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.goal-action-inline-link:hover {
+  color: var(--acc-ink);
+  text-decoration: underline;
+}
+
+.goal-action-edit-confirm {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--accent-ice) 30%, var(--border-soft));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent-ice) 14%, transparent);
+  color: var(--acc-ink);
+  cursor: pointer;
+}
+
+.goal-action-edit-confirm svg {
+  width: 14px;
+  height: 14px;
 }
 
 .goal-action-detail-actions {
@@ -14858,8 +15525,9 @@ textarea.input {
 }
 
 @media (max-width: 700px) {
-  .goal-action-row {
-    grid-template-columns: 18px 18px minmax(0, 1fr) 22px auto 32px;
+  .goal-action-meta {
+    gap: 8px;
+    margin-left: 10px;
   }
 
   .goal-action-progress {
@@ -14867,7 +15535,7 @@ textarea.input {
   }
 
   .goal-action-date {
-    grid-column: 3 / 4;
+    min-width: 0;
     font-size: 9.5px;
   }
 
