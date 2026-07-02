@@ -314,8 +314,11 @@ export function GoalsScreen() {
                 </span>
                 <span className="goals-folder-pct">{goal.progress}%</span>
                 <span className="goals-folder-actions" onClick={(event) => event.stopPropagation()}>
-                  <button className="icon-btn" type="button" aria-label="Edytuj cel" onClick={() => setGoalModal({ goal })}><GoalIcon name="gear" /></button>
-                  <button className="icon-btn is-danger" type="button" aria-label="Usuń cel" onClick={() => setDeleteGoalId(goal.id)}><IcoTrash /></button>
+                  <MoreMenu actions={[
+                    { label: 'Edytuj', onClick: () => setGoalModal({ goal }) },
+                    { label: goal.completedAt ? 'Otwórz ponownie' : 'Oznacz jako ukończony', onClick: () => updateGoal.mutate({ id: goal.id, patch: { completed_at: goal.completedAt ? null : new Date().toISOString(), progress: goal.completedAt ? goal.progress : 100 } }) },
+                    { label: 'Usuń', onClick: () => setDeleteGoalId(goal.id), danger: true },
+                  ]} />
                 </span>
               </div>
             ))}
@@ -720,11 +723,11 @@ function GoalActionRow({ node, selectedId, expandedIds, editingId, draggingId, d
         >
           <IcoPlus />
         </button>
-        {hasChildren && <span className="goal-action-progress">{node.progress.done}/{node.progress.total}</span>}
+        <span className="goal-action-progress">{hasChildren ? `${node.progress.done}/${node.progress.total}` : ''}</span>
         <span className={`goal-action-priority is-${node.priority}`}>{priorityLabel(node.priority)}</span>
         <span className="goal-action-date"><GoalIcon name="calendar" /> {relativeDateLabel(node.dueDate ?? undefined)}</span>
         <MoreMenu actions={[
-          { label: 'Zmień nazwę', onClick: () => onEdit(node.id) },
+          { label: 'Edytuj', onClick: () => onEdit(node.id) },
           { label: node.status === 'blocked' ? 'Odblokuj' : 'Zablokuj', onClick: () => onSetStatus(node.id, node.status === 'blocked' ? 'todo' : 'blocked') },
           { label: 'Dodaj do Planera', onClick: () => onPlanner(node) },
           { label: 'Usuń', onClick: () => onDelete(node.id), danger: true },
@@ -762,11 +765,11 @@ function GoalActionRow({ node, selectedId, expandedIds, editingId, draggingId, d
   );
 }
 
-function GoalActionDetailsPanel({ action, actionsById, onAddChild, onEdit }: {
+function GoalActionDetailsPanel({ action, actionsById, onAddChild, onQuickAdd }: {
   action: GoalAction | null;
   actionsById: Map<string, GoalAction>;
   onAddChild: (parentId: string) => void;
-  onEdit: (id: string) => void;
+  onQuickAdd: (parentId: string, title: string) => void;
 }) {
   if (!action) {
     return (
@@ -790,11 +793,39 @@ function GoalActionDetailsPanel({ action, actionsById, onAddChild, onEdit }: {
         <span>Ścieżka</span><strong>{breadcrumb.map((item) => item.title).join(' > ')}</strong>
       </div>
       {action.description && <p className="goal-action-note">{action.description}</p>}
-      <div className="goal-action-detail-actions">
-        <button className="icon-btn" type="button" onClick={() => onAddChild(action.id)} aria-label="Dodaj poddziałanie" title="Dodaj poddziałanie"><IcoPlus /></button>
-        <button className="btn btn-secondary btn-sm" type="button" onClick={() => onEdit(action.id)}>Edytuj</button>
-      </div>
+      <QuickAddActionBar parentId={action.id} onQuickAdd={onQuickAdd} onDetails={onAddChild} />
     </aside>
+  );
+}
+
+function QuickAddActionBar({ parentId, onQuickAdd, onDetails }: {
+  parentId: string;
+  onQuickAdd: (parentId: string, title: string) => void;
+  onDetails: (parentId: string) => void;
+}) {
+  const [title, setTitle] = useState('');
+
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    onQuickAdd(parentId, trimmed);
+    setTitle('');
+  }
+
+  return (
+    <form className="goal-action-quick-add" onSubmit={submit}>
+      <input
+        className="goal-action-quick-input"
+        value={title}
+        onChange={(event) => setTitle(event.target.value)}
+        placeholder="Dodaj podzadanie..."
+        aria-label="Tytuł podzadania"
+      />
+      <button className="icon-btn" type="button" onClick={() => onDetails(parentId)} aria-label="Dodaj ze szczegółami" title="Dodaj ze szczegółami">
+        <GoalIcon name="gear" />
+      </button>
+    </form>
   );
 }
 
@@ -923,11 +954,13 @@ function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest, onAdd }
   return (
     <section className="card goals-actions-card goal-actions-section">
       <div className="card-head">
-        <div>
+        <div className="goals-card-head-title">
           <span className="card-title">Działania celu</span>
           <span className="goals-collapsed-summary">{actions.length} działań · {openTasks} aktywnych · {actions.length - openTasks} ukończone</span>
         </div>
-        <button className="btn btn-primary btn-sm" type="button" onClick={() => startCreate(null)}><IcoPlus /> Dodaj działanie</button>
+        <div className="goals-card-head-actions">
+          <button className="btn btn-primary btn-sm" type="button" onClick={() => startCreate(null)}><IcoPlus /> Dodaj działanie</button>
+        </div>
       </div>
       <div className="goal-actions-layout">
         <div className="goal-actions-tree">
@@ -986,7 +1019,7 @@ function GoalActionsPanel({ goal, onUpdate, onDelete, onPlanner, onNest, onAdd }
             />
           )}
         </div>
-        <GoalActionDetailsPanel action={selectedAction} actionsById={actionsById} onAddChild={startCreate} onEdit={setEditingId} />
+        <GoalActionDetailsPanel action={selectedAction} actionsById={actionsById} onAddChild={startCreate} onQuickAdd={addInline} />
       </div>
     </section>
   );
@@ -1010,13 +1043,15 @@ function GoalRoadmap({ goal }: { goal: Goal }) {
   return (
     <section className={`card goals-roadmap-card ${expanded ? 'is-expanded' : 'is-collapsed'}`}>
       <div className="card-head">
-        <div>
+        <div className="goals-card-head-title">
           <span className="card-title">Roadmapa celu</span>
           <span className="goals-collapsed-summary">{doneCount}/{milestones.length} kamieni milowych · {goalStatus(goal).label}</span>
         </div>
-        <button className="goals-collapse-btn" type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>
-          {expanded ? 'Zwiń' : 'Rozwiń'} <IcoChevRight />
-        </button>
+        <div className="goals-card-head-actions">
+          <button className="goals-collapse-btn" type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>
+            {expanded ? 'Zwiń' : 'Rozwiń'} <IcoChevRight />
+          </button>
+        </div>
       </div>
       {expanded && <div className="goals-roadmap-track">
         {milestones.map((milestone, index) => (
@@ -1078,13 +1113,15 @@ function GoalWeekPlan({ goal, tasks, todayTasks, onToggle, onReschedule, onPlann
   return (
     <section className={`card goals-week-card ${expanded ? 'is-expanded' : 'is-collapsed'}`}>
       <div className="card-head">
-        <div>
+        <div className="goals-card-head-title">
           <span className="card-title">Plan na ten tydzień</span>
           <span className="goals-collapsed-summary">{plannedCount} działań · dzisiaj {activeTodayCount} aktywne</span>
         </div>
-        <button className="goals-collapse-btn" type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>
-          {expanded ? 'Zwiń' : 'Rozwiń'} <IcoChevRight />
-        </button>
+        <div className="goals-card-head-actions">
+          <button className="goals-collapse-btn" type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>
+            {expanded ? 'Zwiń' : 'Rozwiń'} <IcoChevRight />
+          </button>
+        </div>
       </div>
       {expanded && (
         <>
@@ -1228,7 +1265,7 @@ function GoalFormModal({ open, goal, categories, onClose, onSave }: {
       deadline: deadline || undefined,
       progress,
       streak,
-      archived: false,
+      archived: goal?.archived ?? false,
       emoji: goal?.emoji ?? GOAL_EMOJI_FALLBACK,
       completedAt: goal?.completedAt,
     });
@@ -1237,18 +1274,41 @@ function GoalFormModal({ open, goal, categories, onClose, onSave }: {
   return (
     <Modal open={open} onClose={onClose} title={goal ? 'Edytuj cel' : 'Dodaj cel'} size="lg">
       <form className="modal-form goal-form-modal" onSubmit={submit}>
-        <div className="goal-form-title-row">
-          <Field label="Nazwa celu"><input className="input" value={title} onChange={(event) => setTitle(event.target.value)} autoFocus /></Field>
-        </div>
-        <Field label="Termin końcowy"><GoalDeadlineSelect value={deadline} onChange={setDeadline} /></Field>
-        <div className="grid-2 goal-form-grid">
-          <Field label="Typ"><select className="input" value={type} onChange={(event) => setType(event.target.value as GoalType)}><option value="project">Projekt</option><option value="simple">Prosty cel</option></select></Field>
-          <Field label="Kategoria"><input className="input" list="goal-categories" value={category} onChange={(event) => setCategory(event.target.value)} /><datalist id="goal-categories">{categories.map((name) => <option key={name} value={name} />)}</datalist></Field>
-          <Field label="Priorytet"><select className="input" value={priority} onChange={(event) => setPriority(event.target.value as Priority)}><option value="low">Niski</option><option value="mid">Średni</option><option value="high">Wysoki</option></select></Field>
-          <Field label={`Postęp (${progress}%)`}><input className="goals-range" type="range" min={0} max={100} value={progress} onChange={(event) => setProgress(Number(event.target.value))} /></Field>
-          <Field label="Seria"><input className="input" type="number" min={0} value={streak} onChange={(event) => setStreak(Number(event.target.value))} /></Field>
-        </div>
-        <Field label="Opis"><textarea className="textarea" rows={4} value={description} onChange={(event) => setDescription(event.target.value)} /></Field>
+        <Field label="Nazwa celu"><input className="input goal-form-title-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Wpisz nazwę celu..." autoFocus /></Field>
+        <Field label="Termin końcowy"><GoalDeadlineSelect value={deadline || todayStr()} onChange={setDeadline} /></Field>
+        <Field label="Typ">
+          <div className="goal-form-icon-field">
+            <GoalIcon name="task" />
+            <select className="input" value={type} onChange={(event) => setType(event.target.value as GoalType)}><option value="project">Projekt</option><option value="simple">Prosty cel</option></select>
+          </div>
+        </Field>
+        <Field label="Kategoria">
+          <div className="goal-form-icon-field">
+            <GoalIcon name="folder" />
+            <select className="input" value={category} onChange={(event) => setCategory(event.target.value)}>
+              {categories.map((name) => <option key={name} value={name}>{name}</option>)}
+            </select>
+          </div>
+        </Field>
+        <Field label="Priorytet">
+          <div className="goal-form-icon-field">
+            <GoalIcon name="target" />
+            <select className="input" value={priority} onChange={(event) => setPriority(event.target.value as Priority)}><option value="low">Niski</option><option value="mid">Średni</option><option value="high">Wysoki</option></select>
+          </div>
+        </Field>
+        <Field label={`Postęp (${progress}%)`}>
+          <div className="goal-form-progress-row">
+            <output>{progress}%</output>
+            <input className="goals-range" type="range" min={0} max={100} value={progress} onChange={(event) => setProgress(Number(event.target.value))} />
+          </div>
+        </Field>
+        <Field label="Seria">
+          <div className="goal-form-icon-field">
+            <GoalIcon name="flame" />
+            <input className="input" type="number" min={0} value={streak} onChange={(event) => setStreak(Number(event.target.value))} />
+          </div>
+        </Field>
+        <Field label="Opis"><textarea className="textarea goal-form-description" rows={4} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Dodaj opis celu..." /></Field>
         <div className="modal-actions"><button className="btn btn-secondary" type="button" onClick={onClose}>Anuluj</button><button className="btn btn-primary" type="submit">Zapisz cel</button></div>
       </form>
     </Modal>
